@@ -3,6 +3,7 @@
 module CustomTypes where
 
 import Database.Persist.TH
+import Text.Blaze.Html5
 
 data SpectralType = O | B | A | F | G | K | M | L | T
     deriving (Show, Read, Eq)
@@ -14,3 +15,6 @@ derivePersistField "LuminosityClass"
 
 data Coordinates = Coordinates Int Int
     deriving (Show, Eq)
+
+instance ToMarkup Coordinates where
+    toMarkup (Coordinates x y) = toMarkup $ "(" ++ (show x) ++ ", " ++ (show y) ++ ")"

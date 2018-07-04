@@ -1,6 +1,9 @@
 <div class="container">
     <div .row>
-        ^{systemDetails systemReport}
+        ^{systemDetails systemReport starReports}
+    <hr>
+    <div .row>
+        ^{starReporList starReports}
     <hr>
     <div .row>
         ^{planetReportList planetReports}

@@ -12,7 +12,7 @@ insert into planet (name, position, system_id, gravity) values ('Neptune', 9, 1,
 insert into user (ident) values ('tuukka');
 
 insert into solar_system_report (system_id, name, coord_x, coord_y, user_id, date) values (1, 'Sol', 0, 0, 1, '2018-07-03');
-insert into star_report (star_id, name, spectral_type, user_id, date) values (1, 'Sun', 'G', 1, '2018-07-03');
+insert into star_report (star_id, system_id, name, spectral_type, user_id, date) values (1, 1, 'Sun', 'G', 1, '2018-07-03');
 
 insert into planet_report (planet_id, system_id, name, position, gravity, user_id, date) values (3, 1, 'Earth', 3, 0.99, 1, '2018-07-03');
 insert into planet_report (planet_id, system_id, name, position, gravity, user_id, date) values (3, 1, 'Earth', 3, 1, 1, '2018-07-04');

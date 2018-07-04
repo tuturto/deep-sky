@@ -1,4 +1,4 @@
-<div class="container">
+<div .container>
     $if null systemReports
         <div .row>
             <div .col-lg-1>No known systems

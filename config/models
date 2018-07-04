@@ -43,8 +43,9 @@ SolarSystemReport json
     date Day 
     deriving Show
 
-StarReport 
+StarReport
     starId StarId 
+    systemId SolarSystemId
     name Text Maybe
     spectralType SpectralType Maybe
     luminosityClass LuminosityClass Maybe
