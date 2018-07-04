@@ -9,8 +9,11 @@ module Widgets where
 import Import
 import Report
 
+systemDetails :: CollatedSolarSystemReport -> WidgetFor site ()
+systemDetails systemReport = $(widgetFile "systemdetailsW")
+
+planetReportList :: Foldable t => t CollatedPlanetReport -> WidgetFor App ()
 planetReportList planetReports = $(widgetFile "planetlistW")
 
-systemDetails systemReport starReports = $(widgetFile "systemdetailsW")
-
-starReporList starReports = $(widgetFile "starListW")
+starReportList :: Foldable t => t CollatedStarReport -> WidgetFor site ()
+starReportList starReports = $(widgetFile "starListW")

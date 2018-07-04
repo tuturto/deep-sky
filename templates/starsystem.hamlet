@@ -1,9 +1,9 @@
 <div class="container">
     <div .row>
-        ^{systemDetails systemReport starReports}
+        ^{systemDetails systemReport}
     <hr>
     <div .row>
-        ^{starReporList starReports}
+        ^{starReportList starReports}
     <hr>
     <div .row>
         ^{planetReportList planetReports}
