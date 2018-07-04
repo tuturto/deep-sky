@@ -8,6 +8,7 @@ module Handler.StarSystems where
 import Import
 import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3)
 import Report
+import Widgets
 
 getStarSystemsR :: Handler Html
 getStarSystemsR = do

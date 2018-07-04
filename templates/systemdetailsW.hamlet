@@ -1,0 +1,5 @@
+<div .col-lg-12>
+    $maybe systemName <- cssrName systemReport
+        #{systemName}
+    $nothing
+        Unknown
