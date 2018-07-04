@@ -1,0 +1,12 @@
+<div .container>
+    <!-- Starting
+        ================================================== -->
+    <div .bs-docs-section>
+        <div .row>
+            <div .col-lg-12>
+                <div .page-header>
+                    <h1 #start>Deep Sky
+
+                    <p>Deep sky, a space simulator toy
+                    
+    <hr>

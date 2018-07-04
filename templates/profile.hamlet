@@ -1,0 +1,7 @@
+<div .ui.container>
+
+    <h1>
+      Access granted!
+
+    <p>
+      Your data is protected with us <strong><span class="username">#{userIdent user}</span></strong>!
