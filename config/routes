@@ -11,5 +11,6 @@
 
 /profile ProfileR GET
 
-/starsystem                StarSystemsR GET
-/starsystem/#SolarSystemId StarSystemR  GET
+/starsystem                          StarSystemsR GET
+/starsystem/#SolarSystemId           StarSystemR  GET
+/starsystem/#SolarSystemId/#PlanetId PlanetR      GET

@@ -14,9 +14,14 @@ insert into user (ident) values ('tuukka');
 insert into solar_system_report (system_id, name, coord_x, coord_y, user_id, date) values (1, 'Sol', 0, 0, 1, '2018-07-03');
 insert into star_report (star_id, name, spectral_type, user_id, date) values (1, 'Sun', 'G', 1, '2018-07-03');
 
-insert into planet_report (planet_id, name, position, gravity, user_id, date) values (3, 'Earth', 3, 0.99, 1, '2018-07-03');
-insert into planet_report (planet_id, name, position, gravity, user_id, date) values (3, 'Earth', 3, 1, 1, '2018-07-04');
+insert into planet_report (planet_id, system_id, name, position, gravity, user_id, date) values (3, 1, 'Earth', 3, 0.99, 1, '2018-07-03');
+insert into planet_report (planet_id, system_id, name, position, gravity, user_id, date) values (3, 1, 'Earth', 3, 1, 1, '2018-07-04');
 
-insert into planet_report (planet_id, name, position, gravity, user_id, date) values (1, 'Mercury', 1, NULL, 1, '2018-07-04');
-insert into planet_report (planet_id, name, position, gravity, user_id, date) values (2, 'Venus', 2, NULL, 1, '2018-07-04');
-insert into planet_report (planet_id, name, position, gravity, user_id, date) values (2, 'Venus', 2, 0.904, 1, '2018-07-04');
+insert into planet_report (planet_id, system_id, name, position, gravity, user_id, date) values (1, 1, 'Mercury', 1, NULL, 1, '2018-07-04');
+insert into planet_report (planet_id, system_id, name, position, gravity, user_id, date) values (2, 1, 'Venus', 2, NULL, 1, '2018-07-04');
+insert into planet_report (planet_id, system_id, name, position, gravity, user_id, date) values (2, 1, 'Venus', 2, 0.904, 1, '2018-07-04');
+insert into planet_report (planet_id, system_id, name, position, gravity, user_id, date) values (4, 1, 'Mars', 4, NULL, 1, '2018-07-04');
+insert into planet_report (planet_id, system_id, name, position, gravity, user_id, date) values (5, 1, 'Jupiter', 6, NULL, 1, '2018-07-04');
+insert into planet_report (planet_id, system_id, name, position, gravity, user_id, date) values (6, 1, 'Saturn', 7, NULL, 1, '2018-07-04');
+insert into planet_report (planet_id, system_id, name, position, gravity, user_id, date) values (7, 1, 'Uranus', 8, NULL, 1, '2018-07-04');
+insert into planet_report (planet_id, system_id, name, position, gravity, user_id, date) values (8, 1, 'Neptune', 9, NULL, 1, '2018-07-04');

@@ -15,6 +15,7 @@ import Database.Persist.Sql (ConnectionPool, runSqlPool)
 import Text.Hamlet          (hamletFile)
 import Text.Jasmine         (minifym)
 import Control.Monad.Logger (LogSource)
+import MenuHelpers
 
 -- Used only when in "auth-dummy-login" setting is enabled.
 import Yesod.Auth.Dummy
@@ -176,6 +177,7 @@ instance Yesod App where
     isAuthorized ProfileR _ = isAuthenticated
     isAuthorized StarSystemsR _ = isAuthenticated
     isAuthorized (StarSystemR _) _ = isAuthenticated
+    isAuthorized (PlanetR _ _) _ = isAuthenticated
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -225,6 +227,8 @@ instance YesodBreadcrumbs App where
     breadcrumb (AuthR _) = return ("Login", Just HomeR)
     breadcrumb ProfileR = return ("Profile", Just HomeR)
     breadcrumb StarSystemsR = return ("Star systems", Just HomeR)
+    breadcrumb (StarSystemR systemId) = return ("Star system", Just StarSystemsR)
+    breadcrumb (PlanetR systemId planetId) = return ("Planet", Just (StarSystemR systemId))
     breadcrumb  _ = return ("home", Nothing)
 
 -- How to run database actions.

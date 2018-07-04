@@ -24,10 +24,12 @@ data CollatedStarReport = CollatedStarReport {
 } deriving Show
 
 data CollatedPlanetReport = CollatedPlanetReport {
-      cprName :: Maybe Text
+      cprPlanetId :: Key Planet
+    , cprSystemId :: Key SolarSystem
+    , cprName     :: Maybe Text
     , cprPosition :: Maybe Int
-    , cprGravity :: Maybe Double
-    , cprDate :: Day
+    , cprGravity  :: Maybe Double
+    , cprDate     :: Day
 } deriving Show
 
 combine :: Maybe a -> Maybe a -> Maybe a
@@ -62,8 +64,10 @@ collateStar stars = foldr fn initial stars
 
 collatePlanet :: [PlanetReport] -> CollatedPlanetReport
 collatePlanet planets = foldr fn initial planets
-    where initial = CollatedPlanetReport Nothing Nothing Nothing $ ModifiedJulianDay 1
-          fn val acc = CollatedPlanetReport (combine (planetReportName val) (cprName acc))
+    where initial = CollatedPlanetReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing $ ModifiedJulianDay 1
+          fn val acc = CollatedPlanetReport (planetReportPlanetId val)
+                                            (planetReportSystemId val)
+                                            (combine (planetReportName val) (cprName acc))
                                             (combine (planetReportPosition val) (cprPosition acc))
                                             (combine (planetReportGravity val) (cprGravity acc))
                                             (max (planetReportDate val) (cprDate acc))

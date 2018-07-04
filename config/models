@@ -54,6 +54,7 @@ StarReport
 
 PlanetReport json
     planetId PlanetId 
+    systemId SolarSystemId
     name Text Maybe
     position Int Maybe
     gravity Double Maybe
