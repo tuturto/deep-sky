@@ -227,8 +227,12 @@ instance YesodBreadcrumbs App where
     breadcrumb (AuthR _) = return ("Login", Just HomeR)
     breadcrumb ProfileR = return ("Profile", Just HomeR)
     breadcrumb StarSystemsR = return ("Star systems", Just HomeR)
-    breadcrumb (StarSystemR systemId) = return ("Star system", Just StarSystemsR)
-    breadcrumb (PlanetR systemId planetId) = return ("Planet", Just (StarSystemR systemId))
+    breadcrumb (StarSystemR systemId) = do
+        systemName <- systemNameById systemId
+        return (systemName, Just StarSystemsR)
+    breadcrumb (PlanetR systemId planetId) = do
+        name <- planetNameById planetId
+        return (name, Just (StarSystemR systemId))
     breadcrumb  _ = return ("home", Nothing)
 
 -- How to run database actions.
