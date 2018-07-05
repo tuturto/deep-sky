@@ -3,7 +3,7 @@
         <div .col-lg-1>Name
         <div .col-lg-1>
             $maybe planetName <- cprName planetReport
-                <a href=@{PlanetR (cprSystemId planetReport) (cprPlanetId planetReport)}>#{planetName}
+                #{planetName}
             $nothing
                 Unknown
     <div .row>
