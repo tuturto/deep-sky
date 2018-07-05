@@ -13,3 +13,5 @@
                 <div .col-lg-1>
                     $maybe name <- cssrName report
                         <a href=@{StarSystemR (cssrSystemId report)}>#{name}
+                <div .col-lg-1>
+                    #{cssrLocation report}
