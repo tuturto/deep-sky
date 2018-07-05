@@ -1,4 +1,4 @@
-<div .col-lg-12>
+<div .container>
     <div .row>
         <div .col-lg-1>
             $maybe name <- cssrName systemReport

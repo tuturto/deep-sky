@@ -1,0 +1,26 @@
+<div .container>
+    <div .row>
+        <div .col-lg-1>Name
+        <div .col-lg-1>
+            $maybe planetName <- cprName planetReport
+                <a href=@{PlanetR (cprSystemId planetReport) (cprPlanetId planetReport)}>#{planetName}
+            $nothing
+                Unknown
+    <div .row>
+        <div .col-lg-1>Position
+        <div .col-lg-1>
+            $maybe planetPosition <- cprPosition planetReport
+                #{planetPosition}
+            $nothing
+                -
+    <div .row>
+        <div .col-lg-1>Gravity
+        <div .col-lg-1>
+            $maybe planetGravity <- cprGravity planetReport
+                #{planetGravity}
+            $nothing
+                -
+    <div .row>
+        <div .col-lg-1>Updated
+        <div .col-lg-1>
+            #{show $ cprDate planetReport}

@@ -1,1 +1,4 @@
-<h1>Planet!
+<div .container>
+    <div .row>
+        ^{planetDetails planetReport}
+    <hr>
