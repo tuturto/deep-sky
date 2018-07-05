@@ -12,7 +12,7 @@ Email
     verkey Text Maybe
     UniqueEmail email
 
-SolarSystem 
+StarSystem 
     name Text
     coordX Int
     coordY Int
@@ -20,7 +20,7 @@ SolarSystem
     
 Star 
     name Text
-    systemId SolarSystemId
+    starSystemId StarSystemId
     spectralType SpectralType
     luminosityClass LuminosityClass
     deriving Show
@@ -28,14 +28,14 @@ Star
 Planet 
     name Text
     position Int
-    systemId SolarSystemId
+    starSystemId StarSystemId
     gravity Double
-    SystemPosition systemId position
+    SystemPosition starSystemId position
     deriving Show
 
     
-SolarSystemReport json
-    systemId SolarSystemId 
+StarSystemReport json
+    starSystemId StarSystemId 
     name Text Maybe
     coordX Int 
     coordY Int 
@@ -45,7 +45,7 @@ SolarSystemReport json
 
 StarReport
     starId StarId 
-    systemId SolarSystemId
+    starSystemId StarSystemId
     name Text Maybe
     spectralType SpectralType Maybe
     luminosityClass LuminosityClass Maybe
@@ -55,7 +55,7 @@ StarReport
 
 PlanetReport json
     planetId PlanetId 
-    systemId SolarSystemId
+    starSystemId StarSystemId
     name Text Maybe
     position Int Maybe
     gravity Double Maybe

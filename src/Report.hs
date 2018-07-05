@@ -9,15 +9,15 @@ import Data.Text (Text, pack)
 import Database.Persist.Sql (toSqlKey)
 import Data.List (sortBy)
 
-data CollatedSolarSystemReport = CollatedSolarSystemReport {
-      cssrSystemId :: Key SolarSystem
+data CollatedStarSystemReport = CollatedStarSystemReport {
+      cssrSystemId :: Key StarSystem
     , cssrName     :: Maybe Text
     , cssrLocation :: Coordinates
     , cssrDate     :: Day
 } deriving Show
 
 data CollatedStarReport = CollatedStarReport {
-      csrSystemId        :: Key SolarSystem
+      csrSystemId        :: Key StarSystem
     , csrName            :: Maybe Text    
     , csrSpectralType    :: Maybe SpectralType
     , csrLuminosityClass :: Maybe LuminosityClass
@@ -26,7 +26,7 @@ data CollatedStarReport = CollatedStarReport {
 
 data CollatedPlanetReport = CollatedPlanetReport {
       cprPlanetId :: Key Planet
-    , cprSystemId :: Key SolarSystem
+    , cprSystemId :: Key StarSystem
     , cprName     :: Maybe Text
     , cprPosition :: Maybe Int
     , cprGravity  :: Maybe Double
@@ -45,26 +45,26 @@ spectralInfo (Just st) Nothing   = pack $ show st
 spectralInfo Nothing (Just lc)   = pack $ show lc
 spectralInfo (Just st) (Just lc) = pack $ show st ++ (show lc)
 
-collateSystem :: [SolarSystemReport] -> CollatedSolarSystemReport
+collateSystem :: [StarSystemReport] -> CollatedStarSystemReport
 collateSystem systems = foldr fn initial systems
-    where initial = CollatedSolarSystemReport (toSqlKey 0) Nothing (Coordinates 0 0) $ ModifiedJulianDay 1
-          fn val acc = CollatedSolarSystemReport (solarSystemReportSystemId val)
-                                                 (combine (solarSystemReportName val) (cssrName acc))
-                                                 (Coordinates (solarSystemReportCoordY val) (solarSystemReportCoordX val))
-                                                 (max (solarSystemReportDate val) (cssrDate acc))
+    where initial = CollatedStarSystemReport (toSqlKey 0) Nothing (Coordinates 0 0) $ ModifiedJulianDay 1
+          fn val acc = CollatedStarSystemReport (starSystemReportStarSystemId val)
+                                                (combine (starSystemReportName val) (cssrName acc))
+                                                (Coordinates (starSystemReportCoordY val) (starSystemReportCoordX val))
+                                                (max (starSystemReportDate val) (cssrDate acc))
 
-collateSystems :: [SolarSystemReport] -> [CollatedSolarSystemReport]
+collateSystems :: [StarSystemReport] -> [CollatedStarSystemReport]
 collateSystems [] = []
 collateSystems s@(x:xs) = (collateSystem itemsOfKind) : (collateSystems restOfItems)
     where split = span comparer s
-          comparer = \a -> (solarSystemReportSystemId a) == (solarSystemReportSystemId x)
+          comparer = \a -> (starSystemReportStarSystemId a) == (starSystemReportStarSystemId x)
           itemsOfKind = fst split
           restOfItems = snd split
 
 collateStar :: [StarReport] -> CollatedStarReport
 collateStar stars = foldr fn initial stars
     where initial = CollatedStarReport (toSqlKey 0) Nothing Nothing Nothing $ ModifiedJulianDay 1
-          fn val acc = CollatedStarReport (starReportSystemId val)
+          fn val acc = CollatedStarReport (starReportStarSystemId val)
                                           (combine (starReportName val) (csrName acc))
                                           (combine (starReportSpectralType val) (csrSpectralType acc))
                                           (combine (starReportLuminosityClass val) (csrLuminosityClass acc))
@@ -74,7 +74,7 @@ collateStars :: [StarReport] -> [CollatedStarReport]
 collateStars [] = []
 collateStars s@(x:xs) = (collateStar itemsOfKind) : (collateStars restOfItems)
     where split = span comparer s
-          comparer = \a -> (starReportSystemId a) == (starReportSystemId x)
+          comparer = \a -> (starReportStarSystemId a) == (starReportStarSystemId x)
           itemsOfKind = fst split
           restOfItems = snd split
 
@@ -82,7 +82,7 @@ collatePlanet :: [PlanetReport] -> CollatedPlanetReport
 collatePlanet planets = foldr fn initial planets
     where initial = CollatedPlanetReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing $ ModifiedJulianDay 1
           fn val acc = CollatedPlanetReport (planetReportPlanetId val)
-                                            (planetReportSystemId val)
+                                            (planetReportStarSystemId val)
                                             (combine (planetReportName val) (cprName acc))
                                             (combine (planetReportPosition val) (cprPosition acc))
                                             (combine (planetReportGravity val) (cprGravity acc))

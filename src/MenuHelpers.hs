@@ -14,11 +14,11 @@ module MenuHelpers where
 import Model
 import Import.NoFoundation
 
-systemNameById :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend, YesodPersist site, PersistStoreRead (YesodPersistBackend site)) => Key SolarSystem -> HandlerFor site Text
+systemNameById :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend, YesodPersist site, PersistStoreRead (YesodPersistBackend site)) => Key StarSystem -> HandlerFor site Text
 systemNameById systemId = do
     system <- runDB $ get systemId
     let name = case system of
-                        (Just x) -> solarSystemName x
+                        (Just x) -> starSystemName x
                         Nothing  -> "Unknown"
     return name
 

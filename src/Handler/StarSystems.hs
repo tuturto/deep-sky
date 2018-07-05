@@ -14,27 +14,27 @@ getStarSystemsR :: Handler Html
 getStarSystemsR = do
     (userId, _) <- requireAuthPair
 
-    loadedSystemReports <- runDB $ selectList [ SolarSystemReportUserId ==. userId ] [ Asc SolarSystemReportId
-                                                                                     , Asc SolarSystemReportDate ]
+    loadedSystemReports <- runDB $ selectList [ StarSystemReportUserId ==. userId ] [ Asc StarSystemReportId
+                                                                                    , Asc StarSystemReportDate ]
     let systemReports = collateSystems $ Import.map entityVal loadedSystemReports
     defaultLayout $ do
         setTitle "Deep Sky - Star systems"
         $(widgetFile "starsystems")
 
-getStarSystemR :: Key SolarSystem -> Handler Html
+getStarSystemR :: Key StarSystem -> Handler Html
 getStarSystemR systemId = do
     (userId, _) <- requireAuthPair   
     
-    systemReports <- runDB $ selectList [ SolarSystemReportSystemId ==. systemId
-                                        , SolarSystemReportUserId ==. userId ] [ Asc SolarSystemReportDate ]
+    systemReports <- runDB $ selectList [ StarSystemReportStarSystemId ==. systemId
+                                        , StarSystemReportUserId ==. userId ] [ Asc StarSystemReportDate ]
     let systemReport = collateSystem $ Import.map entityVal systemReports
 
-    loadedStarReports <- runDB $ selectList [ StarReportSystemId ==. systemId
+    loadedStarReports <- runDB $ selectList [ StarReportStarSystemId ==. systemId
                                             , StarReportUserId ==. userId ] [ Asc StarReportId
                                                                             , Asc StarReportDate ]
     let starReports = collateStars $ Import.map entityVal loadedStarReports
 
-    planets <- runDB $ selectList [ PlanetSystemId ==. systemId ] []
+    planets <- runDB $ selectList [ PlanetStarSystemId ==. systemId ] []
     loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId <-. (Import.map entityKey planets) 
                                               , PlanetReportUserId ==. userId ] [ Asc PlanetReportPlanetId
                                                                                 , Asc PlanetReportDate ]
@@ -47,7 +47,7 @@ getStarSystemR systemId = do
         setTitle $ toMarkup expl
         $(widgetFile "starsystem")
 
-getPlanetR :: Key SolarSystem -> Key Planet -> Handler Html
+getPlanetR :: Key StarSystem -> Key Planet -> Handler Html
 getPlanetR _ planetId = do
     (userId, _) <- requireAuthPair   
 
