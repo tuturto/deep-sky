@@ -1,4 +1,4 @@
-<div .container>Known planets:        
+<div .container>
     <div .row>
         <div .col-lg-1>Name
         <div .col-lg-1>Position
