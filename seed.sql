@@ -29,7 +29,7 @@ insert into star_report (star_id, star_system_id, name, spectral_type, luminosit
 insert into planet_report (planet_id, star_system_id, name, position, gravity, user_id, date) values (1, 1, 'Mercury', 1, NULL, 1, 2018.2);
 insert into planet_report (planet_id, star_system_id, name, position, gravity, user_id, date) values (2, 1, 'Venus', 2, NULL, 1, 2018.2);
 insert into planet_report (planet_id, star_system_id, name, position, gravity, user_id, date) values (2, 1, 'Venus', 2, 0.904, 1, 2018.3);
-insert into planet_report (planet_id, star_system_id, name, position, gravity, user_id, date) values (3, 1, 'Earth', 3, 0.99, 1, 2018.3);
+insert into planet_report (planet_id, star_system_id, name, position, gravity, user_id, date) values (3, 1, 'Earth', 3, 0.99, 1, 2018.1);
 insert into planet_report (planet_id, star_system_id, name, position, gravity, user_id, date) values (3, 1, 'Earth', 3, 1, 1, 2018.2);
 insert into planet_report (planet_id, star_system_id, name, position, gravity, user_id, date) values (4, 1, 'Mars', 4, NULL, 1, 2018.3);
 insert into planet_report (planet_id, star_system_id, name, position, gravity, user_id, date) values (5, 1, 'Jupiter', 6, NULL, 1, 2018.2);
