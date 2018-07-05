@@ -17,7 +17,7 @@
         <div .col-lg-1>Gravity
         <div .col-lg-1>
             $maybe planetGravity <- cprGravity planetReport
-                #{planetGravity}
+                #{planetGravity}g
             $nothing
                 -
     <div .row>
