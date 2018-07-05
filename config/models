@@ -33,6 +33,8 @@ Planet
     SystemPosition starSystemId position
     deriving Show
 
+Time
+    currentTime Double
     
 StarSystemReport json
     starSystemId StarSystemId 

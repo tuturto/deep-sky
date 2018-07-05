@@ -13,6 +13,15 @@ module MenuHelpers where
 
 import Model
 import Import.NoFoundation
+import Database.Persist.Sql (toSqlKey)
+
+starDate :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend, YesodPersist site, PersistStoreRead (YesodPersistBackend site)) => HandlerFor site Time
+starDate = do
+    systemTime <- runDB $ get (toSqlKey 1) 
+    let res = case systemTime of
+                (Just x) -> x
+                Nothing  -> Time 0.0
+    return res
 
 systemNameById :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend, YesodPersist site, PersistStoreRead (YesodPersistBackend site)) => Key StarSystem -> HandlerFor site Text
 systemNameById systemId = do

@@ -31,9 +31,12 @@
 
             <li .active>#{title}
 
+    <ul .infoitem>
+        <li>
+            #{timeCurrentTime currentStarDate}
+
     $maybe msg <- mmsg
       <div .alert.alert-info #message>#{msg}
-
 
 $if (Just HomeR == mcurrentRoute)
     ^{widget}

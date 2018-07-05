@@ -23,8 +23,6 @@ data FileForm = FileForm
 -- inclined, or create a single monolithic file.
 getHomeR :: Handler Html
 getHomeR = do
-    let handlerName = "getHomeR" :: Text
-
     defaultLayout $ do
         setTitle "Deep sky"
         $(widgetFile "homepage")

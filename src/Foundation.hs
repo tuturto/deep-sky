@@ -108,7 +108,7 @@ instance Yesod App where
 
         -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
         (title, parents) <- breadcrumbs
-
+        currentStarDate <- starDate
         -- Define the menu items of the header.
         let menuItems =
                 [ NavbarLeft $ MenuItem
@@ -233,7 +233,7 @@ instance YesodBreadcrumbs App where
     breadcrumb (PlanetR systemId planetId) = do
         name <- planetNameById planetId
         return (name, Just (StarSystemR systemId))
-    breadcrumb  _ = return ("home", Nothing)
+    breadcrumb _ = return ("home", Nothing)
 
 -- How to run database actions.
 instance YesodPersist App where

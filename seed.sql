@@ -1,3 +1,5 @@
+insert into time (current_time) values (2019.1);
+
 insert into star_system (name, coord_x, coord_y) values ('Sol', 0, 0);
 insert into star (name, star_system_id, spectral_type, luminosity_class) values ('Sun', 1, 'G', 'V');
 insert into planet (name, position, star_system_id, gravity) values ('Mercury', 1, 1, 0.38);

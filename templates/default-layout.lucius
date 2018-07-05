@@ -9,7 +9,7 @@
 }
 
 .navbar-nav {
-    padding-bottom: 1em;
+    padding-bottom: 2px;
 }
 
 .masthead {
@@ -42,6 +42,24 @@
     margin: 1em 0;
 }
 
+.breadcrumb {
+    margin-bottom: 0px;
+}
+
+.infoitem {
+  padding: 8px 15px;
+  list-style: none;
+  background-color: #ecf0f1;
+  border-radius: 4px;
+}
+.infoitem > li {
+  display: inline-block;
+}
+.infoitem > li + li:before {
+  content: "-\00a0";
+  padding: 0 5px;
+  color: #cccccc;
+}
 
 /* Common styles for all types */
 .bs-callout {
