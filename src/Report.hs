@@ -4,7 +4,6 @@ module Report where
 
 import CustomTypes
 import Model
-import Data.Time.Calendar (Day(..))
 import Data.Text (Text, pack)
 import Database.Persist.Sql (toSqlKey)
 import Data.List (sortBy)
@@ -13,7 +12,7 @@ data CollatedStarSystemReport = CollatedStarSystemReport {
       cssrSystemId :: Key StarSystem
     , cssrName     :: Maybe Text
     , cssrLocation :: Coordinates
-    , cssrDate     :: Day
+    , cssrDate     :: Double
 } deriving Show
 
 data CollatedStarReport = CollatedStarReport {
@@ -21,7 +20,7 @@ data CollatedStarReport = CollatedStarReport {
     , csrName            :: Maybe Text    
     , csrSpectralType    :: Maybe SpectralType
     , csrLuminosityClass :: Maybe LuminosityClass
-    , csrDate            :: Day
+    , csrDate            :: Double
 } deriving Show
 
 data CollatedPlanetReport = CollatedPlanetReport {
@@ -30,7 +29,7 @@ data CollatedPlanetReport = CollatedPlanetReport {
     , cprName     :: Maybe Text
     , cprPosition :: Maybe Int
     , cprGravity  :: Maybe Double
-    , cprDate     :: Day
+    , cprDate     :: Double
 } deriving Show
 
 combine :: Maybe a -> Maybe a -> Maybe a
@@ -47,10 +46,10 @@ spectralInfo (Just st) (Just lc) = pack $ show st ++ (show lc)
 
 collateSystem :: [StarSystemReport] -> CollatedStarSystemReport
 collateSystem systems = foldr fn initial systems
-    where initial = CollatedStarSystemReport (toSqlKey 0) Nothing (Coordinates 0 0) $ ModifiedJulianDay 1
+    where initial = CollatedStarSystemReport (toSqlKey 0) Nothing (Coordinates 0 0) 0
           fn val acc = CollatedStarSystemReport (starSystemReportStarSystemId val)
                                                 (combine (starSystemReportName val) (cssrName acc))
-                                                (Coordinates (starSystemReportCoordY val) (starSystemReportCoordX val))
+                                                (Coordinates (starSystemReportCoordX val) (starSystemReportCoordY val))
                                                 (max (starSystemReportDate val) (cssrDate acc))
 
 collateSystems :: [StarSystemReport] -> [CollatedStarSystemReport]
@@ -63,7 +62,7 @@ collateSystems s@(x:xs) = (collateSystem itemsOfKind) : (collateSystems restOfIt
 
 collateStar :: [StarReport] -> CollatedStarReport
 collateStar stars = foldr fn initial stars
-    where initial = CollatedStarReport (toSqlKey 0) Nothing Nothing Nothing $ ModifiedJulianDay 1
+    where initial = CollatedStarReport (toSqlKey 0) Nothing Nothing Nothing 0
           fn val acc = CollatedStarReport (starReportStarSystemId val)
                                           (combine (starReportName val) (csrName acc))
                                           (combine (starReportSpectralType val) (csrSpectralType acc))
@@ -74,13 +73,13 @@ collateStars :: [StarReport] -> [CollatedStarReport]
 collateStars [] = []
 collateStars s@(x:xs) = (collateStar itemsOfKind) : (collateStars restOfItems)
     where split = span comparer s
-          comparer = \a -> (starReportStarSystemId a) == (starReportStarSystemId x)
+          comparer = \a -> (starReportStarId a) == (starReportStarId x)
           itemsOfKind = fst split
           restOfItems = snd split
 
 collatePlanet :: [PlanetReport] -> CollatedPlanetReport
 collatePlanet planets = foldr fn initial planets
-    where initial = CollatedPlanetReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing $ ModifiedJulianDay 1
+    where initial = CollatedPlanetReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing 0
           fn val acc = CollatedPlanetReport (planetReportPlanetId val)
                                             (planetReportStarSystemId val)
                                             (combine (planetReportName val) (cprName acc))

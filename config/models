@@ -37,10 +37,10 @@ Planet
 StarSystemReport json
     starSystemId StarSystemId 
     name Text Maybe
-    coordX Int 
-    coordY Int 
+    coordX Double 
+    coordY Double
     userId UserId 
-    date Day 
+    date Double 
     deriving Show
 
 StarReport
@@ -50,7 +50,7 @@ StarReport
     spectralType SpectralType Maybe
     luminosityClass LuminosityClass Maybe
     userId UserId 
-    date Day 
+    date Double 
     deriving Show    
 
 PlanetReport json
@@ -60,5 +60,5 @@ PlanetReport json
     position Int Maybe
     gravity Double Maybe
     userId UserId 
-    date Day 
+    date Double 
     deriving Show

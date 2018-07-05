@@ -13,7 +13,7 @@ data LuminosityClass = Iap | Ia | Iab | Ib | II | III | IV | V | VI | VII
     deriving (Show, Read, Eq)
 derivePersistField "LuminosityClass"
 
-data Coordinates = Coordinates Int Int
+data Coordinates = Coordinates Double Double
     deriving (Show, Eq)
 
 instance ToMarkup Coordinates where
