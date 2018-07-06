@@ -1,31 +1,31 @@
 -- By default this file is used by `persistFileWith` in Model.hs (which is imported by Foundation.hs)
 -- Syntax for this file here: https://github.com/yesodweb/persistent/blob/master/docs/Persistent-entity-syntax.md
 
-User
+User json
     ident Text
     password Text Maybe
     UniqueUser ident
     deriving Typeable
-Email
+Email json
     email Text
     userId UserId Maybe
     verkey Text Maybe
     UniqueEmail email
 
-StarSystem 
+StarSystem json
     name Text
     coordX Int
     coordY Int
     deriving Show
     
-Star 
+Star json 
     name Text
     starSystemId StarSystemId
     spectralType SpectralType
     luminosityClass LuminosityClass
     deriving Show
 
-Planet 
+Planet json
     name Text
     position Int
     starSystemId StarSystemId
@@ -33,12 +33,12 @@ Planet
     SystemPosition starSystemId position
     deriving Show
 
-StarLane
+StarLane json
     starSystem1 StarSystemId
     starSystem2 StarSystemId
     deriving Show
 
-Time
+Time json
     currentTime Double
     
 StarSystemReport json
@@ -50,7 +50,7 @@ StarSystemReport json
     date Double 
     deriving Show
 
-StarReport
+StarReport json
     starId StarId 
     starSystemId StarSystemId
     name Text Maybe
@@ -70,7 +70,7 @@ PlanetReport json
     date Double 
     deriving Show
 
-StarLaneReport
+StarLaneReport json
     starSystem1 StarSystemId 
     starSystem2 StarSystemId 
     starSystemName1 Text Maybe
