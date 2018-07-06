@@ -23,29 +23,16 @@ getStarSystemsR = do
 
 getStarSystemR :: Key StarSystem -> Handler Html
 getStarSystemR systemId = do
-    (userId, _) <- requireAuthPair   
-    
-    systemReports <- runDB $ selectList [ StarSystemReportStarSystemId ==. systemId
-                                        , StarSystemReportUserId ==. userId ] [ Asc StarSystemReportDate ]
-    let systemReport = collateSystem $ Import.map entityVal systemReports
+    (userId, _) <- requireAuthPair
 
-    loadedStarReports <- runDB $ selectList [ StarReportStarSystemId ==. systemId
-                                            , StarReportUserId ==. userId ] [ Asc StarReportId
-                                                                            , Asc StarReportDate ]
-    let starReports = collateStars $ Import.map entityVal loadedStarReports
+    systemReport <- createSystemReport systemId userId
+    starReports <- createStarReports systemId userId
+    planetReports <- createPlanetReports systemId userId
+    starLaneReports <- createStarLaneReports systemId userId
 
-    planets <- runDB $ selectList [ PlanetStarSystemId ==. systemId ] []
-    loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId <-. (Import.map entityKey planets) 
-                                              , PlanetReportUserId ==. userId ] [ Asc PlanetReportPlanetId
-                                                                                , Asc PlanetReportDate ]
-    let planetReports = collatePlanets $ Import.map entityVal loadedPlanetReports
     let expl = "Deep Sky - " ++ case (cssrName systemReport) of
                                     (Just x) -> x
                                     Nothing  -> "unknown system"
-
-    loadedLaneReports <- runDB $ selectList ([ StarLaneReportStarSystem1 ==. systemId ]
-                                         ||. [ StarLaneReportStarSystem2 ==. systemId ]) []
-    let starLaneReports = collateStarLanes $ Import.map entityVal loadedLaneReports
 
     defaultLayout $ do
         setTitle $ toMarkup expl

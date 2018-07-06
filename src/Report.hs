@@ -2,6 +2,7 @@
 
 module Report where
 
+import Import (Handler, entityVal, entityKey, SelectOpt(..), (==.), (<-.), (||.), selectList, runDB)
 import CustomTypes
 import Model
 import Data.Text (Text, pack)
@@ -119,3 +120,33 @@ collateStarLanes s@(x:_) = (collateStarLane itemsOfKind) : (collateStarLanes res
                            (starLaneReportStarSystem2 a) == (starLaneReportStarSystem2 x)
           itemsOfKind = fst split
           restOfItems = snd split
+
+
+createStarReports :: Key StarSystem -> Key User -> Handler [CollatedStarReport]
+createStarReports systemId userId = do
+    loadedStarReports <- runDB $ selectList [ StarReportStarSystemId ==. systemId
+                                            , StarReportUserId ==. userId ] [ Asc StarReportId
+                                                                            , Asc StarReportDate ]
+    return $ collateStars $ map entityVal loadedStarReports
+
+createSystemReport :: Key StarSystem -> Key User -> Handler CollatedStarSystemReport
+createSystemReport systemId userId = do
+    systemReports <- runDB $ selectList [ StarSystemReportStarSystemId ==. systemId
+                                        , StarSystemReportUserId ==. userId ] [ Asc StarSystemReportDate ]
+    return $ collateSystem $ map entityVal systemReports
+
+createPlanetReports :: Key StarSystem -> Key User -> Handler [CollatedPlanetReport]
+createPlanetReports systemId userId = do
+    planets <- runDB $ selectList [ PlanetStarSystemId ==. systemId ] []
+    loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId <-. (map entityKey planets) 
+                                              , PlanetReportUserId ==. userId ] [ Asc PlanetReportPlanetId
+                                                                                , Asc PlanetReportDate ]
+    return $ collatePlanets $ map entityVal loadedPlanetReports
+
+createStarLaneReports :: Key StarSystem -> Key User -> Handler [CollatedStarLaneReport]
+createStarLaneReports systemId userId = do
+    loadedLaneReports <- runDB $ selectList ([ StarLaneReportStarSystem1 ==. systemId
+                                             , StarLaneReportUserId ==. userId ]
+                                         ||. [ StarLaneReportStarSystem2 ==. systemId 
+                                             , StarLaneReportUserId ==. userId ]) []
+    return $ collateStarLanes $ map entityVal loadedLaneReports
