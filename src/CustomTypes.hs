@@ -18,3 +18,9 @@ data Coordinates = Coordinates Double Double
 
 instance ToMarkup Coordinates where
     toMarkup (Coordinates x y) = toMarkup $ "(" ++ (show x) ++ ", " ++ (show y) ++ ")"
+
+data Component = Sensors
+               | SubSpaceSensors
+               | TachyonSensors
+               | IonEngine
+               

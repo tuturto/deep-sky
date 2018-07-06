@@ -14,3 +14,7 @@
 /starsystem                          StarSystemsR GET
 /starsystem/#StarSystemId            StarSystemR  GET
 /starsystem/#StarSystemId/#PlanetId  PlanetR      GET
+
+/research                            ResearchR    GET
+
+/fleet                               FleetR       GET

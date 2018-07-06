@@ -6,7 +6,6 @@ import CustomTypes
 import Model
 import Data.Text (Text, pack)
 import Database.Persist.Sql (toSqlKey)
-import Data.List (sortBy)
 
 data CollatedStarSystemReport = CollatedStarSystemReport {
       cssrSystemId :: Key StarSystem
@@ -54,7 +53,7 @@ collateSystem systems = foldr fn initial systems
 
 collateSystems :: [StarSystemReport] -> [CollatedStarSystemReport]
 collateSystems [] = []
-collateSystems s@(x:xs) = (collateSystem itemsOfKind) : (collateSystems restOfItems)
+collateSystems s@(x:_) = (collateSystem itemsOfKind) : (collateSystems restOfItems)
     where split = span comparer s
           comparer = \a -> (starSystemReportStarSystemId a) == (starSystemReportStarSystemId x)
           itemsOfKind = fst split
@@ -71,7 +70,7 @@ collateStar stars = foldr fn initial stars
 
 collateStars :: [StarReport] -> [CollatedStarReport]
 collateStars [] = []
-collateStars s@(x:xs) = (collateStar itemsOfKind) : (collateStars restOfItems)
+collateStars s@(x:_) = (collateStar itemsOfKind) : (collateStars restOfItems)
     where split = span comparer s
           comparer = \a -> (starReportStarId a) == (starReportStarId x)
           itemsOfKind = fst split
@@ -89,7 +88,7 @@ collatePlanet planets = foldr fn initial planets
 
 collatePlanets :: [PlanetReport] -> [CollatedPlanetReport]
 collatePlanets [] = []
-collatePlanets s@(x:xs) = (collatePlanet itemsOfKind) : (collatePlanets restOfItems)
+collatePlanets s@(x:_) = (collatePlanet itemsOfKind) : (collatePlanets restOfItems)
     where split = span comparer s
           comparer = \a -> (planetReportPlanetId a) == (planetReportPlanetId x)
           itemsOfKind = fst split

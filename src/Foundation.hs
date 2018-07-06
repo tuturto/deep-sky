@@ -126,6 +126,16 @@ instance Yesod App where
                     , menuItemRoute = StarSystemsR
                     , menuItemAccessCallback = isJust muser
                     }
+                    , NavbarLeft $ MenuItem
+                    { menuItemLabel = "Fleet"
+                    , menuItemRoute = FleetR
+                    , menuItemAccessCallback = isJust muser
+                    }
+                , NavbarLeft $ MenuItem
+                    { menuItemLabel = "Research"
+                    , menuItemRoute = ResearchR
+                    , menuItemAccessCallback = isJust muser
+                    }
                 , NavbarRight $ MenuItem
                     { menuItemLabel = "Login"
                     , menuItemRoute = AuthR LoginR
@@ -178,6 +188,8 @@ instance Yesod App where
     isAuthorized StarSystemsR _ = isAuthenticated
     isAuthorized (StarSystemR _) _ = isAuthenticated
     isAuthorized (PlanetR _ _) _ = isAuthenticated
+    isAuthorized ResearchR _ = isAuthenticated
+    isAuthorized FleetR _ = isAuthenticated
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -233,6 +245,8 @@ instance YesodBreadcrumbs App where
     breadcrumb (PlanetR systemId planetId) = do
         name <- planetNameById planetId
         return (name, Just (StarSystemR systemId))
+    breadcrumb FleetR = return ("Fleet", Just HomeR)
+    breadcrumb ResearchR = return ("Research", Just HomeR)
     breadcrumb _ = return ("home", Nothing)
 
 -- How to run database actions.
