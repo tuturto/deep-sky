@@ -149,4 +149,14 @@ createStarLaneReports systemId userId = do
                                              , StarLaneReportUserId ==. userId ]
                                          ||. [ StarLaneReportStarSystem2 ==. systemId 
                                              , StarLaneReportUserId ==. userId ]) []
-    return $ collateStarLanes $ map entityVal loadedLaneReports
+    return $ rearrangeStarLanes systemId $ collateStarLanes $ map entityVal loadedLaneReports
+
+rearrangeStarLanes :: Key StarSystem -> [CollatedStarLaneReport] -> [CollatedStarLaneReport]
+rearrangeStarLanes systemId starLanes = map arrangeStarLane starLanes
+    where arrangeStarLane starLane = if systemId == (cslSystemId1 starLane)
+                                        then starLane
+                                        else CollatedStarLaneReport (cslSystemId2 starLane)
+                                                                    (cslSystemId1 starLane)
+                                                                    (cslStarSystemName2 starLane)
+                                                                    (cslStarSystemName1 starLane)
+                                                                    (cslDate starLane)
