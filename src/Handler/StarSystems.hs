@@ -43,6 +43,10 @@ getStarSystemR systemId = do
                                     (Just x) -> x
                                     Nothing  -> "unknown system"
 
+    loadedLaneReports <- runDB $ selectList ([ StarLaneReportStarSystem1 ==. systemId ]
+                                         ||. [ StarLaneReportStarSystem2 ==. systemId ]) []
+    let starLaneReports = collateStarLanes $ Import.map entityVal loadedLaneReports
+
     defaultLayout $ do
         setTitle $ toMarkup expl
         $(widgetFile "starsystem")

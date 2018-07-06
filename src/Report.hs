@@ -31,6 +31,14 @@ data CollatedPlanetReport = CollatedPlanetReport {
     , cprDate     :: Double
 } deriving Show
 
+data CollatedStarLaneReport = CollatedStarLaneReport {
+      cslSystemId1       :: Key StarSystem
+    , cslSystemId2       :: Key StarSystem
+    , cslStarSystemName1 :: Maybe Text
+    , cslStarSystemName2 :: Maybe Text
+    , cslDate            :: Double
+} deriving Show
+
 combine :: Maybe a -> Maybe a -> Maybe a
 combine (Just _) b@(Just _) = b
 combine a@(Just _) Nothing  = a
@@ -91,5 +99,23 @@ collatePlanets [] = []
 collatePlanets s@(x:_) = (collatePlanet itemsOfKind) : (collatePlanets restOfItems)
     where split = span comparer s
           comparer = \a -> (planetReportPlanetId a) == (planetReportPlanetId x)
+          itemsOfKind = fst split
+          restOfItems = snd split
+
+collateStarLane :: [StarLaneReport] -> CollatedStarLaneReport
+collateStarLane lanes = foldr fn initial lanes
+    where initial = CollatedStarLaneReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing 0
+          fn val acc = CollatedStarLaneReport (starLaneReportStarSystem1 val)
+                                              (starLaneReportStarSystem2 val)
+                                              (combine (starLaneReportStarSystemName1 val) (cslStarSystemName1 acc))
+                                              (combine (starLaneReportStarSystemName2 val) (cslStarSystemName2 acc))
+                                              (max (starLaneReportDate val) (cslDate acc))
+
+collateStarLanes :: [StarLaneReport] -> [CollatedStarLaneReport]
+collateStarLanes [] = []
+collateStarLanes s@(x:_) = (collateStarLane itemsOfKind) : (collateStarLanes restOfItems)
+    where split = span comparer s
+          comparer = \a -> (starLaneReportStarSystem1 a) == (starLaneReportStarSystem1 x) &&
+                           (starLaneReportStarSystem2 a) == (starLaneReportStarSystem2 x)
           itemsOfKind = fst split
           restOfItems = snd split

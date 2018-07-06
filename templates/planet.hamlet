@@ -1,4 +1,6 @@
 <div .container>
     <div .row>
+        <div .infotitle>
+            Planet details
         ^{planetDetails planetReport}
     <hr>

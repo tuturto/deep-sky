@@ -20,3 +20,6 @@ planetDetails planetReport = $(widgetFile "planetdetailsW")
 
 starReportList :: Foldable t => t CollatedStarReport -> WidgetFor site ()
 starReportList starReports = $(widgetFile "starListW")
+
+starLaneList :: Foldable t => t CollatedStarLaneReport -> WidgetFor App ()
+starLaneList starLaneReports = $(widgetFile "starlanesW")

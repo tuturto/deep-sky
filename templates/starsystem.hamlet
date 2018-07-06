@@ -3,13 +3,24 @@
         <div .col-lg-6>
             <!-- left panel -->
             <div .row>
-                    ^{systemDetails systemReport}
-                    <hr>
+                <div .infotitle>
+                    System details
+                ^{systemDetails systemReport}
+                <hr>
             <div .row>
-                    ^{starReportList starReports}
+                <div .infotitle>
+                    Stars
+                ^{starReportList starReports}
+                <hr>
+            <div .row>
+                <div .infotitle>
+                    Star lanes
+                ^{starLaneList starLaneReports}
 
         <div .col-lg-6>
             <!-- right panel -->
             <div .row>
+                <div .infotitle>
+                    Planets
                 ^{planetReportList planetReports}
                 <hr>

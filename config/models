@@ -33,6 +33,11 @@ Planet
     SystemPosition starSystemId position
     deriving Show
 
+StarLane
+    starSystem1 StarSystemId
+    starSystem2 StarSystemId
+    deriving Show
+
 Time
     currentTime Double
     
@@ -63,4 +68,13 @@ PlanetReport json
     gravity Double Maybe
     userId UserId 
     date Double 
+    deriving Show
+
+StarLaneReport
+    starSystem1 StarSystemId 
+    starSystem2 StarSystemId 
+    starSystemName1 Text Maybe
+    starSystemName2 Text Maybe
+    userId UserId
+    date Double
     deriving Show
