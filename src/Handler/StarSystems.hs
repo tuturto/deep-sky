@@ -10,6 +10,13 @@ import Text.Blaze.Html5
 import Report
 import Widgets
 
+getApiStarSystemsR :: Handler Value
+getApiStarSystemsR = do
+    loadedSystemReports <- runDB $ selectList [] [ Asc StarSystemReportId
+                                                 , Asc StarSystemReportDate ]
+    let systemReports = collateSystems $ Import.map entityVal loadedSystemReports
+    return $ toJSON systemReports
+
 getStarSystemsR :: Handler Html
 getStarSystemsR = do
     (userId, _) <- requireAuthPair

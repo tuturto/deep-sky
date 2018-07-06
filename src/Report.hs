@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
 module Report where
@@ -7,6 +8,7 @@ import CustomTypes
 import Model
 import Data.Text (Text, pack)
 import Database.Persist.Sql (toSqlKey)
+import Data.Aeson.TH
 
 data CollatedStarSystemReport = CollatedStarSystemReport {
       cssrSystemId :: Key StarSystem
@@ -160,3 +162,5 @@ rearrangeStarLanes systemId starLanes = map arrangeStarLane starLanes
                                                                     (cslStarSystemName2 starLane)
                                                                     (cslStarSystemName1 starLane)
                                                                     (cslDate starLane)
+
+$(deriveJSON defaultOptions {fieldLabelModifier = drop 4} ''CollatedStarSystemReport)

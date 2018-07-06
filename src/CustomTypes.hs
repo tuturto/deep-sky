@@ -31,5 +31,6 @@ data Component = Sensors
                | IonEngine
     deriving Show
 
+$(deriveJSON defaultOptions ''Coordinates)
 $(deriveJSON defaultOptions ''SpectralType)
 $(deriveJSON defaultOptions ''LuminosityClass)
