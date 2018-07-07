@@ -28,6 +28,7 @@ data CollatedStarReport = CollatedStarReport {
 data CollatedPlanetReport = CollatedPlanetReport {
       cprPlanetId :: Key Planet
     , cprSystemId :: Key StarSystem
+    , cprOwnerId  :: Maybe (Key User)
     , cprName     :: Maybe Text
     , cprPosition :: Maybe Int
     , cprGravity  :: Maybe Double
@@ -89,9 +90,10 @@ collateStars s@(x:_) = (collateStar itemsOfKind) : (collateStars restOfItems)
 
 collatePlanet :: [PlanetReport] -> CollatedPlanetReport
 collatePlanet planets = foldr fn initial planets
-    where initial = CollatedPlanetReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing 0
+    where initial = CollatedPlanetReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing Nothing 0
           fn val acc = CollatedPlanetReport (planetReportPlanetId val)
                                             (planetReportStarSystemId val)
+                                            (planetReportOwnerId val)
                                             (combine (planetReportName val) (cprName acc))
                                             (combine (planetReportPosition val) (cprPosition acc))
                                             (combine (planetReportGravity val) (cprGravity acc))

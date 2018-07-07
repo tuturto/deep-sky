@@ -126,7 +126,12 @@ instance Yesod App where
                     , menuItemRoute = StarSystemsR
                     , menuItemAccessCallback = isJust muser
                     }
-                    , NavbarLeft $ MenuItem
+                , NavbarLeft $ MenuItem
+                    { menuItemLabel = "Bases"
+                    , menuItemRoute = BasesR
+                    , menuItemAccessCallback = isJust muser
+                    }
+                , NavbarLeft $ MenuItem
                     { menuItemLabel = "Fleet"
                     , menuItemRoute = FleetR
                     , menuItemAccessCallback = isJust muser
@@ -194,6 +199,7 @@ instance Yesod App where
     isAuthorized StarSystemsR _ = isAuthenticated
     isAuthorized (StarSystemR _) _ = isAuthenticated
     isAuthorized (PlanetR _ _) _ = isAuthenticated
+    isAuthorized BasesR _ = isAuthenticated
     isAuthorized ResearchR _ = isAuthenticated
     isAuthorized FleetR _ = isAuthenticated
     isAuthorized ConstructionR _ = isAuthenticated

@@ -21,16 +21,18 @@ data Coordinates = Coordinates Double Double
 instance ToMarkup Coordinates where
     toMarkup (Coordinates x y) = toMarkup $ "(" ++ (show x) ++ ", " ++ (show y) ++ ")"
 
-data Building = SensorStation
-              | ResearchComplex
+data BuildingType = SensorStation
+                  | ResearchComplex
     deriving Show
 
-data Component = Sensors
-               | SubSpaceSensors
-               | TachyonSensors
-               | IonEngine
+data ComponentType = Sensors
+                   | SubSpaceSensors
+                   | TachyonSensors
+                   | IonEngine
     deriving Show
 
 $(deriveJSON defaultOptions ''Coordinates)
 $(deriveJSON defaultOptions ''SpectralType)
 $(deriveJSON defaultOptions ''LuminosityClass)
+$(deriveJSON defaultOptions ''BuildingType)
+$(deriveJSON defaultOptions ''ComponentType)

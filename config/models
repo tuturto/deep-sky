@@ -29,6 +29,7 @@ Planet json
     name Text
     position Int
     starSystemId StarSystemId
+    ownerId UserId Maybe
     gravity Double
     SystemPosition starSystemId position
     deriving Show
@@ -62,6 +63,7 @@ StarReport json
 
 PlanetReport json
     planetId PlanetId 
+    ownerId  UserId Maybe
     starSystemId StarSystemId
     name Text Maybe
     position Int Maybe

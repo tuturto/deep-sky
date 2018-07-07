@@ -21,4 +21,6 @@
 
 /construction                        ConstructionR   GET
 
+/base                                BasesR          GET
+
 /api/starsystem                      ApiStarSystemsR GET

@@ -44,6 +44,7 @@ import Handler.Common
 import Handler.Home
 import Handler.Profile
 import Handler.StarSystems
+import Handler.Bases
 import Handler.Research
 import Handler.Fleet
 import Handler.Construction
