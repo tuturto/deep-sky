@@ -11,6 +11,6 @@
             <div .col-lg-2>
                 #{buildingType building} #{buildingLevel building}
             <div .col-lg-1>
-                #{buildingConstruction building}
+                #{(buildingConstruction building) * 100}%
             <div .col-lg-1>
-                #{buildingDamage building}
+                #{(buildingDamage building) * 100}%

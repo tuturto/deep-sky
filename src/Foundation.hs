@@ -170,6 +170,8 @@ instance Yesod App where
         -- value passed to hamletToRepHtml cannot be a widget, this allows
         -- you to use normal widget features in default-layout.
 
+        (statusBarBiologicals, statusBarMechanicals, statusBarChemicals) <- statusBarScore muser
+
         pc <- widgetToPageContent $ do
             addStylesheet $ StaticR css_bootstrap_css
             $(widgetFile "default-layout")
@@ -301,6 +303,7 @@ instance YesodAuth App where
             Nothing -> Authenticated <$> insert User
                 { userIdent = credsIdent creds
                 , userPassword = Nothing
+                , userFactionId = Nothing
                 }
 
     -- You can add other plugins like Google Email, email or OAuth here

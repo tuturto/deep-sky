@@ -4,13 +4,23 @@
 User json
     ident Text
     password Text Maybe
+    factionId FactionId Maybe
     UniqueUser ident
     deriving Typeable
+
 Email json
     email Text
     userId UserId Maybe
     verkey Text Maybe
     UniqueEmail email
+
+Faction json
+    name Text
+    homeSystem StarSystemId
+    biologicals Int
+    mechanicals Int
+    chemicals Int
+    deriving Show
 
 StarSystem json
     name Text
