@@ -43,6 +43,11 @@ data CollatedStarLaneReport = CollatedStarLaneReport {
     , cslDate            :: Double
 } deriving Show
 
+data CollatedBaseReport = CollatedBaseReport {
+      cbsPlanetReport   :: CollatedPlanetReport
+    , cbsStarSystemName :: Text
+} deriving Show
+
 combine :: Maybe a -> Maybe a -> Maybe a
 combine (Just _) b@(Just _) = b
 combine a@(Just _) Nothing  = a
@@ -166,3 +171,5 @@ rearrangeStarLanes systemId starLanes = map arrangeStarLane starLanes
                                                                     (cslDate starLane)
 
 $(deriveJSON defaultOptions {fieldLabelModifier = drop 4} ''CollatedStarSystemReport)
+$(deriveJSON defaultOptions {fieldLabelModifier = drop 3} ''CollatedPlanetReport)
+$(deriveJSON defaultOptions {fieldLabelModifier = drop 3} ''CollatedBaseReport)

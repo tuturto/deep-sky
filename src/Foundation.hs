@@ -261,6 +261,7 @@ instance YesodBreadcrumbs App where
     breadcrumb FleetR = return ("Fleet", Just HomeR)
     breadcrumb ResearchR = return ("Research", Just HomeR)
     breadcrumb ConstructionR = return ("Construction", Just HomeR)
+    breadcrumb BasesR = return ("Bases", Just HomeR)
     breadcrumb _ = return ("home", Nothing)
 
 -- How to run database actions.
