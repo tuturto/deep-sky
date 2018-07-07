@@ -185,24 +185,24 @@ instance Yesod App where
         :: Route App  -- ^ The route the user is visiting.
         -> Bool       -- ^ Whether or not this is a "write" request.
         -> Handler AuthResult
-    -- Routes not requiring authentication.
-    isAuthorized (AuthR _) _ = return Authorized
-    isAuthorized HomeR _ = return Authorized
-    isAuthorized FaviconR _ = return Authorized
-    isAuthorized RobotsR _ = return Authorized
-    isAuthorized (StaticR _) _ = return Authorized
+    -- Routes not requiring authentication
+    isAuthorized (AuthR _) _       = return Authorized
+    isAuthorized HomeR _           = return Authorized
+    isAuthorized FaviconR _        = return Authorized
+    isAuthorized RobotsR _         = return Authorized
+    isAuthorized (StaticR _) _     = return Authorized
     isAuthorized ApiStarSystemsR _ = return Authorized
 
-    -- the profile route requires that the user is authenticated, so we
-    -- delegate to that function
-    isAuthorized ProfileR _ = isAuthenticated
-    isAuthorized StarSystemsR _ = isAuthenticated
+    -- Routes requiring authentication
+    isAuthorized ProfileR _        = isAuthenticated
+    isAuthorized StarSystemsR _    = isAuthenticated
     isAuthorized (StarSystemR _) _ = isAuthenticated
-    isAuthorized (PlanetR _ _) _ = isAuthenticated
-    isAuthorized BasesR _ = isAuthenticated
-    isAuthorized ResearchR _ = isAuthenticated
-    isAuthorized FleetR _ = isAuthenticated
-    isAuthorized ConstructionR _ = isAuthenticated
+    isAuthorized (PlanetR _ _) _   = isAuthenticated
+    isAuthorized BasesR _          = isAuthenticated
+    isAuthorized (BaseR _) _       = isAuthenticated
+    isAuthorized ResearchR _       = isAuthenticated
+    isAuthorized FleetR _          = isAuthenticated
+    isAuthorized ConstructionR _   = isAuthenticated
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -262,6 +262,9 @@ instance YesodBreadcrumbs App where
     breadcrumb ResearchR = return ("Research", Just HomeR)
     breadcrumb ConstructionR = return ("Construction", Just HomeR)
     breadcrumb BasesR = return ("Bases", Just HomeR)
+    breadcrumb (BaseR planetId) = do
+        name <- planetNameById planetId
+        return (name, Just BasesR)
     breadcrumb _ = return ("home", Nothing)
 
 -- How to run database actions.

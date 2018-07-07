@@ -1,0 +1,5 @@
+<div .container>
+    <div .row>
+        <div .infotitle>
+            Base details
+            ^{planetDetails planetReport}

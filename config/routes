@@ -22,5 +22,6 @@
 /construction                        ConstructionR   GET
 
 /base                                BasesR          GET
+/base/#PlanetId                      BaseR           GET
 
 /api/starsystem                      ApiStarSystemsR GET

@@ -16,7 +16,7 @@
                     <div .row>
                         <div .col-lg-2>
                             $maybe name <- cprName $ cbsPlanetReport base
-                                <a href=@{PlanetR (cprSystemId (cbsPlanetReport base)) (cprPlanetId (cbsPlanetReport base))}>
+                                <a href=@{BaseR (cprPlanetId (cbsPlanetReport base))}>
                                     #{name}
                             $nothing
                                 Unknown

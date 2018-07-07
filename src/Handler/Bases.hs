@@ -9,6 +9,8 @@ module Handler.Bases where
 import Import
 import Report
 import Widgets
+import Data.List (head)
+import Text.Blaze.Html5
 
 getBasesR :: Handler Html
 getBasesR = do
@@ -23,6 +25,27 @@ getBasesR = do
     defaultLayout $ do
         setTitle "Deep Sky - Bases"
         $(widgetFile "bases")
+
+getBaseR :: Key Planet -> Handler Html
+getBaseR planetId = do
+    (userId, _) <- requireAuthPair
+
+    loadedPlanetReports <- runDB $ selectList [ PlanetReportOwnerId ==. Just userId 
+                                              , PlanetReportPlanetId ==. planetId ] [ Asc PlanetReportPlanetId
+                                                                                    , Asc PlanetReportDate ]
+
+    let planetReports = filter (\x -> Just userId == cprOwnerId x) $ collatePlanets $ Import.map entityVal loadedPlanetReports
+    let planetReport =  Data.List.head planetReports
+
+    baseReports <- Import.mapM addBaseDetails planetReports
+
+    let expl = "Deep Sky - " ++ case (cprName planetReport) of
+                                    (Just x) -> x
+                                    Nothing  -> "unknown planet"
+
+    defaultLayout $ do
+        setTitle $ toMarkup expl
+        $(widgetFile "base")
 
 addBaseDetails :: CollatedPlanetReport -> Handler CollatedBaseReport
 addBaseDetails planetReport = do
