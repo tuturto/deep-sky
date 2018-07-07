@@ -23,7 +23,14 @@ instance ToMarkup Coordinates where
 
 data BuildingType = SensorStation
                   | ResearchComplex
-    deriving Show
+    deriving (Show, Read, Eq)
+derivePersistField "BuildingType"
+
+instance ToMarkup BuildingType where
+    toMarkup building = case building of
+                        SensorStation -> toMarkup ("Sensor station" :: [Char])
+                        ResearchComplex -> toMarkup ("Research complex" :: [Char])
+
 
 data ComponentType = Sensors
                    | SubSpaceSensors

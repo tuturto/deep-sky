@@ -1,5 +1,25 @@
 <div .container>
     <div .row>
-        <div .infotitle>
-            Base details
-            ^{planetDetails planetReport}
+        <div .col-lg-6>
+            <!-- left panel -->
+            <div .row>
+                <div .infotitle>
+                    Base details
+                ^{planetDetails planetReport}
+                <hr>
+            <div .row>
+                <div .infotitle>
+                    Construction queue
+                <hr>
+            <div .row>
+                <div .infotitle>
+                    Population
+                
+
+        <div .col-lg-6>
+            <!-- right panel -->
+            <div .row>
+                <div .infotitle>
+                    Buildings
+                ^{buildingList buildings}
+                <hr>

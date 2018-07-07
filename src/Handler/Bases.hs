@@ -39,6 +39,9 @@ getBaseR planetId = do
 
     baseReports <- Import.mapM addBaseDetails planetReports
 
+    loadedBuildings <- runDB $ selectList [ BuildingPlanetId ==. planetId ] []
+    let buildings = Import.map entityVal loadedBuildings
+
     let expl = "Deep Sky - " ++ case (cprName planetReport) of
                                     (Just x) -> x
                                     Nothing  -> "unknown planet"

@@ -1,0 +1,16 @@
+<div .container>
+    <div .row>
+        <div .col-lg-2>
+            Type
+        <div .col-lg-1>
+            Construction
+        <div .col-lg-1>
+            Damage
+    $forall building <- buildings
+        <div .row>
+            <div .col-lg-2>
+                #{buildingType building} #{buildingLevel building}
+            <div .col-lg-1>
+                #{buildingConstruction building}
+            <div .col-lg-1>
+                #{buildingDamage building}

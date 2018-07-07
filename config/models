@@ -39,6 +39,14 @@ StarLane json
     starSystem2 StarSystemId
     deriving Show
 
+Building json
+    planetId PlanetId
+    type BuildingType
+    level Int
+    construction Double
+    damage Double
+    deriving Show
+
 Time json
     currentTime Double
     
