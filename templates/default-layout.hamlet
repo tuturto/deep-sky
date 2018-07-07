@@ -33,7 +33,17 @@
 
     <ul .infoitem>
         <li>
+            <i class="fas fa-clock"></i>
             #{timeCurrentTime currentStarDate}
+        <li>
+            <i class="fas fa-leaf"></i>
+            10 000
+        <li>
+            <i class="fas fa-toolbox"></i>
+            150
+        <li>
+            <i class="fas fa-flask"></i>
+            250
 
     $maybe msg <- mmsg
       <div .alert.alert-info #message>#{msg}

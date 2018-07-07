@@ -46,6 +46,6 @@ insert into star_report (star_id, star_system_id, name, spectral_type, luminosit
 insert into star_lane_report (star_system1, star_system2, star_system_name1, star_system_name2, user_id, date) values (1, 2, 'Sol', 'Aclael', 1, 2018.4);
 insert into star_lane_report (star_system1, star_system2, star_system_name1, star_system_name2, user_id, date) values (2, 3, 'Aclael', NULL, 1, 2018.4);
 
-insert into building (planet_id, type, level, construction, damage) values (3, 'SensorStation', 1, 1.0, 0.0);
-insert into building (planet_id, type, level, construction, damage) values (3, 'ResearchComplex', 1, 1.0, 0.0);
-insert into building (planet_id, type, level, construction, damage) values (3, 'ResearchComplex', 1, 0.5, 0.0);
+insert into building (planet_id, type, level, construction, damage) values (3, 'SensorStation', 1, 1.0, 1.0);
+insert into building (planet_id, type, level, construction, damage) values (3, 'ResearchComplex', 1, 1.0, 1.0);
+insert into building (planet_id, type, level, construction, damage) values (3, 'ResearchComplex', 1, 0.5, 0.5);
