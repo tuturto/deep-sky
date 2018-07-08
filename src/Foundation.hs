@@ -201,7 +201,7 @@ instance Yesod App where
     isAuthorized (StarSystemR _) _ = isAuthenticated
     isAuthorized (PlanetR _ _) _   = isAuthenticated
     isAuthorized BasesR _          = isAuthenticated
-    isAuthorized (BaseR _) _       = isAuthenticated
+    isAuthorized (BaseR _ _) _     = isAuthenticated
     isAuthorized ResearchR _       = isAuthenticated
     isAuthorized FleetR _          = isAuthenticated
     isAuthorized ConstructionR _   = isAuthenticated
@@ -264,7 +264,7 @@ instance YesodBreadcrumbs App where
     breadcrumb ResearchR = return ("Research", Just HomeR)
     breadcrumb ConstructionR = return ("Construction", Just HomeR)
     breadcrumb BasesR = return ("Bases", Just HomeR)
-    breadcrumb (BaseR planetId) = do
+    breadcrumb (BaseR _ planetId) = do
         name <- planetNameById planetId
         return (name, Just BasesR)
     breadcrumb _ = return ("home", Nothing)
