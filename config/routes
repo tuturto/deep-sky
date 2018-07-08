@@ -24,4 +24,6 @@
 /base                                BasesR          GET
 /base/#StarSystemId/#PlanetId        BaseR           GET
 
+/faction                             FactionR        GET
+
 /api/starsystem                      ApiStarSystemsR GET

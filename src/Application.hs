@@ -43,6 +43,7 @@ import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
 import Handler.Common
 import Handler.Home
 import Handler.Profile
+import Handler.Faction
 import Handler.StarSystems
 import Handler.Bases
 import Handler.Research

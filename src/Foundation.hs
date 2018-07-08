@@ -197,6 +197,7 @@ instance Yesod App where
 
     -- Routes requiring authentication
     isAuthorized ProfileR _        = isAuthenticated
+    isAuthorized FactionR _        = isAuthenticated
     isAuthorized StarSystemsR _    = isAuthenticated
     isAuthorized (StarSystemR _) _ = isAuthenticated
     isAuthorized (PlanetR _ _) _   = isAuthenticated
@@ -253,6 +254,7 @@ instance YesodBreadcrumbs App where
     breadcrumb HomeR = return ("Home", Nothing)
     breadcrumb (AuthR _) = return ("Login", Just HomeR)
     breadcrumb ProfileR = return ("Profile", Just HomeR)
+    breadcrumb FactionR = return ("Faction", Just ProfileR)
     breadcrumb StarSystemsR = return ("Star systems", Just HomeR)
     breadcrumb (StarSystemR systemId) = do
         systemName <- systemNameById systemId
