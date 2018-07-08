@@ -44,6 +44,13 @@ Planet json
     SystemPosition starSystemId position
     deriving Show
 
+Moon json
+    name Text
+    position Int
+    planetId PlanetId
+    gravity Double
+    deriving Show
+
 StarLane json
     starSystem1 StarSystemId
     starSystem2 StarSystemId
@@ -88,6 +95,16 @@ PlanetReport json
     gravity Double Maybe
     userId UserId 
     date Double 
+    deriving Show
+
+MoonReport json
+    moonId MoonId
+    name Text
+    position Int
+    planetId PlanetId
+    gravity Double
+    userId UserId
+    date Double
     deriving Show
 
 StarLaneReport json
