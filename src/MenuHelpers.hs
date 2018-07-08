@@ -42,14 +42,12 @@ planetNameById planetId = do
 statusBarScore :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend, YesodPersist site, PersistStoreRead (YesodPersistBackend site)) => (Maybe (UserId, User)) -> HandlerFor site (Int, Int, Int)
 statusBarScore (Just (userId, user)) = do
     faction <- getFaction $ userFactionId user
-    let score = getScore faction
-    return score
+    return $ getScore faction
 statusBarScore _ = do
     return (0, 0, 0)
 
-getFaction (Just factionId) = do
-    faction <- runDB $ get factionId
-    return faction
+getFaction :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend, YesodPersist site, PersistStoreRead (YesodPersistBackend site)) => (Maybe (Key Faction)) -> HandlerFor site (Maybe Faction)
+getFaction (Just factionId) = runDB $ get factionId
 getFaction _ = do
     return Nothing
 

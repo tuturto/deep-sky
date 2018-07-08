@@ -98,3 +98,14 @@ StarLaneReport json
     userId UserId
     date Double
     deriving Show
+
+BuildingReport json
+    buildingId BuildingId
+    planetId PlanetId
+    type BuildingType Maybe
+    level Int Maybe
+    construction Double Maybe
+    damage Double Maybe
+    userId UserId 
+    date Double
+    deriving Show
