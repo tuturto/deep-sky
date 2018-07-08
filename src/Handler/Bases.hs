@@ -8,7 +8,6 @@ module Handler.Bases where
 
 import Import
 import Report
-import Widgets
 import Handler.StarSystems
 
 getBasesR :: Handler Html

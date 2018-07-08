@@ -48,6 +48,16 @@ data CollatedBaseReport = CollatedBaseReport {
     , cbsStarSystemName :: Text
 } deriving Show
 
+data CollatedBuildingReport = CollatedBuildingReport {
+      cbrBuildingId   :: Key Building
+    , cbrPlanetId     :: Key Planet
+    , cbrType :: Maybe BuildingType
+    , cbrLevel        :: Maybe Int
+    , cbrConstruction :: Maybe Double
+    , cbrDamage       :: Maybe Double
+    , cbrDate         :: Double
+} deriving Show
+
 combine :: Maybe a -> Maybe a -> Maybe a
 combine (Just _) b@(Just _) = b
 combine a@(Just _) Nothing  = a
@@ -61,7 +71,7 @@ spectralInfo Nothing (Just lc)   = pack $ show lc
 spectralInfo (Just st) (Just lc) = pack $ show st ++ (show lc)
 
 collateSystem :: [StarSystemReport] -> CollatedStarSystemReport
-collateSystem systems = foldr fn initial systems
+collateSystem = foldr fn initial
     where initial = CollatedStarSystemReport (toSqlKey 0) Nothing (Coordinates 0 0) 0
           fn val acc = CollatedStarSystemReport (starSystemReportStarSystemId val)
                                                 (combine (starSystemReportName val) (cssrName acc))
@@ -77,7 +87,7 @@ collateSystems s@(x:_) = (collateSystem itemsOfKind) : (collateSystems restOfIte
           restOfItems = snd split
 
 collateStar :: [StarReport] -> CollatedStarReport
-collateStar stars = foldr fn initial stars
+collateStar = foldr fn initial
     where initial = CollatedStarReport (toSqlKey 0) Nothing Nothing Nothing 0
           fn val acc = CollatedStarReport (starReportStarSystemId val)
                                           (combine (starReportName val) (csrName acc))
@@ -94,7 +104,7 @@ collateStars s@(x:_) = (collateStar itemsOfKind) : (collateStars restOfItems)
           restOfItems = snd split
 
 collatePlanet :: [PlanetReport] -> CollatedPlanetReport
-collatePlanet planets = foldr fn initial planets
+collatePlanet = foldr fn initial
     where initial = CollatedPlanetReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing Nothing 0
           fn val acc = CollatedPlanetReport (planetReportPlanetId val)
                                             (planetReportStarSystemId val)
@@ -113,7 +123,7 @@ collatePlanets s@(x:_) = (collatePlanet itemsOfKind) : (collatePlanets restOfIte
           restOfItems = snd split
 
 collateStarLane :: [StarLaneReport] -> CollatedStarLaneReport
-collateStarLane lanes = foldr fn initial lanes
+collateStarLane = foldr fn initial
     where initial = CollatedStarLaneReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing 0
           fn val acc = CollatedStarLaneReport (starLaneReportStarSystem1 val)
                                               (starLaneReportStarSystem2 val)
@@ -130,6 +140,24 @@ collateStarLanes s@(x:_) = (collateStarLane itemsOfKind) : (collateStarLanes res
           itemsOfKind = fst split
           restOfItems = snd split
 
+collateBuilding :: [BuildingReport] -> CollatedBuildingReport
+collateBuilding = foldr fn initial
+    where initial = CollatedBuildingReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing Nothing 0
+          fn val acc = CollatedBuildingReport (buildingReportBuildingId val)
+                                              (buildingReportPlanetId val)
+                                              (combine (buildingReportType val) (cbrType acc))
+                                              (combine (buildingReportLevel val) (cbrLevel acc))
+                                              (combine (buildingReportConstruction val) (cbrConstruction acc))
+                                              (combine (buildingReportDamage val) (cbrDamage acc))
+                                              (max (buildingReportDate val) (cbrDate acc))
+
+collateBuildings :: [BuildingReport] -> [CollatedBuildingReport]
+collateBuildings [] = []
+collateBuildings s@(x:_) = (collateBuilding itemsOfKind) : (collateBuildings restOfItems)
+    where split = span comparer s
+          comparer = \a -> (buildingReportBuildingId a) == (buildingReportBuildingId x)
+          itemsOfKind = fst split
+          restOfItems = snd split
 
 createStarReports :: Key StarSystem -> Key User -> Handler [CollatedStarReport]
 createStarReports systemId userId = do
@@ -161,7 +189,7 @@ createStarLaneReports systemId userId = do
     return $ rearrangeStarLanes systemId $ collateStarLanes $ map entityVal loadedLaneReports
 
 rearrangeStarLanes :: Key StarSystem -> [CollatedStarLaneReport] -> [CollatedStarLaneReport]
-rearrangeStarLanes systemId starLanes = map arrangeStarLane starLanes
+rearrangeStarLanes systemId = map arrangeStarLane
     where arrangeStarLane starLane = if systemId == (cslSystemId1 starLane)
                                         then starLane
                                         else CollatedStarLaneReport (cslSystemId2 starLane)

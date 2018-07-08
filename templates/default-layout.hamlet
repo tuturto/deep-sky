@@ -39,7 +39,7 @@
             <i class="fas fa-leaf"></i>
             #{statusBarBiologicals}
         <li>
-            <i class="fas fa-toolbox"></i>
+            <i class="fas fa-cogs"></i>
             #{statusBarMechanicals}
         <li>
             <i class="fas fa-flask"></i>

@@ -51,11 +51,13 @@ getPlanetR _ planetId = do
 
     loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId ==. planetId
                                               , PlanetReportUserId ==. userId ] [ Asc PlanetReportDate ]
-
-    loadedBuildings <- runDB $ selectList [ BuildingPlanetId ==. planetId ] []
-    let buildings = Import.map entityVal loadedBuildings
-    
     let planetReport = collatePlanet $ Import.map entityVal loadedPlanetReports
+
+    loadedBuildingReports <- runDB $ selectList [ BuildingReportPlanetId ==. planetId 
+                                                , BuildingReportUserId ==. userId ] [ Asc BuildingReportBuildingId
+                                                                                    , Asc BuildingReportDate ]
+    let buildingReports = collateBuildings $ Import.map entityVal loadedBuildingReports
+
     let expl = "Deep Sky - " ++ case (cprName planetReport) of
                                     (Just x) -> x
                                     Nothing  -> "unknown planet"

@@ -6,11 +6,23 @@
             Construction
         <div .col-lg-1>
             Damage
-    $forall building <- buildings
+        <div .col-lg-1>
+            Date
+    $forall building <- buildingReports
         <div .row>
             <div .col-lg-2>
-                #{buildingType building} #{buildingLevel building}
+                $maybe bType <- cbrType building
+                    #{bType} 
+                    $maybe level <- cbrLevel building
+                        #{level}
+                $nothing
+                    Unknown
+                
             <div .col-lg-1>
-                #{(buildingConstruction building) * 100}%
+                $maybe construction <- cbrConstruction building
+                    #{construction * 100}%
             <div .col-lg-1>
-                #{(buildingDamage building) * 100}%
+                $maybe damage <- cbrDamage building
+                    #{damage * 100}%
+            <div .col-lg-1>
+                #{cbrDate building}
