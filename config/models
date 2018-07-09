@@ -8,6 +8,11 @@ User json
     UniqueUser ident
     deriving Typeable
 
+UserRole json
+    userId UserId
+    role Role
+    deriving Show Eq
+
 Email json
     email Text
     userId UserId Maybe

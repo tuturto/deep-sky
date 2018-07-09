@@ -19,7 +19,7 @@ getApiStarSystemsR = do
 
 getStarSystemsR :: Handler Html
 getStarSystemsR = do
-    (userId, user) <- requireAuthPair   
+    (_, user) <- requireAuthPair   
     factionId <- case (userFactionId user) of
                         Just x -> return x
                         Nothing -> redirect ProfileR
@@ -33,7 +33,7 @@ getStarSystemsR = do
 
 getStarSystemR :: Key StarSystem -> Handler Html
 getStarSystemR systemId = do
-    (userId, user) <- requireAuthPair   
+    (_, user) <- requireAuthPair   
     factionId <- case (userFactionId user) of
                         Just x -> return x
                         Nothing -> redirect ProfileR
@@ -53,7 +53,7 @@ getStarSystemR systemId = do
 
 getPlanetR :: Key StarSystem -> Key Planet -> Handler Html
 getPlanetR _ planetId = do
-    (userId, user) <- requireAuthPair   
+    (_, user) <- requireAuthPair   
     factionId <- case (userFactionId user) of
                         Just x -> return x
                         Nothing -> redirect ProfileR

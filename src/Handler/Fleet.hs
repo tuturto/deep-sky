@@ -10,7 +10,10 @@ import Import
 
 getFleetR :: Handler Html
 getFleetR = do
-    (_, user) <- requireAuthPair
+    (_, user) <- requireAuthPair   
+    _ <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> redirect ProfileR
     defaultLayout $ do
         setTitle "Deep Sky - Fleet"
         $(widgetFile "fleet")

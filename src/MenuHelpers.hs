@@ -15,7 +15,12 @@ import Model
 import Import.NoFoundation
 import Database.Persist.Sql (toSqlKey)
 
-starDate :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend, YesodPersist site, PersistStoreRead (YesodPersistBackend site)) => HandlerFor site Time
+starDate :: (BaseBackend (YesodPersistBackend site) 
+    ~ 
+    SqlBackend, 
+    YesodPersist site, 
+    PersistStoreRead (YesodPersistBackend site)) => 
+    HandlerFor site Time
 starDate = do
     systemTime <- runDB $ get (toSqlKey 1) 
     let res = case systemTime of
@@ -23,7 +28,12 @@ starDate = do
                 Nothing  -> Time 0.0
     return res
 
-systemNameById :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend, YesodPersist site, PersistStoreRead (YesodPersistBackend site)) => Key StarSystem -> HandlerFor site Text
+systemNameById :: (BaseBackend (YesodPersistBackend site) 
+    ~ 
+    SqlBackend, 
+    YesodPersist site, 
+    PersistStoreRead (YesodPersistBackend site)) => 
+    Key StarSystem -> HandlerFor site Text
 systemNameById systemId = do
     system <- runDB $ get systemId
     let name = case system of
@@ -31,7 +41,12 @@ systemNameById systemId = do
                         Nothing  -> "Unknown"
     return name
 
-planetNameById :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend, YesodPersist site, PersistStoreRead (YesodPersistBackend site)) => Key Planet -> HandlerFor site Text
+planetNameById :: (BaseBackend (YesodPersistBackend site) 
+    ~ 
+    SqlBackend, 
+    YesodPersist site, 
+    PersistStoreRead (YesodPersistBackend site)) => 
+    Key Planet -> HandlerFor site Text
 planetNameById planetId = do
     planet <- runDB $ get planetId
     let name = case planet of
@@ -39,18 +54,33 @@ planetNameById planetId = do
                         Nothing  -> "Unknown"
     return name
 
-statusBarScore :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend, YesodPersist site, PersistStoreRead (YesodPersistBackend site)) => (Maybe (UserId, User)) -> HandlerFor site (Int, Int, Int)
-statusBarScore (Just (userId, user)) = do
+statusBarScore :: (BaseBackend (YesodPersistBackend site) 
+    ~ 
+    SqlBackend, 
+    YesodPersist site, 
+    PersistStoreRead (YesodPersistBackend site)) => 
+    (Maybe (UserId, User)) -> HandlerFor site (Int, Int, Int)
+statusBarScore (Just (_, user)) = do
     faction <- getFaction $ userFactionId user
     return $ getScore faction
 statusBarScore _ = do
     return (0, 0, 0)
 
+maybeFaction :: (BaseBackend (YesodPersistBackend site)
+    ~
+    SqlBackend,
+    PersistStoreRead (YesodPersistBackend site), YesodPersist site) =>
+    User -> HandlerFor site (Maybe Faction)
 maybeFaction user = do
     faction <- getFaction $ userFactionId user
     return faction
 
-getFaction :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend, YesodPersist site, PersistStoreRead (YesodPersistBackend site)) => (Maybe (Key Faction)) -> HandlerFor site (Maybe Faction)
+getFaction :: (BaseBackend (YesodPersistBackend site) 
+    ~ 
+    SqlBackend, 
+    YesodPersist site, 
+    PersistStoreRead (YesodPersistBackend site)) => 
+    (Maybe (Key Faction)) -> HandlerFor site (Maybe Faction)
 getFaction (Just factionId) = runDB $ get factionId
 getFaction _ = do
     return Nothing

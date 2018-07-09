@@ -6,7 +6,6 @@
 module Handler.Profile where
 
 import Import
-import Foundation
 import MenuHelpers
 
 getProfileR :: Handler Html
