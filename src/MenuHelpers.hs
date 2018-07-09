@@ -46,6 +46,10 @@ statusBarScore (Just (userId, user)) = do
 statusBarScore _ = do
     return (0, 0, 0)
 
+maybeFaction user = do
+    faction <- getFaction $ userFactionId user
+    return faction
+
 getFaction :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend, YesodPersist site, PersistStoreRead (YesodPersistBackend site)) => (Maybe (Key Faction)) -> HandlerFor site (Maybe Faction)
 getFaction (Just factionId) = runDB $ get factionId
 getFaction _ = do
