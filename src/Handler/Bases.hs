@@ -12,9 +12,12 @@ import Handler.StarSystems
 
 getBasesR :: Handler Html
 getBasesR = do
-    (userId, _) <- requireAuthPair
+    (userId, user) <- requireAuthPair
+    factionId <- case (userFactionId user) of
+        Just x -> return x
+        Nothing -> redirect ProfileR
 
-    loadedPlanetReports <- runDB $ selectList [ PlanetReportOwnerId ==. Just userId ] [ Asc PlanetReportPlanetId
+    loadedPlanetReports <- runDB $ selectList [ PlanetReportFactionId ==. factionId ] [ Asc PlanetReportPlanetId
                                                                                       , Asc PlanetReportDate ]
 
     let planetReports = filter (\x -> Just userId == cprOwnerId x) $ collatePlanets $ Import.map entityVal loadedPlanetReports

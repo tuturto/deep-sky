@@ -23,6 +23,7 @@ insert into star_lane (star_system1, star_system2) values (1, 2);
 insert into star_lane (star_system1, star_system2) values (2, 3);
 
 insert into faction (name, home_system, biologicals, mechanicals, chemicals) values ('Terrans', 1, 10000, 7500, 7500);
+insert into faction (name, home_system, biologicals, mechanicals, chemicals) values ('Republic of Aclael', 2, 5000, 5000, 5000);
 insert into user (ident, faction_id) values ('tuukka', 1);
 
 insert into building (planet_id, type, level, construction, damage) values (3, 'SensorStation', 1, 1.0, 0);

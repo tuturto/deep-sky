@@ -1,2 +1,13 @@
 <div .container>
-    <h1>Faction
+    $maybe currFaction <- faction
+        <div .row>
+            <div .col-lg-6>
+                You are memeber of #{factionName currFaction}
+    $nothing
+        <div .row>
+            <div .col-lg-12>
+                You aren't member of faction. Select faction to join
+        <div .row>
+            <div .col-lg-12>
+                <form .form-horizontal method="post" action=@{FactionR}>
+                    ^{factionSelection}

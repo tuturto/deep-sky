@@ -20,7 +20,7 @@ Faction json
     biologicals Int
     mechanicals Int
     chemicals Int
-    deriving Show
+    deriving Show Eq
 
 StarSystem json
     name Text
