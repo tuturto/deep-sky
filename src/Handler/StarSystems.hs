@@ -19,10 +19,13 @@ getApiStarSystemsR = do
 
 getStarSystemsR :: Handler Html
 getStarSystemsR = do
-    (userId, _) <- requireAuthPair
+    (userId, user) <- requireAuthPair   
+    factionId <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> redirect ProfileR
 
-    loadedSystemReports <- runDB $ selectList [ StarSystemReportUserId ==. userId ] [ Asc StarSystemReportId
-                                                                                    , Asc StarSystemReportDate ]
+    loadedSystemReports <- runDB $ selectList [ StarSystemReportFactionId ==. factionId ] [ Asc StarSystemReportId
+                                                                                          , Asc StarSystemReportDate ]
     let systemReports = collateSystems $ Import.map entityVal loadedSystemReports
     defaultLayout $ do
         setTitle "Deep Sky - Star systems"
@@ -30,12 +33,15 @@ getStarSystemsR = do
 
 getStarSystemR :: Key StarSystem -> Handler Html
 getStarSystemR systemId = do
-    (userId, _) <- requireAuthPair
+    (userId, user) <- requireAuthPair   
+    factionId <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> redirect ProfileR
 
-    systemReport <- createSystemReport systemId userId
-    starReports <- createStarReports systemId userId
-    planetReports <- createPlanetReports systemId userId
-    starLaneReports <- createStarLaneReports systemId userId
+    systemReport <- createSystemReport systemId factionId
+    starReports <- createStarReports systemId factionId
+    planetReports <- createPlanetReports systemId factionId
+    starLaneReports <- createStarLaneReports systemId factionId
 
     let expl = "Deep Sky - " ++ case (cssrName systemReport) of
                                     (Just x) -> x
@@ -47,15 +53,17 @@ getStarSystemR systemId = do
 
 getPlanetR :: Key StarSystem -> Key Planet -> Handler Html
 getPlanetR _ planetId = do
-    (userId, _) <- requireAuthPair   
-
+    (userId, user) <- requireAuthPair   
+    factionId <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> redirect ProfileR
     loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId ==. planetId
-                                              , PlanetReportUserId ==. userId ] [ Asc PlanetReportDate ]
+                                              , PlanetReportFactionId ==. factionId ] [ Asc PlanetReportDate ]
     let planetReport = collatePlanet $ Import.map entityVal loadedPlanetReports
 
     loadedBuildingReports <- runDB $ selectList [ BuildingReportPlanetId ==. planetId 
-                                                , BuildingReportUserId ==. userId ] [ Asc BuildingReportBuildingId
-                                                                                    , Asc BuildingReportDate ]
+                                                , BuildingReportFactionId ==. factionId ] [ Asc BuildingReportBuildingId
+                                                                                          , Asc BuildingReportDate ]
     let buildingReports = collateBuildings $ Import.map entityVal loadedBuildingReports
 
     let expl = "Deep Sky - " ++ case (cprName planetReport) of

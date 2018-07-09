@@ -39,7 +39,7 @@ Planet json
     name Text
     position Int
     starSystemId StarSystemId
-    ownerId UserId Maybe
+    ownerId FactionId Maybe
     gravity Double
     SystemPosition starSystemId position
     deriving Show
@@ -48,6 +48,7 @@ Moon json
     name Text
     position Int
     planetId PlanetId
+    ownerId FactionId Maybe
     gravity Double
     deriving Show
 
@@ -72,7 +73,7 @@ StarSystemReport json
     name Text Maybe
     coordX Double 
     coordY Double
-    userId UserId 
+    factionId FactionId
     date Double 
     deriving Show
 
@@ -82,7 +83,7 @@ StarReport json
     name Text Maybe
     spectralType SpectralType Maybe
     luminosityClass LuminosityClass Maybe
-    userId UserId 
+    factionId FactionId
     date Double 
     deriving Show    
 
@@ -93,7 +94,7 @@ PlanetReport json
     name Text Maybe
     position Int Maybe
     gravity Double Maybe
-    userId UserId 
+    factionId FactionId
     date Double 
     deriving Show
 
@@ -103,7 +104,7 @@ MoonReport json
     position Int
     planetId PlanetId
     gravity Double
-    userId UserId
+    factionId FactionId
     date Double
     deriving Show
 
@@ -112,7 +113,7 @@ StarLaneReport json
     starSystem2 StarSystemId 
     starSystemName1 Text Maybe
     starSystemName2 Text Maybe
-    userId UserId
+    factionId FactionId
     date Double
     deriving Show
 
@@ -123,6 +124,6 @@ BuildingReport json
     level Int Maybe
     construction Double Maybe
     damage Double Maybe
-    userId UserId 
+    factionId FactionId
     date Double
     deriving Show

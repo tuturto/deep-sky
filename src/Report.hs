@@ -159,33 +159,33 @@ collateBuildings s@(x:_) = (collateBuilding itemsOfKind) : (collateBuildings res
           itemsOfKind = fst split
           restOfItems = snd split
 
-createStarReports :: Key StarSystem -> Key User -> Handler [CollatedStarReport]
-createStarReports systemId userId = do
+createStarReports :: Key StarSystem -> Key Faction -> Handler [CollatedStarReport]
+createStarReports systemId factionId = do
     loadedStarReports <- runDB $ selectList [ StarReportStarSystemId ==. systemId
-                                            , StarReportUserId ==. userId ] [ Asc StarReportId
-                                                                            , Asc StarReportDate ]
+                                            , StarReportFactionId ==. factionId ] [ Asc StarReportId
+                                                                                  , Asc StarReportDate ]
     return $ collateStars $ map entityVal loadedStarReports
 
-createSystemReport :: Key StarSystem -> Key User -> Handler CollatedStarSystemReport
-createSystemReport systemId userId = do
+createSystemReport :: Key StarSystem -> Key Faction -> Handler CollatedStarSystemReport
+createSystemReport systemId factionId = do
     systemReports <- runDB $ selectList [ StarSystemReportStarSystemId ==. systemId
-                                        , StarSystemReportUserId ==. userId ] [ Asc StarSystemReportDate ]
+                                        , StarSystemReportFactionId ==. factionId ] [ Asc StarSystemReportDate ]
     return $ collateSystem $ map entityVal systemReports
 
-createPlanetReports :: Key StarSystem -> Key User -> Handler [CollatedPlanetReport]
-createPlanetReports systemId userId = do
+createPlanetReports :: Key StarSystem -> Key Faction -> Handler [CollatedPlanetReport]
+createPlanetReports systemId factionId = do
     planets <- runDB $ selectList [ PlanetStarSystemId ==. systemId ] []
     loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId <-. (map entityKey planets) 
-                                              , PlanetReportUserId ==. userId ] [ Asc PlanetReportPlanetId
-                                                                                , Asc PlanetReportDate ]
+                                              , PlanetReportFactionId ==. factionId ] [ Asc PlanetReportPlanetId
+                                                                                      , Asc PlanetReportDate ]
     return $ collatePlanets $ map entityVal loadedPlanetReports
 
-createStarLaneReports :: Key StarSystem -> Key User -> Handler [CollatedStarLaneReport]
-createStarLaneReports systemId userId = do
+createStarLaneReports :: Key StarSystem -> Key Faction -> Handler [CollatedStarLaneReport]
+createStarLaneReports systemId factionId = do
     loadedLaneReports <- runDB $ selectList ([ StarLaneReportStarSystem1 ==. systemId
-                                             , StarLaneReportUserId ==. userId ]
+                                             , StarLaneReportFactionId ==. factionId ]
                                          ||. [ StarLaneReportStarSystem2 ==. systemId 
-                                             , StarLaneReportUserId ==. userId ]) []
+                                             , StarLaneReportFactionId ==. factionId ]) []
     return $ rearrangeStarLanes systemId $ collateStarLanes $ map entityVal loadedLaneReports
 
 rearrangeStarLanes :: Key StarSystem -> [CollatedStarLaneReport] -> [CollatedStarLaneReport]
