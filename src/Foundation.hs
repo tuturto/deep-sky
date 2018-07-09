@@ -105,6 +105,9 @@ instance Yesod App where
 
         muser <- maybeAuthPair
         mcurrentRoute <- getCurrentRoute
+        adminOnly <- case muser of
+                        Just (userId, _) -> isAdmin userId
+                        _ -> return False
 
         -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
         (title, parents) <- breadcrumbs
@@ -145,6 +148,11 @@ instance Yesod App where
                     { menuItemLabel = "Construction"
                     , menuItemRoute = ConstructionR
                     , menuItemAccessCallback = isJust muser
+                    }
+                , NavbarRight $ MenuItem
+                    { menuItemLabel = "Admin"
+                    , menuItemRoute = AdminPanelR
+                    , menuItemAccessCallback = adminOnly
                     }
                 , NavbarRight $ MenuItem
                     { menuItemLabel = "Login"
@@ -206,6 +214,16 @@ instance Yesod App where
     isAuthorized ResearchR _       = isAuthenticated
     isAuthorized FleetR _          = isAuthenticated
     isAuthorized ConstructionR _   = isAuthenticated
+
+    -- Special authorization
+    isAuthorized AdminPanelR _     = do
+        muid <- maybeAuthId
+        res <- authorizeAdmin muid
+        return res
+    isAuthorized AdminAdvanceTimeR _     = do
+        muid <- maybeAuthId
+        res <- authorizeAdmin muid
+        return res
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -269,6 +287,8 @@ instance YesodBreadcrumbs App where
     breadcrumb (BaseR _ planetId) = do
         name <- planetNameById planetId
         return (name, Just BasesR)
+    breadcrumb AdminPanelR = return ("Admin", Just HomeR)
+    breadcrumb AdminAdvanceTimeR = return ("Time management", Just AdminPanelR)
     breadcrumb _ = return ("home", Nothing)
 
 -- How to run database actions.

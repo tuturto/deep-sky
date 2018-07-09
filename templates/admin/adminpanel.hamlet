@@ -1,0 +1,8 @@
+<div .container>
+    <div .row>
+        <div .col-lg-12>
+            With great power comes great responsibility
+    <div .row>
+        <div .col-lg-12>
+            <a href=@{AdminAdvanceTimeR}>
+                Advance time

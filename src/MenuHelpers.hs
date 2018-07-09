@@ -14,6 +14,7 @@ module MenuHelpers where
 import Model
 import Import.NoFoundation
 import Database.Persist.Sql (toSqlKey)
+import CustomTypes
 
 starDate :: (BaseBackend (YesodPersistBackend site) 
     ~ 
@@ -88,3 +89,31 @@ getFaction _ = do
 getScore :: Maybe Faction -> (Int, Int, Int)
 getScore (Just faction) = ((factionBiologicals faction), (factionMechanicals faction), (factionChemicals faction))
 getScore _ = (0, 0, 0)
+
+usersRoles :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend,
+    YesodPersist site, PersistQueryRead (YesodPersistBackend site)) =>
+    Key User -> HandlerFor site [Role]
+usersRoles userId = do
+    roles <- runDB $ selectList [ UserRoleUserId ==. userId ] []
+    return $ map (\x -> userRoleRole $ entityVal x) roles
+
+isAdmin :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend,
+    PersistQueryRead (YesodPersistBackend site), YesodPersist site) =>
+    Key User -> HandlerFor site Bool
+isAdmin userId = do
+    roles <- usersRoles userId
+    return $ any (RoleAdministrator ==) roles
+
+authorizeAdmin :: (BaseBackend (YesodPersistBackend site)
+    ~
+    SqlBackend,
+    YesodPersist site, PersistQueryRead (YesodPersistBackend site)) =>
+    Maybe (Key User) -> HandlerFor site AuthResult
+authorizeAdmin (Just userId) = do
+    checkAdmin <- isAdmin userId
+    let res = case checkAdmin of
+                True -> Authorized
+                _ -> Unauthorized "This part is only for administrators"
+    return res
+authorizeAdmin _ = do
+    return $ Unauthorized "This part is only for administrators"

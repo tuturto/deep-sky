@@ -11,19 +11,21 @@
 
 /profile ProfileR GET
 
-/starsystem                          StarSystemsR    GET
-/starsystem/#StarSystemId            StarSystemR     GET
-/starsystem/#StarSystemId/#PlanetId  PlanetR         GET
+/starsystem                          StarSystemsR      GET
+/starsystem/#StarSystemId            StarSystemR       GET
+/starsystem/#StarSystemId/#PlanetId  PlanetR           GET
 
-/research                            ResearchR       GET
+/research                            ResearchR         GET
 
-/fleet                               FleetR          GET
+/fleet                               FleetR            GET
 
-/construction                        ConstructionR   GET
+/construction                        ConstructionR     GET
 
-/base                                BasesR          GET
-/base/#StarSystemId/#PlanetId        BaseR           GET
+/base                                BasesR            GET
+/base/#StarSystemId/#PlanetId        BaseR             GET
 
-/faction                             FactionR        GET POST
+/faction                             FactionR          GET POST
 
-/api/starsystem                      ApiStarSystemsR GET
+/api/starsystem                      ApiStarSystemsR   GET
+/admin                               AdminPanelR       GET
+/admin/time                          AdminAdvanceTimeR GET
