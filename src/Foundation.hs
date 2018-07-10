@@ -106,12 +106,12 @@ instance Yesod App where
         muser <- maybeAuthPair
         mcurrentRoute <- getCurrentRoute
         adminOnly <- case muser of
-                        Just (userId, _) -> isAdmin userId
+                        Just (userId, _) -> runDB $ isAdmin userId
                         _ -> return False
 
         -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
         (title, parents) <- breadcrumbs
-        currentStarDate <- starDate
+        currentStarDate <- runDB $ starDate
         -- Define the menu items of the header.
         let menuItems =
                 [ NavbarLeft $ MenuItem
@@ -275,17 +275,17 @@ instance YesodBreadcrumbs App where
     breadcrumb FactionR = return ("Faction", Just ProfileR)
     breadcrumb StarSystemsR = return ("Star systems", Just HomeR)
     breadcrumb (StarSystemR systemId) = do
-        systemName <- systemNameById systemId
+        systemName <- runDB $ systemNameById systemId
         return (systemName, Just StarSystemsR)
     breadcrumb (PlanetR systemId planetId) = do
-        name <- planetNameById planetId
+        name <- runDB $ planetNameById planetId
         return (name, Just (StarSystemR systemId))
     breadcrumb FleetR = return ("Fleet", Just HomeR)
     breadcrumb ResearchR = return ("Research", Just HomeR)
     breadcrumb ConstructionR = return ("Construction", Just HomeR)
     breadcrumb BasesR = return ("Bases", Just HomeR)
     breadcrumb (BaseR _ planetId) = do
-        name <- planetNameById planetId
+        name <- runDB $ planetNameById planetId
         return (name, Just BasesR)
     breadcrumb AdminPanelR = return ("Admin", Just HomeR)
     breadcrumb AdminAdvanceTimeR = return ("Time management", Just AdminPanelR)

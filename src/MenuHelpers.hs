@@ -17,40 +17,31 @@ import Database.Persist.Sql (toSqlKey)
 import CustomTypes
 import Text.Printf (printf)
 
-starDate :: (BaseBackend (YesodPersistBackend site) 
-    ~ 
-    SqlBackend, 
-    YesodPersist site, 
-    PersistStoreRead (YesodPersistBackend site)) => 
-    HandlerFor site Time
+starDate :: (BaseBackend backend ~ SqlBackend, MonadIO m,
+    PersistQueryRead backend) =>
+    ReaderT backend m Time
 starDate = do
-    systemTime <- runDB $ get (toSqlKey 1) 
+    systemTime <- get (toSqlKey 1) 
     let res = case systemTime of
                 (Just x) -> x
                 Nothing  -> Time 0
     return res
 
-systemNameById :: (BaseBackend (YesodPersistBackend site) 
-    ~ 
-    SqlBackend, 
-    YesodPersist site, 
-    PersistStoreRead (YesodPersistBackend site)) => 
-    Key StarSystem -> HandlerFor site Text
+systemNameById :: (BaseBackend backend ~ SqlBackend,
+    PersistStoreRead backend, MonadIO m) =>
+    Key StarSystem -> ReaderT backend m Text
 systemNameById systemId = do
-    system <- runDB $ get systemId
+    system <- get systemId
     let name = case system of
                         (Just x) -> starSystemName x
                         Nothing  -> "Unknown"
     return name
 
-planetNameById :: (BaseBackend (YesodPersistBackend site) 
-    ~ 
-    SqlBackend, 
-    YesodPersist site, 
-    PersistStoreRead (YesodPersistBackend site)) => 
-    Key Planet -> HandlerFor site Text
+planetNameById :: (BaseBackend backend ~ SqlBackend,
+    PersistStoreRead backend, MonadIO m) =>
+    Key Planet -> ReaderT backend m Text
 planetNameById planetId = do
-    planet <- runDB $ get planetId
+    planet <- get planetId
     let name = case planet of
                         (Just x) -> planetName x
                         Nothing  -> "Unknown"
@@ -91,16 +82,16 @@ getScore :: Maybe Faction -> (Int, Int, Int)
 getScore (Just faction) = ((factionBiologicals faction), (factionMechanicals faction), (factionChemicals faction))
 getScore _ = (0, 0, 0)
 
-usersRoles :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend,
-    YesodPersist site, PersistQueryRead (YesodPersistBackend site)) =>
-    Key User -> HandlerFor site [Role]
+usersRoles :: (BaseBackend backend ~ SqlBackend, MonadIO m,
+    PersistQueryRead backend) =>
+    Key User -> ReaderT backend m [Role]
 usersRoles userId = do
-    roles <- runDB $ selectList [ UserRoleUserId ==. userId ] []
+    roles <- selectList [ UserRoleUserId ==. userId ] []
     return $ map (\x -> userRoleRole $ entityVal x) roles
 
-isAdmin :: (BaseBackend (YesodPersistBackend site) ~ SqlBackend,
-    PersistQueryRead (YesodPersistBackend site), YesodPersist site) =>
-    Key User -> HandlerFor site Bool
+isAdmin :: (BaseBackend backend ~ SqlBackend,
+    PersistQueryRead backend, MonadIO m) =>
+    Key User -> ReaderT backend m Bool
 isAdmin userId = do
     roles <- usersRoles userId
     return $ any (RoleAdministrator ==) roles
@@ -111,7 +102,7 @@ authorizeAdmin :: (BaseBackend (YesodPersistBackend site)
     YesodPersist site, PersistQueryRead (YesodPersistBackend site)) =>
     Maybe (Key User) -> HandlerFor site AuthResult
 authorizeAdmin (Just userId) = do
-    checkAdmin <- isAdmin userId
+    checkAdmin <- runDB $ isAdmin userId
     let res = case checkAdmin of
                 True -> Authorized
                 _ -> Unauthorized "This part is only for administrators"

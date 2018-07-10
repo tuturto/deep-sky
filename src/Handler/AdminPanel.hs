@@ -12,7 +12,7 @@ import Simulation.Time
 getAdminPanelR :: Handler Html
 getAdminPanelR = do
     (userId, _) <- requireAuthPair   
-    _ <- isAdmin userId
+    _ <- runDB $ isAdmin userId
 
     defaultLayout $ do
         setTitle "Deep Sky - Admin"
@@ -21,7 +21,7 @@ getAdminPanelR = do
 getAdminAdvanceTimeR :: Handler Html
 getAdminAdvanceTimeR = do
     (userId, _) <- requireAuthPair   
-    _ <- isAdmin userId
+    _ <- runDB $ isAdmin userId
     newTime <- runDB advanceTime
 
     defaultLayout $ do
