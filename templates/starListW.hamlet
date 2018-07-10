@@ -16,4 +16,4 @@
             <div .col-lg-1>
                 #{spectralInfo (csrSpectralType report) (csrLuminosityClass report)}
             <div .col-lg-1>
-                #{show $ csrDate report}
+                #{toDisplayDate $ csrDate report}

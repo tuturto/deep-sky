@@ -25,4 +25,4 @@
                 $maybe damage <- cbrDamage building
                     #{damage * 100}%
             <div .col-lg-1>
-                #{cbrDate building}
+                #{toDisplayDate $ cbrDate building}

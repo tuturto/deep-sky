@@ -14,7 +14,7 @@ data CollatedStarSystemReport = CollatedStarSystemReport {
       cssrSystemId :: Key StarSystem
     , cssrName     :: Maybe Text
     , cssrLocation :: Coordinates
-    , cssrDate     :: Double
+    , cssrDate     :: Int
 } deriving Show
 
 data CollatedStarReport = CollatedStarReport {
@@ -22,7 +22,7 @@ data CollatedStarReport = CollatedStarReport {
     , csrName            :: Maybe Text    
     , csrSpectralType    :: Maybe SpectralType
     , csrLuminosityClass :: Maybe LuminosityClass
-    , csrDate            :: Double
+    , csrDate            :: Int
 } deriving Show
 
 data CollatedPlanetReport = CollatedPlanetReport {
@@ -32,7 +32,7 @@ data CollatedPlanetReport = CollatedPlanetReport {
     , cprName     :: Maybe Text
     , cprPosition :: Maybe Int
     , cprGravity  :: Maybe Double
-    , cprDate     :: Double
+    , cprDate     :: Int
 } deriving Show
 
 data CollatedStarLaneReport = CollatedStarLaneReport {
@@ -40,7 +40,7 @@ data CollatedStarLaneReport = CollatedStarLaneReport {
     , cslSystemId2       :: Key StarSystem
     , cslStarSystemName1 :: Maybe Text
     , cslStarSystemName2 :: Maybe Text
-    , cslDate            :: Double
+    , cslDate            :: Int
 } deriving Show
 
 data CollatedBaseReport = CollatedBaseReport {
@@ -55,7 +55,7 @@ data CollatedBuildingReport = CollatedBuildingReport {
     , cbrLevel        :: Maybe Int
     , cbrConstruction :: Maybe Double
     , cbrDamage       :: Maybe Double
-    , cbrDate         :: Double
+    , cbrDate         :: Int
 } deriving Show
 
 combine :: Maybe a -> Maybe a -> Maybe a

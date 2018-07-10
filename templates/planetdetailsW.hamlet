@@ -23,4 +23,4 @@
     <div .row>
         <div .col-lg-1>Updated
         <div .col-lg-1>
-            #{show $ cprDate planetReport}
+            #{toDisplayDate $ cprDate planetReport}

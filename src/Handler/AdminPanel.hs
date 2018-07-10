@@ -6,15 +6,13 @@
 module Handler.AdminPanel where
 
 import Import
-import Text.Blaze.Html5
-import Report
-import Widgets
 import MenuHelpers
+import Simulation.Time
 
 getAdminPanelR :: Handler Html
 getAdminPanelR = do
     (userId, _) <- requireAuthPair   
-    adminCheck <- isAdmin userId
+    _ <- isAdmin userId
 
     defaultLayout $ do
         setTitle "Deep Sky - Admin"
@@ -23,7 +21,8 @@ getAdminPanelR = do
 getAdminAdvanceTimeR :: Handler Html
 getAdminAdvanceTimeR = do
     (userId, _) <- requireAuthPair   
-    adminCheck <- isAdmin userId
+    _ <- isAdmin userId
+    newTime <- runDB advanceTime
 
     defaultLayout $ do
         setTitle "Deep Sky - Admin"

@@ -2,3 +2,8 @@
     <div .row>
         <div .col-lg-12>
             Time is but a shadow
+    <div .row>
+        <div .col-lg-2>
+            Current time:
+        <div .col-lg-1>
+            #{toDisplayDate $ timeCurrentTime newTime}

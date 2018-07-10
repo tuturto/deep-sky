@@ -8,6 +8,7 @@ module Widgets where
 
 import Import
 import Report
+import MenuHelpers (toDisplayDate)
 
 systemDetails :: CollatedStarSystemReport -> WidgetFor site ()
 systemDetails systemReport = $(widgetFile "systemdetailsW")

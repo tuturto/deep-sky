@@ -15,6 +15,7 @@ import Model
 import Import.NoFoundation
 import Database.Persist.Sql (toSqlKey)
 import CustomTypes
+import Text.Printf (printf)
 
 starDate :: (BaseBackend (YesodPersistBackend site) 
     ~ 
@@ -26,7 +27,7 @@ starDate = do
     systemTime <- runDB $ get (toSqlKey 1) 
     let res = case systemTime of
                 (Just x) -> x
-                Nothing  -> Time 0.0
+                Nothing  -> Time 0
     return res
 
 systemNameById :: (BaseBackend (YesodPersistBackend site) 
@@ -117,3 +118,6 @@ authorizeAdmin (Just userId) = do
     return res
 authorizeAdmin _ = do
     return $ Unauthorized "This part is only for administrators"
+
+toDisplayDate :: Int -> [Char]
+toDisplayDate date = printf "%.1f" $ (fromIntegral date) * (0.1 :: Double)

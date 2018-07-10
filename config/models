@@ -71,7 +71,7 @@ Building json
     deriving Show
 
 Time json
-    currentTime Double
+    currentTime Int
     
 StarSystemReport json
     starSystemId StarSystemId 
@@ -79,7 +79,7 @@ StarSystemReport json
     coordX Double 
     coordY Double
     factionId FactionId
-    date Double 
+    date Int 
     deriving Show
 
 StarReport json
@@ -89,7 +89,7 @@ StarReport json
     spectralType SpectralType Maybe
     luminosityClass LuminosityClass Maybe
     factionId FactionId
-    date Double 
+    date Int 
     deriving Show    
 
 PlanetReport json
@@ -100,7 +100,7 @@ PlanetReport json
     position Int Maybe
     gravity Double Maybe
     factionId FactionId
-    date Double 
+    date Int 
     deriving Show
 
 MoonReport json
@@ -110,7 +110,7 @@ MoonReport json
     planetId PlanetId
     gravity Double
     factionId FactionId
-    date Double
+    date Int
     deriving Show
 
 StarLaneReport json
@@ -119,7 +119,7 @@ StarLaneReport json
     starSystemName1 Text Maybe
     starSystemName2 Text Maybe
     factionId FactionId
-    date Double
+    date Int
     deriving Show
 
 BuildingReport json
@@ -130,5 +130,5 @@ BuildingReport json
     construction Double Maybe
     damage Double Maybe
     factionId FactionId
-    date Double
+    date Int
     deriving Show

@@ -34,7 +34,7 @@
     <ul .infoitem>
         <li>
             <i class="fas fa-clock"></i>
-            #{timeCurrentTime currentStarDate}
+            #{toDisplayDate $ timeCurrentTime currentStarDate}
         <li>
             <i class="fas fa-leaf"></i>
             #{statusBarBiologicals}
