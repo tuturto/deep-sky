@@ -12,7 +12,7 @@ import Yesod.Form.Bootstrap3
 getFactionR :: Handler Html
 getFactionR = do
     (_, user) <- requireAuthPair
-    faction <- maybeFaction user
+    faction <- runDB $ maybeFaction user
     factions <- runDB $ selectList [] [ Asc FactionId ]
     (factionSelection, _) <- generateFormPost $ renderBootstrap3 BootstrapBasicForm $ factionAForm factions 
 

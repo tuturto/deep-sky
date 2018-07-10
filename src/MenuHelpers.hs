@@ -47,35 +47,27 @@ planetNameById planetId = do
                         Nothing  -> "Unknown"
     return name
 
-statusBarScore :: (BaseBackend (YesodPersistBackend site) 
-    ~ 
-    SqlBackend, 
-    YesodPersist site, 
-    PersistStoreRead (YesodPersistBackend site)) => 
-    (Maybe (UserId, User)) -> HandlerFor site (Int, Int, Int)
+statusBarScore :: (BaseBackend backend ~ SqlBackend, MonadIO m,
+    PersistStoreRead backend) =>
+    Maybe (a, User) -> ReaderT backend m (Int, Int, Int)
 statusBarScore (Just (_, user)) = do
-    faction <- getFaction $ userFactionId user
+    faction <- getMaybeEntity $ userFactionId user
     return $ getScore faction
 statusBarScore _ = do
     return (0, 0, 0)
 
-maybeFaction :: (BaseBackend (YesodPersistBackend site)
-    ~
-    SqlBackend,
-    PersistStoreRead (YesodPersistBackend site), YesodPersist site) =>
-    User -> HandlerFor site (Maybe Faction)
+maybeFaction :: (BaseBackend backend ~ SqlBackend, MonadIO m,
+    PersistStoreRead backend) =>
+    User -> ReaderT backend m (Maybe Faction)
 maybeFaction user = do
-    faction <- getFaction $ userFactionId user
+    faction <- getMaybeEntity $ userFactionId user
     return faction
 
-getFaction :: (BaseBackend (YesodPersistBackend site) 
-    ~ 
-    SqlBackend, 
-    YesodPersist site, 
-    PersistStoreRead (YesodPersistBackend site)) => 
-    (Maybe (Key Faction)) -> HandlerFor site (Maybe Faction)
-getFaction (Just factionId) = runDB $ get factionId
-getFaction _ = do
+getMaybeEntity :: (PersistEntityBackend record ~ BaseBackend backend,
+    PersistEntity record, PersistStoreRead backend, MonadIO m) =>
+    Maybe (Key record) -> ReaderT backend m (Maybe record)
+getMaybeEntity (Just factionId) = get factionId
+getMaybeEntity _ = do
     return Nothing
 
 getScore :: Maybe Faction -> (Int, Int, Int)

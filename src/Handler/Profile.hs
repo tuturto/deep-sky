@@ -11,7 +11,7 @@ import MenuHelpers
 getProfileR :: Handler Html
 getProfileR = do
     (_, user) <- requireAuthPair
-    mFac <- maybeFaction user
+    mFac <- runDB $ maybeFaction user
     faction <- case mFac of
                    Just fac -> return fac
                    Nothing  -> redirect FactionR
