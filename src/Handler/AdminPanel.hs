@@ -7,7 +7,7 @@ module Handler.AdminPanel where
 
 import Import
 import MenuHelpers
-import Simulation.Time
+import Simulation.Main (processTurn)
 
 getAdminPanelR :: Handler Html
 getAdminPanelR = do
@@ -22,7 +22,7 @@ getAdminAdvanceTimeR :: Handler Html
 getAdminAdvanceTimeR = do
     (userId, _) <- requireAuthPair   
     _ <- runDB $ isAdmin userId
-    newTime <- runDB advanceTime
+    (newTime) <- runDB processTurn
 
     defaultLayout $ do
         setTitle "Deep Sky - Admin"
