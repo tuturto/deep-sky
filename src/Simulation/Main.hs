@@ -36,6 +36,6 @@ handleFaction faction = do
     _ <- update (entityKey faction) [ FactionBiologicals -=. reqBio ]
     return ()
 
--- | amount of food a planet requires to sustain itself
+-- | amount of food group of planets require
 foodRequirement :: [Planet] -> Int
 foodRequirement planets = length planets

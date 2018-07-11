@@ -49,6 +49,16 @@ Planet json
     SystemPosition starSystemId position
     deriving Show
 
+Race json
+    name Text
+    deriving Show
+
+PlanetPopulation json
+    planetId PlanetId
+    raceId RaceId
+    population Int
+    deriving Show
+
 Moon json
     name Text
     position Int
@@ -129,6 +139,14 @@ BuildingReport json
     level Int Maybe
     construction Double Maybe
     damage Double Maybe
+    factionId FactionId
+    date Int
+    deriving Show
+
+PlanetPopulationReport json
+    planetId PlanetId
+    raceId RaceId Maybe
+    population Int Maybe
     factionId FactionId
     date Int
     deriving Show

@@ -27,3 +27,6 @@ starLaneList starLaneReports = $(widgetFile "starlanesW")
 
 buildingList :: Foldable t => t CollatedBuildingReport -> WidgetFor site ()
 buildingList buildingReports = $(widgetFile "buildingListW")
+
+populationList :: Foldable t => t CollatedPopulationReport -> WidgetFor site ()
+populationList populationReports = $(widgetFile "widgets/populationlistW")

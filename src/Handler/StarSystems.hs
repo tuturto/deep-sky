@@ -9,6 +9,7 @@ import Import
 import Text.Blaze.Html5
 import Report
 import Widgets
+import MenuHelpers
 
 getApiStarSystemsR :: Handler Value
 getApiStarSystemsR = do
@@ -66,9 +67,26 @@ getPlanetR _ planetId = do
                                                                                           , Asc BuildingReportDate ]
     let buildingReports = collateBuildings $ Import.map entityVal loadedBuildingReports
 
+    loadedPopulationReports <- runDB $ selectList [ PlanetPopulationReportPlanetId ==. planetId
+                                                  , PlanetPopulationReportFactionId ==. factionId ] [ Asc PlanetPopulationReportPlanetId
+                                                                                                    , Asc PlanetPopulationReportRaceId
+                                                                                                    , Asc PlanetPopulationReportDate ]
+    let partialPopulationReports = collatePopulations $ Import.map entityVal loadedPopulationReports
+    populationReports <- runDB $ Import.mapM addPopulationDetails partialPopulationReports
+
     let expl = "Deep Sky - " ++ case (cprName planetReport) of
                                     (Just x) -> x
                                     Nothing  -> "unknown planet"
     defaultLayout $ do
         setTitle $ toMarkup expl
         $(widgetFile "planet")
+
+addPopulationDetails :: (BaseBackend backend ~ SqlBackend,
+    MonadIO m, PersistStoreRead backend) =>
+    CollatedPopulationReport -> ReaderT backend m CollatedPopulationReport
+addPopulationDetails report = do
+    aRace <- getMaybeEntity $ cpopRaceId report
+    res <- case aRace of
+                (Just x) -> return $ report { cpopRace = Just $ raceName x}
+                Nothing  -> return report
+    return res

@@ -16,6 +16,11 @@ insert into star (name, star_system_id, spectral_type, luminosity_class) values 
 insert into star (name, star_system_id, spectral_type, luminosity_class) values ('Aclael beta', 2, 'M', 'VI');
 insert into planet (name, position, star_system_id, owner_id, gravity) values ('Aclael I', 1, 2, NULL, 0.9);
 
+insert into race (name) values ('Terrans');
+insert into race (name) values ('Aclaelites');
+
+insert into planet_population (planet_id, race_id, population) values (1, 1, 10);
+
 insert into star_system (name, coord_x, coord_y) values ('Barynth', 5.6, 2.2);
 insert into star (name, star_system_id, spectral_type, luminosity_class) values ('Barynth alpha', 3, 'L', 'VI');
 
@@ -45,6 +50,8 @@ insert into planet_report (planet_id, star_system_id, owner_id, name, position, 
 insert into planet_report (planet_id, star_system_id, owner_id, name, position, gravity, faction_id, date) values (6, 1, NULL, 'Saturn', 7, NULL, 1, 20182);
 insert into planet_report (planet_id, star_system_id, owner_id, name, position, gravity, faction_id, date) values (7, 1, NULL, 'Uranus', 8, NULL, 1, 20182);
 insert into planet_report (planet_id, star_system_id, owner_id, name, position, gravity, faction_id, date) values (8, 1, NULL, 'Neptune', 9, NULL, 1, 20182);
+
+insert into planet_population_report (planet_id, race_id, population, faction_id, date) values (3, 1, 10, 1, 20182);
 
 insert into star_system_report (star_system_id, name, coord_x, coord_y, faction_id, date) values (2, 'Aclael', 4.2, -1.2, 1, 2018.3);
 insert into star_report (star_id, star_system_id, name, spectral_type, luminosity_class, faction_id, date) values (2, 2, 'Aclael alpha', 'A', NULL, 1, 20183);

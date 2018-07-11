@@ -25,15 +25,23 @@ data CollatedStarReport = CollatedStarReport {
     , csrDate            :: Int
 } deriving Show
 
-data CollatedPlanetReport = CollatedPlanetReport {
-      cprPlanetId :: Key Planet
+data CollatedPlanetReport = CollatedPlanetReport 
+    { cprPlanetId :: Key Planet
     , cprSystemId :: Key StarSystem
     , cprOwnerId  :: Maybe (Key User)
     , cprName     :: Maybe Text
     , cprPosition :: Maybe Int
     , cprGravity  :: Maybe Double
     , cprDate     :: Int
-} deriving Show
+    } deriving Show
+
+data CollatedPopulationReport = CollatedPopulationReport
+    { cpopPlanetId   :: Key Planet
+    , cpopRaceId     :: Maybe (Key Race)
+    , cpopRace       :: Maybe Text
+    , cpopPopulation :: Maybe Int
+    , cpopDate       :: Int
+    } deriving Show
 
 data CollatedStarLaneReport = CollatedStarLaneReport {
       cslSystemId1       :: Key StarSystem
@@ -119,6 +127,24 @@ collatePlanets [] = []
 collatePlanets s@(x:_) = (collatePlanet itemsOfKind) : (collatePlanets restOfItems)
     where split = span comparer s
           comparer = \a -> (planetReportPlanetId a) == (planetReportPlanetId x)
+          itemsOfKind = fst split
+          restOfItems = snd split
+
+collatePopulation :: [PlanetPopulationReport] -> CollatedPopulationReport
+collatePopulation = foldr fn initial
+    where initial = CollatedPopulationReport (toSqlKey 0) Nothing Nothing Nothing 0
+          fn val acc = CollatedPopulationReport (planetPopulationReportPlanetId val)
+                                                (combine (planetPopulationReportRaceId val) (cpopRaceId acc))
+                                                (cpopRace acc)
+                                                (combine (planetPopulationReportPopulation val) (cpopPopulation acc))
+                                                (max (planetPopulationReportDate val) (cpopDate acc))
+
+collatePopulations :: [PlanetPopulationReport] -> [CollatedPopulationReport]
+collatePopulations [] = []
+collatePopulations s@(x:_) = (collatePopulation itemsOfKind) : (collatePopulations restOfItems)
+    where split = span comparer s
+          comparer a = (planetPopulationReportPlanetId a) == (planetPopulationReportPlanetId x) &&
+                       (planetPopulationReportFactionId a) == (planetPopulationReportFactionId x)
           itemsOfKind = fst split
           restOfItems = snd split
 

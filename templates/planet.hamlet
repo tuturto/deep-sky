@@ -9,12 +9,13 @@
                 <hr>
             <div .row>
                 <div .infotitle>
-                    Construction queue
+                    Population
+                ^{populationList populationReports}
                 <hr>
             <div .row>
                 <div .infotitle>
-                    Population
-                
+                    Construction queue
+                <hr>
 
         <div .col-lg-6>
             <!-- right panel -->
