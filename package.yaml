@@ -92,6 +92,11 @@ tests:
     - hspec >=2.0.0
     - yesod-test
     - microlens
+    - test-framework
+    - test-framework-quickcheck2
+    - QuickCheck
+    - test-invariant >=0.4.5.0 && < 0.4.6.0
+    - quickcheck-instances
 
 # Define flags used by "yesod devel" to make compilation faster
 flags:
