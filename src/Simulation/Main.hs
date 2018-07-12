@@ -32,10 +32,22 @@ handleFaction :: (BaseBackend backend ~ SqlBackend,
     Entity Faction -> ReaderT backend m ()
 handleFaction faction = do
     planets <- selectList [ PlanetOwnerId ==. Just (entityKey faction)] []
-    let reqBio = foodRequirement $ map entityVal planets
+    bios <- mapM getFoodRequirement $ map entityKey planets
+    let reqBio = foldr (+) 0 bios
     _ <- update (entityKey faction) [ FactionBiologicals -=. reqBio ]
     return ()
 
--- | amount of food group of planets require
-foodRequirement :: [Planet] -> Int
-foodRequirement planets = length planets
+-- | calculate amount of food a given planet requires
+getFoodRequirement :: (BaseBackend backend ~ SqlBackend, MonadIO m,
+    PersistQueryRead backend) =>
+    Key Planet -> ReaderT backend m Int
+getFoodRequirement pid = do
+    pop <- selectList [ PlanetPopulationPlanetId ==. pid ] []
+    let res = pFoodRequirement $ map entityVal pop
+    return res
+
+-- | calculate amount of food given population requires
+pFoodRequirement :: [PlanetPopulation] -> Int
+pFoodRequirement population = 
+    totalPopulation * 2
+        where totalPopulation = foldr (\a b -> planetPopulationPopulation a + b) 0 population

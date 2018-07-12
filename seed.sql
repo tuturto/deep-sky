@@ -19,7 +19,7 @@ insert into planet (name, position, star_system_id, owner_id, gravity) values ('
 insert into race (name) values ('Terrans');
 insert into race (name) values ('Aclaelites');
 
-insert into planet_population (planet_id, race_id, population) values (1, 1, 10);
+insert into planet_population (planet_id, race_id, population) values (3, 1, 10);
 
 insert into star_system (name, coord_x, coord_y) values ('Barynth', 5.6, 2.2);
 insert into star (name, star_system_id, spectral_type, luminosity_class) values ('Barynth alpha', 3, 'L', 'VI');
@@ -35,6 +35,7 @@ insert into user_role (user_id, role) values (1, 'RoleAdministrator');
 insert into building (planet_id, type, level, construction, damage) values (3, 'SensorStation', 1, 1.0, 0);
 insert into building (planet_id, type, level, construction, damage) values (3, 'ResearchComplex', 1, 1.0, 0.25);
 insert into building (planet_id, type, level, construction, damage) values (3, 'ResearchComplex', 1, 0.5, 0);
+insert into building (planet_id, type, level, construction, damage) values (3, 'Farm', 1, 1.0, 0);
 
 insert into star_system_report (star_system_id, name, coord_x, coord_y, faction_id, date) values (1, 'Sol', 0, 0, 1, 20183);
 insert into star_report (star_id, star_system_id, name, spectral_type, luminosity_class, faction_id, date) values (1, 1, 'Sun', 'G', NULL, 1, 20183);
@@ -63,3 +64,4 @@ insert into star_lane_report (star_system1, star_system2, star_system_name1, sta
 insert into building_report (building_id, planet_id, type, level, construction, damage, faction_id, date) values (1, 3, 'SensorStation', 1, 1.0, 0, 1, 20184);
 insert into building_report (building_id, planet_id, type, level, construction, damage, faction_id, date) values (2, 3, 'ResearchComplex', 1, 1.0, 0.25, 1, 20184);
 insert into building_report (building_id, planet_id, type, level, construction, damage, faction_id, date) values (3, 3, 'ResearchComplex', 1, 0.5, 0, 1, 20184);
+insert into building_report (building_id, planet_id, type, level, construction, damage, faction_id, date) values (3, 3, 'Farm', 1, 1.0, 0, 1, 20184);
