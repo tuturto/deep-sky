@@ -9,7 +9,7 @@ import Test.QuickCheck
 import Database.Persist.Sql (toSqlKey)
 import Model
 import CustomTypes
-import Simulation.Main (foodRequirement, foodProduction)
+import Simulation.Food (foodRequirement, foodProduction)
 
 singlePopulation :: Gen PlanetPopulation
 singlePopulation = do
