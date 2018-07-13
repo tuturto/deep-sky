@@ -1,8 +1,8 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
 module Handler.Faction where
 
 import Import
@@ -48,5 +48,5 @@ factionAForm factions = FactionSelection
         <*  bootstrapSubmit (BootstrapSubmit ("Submit" :: Text) "btn-default" [])
     where
         facs :: [(Text, Key Faction)]
-        facs = Import.map (\x -> ((factionName $ entityVal x), (entityKey x))) factions
+        facs = map (\x -> ((factionName $ entityVal x), (entityKey x))) factions
 

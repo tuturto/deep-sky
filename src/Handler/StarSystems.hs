@@ -1,12 +1,12 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
 module Handler.StarSystems where
 
 import Import
-import Text.Blaze.Html5
+import Text.Blaze.Html5 (toMarkup)
 import Report
 import Widgets
 import MenuHelpers
@@ -15,7 +15,7 @@ getApiStarSystemsR :: Handler Value
 getApiStarSystemsR = do
     loadedSystemReports <- runDB $ selectList [] [ Asc StarSystemReportId
                                                  , Asc StarSystemReportDate ]
-    let systemReports = collateSystems $ Import.map entityVal loadedSystemReports
+    let systemReports = collateSystems $ map entityVal loadedSystemReports
     return $ toJSON systemReports
 
 getStarSystemsR :: Handler Html
@@ -27,7 +27,7 @@ getStarSystemsR = do
 
     loadedSystemReports <- runDB $ selectList [ StarSystemReportFactionId ==. factionId ] [ Asc StarSystemReportId
                                                                                           , Asc StarSystemReportDate ]
-    let systemReports = collateSystems $ Import.map entityVal loadedSystemReports
+    let systemReports = collateSystems $ map entityVal loadedSystemReports
     defaultLayout $ do
         setTitle "Deep Sky - Star systems"
         $(widgetFile "starsystems")
@@ -39,10 +39,10 @@ getStarSystemR systemId = do
                         Just x -> return x
                         Nothing -> redirect ProfileR
 
-    systemReport <- createSystemReport systemId factionId
-    starReports <- createStarReports systemId factionId
-    planetReports <- createPlanetReports systemId factionId
-    starLaneReports <- createStarLaneReports systemId factionId
+    systemReport <- runDB $ createSystemReport systemId factionId
+    starReports <- runDB $ createStarReports systemId factionId
+    planetReports <- runDB $ createPlanetReports systemId factionId
+    starLaneReports <- runDB $ createStarLaneReports systemId factionId
 
     let expl = "Deep Sky - " ++ case (cssrName systemReport) of
                                     (Just x) -> x
@@ -60,19 +60,19 @@ getPlanetR _ planetId = do
                         Nothing -> redirect ProfileR
     loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId ==. planetId
                                               , PlanetReportFactionId ==. factionId ] [ Asc PlanetReportDate ]
-    let planetReport = collatePlanet $ Import.map entityVal loadedPlanetReports
+    let planetReport = collatePlanet $ map entityVal loadedPlanetReports
 
     loadedBuildingReports <- runDB $ selectList [ BuildingReportPlanetId ==. planetId 
                                                 , BuildingReportFactionId ==. factionId ] [ Asc BuildingReportBuildingId
                                                                                           , Asc BuildingReportDate ]
-    let buildingReports = collateBuildings $ Import.map entityVal loadedBuildingReports
+    let buildingReports = collateBuildings $ map entityVal loadedBuildingReports
 
     loadedPopulationReports <- runDB $ selectList [ PlanetPopulationReportPlanetId ==. planetId
                                                   , PlanetPopulationReportFactionId ==. factionId ] [ Asc PlanetPopulationReportPlanetId
                                                                                                     , Asc PlanetPopulationReportRaceId
                                                                                                     , Asc PlanetPopulationReportDate ]
-    let partialPopulationReports = collatePopulations $ Import.map entityVal loadedPopulationReports
-    populationReports <- runDB $ Import.mapM addPopulationDetails partialPopulationReports
+    let partialPopulationReports = collatePopulations $ map entityVal loadedPopulationReports
+    populationReports <- runDB $ mapM addPopulationDetails partialPopulationReports
 
     let expl = "Deep Sky - " ++ case (cprName planetReport) of
                                     (Just x) -> x

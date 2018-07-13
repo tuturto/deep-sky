@@ -1,8 +1,8 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 module Handler.Bases where
 
@@ -20,8 +20,8 @@ getBasesR = do
     loadedPlanetReports <- runDB $ selectList [ PlanetReportFactionId ==. factionId ] [ Asc PlanetReportPlanetId
                                                                                       , Asc PlanetReportDate ]
 
-    let planetReports = filter (\x -> Just userId == cprOwnerId x) $ collatePlanets $ Import.map entityVal loadedPlanetReports
-    baseReports <- Import.mapM addBaseDetails planetReports
+    let planetReports = filter (\x -> Just userId == cprOwnerId x) $ collatePlanets $ map entityVal loadedPlanetReports
+    baseReports <- mapM addBaseDetails planetReports
 
     defaultLayout $ do
         setTitle "Deep Sky - Bases"

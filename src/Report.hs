@@ -1,12 +1,12 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
 
 module Report where
 
-import Import (Handler, entityVal, entityKey, SelectOpt(..), (==.), (<-.), (||.), selectList, runDB)
+import Import
 import CustomTypes
-import Model
-import Data.Text (Text, pack)
 import Database.Persist.Sql (toSqlKey)
 import Data.Aeson.TH
 
@@ -185,33 +185,41 @@ collateBuildings s@(x:_) = (collateBuilding itemsOfKind) : (collateBuildings res
           itemsOfKind = fst split
           restOfItems = snd split
 
-createStarReports :: Key StarSystem -> Key Faction -> Handler [CollatedStarReport]
+createStarReports :: (BaseBackend backend ~ SqlBackend,
+    PersistQueryRead backend, MonadIO m) =>
+    Key StarSystem -> Key Faction -> ReaderT backend m [CollatedStarReport]
 createStarReports systemId factionId = do
-    loadedStarReports <- runDB $ selectList [ StarReportStarSystemId ==. systemId
-                                            , StarReportFactionId ==. factionId ] [ Asc StarReportId
-                                                                                  , Asc StarReportDate ]
+    loadedStarReports <- selectList [ StarReportStarSystemId ==. systemId
+                                    , StarReportFactionId ==. factionId ] [ Asc StarReportId
+                                                                          , Asc StarReportDate ]
     return $ collateStars $ map entityVal loadedStarReports
 
-createSystemReport :: Key StarSystem -> Key Faction -> Handler CollatedStarSystemReport
+createSystemReport :: (BaseBackend backend ~ SqlBackend, MonadIO m,
+    PersistQueryRead backend) =>
+    Key StarSystem -> Key Faction -> ReaderT backend m CollatedStarSystemReport
 createSystemReport systemId factionId = do
-    systemReports <- runDB $ selectList [ StarSystemReportStarSystemId ==. systemId
-                                        , StarSystemReportFactionId ==. factionId ] [ Asc StarSystemReportDate ]
+    systemReports <- selectList [ StarSystemReportStarSystemId ==. systemId
+                                , StarSystemReportFactionId ==. factionId ] [ Asc StarSystemReportDate ]
     return $ collateSystem $ map entityVal systemReports
 
-createPlanetReports :: Key StarSystem -> Key Faction -> Handler [CollatedPlanetReport]
+createPlanetReports :: (BaseBackend backend ~ SqlBackend,
+    MonadIO m, PersistQueryRead backend) =>
+    Key StarSystem -> Key Faction -> ReaderT backend m [CollatedPlanetReport]
 createPlanetReports systemId factionId = do
-    planets <- runDB $ selectList [ PlanetStarSystemId ==. systemId ] []
-    loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId <-. (map entityKey planets) 
-                                              , PlanetReportFactionId ==. factionId ] [ Asc PlanetReportPlanetId
-                                                                                      , Asc PlanetReportDate ]
+    planets <- selectList [ PlanetStarSystemId ==. systemId ] []
+    loadedPlanetReports <-  selectList [ PlanetReportPlanetId <-. (map entityKey planets) 
+                                       , PlanetReportFactionId ==. factionId ] [ Asc PlanetReportPlanetId
+                                                                               , Asc PlanetReportDate ]
     return $ collatePlanets $ map entityVal loadedPlanetReports
 
-createStarLaneReports :: Key StarSystem -> Key Faction -> Handler [CollatedStarLaneReport]
+createStarLaneReports :: (BaseBackend backend ~ SqlBackend,
+    MonadIO m, PersistQueryRead backend) =>
+    Key StarSystem -> Key Faction -> ReaderT backend m [CollatedStarLaneReport]
 createStarLaneReports systemId factionId = do
-    loadedLaneReports <- runDB $ selectList ([ StarLaneReportStarSystem1 ==. systemId
-                                             , StarLaneReportFactionId ==. factionId ]
-                                         ||. [ StarLaneReportStarSystem2 ==. systemId 
-                                             , StarLaneReportFactionId ==. factionId ]) []
+    loadedLaneReports <- selectList ([ StarLaneReportStarSystem1 ==. systemId
+                                     , StarLaneReportFactionId ==. factionId ]
+                                 ||. [ StarLaneReportStarSystem2 ==. systemId 
+                                     , StarLaneReportFactionId ==. factionId ]) []
     return $ rearrangeStarLanes systemId $ collateStarLanes $ map entityVal loadedLaneReports
 
 rearrangeStarLanes :: Key StarSystem -> [CollatedStarLaneReport] -> [CollatedStarLaneReport]
