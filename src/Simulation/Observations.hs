@@ -74,6 +74,8 @@ doSensorStationObservation faction planet = do
                             , BuildingType ==. SensorStation
                             , BuildingConstruction ==. 1.0 
                             , BuildingDamage <. 0.5 ] []
+    starSystem <- get $ planetStarSystemId p
+    starSystemReport <- createSystemReport (planetStarSystemId p) $ entityKey faction -- where does this really belong?
     stars <- selectList [ StarStarSystemId ==. planetStarSystemId p ] []
     starReports <- createStarReports (planetStarSystemId p) $ entityKey faction
     planets <- selectList [ PlanetStarSystemId ==. planetStarSystemId p 
@@ -82,4 +84,14 @@ doSensorStationObservation faction planet = do
     starLanes <- selectList ([ StarLaneStarSystem1 ==. planetStarSystemId p ]
                          ||. [ StarLaneStarSystem2 ==. planetStarSystemId p ]) []
     starLaneReports <- createStarLaneReports (planetStarSystemId p) $ entityKey faction
+    -- group [(object, report)]
+    -- select one to observe
+    -- observe
+    -- repeat for all stations
     return ()
+
+groupPlanetReports :: [Entity Planet] -> [CollatedPlanetReport] -> [(Entity Planet, Maybe CollatedPlanetReport)]
+groupPlanetReports planets reports = 
+    map fn planets
+        where fn planet = (planet, matchingReport planet)
+              matchingReport planet = find (\a -> cprPlanetId a == entityKey planet) reports

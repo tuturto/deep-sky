@@ -12,7 +12,6 @@
 module Simulation.Food where
 
 import Import
-import Simulation.Time
 import CustomTypes
 
 -- | handle production and consumption of food for given faction
@@ -22,9 +21,9 @@ handleFactionFood :: (BaseBackend backend ~ SqlBackend,
 handleFactionFood faction = do
     planets <- selectList [ PlanetOwnerId ==. Just (entityKey faction)] []
     lReqBio <- mapM getFoodRequirement $ map entityKey planets
-    let reqBio = foldr (+) 0 lReqBio
+    let reqBio = foldl' (+) 0 lReqBio
     lProdBio <- mapM getFoodProduction $ map entityKey planets
-    let prodBio = foldr (+) 0 lProdBio
+    let prodBio = foldl' (+) 0 lProdBio
     let deltaBio = prodBio - reqBio
     _ <- update (entityKey faction) [ FactionBiologicals +=. deltaBio ]
     return ()
@@ -56,7 +55,7 @@ foodRequirement population =
 -- | calculate amount of food produced by group of buildings
 foodProduction :: [Building] -> Int
 foodProduction buildings =
-    foldr (+) 0 productions 
+    foldl' (+) 0 productions 
         where productions = map prod buildings
               prod x = case (buildingType x) of
                             Farm -> 5

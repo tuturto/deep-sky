@@ -16,8 +16,6 @@ import Simulation.Time
 import Simulation.Food (handleFactionFood)
 import Simulation.Observations (handleFactionObservations)
 import System.Random
-import MenuHelpers
-import CustomTypes
 
 -- | simulate a single step
 processTurn :: (BaseBackend backend ~ SqlBackend,

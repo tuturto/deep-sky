@@ -36,32 +36,3 @@ insert into building (planet_id, type, level, construction, damage) values (3, '
 insert into building (planet_id, type, level, construction, damage) values (3, 'ResearchComplex', 1, 1.0, 0.25);
 insert into building (planet_id, type, level, construction, damage) values (3, 'ResearchComplex', 1, 0.5, 0);
 insert into building (planet_id, type, level, construction, damage) values (3, 'Farm', 1, 1.0, 0);
-
-insert into star_system_report (star_system_id, name, coord_x, coord_y, faction_id, date) values (1, 'Sol', 0, 0, 1, 20183);
-insert into star_report (star_id, star_system_id, name, spectral_type, luminosity_class, faction_id, date) values (1, 1, 'Sun', 'G', NULL, 1, 20183);
-insert into star_report (star_id, star_system_id, name, spectral_type, luminosity_class, faction_id, date) values (1, 1, 'Sun', 'G', 'V', 1, 20184);
-
-insert into planet_report (planet_id, star_system_id, owner_id, name, position, gravity, faction_id, date) values (1, 1, NULL, 'Mercury', 1, NULL, 1, 20182);
-insert into planet_report (planet_id, star_system_id, owner_id, name, position, gravity, faction_id, date) values (2, 1, NULL, 'Venus', 2, NULL, 1, 20182);
-insert into planet_report (planet_id, star_system_id, owner_id, name, position, gravity, faction_id, date) values (2, 1, NULL, 'Venus', 2, 0.904, 1, 20183);
-insert into planet_report (planet_id, star_system_id, owner_id, name, position, gravity, faction_id, date) values (3, 1, 1, 'Earth', 3, 0.99, 1, 20181);
-insert into planet_report (planet_id, star_system_id, owner_id, name, position, gravity, faction_id, date) values (3, 1, 1, 'Earth', 3, 1, 1, 20182);
-insert into planet_report (planet_id, star_system_id, owner_id, name, position, gravity, faction_id, date) values (4, 1, NULL, 'Mars', 4, NULL, 1, 20183);
-insert into planet_report (planet_id, star_system_id, owner_id, name, position, gravity, faction_id, date) values (5, 1, NULL, 'Jupiter', 6, NULL, 1, 20182);
-insert into planet_report (planet_id, star_system_id, owner_id, name, position, gravity, faction_id, date) values (6, 1, NULL, 'Saturn', 7, NULL, 1, 20182);
-insert into planet_report (planet_id, star_system_id, owner_id, name, position, gravity, faction_id, date) values (7, 1, NULL, 'Uranus', 8, NULL, 1, 20182);
-insert into planet_report (planet_id, star_system_id, owner_id, name, position, gravity, faction_id, date) values (8, 1, NULL, 'Neptune', 9, NULL, 1, 20182);
-
-insert into planet_population_report (planet_id, race_id, population, faction_id, date) values (3, 1, 10, 1, 20182);
-
-insert into star_system_report (star_system_id, name, coord_x, coord_y, faction_id, date) values (2, 'Aclael', 4.2, -1.2, 1, 2018.3);
-insert into star_report (star_id, star_system_id, name, spectral_type, luminosity_class, faction_id, date) values (2, 2, 'Aclael alpha', 'A', NULL, 1, 20183);
-insert into star_report (star_id, star_system_id, name, spectral_type, luminosity_class, faction_id, date) values (3, 2, 'Aclael beta', 'M', NULL, 1, 20184);
-
-insert into star_lane_report (star_system1, star_system2, star_system_name1, star_system_name2, faction_id, date) values (1, 2, 'Sol', 'Aclael', 1, 20184);
-insert into star_lane_report (star_system1, star_system2, star_system_name1, star_system_name2, faction_id, date) values (2, 3, 'Aclael', NULL, 1, 20184);
-
-insert into building_report (building_id, planet_id, type, level, construction, damage, faction_id, date) values (1, 3, 'SensorStation', 1, 1.0, 0, 1, 20184);
-insert into building_report (building_id, planet_id, type, level, construction, damage, faction_id, date) values (2, 3, 'ResearchComplex', 1, 1.0, 0.25, 1, 20184);
-insert into building_report (building_id, planet_id, type, level, construction, damage, faction_id, date) values (3, 3, 'ResearchComplex', 1, 0.5, 0, 1, 20184);
-insert into building_report (building_id, planet_id, type, level, construction, damage, faction_id, date) values (3, 3, 'Farm', 1, 1.0, 0, 1, 20184);
