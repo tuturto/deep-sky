@@ -2,18 +2,11 @@
 
 module QC.Generators.Database where
 
-import Test.QuickCheck.All
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen
-import Test.QuickCheck
-import Test.QuickCheck.Instances
     
 import Database.Persist.Sql
 import Model
-import CustomTypes
-import Simulation.Observations (groupPlanetReports)
-import Report
-import Data.List (find)
 
 randomStarKey :: Gen (Key Star)
 randomStarKey = do

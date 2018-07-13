@@ -4,6 +4,7 @@ module QC.Generators.Planets where
 
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen
+import Test.QuickCheck.Instances()
     
 import Database.Persist.Sql
 import Model

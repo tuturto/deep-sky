@@ -93,18 +93,21 @@ doSensorStationObservation faction planet = do
     -- repeat for all stations
     return ()
 
+-- | given list of stars and collated reports, build list of pairs with star and maybe respective report
 groupStarReports :: [Entity Star] -> [CollatedStarReport] -> [(Entity Star, Maybe CollatedStarReport)]
 groupStarReports stars reports = 
     map fn stars
         where fn star = (star, matchingReport star)
               matchingReport star = find (\a -> csrStarId a == entityKey star) reports
 
+-- | given list of planets and collated reports, build list of pairs with planet and maybe respective report
 groupPlanetReports :: [Entity Planet] -> [CollatedPlanetReport] -> [(Entity Planet, Maybe CollatedPlanetReport)]
 groupPlanetReports planets reports = 
     map fn planets
         where fn planet = (planet, matchingReport planet)
               matchingReport planet = find (\a -> cprPlanetId a == entityKey planet) reports
 
+-- | given list of starlanes and collated reports, build list of pairs with starlane and maybe respective report
 groupStarLaneReports :: [Entity StarLane] -> [CollatedStarLaneReport] -> [(Entity StarLane, Maybe CollatedStarLaneReport)]
 groupStarLaneReports lanes reports =
     map fn lanes
