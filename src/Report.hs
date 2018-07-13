@@ -18,7 +18,8 @@ data CollatedStarSystemReport = CollatedStarSystemReport {
 } deriving Show
 
 data CollatedStarReport = CollatedStarReport {
-      csrSystemId        :: Key StarSystem
+      csrStarId          :: Key Star
+    , csrSystemId        :: Key StarSystem
     , csrName            :: Maybe Text    
     , csrSpectralType    :: Maybe SpectralType
     , csrLuminosityClass :: Maybe LuminosityClass
@@ -96,8 +97,9 @@ collateSystems s@(x:_) = (collateSystem itemsOfKind) : (collateSystems restOfIte
 
 collateStar :: [StarReport] -> CollatedStarReport
 collateStar = foldr fn initial
-    where initial = CollatedStarReport (toSqlKey 0) Nothing Nothing Nothing 0
-          fn val acc = CollatedStarReport (starReportStarSystemId val)
+    where initial = CollatedStarReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing 0
+          fn val acc = CollatedStarReport (starReportStarId val)
+                                          (starReportStarSystemId val)
                                           (combine (starReportName val) (csrName acc))
                                           (combine (starReportSpectralType val) (csrSpectralType acc))
                                           (combine (starReportLuminosityClass val) (csrLuminosityClass acc))

@@ -15,6 +15,11 @@ import Simulation.Observations (groupPlanetReports)
 import Report
 import Data.List (find)
 
+randomStarKey :: Gen (Key Star)
+randomStarKey = do
+    aId <- arbitrary
+    return $ toSqlKey aId
+
 randomStarSystemKey :: Gen (Key StarSystem)
 randomStarSystemKey = do
     aId <- arbitrary

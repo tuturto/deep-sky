@@ -78,20 +78,38 @@ doSensorStationObservation faction planet = do
     starSystemReport <- createSystemReport (planetStarSystemId p) $ entityKey faction -- where does this really belong?
     stars <- selectList [ StarStarSystemId ==. planetStarSystemId p ] []
     starReports <- createStarReports (planetStarSystemId p) $ entityKey faction
+    let starGroups = groupStarReports stars starReports
     planets <- selectList [ PlanetStarSystemId ==. planetStarSystemId p 
                           , PlanetId !=. entityKey planet ] []
     planetReports <- createPlanetReports (planetStarSystemId p) $ entityKey faction
+    let planetGroups = groupPlanetReports planets planetReports
     starLanes <- selectList ([ StarLaneStarSystem1 ==. planetStarSystemId p ]
                          ||. [ StarLaneStarSystem2 ==. planetStarSystemId p ]) []
     starLaneReports <- createStarLaneReports (planetStarSystemId p) $ entityKey faction
+    let starLaneGroups = groupStarLaneReports starLanes starLaneReports
     -- group [(object, report)]
     -- select one to observe
     -- observe
     -- repeat for all stations
     return ()
 
+groupStarReports :: [Entity Star] -> [CollatedStarReport] -> [(Entity Star, Maybe CollatedStarReport)]
+groupStarReports stars reports = 
+    map fn stars
+        where fn star = (star, matchingReport star)
+              matchingReport star = find (\a -> csrStarId a == entityKey star) reports
+
 groupPlanetReports :: [Entity Planet] -> [CollatedPlanetReport] -> [(Entity Planet, Maybe CollatedPlanetReport)]
 groupPlanetReports planets reports = 
     map fn planets
         where fn planet = (planet, matchingReport planet)
               matchingReport planet = find (\a -> cprPlanetId a == entityKey planet) reports
+
+groupStarLaneReports :: [Entity StarLane] -> [CollatedStarLaneReport] -> [(Entity StarLane, Maybe CollatedStarLaneReport)]
+groupStarLaneReports lanes reports =
+    map fn lanes
+        where fn lane = (lane, matchingReport lane)
+              matchingReport lane = find (\a -> (cslSystemId1 a == (starLaneStarSystem1 $ entityVal lane) 
+                                                   && (cslSystemId2 a == (starLaneStarSystem2 $ entityVal lane)))
+                                                || (cslSystemId2 a == (starLaneStarSystem1 $ entityVal lane) 
+                                                    && (cslSystemId1 a == (starLaneStarSystem2 $ entityVal lane)))) reports
