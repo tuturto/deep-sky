@@ -18,8 +18,12 @@ import System.Random
 import MenuHelpers
 import CustomTypes
 import Report
+import Common
 
 -- | Generate reports for all kinds of things faction can currently observe
+--   Currently these include forces on faction's own planets (population that is),
+--   sensor stations on planets, forces on space (space ships and satellites) and
+--   ground forces on other faction's planets
 handleFactionObservations :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, PersistQueryRead backend,
     MonadIO m) =>
@@ -36,7 +40,7 @@ handleFactionObservations faction = do
                             where isPopulated planet = elem (entityKey planet)
                                     (map (planetPopulationPlanetId . entityVal) populations)
     _ <- mapM (doPlanetObservation faction) populatedPlanets
-    _ <- mapM (doSensorStationObservation faction) populatedPlanets
+    _ <- mapM (doSensorStationObservations faction) populatedPlanets
     return ()
 
 -- | Let forces on populated planet observe their surroundings and write reports
@@ -64,10 +68,10 @@ doPlanetObservation faction planet = do
     return ()
 
 -- | Let sensor stations on planet observe surrounding space
-doSensorStationObservation :: (BaseBackend backend ~ SqlBackend,
+doSensorStationObservations :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, PersistQueryRead backend, MonadIO m) =>
     Entity Faction -> Entity Planet -> ReaderT backend m ()
-doSensorStationObservation faction planet = do
+doSensorStationObservations faction planet = do
     time <- starDate
     let p = entityVal planet
     buildings <- selectList [ BuildingPlanetId ==. (entityKey planet)
@@ -87,11 +91,43 @@ doSensorStationObservation faction planet = do
                          ||. [ StarLaneStarSystem2 ==. planetStarSystemId p ]) []
     starLaneReports <- createStarLaneReports (planetStarSystemId p) $ entityKey faction
     let starLaneGroups = groupStarLaneReports starLanes starLaneReports
-    -- group [(object, report)]
-    -- select one to observe
-    -- observe
-    -- repeat for all stations
+    let candidates = (buildOCStarList starGroups) ++ (buildOCPlanetList planetGroups) ++ (buildOCStarLaneList starLaneGroups)
+    _ <- mapM (observe faction candidates) buildings
     return ()
+
+observe :: (BaseBackend backend ~ SqlBackend,
+    PersistStoreWrite backend, PersistQueryRead backend, MonadIO m) =>
+    Entity Faction -> [ObservationCandidate] -> (Entity Building) -> ReaderT backend m ()
+observe faction candidates building = do
+    res <- liftIO $ randomRIO (0, (length candidates) - 1)
+    let target = maybeGet candidates res
+    _ <- observeTarget faction target
+    return ()
+
+observeTarget :: (BaseBackend backend ~ SqlBackend,
+    PersistStoreWrite backend, PersistQueryRead backend, MonadIO m) =>
+    Entity Faction -> (Maybe ObservationCandidate) -> ReaderT backend m ()
+observeTarget _ Nothing = do
+    return ()
+observeTarget faction (Just (OCStar starEntity _)) = do
+    let star = entityVal starEntity
+    let sid = entityKey starEntity
+    date <- starDate
+    aLuminosityClass <- liftIO $ chooseOne (Just (starSpectralType star)) Nothing
+    aSpectralType <- liftIO $ chooseOne (Just (starLuminosityClass star)) Nothing
+    let res = StarReport sid (starStarSystemId star) (Just (starName star)) 
+                         aLuminosityClass aSpectralType
+                         (entityKey faction) (timeCurrentTime date)
+    _ <- insert res
+    return ()
+observeTarget _ _ = do
+    return ()
+
+
+data ObservationCandidate = OCStar (Entity Star) (Maybe CollatedStarReport)
+                          | OCPlanet (Entity Planet) (Maybe CollatedPlanetReport)
+                          | OCStarLane (Entity StarLane) (Maybe CollatedStarLaneReport)
+    deriving Show
 
 -- | given list of stars and collated reports, build list of pairs with star and maybe respective report
 groupStarReports :: [Entity Star] -> [CollatedStarReport] -> [(Entity Star, Maybe CollatedStarReport)]
@@ -116,3 +152,28 @@ groupStarLaneReports lanes reports =
                                                    && (cslSystemId2 a == (starLaneStarSystem2 $ entityVal lane)))
                                                 || (cslSystemId2 a == (starLaneStarSystem1 $ entityVal lane) 
                                                     && (cslSystemId1 a == (starLaneStarSystem2 $ entityVal lane)))) reports
+
+buildOCStarList :: [(Entity Star, Maybe CollatedStarReport)] -> [ObservationCandidate]
+buildOCStarList reports = filter needsObservation $ map combineFn reports
+    where combineFn (star, report) = OCStar star report
+
+buildOCPlanetList :: [(Entity Planet, Maybe CollatedPlanetReport)] -> [ObservationCandidate]
+buildOCPlanetList reports = filter needsObservation $ map combineFn reports
+    where combineFn (planet, report) = OCPlanet planet report
+
+buildOCStarLaneList :: [(Entity StarLane, Maybe CollatedStarLaneReport)] -> [ObservationCandidate]
+buildOCStarLaneList reports = filter needsObservation $ map combineFn reports
+    where combineFn (lane, report) = OCStarLane lane report
+
+needsObservation :: ObservationCandidate -> Bool
+needsObservation (OCStar _ Nothing) = True
+needsObservation (OCPlanet _ Nothing) = True
+needsObservation (OCStarLane _ Nothing) = True
+needsObservation (OCStar entity (Just report)) = 
+    csrSpectralType report == (Just $ starSpectralType star)
+    && csrLuminosityClass report == (Just $ starLuminosityClass star)
+    where
+        star = entityVal entity
+
+needsObservation (OCPlanet entity (Just report)) = True
+needsObservation (OCStarLane entity (Just report)) = True
