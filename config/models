@@ -124,6 +124,7 @@ MoonReport json
     deriving Show
 
 StarLaneReport json
+    starLaneId StarLaneId
     starSystem1 StarSystemId 
     starSystem2 StarSystemId 
     starSystemName1 Text Maybe

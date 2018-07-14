@@ -17,7 +17,12 @@ randomStarSystemKey :: Gen (Key StarSystem)
 randomStarSystemKey = do
     aId <- arbitrary
     return $ toSqlKey aId
-    
+
+randomStarLaneKey :: Gen (Key StarLane)
+randomStarLaneKey = do
+    aId <- arbitrary
+    return $ toSqlKey aId
+
 randomFactionKey :: Gen (Key Faction)
 randomFactionKey = do
     aId <- arbitrary

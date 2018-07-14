@@ -45,7 +45,8 @@ data CollatedPopulationReport = CollatedPopulationReport
     } deriving Show
 
 data CollatedStarLaneReport = CollatedStarLaneReport {
-      cslSystemId1       :: Key StarSystem
+      cslStarLaneId      :: Key StarLane
+    , cslSystemId1       :: Key StarSystem
     , cslSystemId2       :: Key StarSystem
     , cslStarSystemName1 :: Maybe Text
     , cslStarSystemName2 :: Maybe Text
@@ -152,8 +153,9 @@ collatePopulations s@(x:_) = (collatePopulation itemsOfKind) : (collatePopulatio
 
 collateStarLane :: [StarLaneReport] -> CollatedStarLaneReport
 collateStarLane = foldr fn initial
-    where initial = CollatedStarLaneReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing 0
-          fn val acc = CollatedStarLaneReport (starLaneReportStarSystem1 val)
+    where initial = CollatedStarLaneReport (toSqlKey 0) (toSqlKey 0) (toSqlKey 0) Nothing Nothing 0
+          fn val acc = CollatedStarLaneReport (starLaneReportStarLaneId val)
+                                              (starLaneReportStarSystem1 val)
                                               (starLaneReportStarSystem2 val)
                                               (combine (starLaneReportStarSystemName1 val) (cslStarSystemName1 acc))
                                               (combine (starLaneReportStarSystemName2 val) (cslStarSystemName2 acc))
@@ -228,7 +230,8 @@ rearrangeStarLanes :: Key StarSystem -> [CollatedStarLaneReport] -> [CollatedSta
 rearrangeStarLanes systemId = map arrangeStarLane
     where arrangeStarLane starLane = if systemId == (cslSystemId1 starLane)
                                         then starLane
-                                        else CollatedStarLaneReport (cslSystemId2 starLane)
+                                        else CollatedStarLaneReport (toSqlKey 0)
+                                                                    (cslSystemId2 starLane)
                                                                     (cslSystemId1 starLane)
                                                                     (cslStarSystemName2 starLane)
                                                                     (cslStarSystemName1 starLane)

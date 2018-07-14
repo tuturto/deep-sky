@@ -81,3 +81,41 @@ starsAndReports = do
     aStars <- starEntities
     aReports <- starReports
     return $ (aStars, aReports)
+
+singleStarLane :: Gen StarLane
+singleStarLane = do
+    aSystem1 <- randomStarSystemKey
+    aSystem2 <- randomStarSystemKey
+    return $ StarLane aSystem1 aSystem2
+
+singleStarLaneEntity :: Gen (Entity StarLane)
+singleStarLaneEntity = do
+    aStarLane <- singleStarLane
+    aId <- randomStarLaneKey
+    return $ Entity aId aStarLane
+
+singleStarLaneReport :: Gen CollatedStarLaneReport
+singleStarLaneReport = do
+    aLaneId <- randomStarLaneKey
+    aSystem1 <- randomStarSystemKey
+    aSystem2 <- randomStarSystemKey
+    aSystemName1 <- perhaps arbitrary
+    aSystemName2 <- perhaps arbitrary
+    aDate <- arbitrary `suchThat` \x -> x > 0
+    return $ CollatedStarLaneReport aLaneId aSystem1 aSystem2 aSystemName1 aSystemName2 aDate
+
+starLaneEntities :: Gen [(Entity StarLane)]
+starLaneEntities = do
+    k <- arbitrary `suchThat` \x -> x > 0
+    vectorOf k singleStarLaneEntity
+        
+starLaneReports :: Gen [CollatedStarLaneReport]
+starLaneReports = do
+    k <- arbitrary `suchThat` \x -> x >= 0
+    vectorOf k singleStarLaneReport
+        
+starLanesAndReports :: Gen ([Entity StarLane], [CollatedStarLaneReport])
+starLanesAndReports = do
+    aStarLanes <- starLaneEntities
+    aReports <- starLaneReports
+    return $ (aStarLanes, aReports)
