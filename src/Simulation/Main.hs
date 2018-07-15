@@ -15,7 +15,6 @@ import Import
 import Simulation.Time
 import Simulation.Food (handleFactionFood)
 import Simulation.Observations (handleFactionObservations)
-import System.Random
 
 -- | simulate a single step
 processTurn :: (BaseBackend backend ~ SqlBackend,
@@ -23,7 +22,6 @@ processTurn :: (BaseBackend backend ~ SqlBackend,
     ReaderT backend m (Time)
 processTurn = do
     newTime <- advanceTime
-    rng <- liftIO $ getStdGen
     factions <- selectList [] [ Asc FactionId ]
     _ <- mapM handleFaction factions
     return (newTime)

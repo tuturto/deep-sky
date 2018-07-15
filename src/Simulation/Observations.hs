@@ -70,14 +70,11 @@ doSensorStationObservations :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, PersistQueryRead backend, MonadIO m) =>
     Entity Faction -> Entity Planet -> ReaderT backend m ()
 doSensorStationObservations faction planet = do
-    time <- starDate
     let p = entityVal planet
     buildings <- selectList [ BuildingPlanetId ==. (entityKey planet)
                             , BuildingType ==. SensorStation
                             , BuildingConstruction ==. 1.0 
                             , BuildingDamage <. 0.5 ] []
-    starSystem <- get $ planetStarSystemId p
-    starSystemReport <- createSystemReport (planetStarSystemId p) $ entityKey faction -- where does this really belong?
     stars <- selectList [ StarStarSystemId ==. planetStarSystemId p ] []
     starReports <- createStarReports (planetStarSystemId p) $ entityKey faction
     let starGroups = groupStarReports stars starReports

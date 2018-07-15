@@ -59,14 +59,6 @@ PlanetPopulation json
     population Int
     deriving Show
 
-Moon json
-    name Text
-    position Int
-    planetId PlanetId
-    ownerId FactionId Maybe
-    gravity Double
-    deriving Show
-
 StarLane json
     starSystem1 StarSystemId
     starSystem2 StarSystemId
@@ -82,7 +74,21 @@ Building json
 
 Time json
     currentTime Int
-    
+
+Ship json
+    name Text
+    type ShipType
+    starSystemId StarSystemId
+    planetId PlanetId Maybe
+    landed Bool
+    deriving Show
+
+ShipComponent json
+    shipId ShipId
+    type ComponentType
+    level Int
+    deriving Show
+
 StarSystemReport json
     starSystemId StarSystemId 
     name Text Maybe
@@ -111,16 +117,6 @@ PlanetReport json
     gravity Double Maybe
     factionId FactionId
     date Int 
-    deriving Show
-
-MoonReport json
-    moonId MoonId
-    name Text
-    position Int
-    planetId PlanetId
-    gravity Double
-    factionId FactionId
-    date Int
     deriving Show
 
 StarLaneReport json

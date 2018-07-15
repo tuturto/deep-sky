@@ -12,7 +12,7 @@ import Handler.StarSystems
 
 getBasesR :: Handler Html
 getBasesR = do
-    (userId, user) <- requireAuthPair
+    (_, user) <- requireAuthPair
     factionId <- case (userFactionId user) of
         Just x -> return x
         Nothing -> redirect ProfileR

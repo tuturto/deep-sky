@@ -30,15 +30,47 @@ derivePersistField "BuildingType"
 
 instance ToMarkup BuildingType where
     toMarkup building = case building of
-                        SensorStation -> toMarkup ("Sensor station" :: Text)
+                        SensorStation   -> toMarkup ("Sensor station" :: Text)
                         ResearchComplex -> toMarkup ("Research complex" :: Text)
-                        Farm -> toMarkup ("Farm" :: Text)
+                        Farm            -> toMarkup ("Farm" :: Text)
 
 data ComponentType = Sensors
+                   | CombatSensors
+                   | Armour
+                   | FerrousArmour
                    | SubSpaceSensors
                    | TachyonSensors
                    | IonEngine
+                   | LifeSupport
+                   | CrewQuarters
+                   | Bridge
     deriving (Show, Read, Eq)
+derivePersistField "ComponentType"
+
+instance ToMarkup ComponentType where
+    toMarkup component = 
+        case component of
+            Sensors         -> toMarkup ("Sensors" :: Text)
+            CombatSensors   -> toMarkup ("Combat Sensors" :: Text)
+            Armour          -> toMarkup ("Armour" :: Text)
+            FerrousArmour   -> toMarkup ("Ferrous Armour" :: Text)
+            SubSpaceSensors -> toMarkup ("Sub-Space Sensors" :: Text)
+            TachyonSensors  -> toMarkup ("Tachyon Sensors" :: Text)
+            IonEngine       -> toMarkup ("Ion Engine" :: Text)
+            LifeSupport     -> toMarkup ("Life Support" :: Text)
+            CrewQuarters    -> toMarkup ("Crew Quarters" :: Text)
+            Bridge          -> toMarkup ("Bridge" :: Text)
+
+data ShipType = Satellite
+              | Fighter
+              | Destroyer
+              | Frigate
+              | Cruiser
+              | BattleShip
+              | MobileBase
+              | Station
+    deriving (Show, Read, Eq)
+derivePersistField "ShipType"
 
 data Role = RoleUser
           | RoleAdministrator
@@ -55,3 +87,4 @@ $(deriveJSON defaultOptions ''SpectralType)
 $(deriveJSON defaultOptions ''LuminosityClass)
 $(deriveJSON defaultOptions ''BuildingType)
 $(deriveJSON defaultOptions ''ComponentType)
+$(deriveJSON defaultOptions ''ShipType)
