@@ -87,7 +87,10 @@ prop_every_planet_is_present_in_grouped_planet_report_list =
     forAll planetsAndReports $ \(planets, reports) 
         -> all (planetIsInGroupedReport $ groupPlanetReports planets reports) planets
 
-
+-- buildOCStarList
+-- buildOCPlanetList
+-- buildOCStarLaneList
+-- needsObservation
 
 --------------------------
 return []

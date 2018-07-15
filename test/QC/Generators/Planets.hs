@@ -32,7 +32,7 @@ singlePlanetEntity = do
 singlePlanetReport :: Gen CollatedPlanetReport
 singlePlanetReport = do
     aPlanetId <- randomPlanetKey
-    aOwnerId <- perhaps randomUserKey
+    aOwnerId <- perhaps randomFactionKey
     aStarSystemId <- randomStarSystemKey
     aName <- perhaps arbitrary
     aPosition <- perhaps $ arbitrary `suchThat` \x -> x > 0
