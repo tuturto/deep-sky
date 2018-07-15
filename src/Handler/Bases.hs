@@ -20,7 +20,7 @@ getBasesR = do
     loadedPlanetReports <- runDB $ selectList [ PlanetReportFactionId ==. factionId ] [ Asc PlanetReportPlanetId
                                                                                       , Asc PlanetReportDate ]
 
-    let planetReports = filter (\x -> Just userId == cprOwnerId x) $ collatePlanets $ map entityVal loadedPlanetReports
+    let planetReports = filter (\x -> (Just factionId) == cprOwnerId x) $ collatePlanets $ map entityVal loadedPlanetReports
     baseReports <- mapM addBaseDetails planetReports
 
     defaultLayout $ do

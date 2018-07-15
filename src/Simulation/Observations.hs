@@ -12,8 +12,6 @@
 module Simulation.Observations where
 
 import Import
-import Simulation.Time
-import Simulation.Food (handleFactionFood)
 import System.Random
 import MenuHelpers
 import CustomTypes
@@ -92,13 +90,13 @@ doSensorStationObservations faction planet = do
     starLaneReports <- createStarLaneReports (planetStarSystemId p) $ entityKey faction
     let starLaneGroups = groupStarLaneReports starLanes starLaneReports
     let candidates = (buildOCStarList starGroups) ++ (buildOCPlanetList planetGroups) ++ (buildOCStarLaneList starLaneGroups)
-    _ <- mapM (observe faction candidates) buildings
+    _ <- mapM (observeRandomTarget faction candidates) buildings
     return ()
 
-observe :: (BaseBackend backend ~ SqlBackend,
+observeRandomTarget :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, PersistQueryRead backend, MonadIO m) =>
     Entity Faction -> [ObservationCandidate] -> (Entity Building) -> ReaderT backend m ()
-observe faction candidates building = do
+observeRandomTarget faction candidates building = do
     res <- liftIO $ randomRIO (0, (length candidates) - 1)
     let target = maybeGet candidates res
     _ <- observeTarget faction target
@@ -109,6 +107,7 @@ observeTarget :: (BaseBackend backend ~ SqlBackend,
     Entity Faction -> (Maybe ObservationCandidate) -> ReaderT backend m ()
 observeTarget _ Nothing = do
     return ()
+
 observeTarget faction (Just (OCStar starEntity _)) = do
     let star = entityVal starEntity
     let sid = entityKey starEntity
@@ -120,9 +119,19 @@ observeTarget faction (Just (OCStar starEntity _)) = do
                          (entityKey faction) (timeCurrentTime date)
     _ <- insert res
     return ()
-observeTarget _ _ = do
+
+observeTarget faction (Just (OCPlanet planetEntity _)) = do
+    let planet = entityVal planetEntity
+    let pid = entityKey planetEntity
+    date <- starDate
+    aGravity <- liftIO $ chooseOne (Just (planetGravity planet)) Nothing
+    let res = PlanetReport pid (planetOwnerId planet) (planetStarSystemId planet) (Just $ planetName planet)
+                           (Just $ planetPosition planet) aGravity (entityKey faction) (timeCurrentTime date)
+    _ <- insert res
     return ()
 
+observeTarget _ (Just (OCStarLane _ _)) = do
+    return ()
 
 data ObservationCandidate = OCStar (Entity Star) (Maybe CollatedStarReport)
                           | OCPlanet (Entity Planet) (Maybe CollatedPlanetReport)
@@ -165,15 +174,23 @@ buildOCStarLaneList :: [(Entity StarLane, Maybe CollatedStarLaneReport)] -> [Obs
 buildOCStarLaneList reports = filter needsObservation $ map combineFn reports
     where combineFn (lane, report) = OCStarLane lane report
 
+-- | Does given observation candidate need observing?
+--   If given collated report contains different information than the object it's about, return True
 needsObservation :: ObservationCandidate -> Bool
 needsObservation (OCStar _ Nothing) = True
 needsObservation (OCPlanet _ Nothing) = True
-needsObservation (OCStarLane _ Nothing) = True
+needsObservation (OCStarLane _ _) = False
+
 needsObservation (OCStar entity (Just report)) = 
     csrSpectralType report == (Just $ starSpectralType star)
     && csrLuminosityClass report == (Just $ starLuminosityClass star)
     where
         star = entityVal entity
 
-needsObservation (OCPlanet entity (Just report)) = True
-needsObservation (OCStarLane entity (Just report)) = True
+needsObservation (OCPlanet entity (Just report)) = 
+    cprOwnerId report == planetOwnerId planet
+    && cprName report == (Just $ planetName planet)
+    && cprPosition report == (Just $ planetPosition planet)
+    && cprGravity report == (Just $ planetGravity planet)
+    where
+        planet = entityVal entity

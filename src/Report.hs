@@ -29,7 +29,7 @@ data CollatedStarReport = CollatedStarReport {
 data CollatedPlanetReport = CollatedPlanetReport 
     { cprPlanetId :: Key Planet
     , cprSystemId :: Key StarSystem
-    , cprOwnerId  :: Maybe (Key User)
+    , cprOwnerId  :: Maybe (Key Faction)
     , cprName     :: Maybe Text
     , cprPosition :: Maybe Int
     , cprGravity  :: Maybe Double
