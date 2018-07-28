@@ -7,7 +7,8 @@ import Test.QuickCheck
 
 import Database.Persist.Sql
 import Model
-import Simulation.Observations (groupPlanetReports, groupStarReports, groupStarLaneReports)
+import Simulation.Observations (groupPlanetReports, groupStarReports, groupStarLaneReports,
+                                buildOCStarList)
 import Report
 import Data.List (find)
 import QC.Generators.Import
@@ -87,10 +88,31 @@ prop_every_planet_is_present_in_grouped_planet_report_list =
     forAll planetsAndReports $ \(planets, reports) 
         -> all (planetIsInGroupedReport $ groupPlanetReports planets reports) planets
 
+prop_ocStarList_is_as_long_as_needs_observation_list :: Property
+prop_ocStarList_is_as_long_as_needs_observation_list =
+    forAll unobservedStarList $ \entities
+        -> length entities == (length $ buildOCStarList entities)
+
 -- buildOCStarList
+--  + oclist should be as long as needs observation list
+--  oclist should have items from needs observation list
 -- buildOCPlanetList
+--  oclist should be as long as needs observation list
+--  oclist should have items from needs observation list
 -- buildOCStarLaneList
+--  oclist should be as long as needs observation list
+--  oclist should have items from needs observation list
 -- needsObservation
+--  fully observed don't need observation
+--  not observed needs observation
+
+--- needsObservation :: ObservationCandidate -> Bool
+
+--- data ObservationCandidate = OCStar (Entity Star) (Maybe CollatedStarReport)
+--- | OCPlanet (Entity Planet) (Maybe CollatedPlanetReport)
+--- | OCStarLane (Entity StarLane) (Maybe CollatedStarLaneReport)
+
+
 
 --------------------------
 return []

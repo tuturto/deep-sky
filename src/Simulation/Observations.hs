@@ -185,8 +185,9 @@ needsObservation (OCPlanet _ Nothing) = True
 needsObservation (OCStarLane _ _) = False
 
 needsObservation (OCStar entity (Just report)) = 
-    csrSpectralType report == (Just $ starSpectralType star)
-    && csrLuminosityClass report == (Just $ starLuminosityClass star)
+    csrSpectralType report /= (Just $ starSpectralType star)
+    || csrLuminosityClass report /= (Just $ starLuminosityClass star)
+    || csrName report /= (Just $ starName star)
     where
         star = entityVal entity
 
