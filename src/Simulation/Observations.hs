@@ -192,9 +192,9 @@ needsObservation (OCStar entity (Just report)) =
         star = entityVal entity
 
 needsObservation (OCPlanet entity (Just report)) = 
-    cprOwnerId report == planetOwnerId planet
-    && cprName report == (Just $ planetName planet)
-    && cprPosition report == (Just $ planetPosition planet)
-    && cprGravity report == (Just $ planetGravity planet)
+    cprOwnerId report /= planetOwnerId planet
+    || cprName report /= (Just $ planetName planet)
+    || cprPosition report /= (Just $ planetPosition planet)
+    || cprGravity report /= (Just $ planetGravity planet)
     where
         planet = entityVal entity
