@@ -12,7 +12,7 @@ import Test.QuickCheck
 import Database.Persist.Sql
 import Model
 import Simulation.Observations (groupPlanetReports, groupStarReports, groupStarLaneReports,
-                                buildOCStarList, ObservationCandidate(..))
+                                buildOCStarList, buildOCPlanetList, ObservationCandidate(..))
 import Report
 
 import QC.Generators.Import
@@ -103,8 +103,13 @@ prop_ocStarList_contains_items_needing_observation =
     forAll unobservedStarList $ \entities
         -> all (starIsInCandidateList $ buildOCStarList entities) entities
 
+prop_ocPlanetList_is_as_long_as_needs_observation_list :: Property
+prop_ocPlanetList_is_as_long_as_needs_observation_list =
+    forAll unobservedPlanetList $ \entities
+        -> length entities == (length $ buildOCPlanetList entities)
+
 -- buildOCPlanetList
---  oclist should be as long as needs observation list
+-- + oclist should be as long as needs observation list
 --  oclist should have items from needs observation list
 -- buildOCStarLaneList
 --  oclist should be as long as needs observation list
