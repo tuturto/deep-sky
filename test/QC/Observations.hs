@@ -49,13 +49,6 @@ planetIsInCandidateList candidates (Entity planetId _, _) =
         compareIds (OCPlanet ocPlanet _) = (entityKey ocPlanet) == planetId
         compareIds _ = False
 
-prop_starlanes_and_their_reports_are_grouped_by_ids :: Property
-prop_starlanes_and_their_reports_are_grouped_by_ids = 
-    forAll starLanesAndReports $ \(lanes, reports) 
-        -> all fn (groupStarLaneReports lanes reports)
-            where fn (lane, (Just report)) = (entityKey lane) == (cslStarLaneId report)
-                  fn _ = True
-
 prop_grouped_starlane_report_list_is_as_long_as_starlanes_list :: Property
 prop_grouped_starlane_report_list_is_as_long_as_starlanes_list = 
     forAll starLanesAndReports $ \(lanes, reports) 
@@ -120,9 +113,6 @@ prop_ocPlanetList_contains_items_needing_observation =
     forAll unobservedPlanetList $ \entities
         -> all (planetIsInCandidateList $ buildOCPlanetList entities) entities
 
--- buildOCStarLaneList
---  oclist should be as long as needs observation list
---  oclist should have items from needs observation list
 -- needsObservation
 --  fully observed don't need observation
 --  not observed needs observation
