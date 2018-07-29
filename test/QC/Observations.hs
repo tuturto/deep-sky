@@ -2,15 +2,19 @@
 
 module QC.Observations where
 
+import Prelude
+import Data.List (find)
+import Data.Maybe (isJust)
+
 import Test.QuickCheck.All
 import Test.QuickCheck
 
 import Database.Persist.Sql
 import Model
 import Simulation.Observations (groupPlanetReports, groupStarReports, groupStarLaneReports,
-                                buildOCStarList)
+                                buildOCStarList, ObservationCandidate(..))
 import Report
-import Data.List (find)
+
 import QC.Generators.Import
 
 planetIsInGroupedReport :: [(Entity Planet, Maybe CollatedPlanetReport)] -> Entity Planet -> Bool
@@ -36,6 +40,13 @@ starLaneIsInGroupedReport report starlane =
         Nothing  -> False
     where
         wasFound = find (\p -> (entityKey starlane) == (entityKey $ fst p)) report
+
+starIsInCandidateList :: [ObservationCandidate] -> (Entity Star, Maybe CollatedStarReport) -> Bool
+starIsInCandidateList candidates (Entity starId _, _) =
+    isJust $ find compareIds candidates
+    where
+        compareIds (OCStar ocStar _) = (entityKey ocStar) == starId
+        compareIds _ = False
 
 prop_starlanes_and_their_reports_are_grouped_by_ids :: Property
 prop_starlanes_and_their_reports_are_grouped_by_ids = 
@@ -93,9 +104,11 @@ prop_ocStarList_is_as_long_as_needs_observation_list =
     forAll unobservedStarList $ \entities
         -> length entities == (length $ buildOCStarList entities)
 
--- buildOCStarList
---  + oclist should be as long as needs observation list
---  oclist should have items from needs observation list
+prop_ocStarList_contains_items_needing_observation :: Property
+prop_ocStarList_contains_items_needing_observation =
+    forAll unobservedStarList $ \entities
+        -> all (starIsInCandidateList $ buildOCStarList entities) entities
+
 -- buildOCPlanetList
 --  oclist should be as long as needs observation list
 --  oclist should have items from needs observation list
