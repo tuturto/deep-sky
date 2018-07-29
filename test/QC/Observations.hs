@@ -19,27 +19,21 @@ import QC.Generators.Import
 
 planetIsInGroupedReport :: [(Entity Planet, Maybe CollatedPlanetReport)] -> Entity Planet -> Bool
 planetIsInGroupedReport report planet = 
-    case wasFound of
-        (Just _) -> True
-        Nothing  -> False
+    isJust $ find compareIds report
     where
-        wasFound = find (\p -> (entityKey planet) == (entityKey $ fst p)) report
+        compareIds p = (entityKey planet) == (entityKey $ fst p)
 
 starIsInGroupedReport :: [(Entity Star, Maybe CollatedStarReport)] -> Entity Star -> Bool
 starIsInGroupedReport report star = 
-    case wasFound of
-        (Just _) -> True
-        Nothing  -> False
+    isJust $ find compareIds report
     where
-        wasFound = find (\p -> (entityKey star) == (entityKey $ fst p)) report
+        compareIds p = (entityKey star) == (entityKey $ fst p)
 
 starLaneIsInGroupedReport :: [(Entity StarLane, Maybe CollatedStarLaneReport)] -> Entity StarLane -> Bool
 starLaneIsInGroupedReport report starlane = 
-    case wasFound of
-        (Just _) -> True
-        Nothing  -> False
+    isJust $ find compareIds report
     where
-        wasFound = find (\p -> (entityKey starlane) == (entityKey $ fst p)) report
+        compareIds p = (entityKey starlane) == (entityKey $ fst p)
 
 starIsInCandidateList :: [ObservationCandidate] -> (Entity Star, Maybe CollatedStarReport) -> Bool
 starIsInCandidateList candidates (Entity starId _, _) =
