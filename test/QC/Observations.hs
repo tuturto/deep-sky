@@ -42,6 +42,13 @@ starIsInCandidateList candidates (Entity starId _, _) =
         compareIds (OCStar ocStar _) = (entityKey ocStar) == starId
         compareIds _ = False
 
+planetIsInCandidateList :: [ObservationCandidate] -> (Entity Planet, Maybe CollatedPlanetReport) -> Bool
+planetIsInCandidateList candidates (Entity planetId _, _) =
+    isJust $ find compareIds candidates
+    where
+        compareIds (OCPlanet ocPlanet _) = (entityKey ocPlanet) == planetId
+        compareIds _ = False
+
 prop_starlanes_and_their_reports_are_grouped_by_ids :: Property
 prop_starlanes_and_their_reports_are_grouped_by_ids = 
     forAll starLanesAndReports $ \(lanes, reports) 
@@ -108,9 +115,11 @@ prop_ocPlanetList_is_as_long_as_needs_observation_list =
     forAll unobservedPlanetList $ \entities
         -> length entities == (length $ buildOCPlanetList entities)
 
--- buildOCPlanetList
--- + oclist should be as long as needs observation list
---  oclist should have items from needs observation list
+prop_ocPlanetList_contains_items_needing_observation :: Property
+prop_ocPlanetList_contains_items_needing_observation =
+    forAll unobservedPlanetList $ \entities
+        -> all (planetIsInCandidateList $ buildOCPlanetList entities) entities
+
 -- buildOCStarLaneList
 --  oclist should be as long as needs observation list
 --  oclist should have items from needs observation list
