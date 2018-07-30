@@ -1,0 +1,16 @@
+<div .container>
+    <div .row>
+        <div .col-lg-2>
+            Name
+        <div .col-lg-1>
+            Type
+        <div .col-lg-1>
+            Owner
+    $forall ship <- ships
+        <div .row>
+            <div .col-lg-2>
+                #{shipName ship}              
+            <div .col-lg-1>
+                #{shipType ship}
+            <div .col-lg-1>
+                TODO: implement

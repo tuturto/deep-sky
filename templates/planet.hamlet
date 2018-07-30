@@ -24,3 +24,13 @@
                     Buildings
                 ^{buildingList buildingReports}
                 <hr>
+            <div .row>
+                <div .infotitle>
+                    Landed ships
+                ^{shipList landedShips}
+                <hr>
+            <div .row>
+                <div .infotitle>
+                    Orbiting ships
+                ^{shipList orbitingShips}
+                <hr>

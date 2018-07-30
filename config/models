@@ -81,6 +81,7 @@ Ship json
     starSystemId StarSystemId
     planetId PlanetId Maybe
     landed Bool
+    ownerId FactionId
     deriving Show
 
 ShipComponent json

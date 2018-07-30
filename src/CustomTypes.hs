@@ -72,6 +72,18 @@ data ShipType = Satellite
     deriving (Show, Read, Eq)
 derivePersistField "ShipType"
 
+instance ToMarkup ShipType where
+    toMarkup shipType =
+        case shipType of
+            Satellite   -> toMarkup ("Satellite" :: Text)
+            Fighter     -> toMarkup ("Fighter" :: Text)
+            Destroyer   -> toMarkup ("Destroyer" :: Text)
+            Frigate     -> toMarkup ("Frigate" :: Text)
+            Cruiser     -> toMarkup ("Cruiser" :: Text)
+            BattleShip  -> toMarkup ("Battleship" :: Text)
+            MobileBase  -> toMarkup ("Mobile base" :: Text)
+            Station     -> toMarkup ("Station" :: Text)
+
 data Role = RoleUser
           | RoleAdministrator
     deriving (Show, Read, Eq)

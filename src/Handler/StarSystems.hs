@@ -74,6 +74,13 @@ getPlanetR _ planetId = do
     let partialPopulationReports = collatePopulations $ map entityVal loadedPopulationReports
     populationReports <- runDB $ mapM addPopulationDetails partialPopulationReports
 
+    loadLandedShips <- runDB $ selectList [ ShipPlanetId ==. Just planetId 
+                                          , ShipLanded ==. True ] []
+    let landedShips = map entityVal loadLandedShips
+    loadOrbitingShips <- runDB $ selectList [ ShipPlanetId ==. Just planetId 
+                                            , ShipLanded ==. False ] []
+    let orbitingShips = map entityVal loadOrbitingShips
+
     let expl = "Deep Sky - " ++ case (cprName planetReport) of
                                     (Just x) -> x
                                     Nothing  -> "unknown planet"
