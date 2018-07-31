@@ -10,6 +10,7 @@ import Text.Blaze.Html5 (toMarkup)
 import Report
 import Widgets
 import MenuHelpers
+import Data.Maybe (fromJust)
 
 getApiStarSystemsR :: Handler Value
 getApiStarSystemsR = do
@@ -74,12 +75,13 @@ getPlanetR _ planetId = do
     let partialPopulationReports = collatePopulations $ map entityVal loadedPopulationReports
     populationReports <- runDB $ mapM addPopulationDetails partialPopulationReports
 
+    factions <- runDB $ selectList [] [ Asc FactionId ]
     loadLandedShips <- runDB $ selectList [ ShipPlanetId ==. Just planetId 
                                           , ShipLanded ==. True ] []
-    let landedShips = map entityVal loadLandedShips
+    let landedShips = fillFactions factions loadLandedShips
     loadOrbitingShips <- runDB $ selectList [ ShipPlanetId ==. Just planetId 
                                             , ShipLanded ==. False ] []
-    let orbitingShips = map entityVal loadOrbitingShips
+    let orbitingShips = fillFactions factions loadOrbitingShips
 
     let expl = "Deep Sky - " ++ case (cprName planetReport) of
                                     (Just x) -> x
@@ -87,6 +89,18 @@ getPlanetR _ planetId = do
     defaultLayout $ do
         setTitle $ toMarkup expl
         $(widgetFile "planet")
+
+-- | match entries in given faction and ship lists, producing (Ship, Faction) tuples
+-- This is temporary fix, until esqueleto is included in stack
+fillFactions :: (SemiSequence seq, Functor f,
+                       Element seq ~ Entity Faction) =>
+                      seq -> f (Entity Ship) -> f (Ship, Faction)
+fillFactions factions ships =
+    map fn ships
+        where fn eShip = (entityVal eShip, entityVal $ fromJust faction)
+                where faction = find compareIds factions
+                      compareIds f = (shipOwnerId $ entityVal eShip) == (entityKey f)
+-- fromJust
 
 addPopulationDetails :: (BaseBackend backend ~ SqlBackend,
     MonadIO m, PersistStoreRead backend) =>

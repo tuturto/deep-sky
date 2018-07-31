@@ -31,5 +31,5 @@ buildingList buildingReports = $(widgetFile "widgets/buildingListW")
 populationList :: Foldable t => t CollatedPopulationReport -> WidgetFor site ()
 populationList populationReports = $(widgetFile "widgets/populationListW")
 
-shipList :: Foldable t => t Ship -> WidgetFor site ()
+shipList :: Foldable t => t (Ship, Faction) -> WidgetFor site ()
 shipList ships = $(widgetFile "widgets/shipListW")

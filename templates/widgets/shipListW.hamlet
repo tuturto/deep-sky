@@ -9,8 +9,8 @@
     $forall ship <- ships
         <div .row>
             <div .col-lg-2>
-                #{shipName ship}              
+                #{shipName $ fst ship}              
             <div .col-lg-1>
-                #{shipType ship}
+                #{shipType $ fst ship}
             <div .col-lg-1>
-                TODO: implement
+                #{factionName $ snd ship}
