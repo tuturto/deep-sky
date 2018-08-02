@@ -16,5 +16,4 @@ getFleetR = do
                         Nothing -> redirect ProfileR
     defaultLayout $ do
         setTitle "Deep Sky - Fleet"
-        addScript $ StaticR js_shipdesigner_js
         $(widgetFile "fleet")

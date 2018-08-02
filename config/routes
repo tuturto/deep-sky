@@ -21,6 +21,9 @@
 
 /construction                        ConstructionR     GET
 
+/designer                            DesignerR         GET
+/designer/new                        NewDesignR        GET
+
 /base                                BasesR            GET
 /base/#StarSystemId/#PlanetId        BaseR             GET
 

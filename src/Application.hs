@@ -48,6 +48,7 @@ import Handler.StarSystems
 import Handler.Bases
 import Handler.Research
 import Handler.Fleet
+import Handler.Designer
 import Handler.Construction
 import Handler.AdminPanel
 

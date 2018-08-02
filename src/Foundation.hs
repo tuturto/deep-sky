@@ -140,6 +140,11 @@ instance Yesod App where
                     , menuItemAccessCallback = isJust muser
                     }
                 , NavbarLeft $ MenuItem
+                    { menuItemLabel = "Designer"
+                    , menuItemRoute = DesignerR
+                    , menuItemAccessCallback = isJust muser
+                    }
+                , NavbarLeft $ MenuItem
                     { menuItemLabel = "Research"
                     , menuItemRoute = ResearchR
                     , menuItemAccessCallback = isJust muser
@@ -213,6 +218,8 @@ instance Yesod App where
     isAuthorized (BaseR _ _) _     = isAuthenticated
     isAuthorized ResearchR _       = isAuthenticated
     isAuthorized FleetR _          = isAuthenticated
+    isAuthorized DesignerR _       = isAuthenticated
+    isAuthorized NewDesignR _      = isAuthenticated
     isAuthorized ConstructionR _   = isAuthenticated
 
     -- Special authorization
@@ -281,6 +288,8 @@ instance YesodBreadcrumbs App where
         name <- runDB $ planetNameById planetId
         return (name, Just (StarSystemR systemId))
     breadcrumb FleetR = return ("Fleet", Just HomeR)
+    breadcrumb DesignerR = return ("Designer", Just HomeR)
+    breadcrumb NewDesignR = return ("New design", Just DesignerR)
     breadcrumb ResearchR = return ("Research", Just HomeR)
     breadcrumb ConstructionR = return ("Construction", Just HomeR)
     breadcrumb BasesR = return ("Bases", Just HomeR)
