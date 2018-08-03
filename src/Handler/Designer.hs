@@ -27,4 +27,5 @@ getNewDesignR = do
     defaultLayout $ do
         setTitle "Deep Sky - Ship designer"
         addScript $ StaticR js_shipdesigner_js
+        addStylesheet $ StaticR css_site_css
         $(widgetFile "shipdesigner")

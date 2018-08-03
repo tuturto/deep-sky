@@ -29,11 +29,11 @@ update msg model =
 -- VIEW
 
 statisticsPanel model =
-  div []
+  div [ class "design-panel" ]
   [
     div [ class "row" ]
     [
-      div [ class "col-lg-12" ]
+      div [ class "col-lg-12 design-panel-title" ]
       [
         text "Design statistics"
       ]
@@ -126,11 +126,11 @@ statisticsPanel model =
   ]
 
 componentList model =
-  div []
+  div [ class "design-panel" ]
   [
     div [ class "row" ]
     [
-      div [ class "col-lg-12" ]
+      div [ class "col-lg-12 design-panel-title" ]
       [
         text "Components"
       ]
@@ -147,9 +147,15 @@ leftPanel model =
 middlePanel model =
   div []
   [
-    div [ class "row" ]
+    div [ class "row design-panel" ]
     [
-      text "Selected components"
+      div [ class "row" ]
+      [
+        div [ class "col-lg-12 design-panel-title" ]
+        [
+          text "Selected components"
+        ]
+      ]
     ]
   ]
   
@@ -157,9 +163,15 @@ middlePanel model =
 rightPanel model =
   div []
   [
-    div [ class "row" ]
+    div [ class "design-panel" ]
     [
-      text "Warnings"
+      div [ class "row" ]
+      [
+        div [ class "col-lg-12 design-panel-title" ]
+        [
+          text "Warnings"
+        ]
+      ]
     ]
   ]
 
@@ -168,15 +180,15 @@ view model =
     [
       div [ class "row" ] 
       [
-        div [ class "col-lg-3" ]
+        div [ class "col-lg-4" ]
         [
           leftPanel model
         ]
-      , div [ class "col-lg-6" ]
+      , div [ class "col-lg-4" ]
         [
           middlePanel model
         ]
-      , div [ class "col-lg-3" ]
+      , div [ class "col-lg-4" ]
         [
           rightPanel model
         ]
