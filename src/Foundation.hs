@@ -207,9 +207,6 @@ instance Yesod App where
     isAuthorized RobotsR _         = return Authorized
     isAuthorized (StaticR _) _     = return Authorized
 
-    isAuthorized ApiStarSystemsR _ = return Authorized
-    isAuthorized ApiComponentsR _  = return Authorized
-
     -- Routes requiring authentication
     isAuthorized ProfileR _        = isAuthenticated
     isAuthorized FactionR _        = isAuthenticated
@@ -233,6 +230,10 @@ instance Yesod App where
         muid <- maybeAuthId
         res <- authorizeAdmin muid
         return res
+
+    -- API routes
+    isAuthorized ApiStarSystemsR _ = isAuthenticated
+    isAuthorized ApiComponentsR _  = isAuthenticated
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows

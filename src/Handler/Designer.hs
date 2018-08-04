@@ -31,10 +31,19 @@ getNewDesignR = do
         addStylesheet $ StaticR css_site_css
         $(widgetFile "shipdesigner")
 
+data ComponentDto = ComponentDto { cdName :: String
+                                 , cdDescription :: String
+                                 , cdWeight :: Int }
+
+instance ToJSON ComponentDto where
+    toJSON (ComponentDto name desc weight) = object [ "name" .= name
+                                                    , "desc" .= desc
+                                                    , "weight" .= weight ]
+
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
-    let json = object $ [ "name" .= ("Long range sensors" :: Text)
-                        , "description" .= ("Long range sensors let you see long" :: Text) 
-                        , "weight" .= (4 :: Int)
-                        ]
+    let obj1 = ComponentDto "Long range sensors" "Long range sensors let you see long" 1
+    let obj2 = ComponentDto "Engines" "Engines let you move" 2
+    let objList = [ obj1, obj2 ]
+    let json = toJSON objList
     return json

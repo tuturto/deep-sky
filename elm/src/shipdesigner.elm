@@ -1,7 +1,9 @@
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-
+import Http
+import Json.Decode as Decode
+import Debug exposing (log)
 
 main =
   program { init = init
@@ -13,6 +15,7 @@ main =
 type alias Component = 
   { name : String
   , description : String
+  , weight : Int
   }
 
 type alias Model =
@@ -23,13 +26,23 @@ type alias Model =
 
 init : (Model, Cmd Msg)
 init =
-  ({ components = 
-     [ { name = "foo"
-       , description = "bar" 
-       }
-     ]
-   }
-  , Cmd.none)
+  let newModel = { components = []
+                 }
+      url = "http://localhost:3000/api/components"
+      cmd = Http.send AvailableComponents (Http.get url decodeStuff)
+  in
+    (newModel, cmd)
+
+decodeStuff : Decode.Decoder (List Component)
+decodeStuff =
+  Decode.list componentDecoder
+
+componentDecoder : Decode.Decoder Component
+componentDecoder =
+  Decode.map3 Component
+    (Decode.field "name" Decode.string)
+    (Decode.field "desc" Decode.string)
+    (Decode.field "weight" Decode.int)
 
 -- SUBSCRIPTIONS
 
@@ -40,20 +53,21 @@ subscriptions model =
 
 -- UPDATE
 
-type Msg = Increment | Decrement
+type Msg = AvailableComponents (Result Http.Error (List Component))
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    Increment ->
+    AvailableComponents (Ok components) ->
+      ({ components = components
+       }
+      , Cmd.none)
+    AvailableComponents (Err data) ->
       (model, Cmd.none)
-
-    Decrement ->
-      (model, Cmd.none)
-      
 
 -- VIEW
 
+statisticsPanel : Model -> Html Msg
 statisticsPanel model =
   div [ class "design-panel" ]
   [ div [ class "row" ]
@@ -126,16 +140,21 @@ statisticsPanel model =
     ]
   ]
 
+selectableComponent : Component -> Html Msg
 selectableComponent component =
-  div [ class "row" ]
-  [ div [ class "col-lg-4" ]
-    [ text "nimi"
+  div [] 
+  [ div [ class "row" ]
+    [ div [ class "col-lg-12" ]
+      [ text component.name
+      ]
     ]
-  , div [class "col-lg-8" ]
-    [ text "selite"
+  , div [ class "row" ]
+    [ div [ class "col-lg-4 col-lg-offset-1"]
+      [ text <| toString component.weight ]
     ]
   ]
 
+componentList : Model -> Html Msg
 componentList model =
   div [ class "design-panel" ]
     <| List.append 
@@ -147,12 +166,14 @@ componentList model =
       ]
       <| List.map selectableComponent model.components
 
+leftPanel : Model -> Html Msg
 leftPanel model =
   div []
   [ statisticsPanel model
   , componentList model
   ]
 
+middlePanel : Model -> Html Msg
 middlePanel model =
   div []
   [ div [ class "row design-panel" ]
@@ -164,7 +185,7 @@ middlePanel model =
     ]
   ]
   
-
+rightPanel : Model -> Html Msg
 rightPanel model =
   div []
   [ div [ class "design-panel" ]
@@ -176,6 +197,7 @@ rightPanel model =
     ]
   ]
 
+view : Model -> Html Msg
 view model =
   div [ class "container" ]
     [ div [ class "row" ] 
