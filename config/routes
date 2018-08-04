@@ -30,5 +30,6 @@
 /faction                             FactionR          GET POST
 
 /api/starsystem                      ApiStarSystemsR   GET
+/api/components                      ApiComponentsR    GET
 /admin                               AdminPanelR       GET
 /admin/time                          AdminAdvanceTimeR GET

@@ -6,6 +6,7 @@
 
 module Handler.Designer where
 
+import Data.Aeson (object, (.=))
 import Import
 
 getDesignerR :: Handler Html
@@ -29,3 +30,11 @@ getNewDesignR = do
         addScript $ StaticR js_shipdesigner_js
         addStylesheet $ StaticR css_site_css
         $(widgetFile "shipdesigner")
+
+getApiComponentsR :: Handler Value
+getApiComponentsR = do
+    let json = object $ [ "name" .= ("Long range sensors" :: Text)
+                        , "description" .= ("Long range sensors let you see long" :: Text) 
+                        , "weight" .= (4 :: Int)
+                        ]
+    return json
