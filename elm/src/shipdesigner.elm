@@ -1,12 +1,10 @@
 import Html exposing (..)
 import Html.Attributes exposing (..)
---import Html.Events exposing (..)
 import Http
-import Debug exposing (log)
 import Json.Decode.Extra exposing ((|:))
 import Json.Decode as Decode
--- import Json.Decode exposing ((:=))
 
+main : Program Never Model Msg
 main =
   program { init = init
           , view = view
