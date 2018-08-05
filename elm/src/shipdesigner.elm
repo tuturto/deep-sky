@@ -1,5 +1,6 @@
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 import Http
 import Json.Decode.Extra exposing ((|:))
 import Json.Decode as Decode
@@ -21,6 +22,7 @@ type alias Component =
 
 type alias Model =
   { components : List Component
+  , message : String
   }
 
 type EquipmentSlot = InnerSlot
@@ -34,6 +36,7 @@ type EquipmentSlot = InnerSlot
 init : (Model, Cmd Msg)
 init =
   let newModel = { components = []
+                 , message = ""
                  }
       url = "http://localhost:3000/api/components"
       cmd = Http.send AvailableComponents (Http.get url (Decode.list componentDecoder))
@@ -74,16 +77,21 @@ subscriptions model =
 -- UPDATE
 
 type Msg = AvailableComponents (Result Http.Error (List Component))
+         | AddComponent String
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     AvailableComponents (Ok components) ->
-      ({ components = components
+      ({ model | components = components
        }
       , Cmd.none)
     AvailableComponents (Err data) ->
       (model, Cmd.none)
+    AddComponent msg ->
+      ({ model | message = msg
+       }
+      , Cmd.none)
 
 -- VIEW
 
@@ -92,61 +100,47 @@ statisticsPanel model =
   div [ class "design-panel" ]
   [ div [ class "row" ]
     [ div [ class "col-lg-12 design-panel-title" ]
-      [ text "Design statistics"
-      ]
+      [ text "Design statistics" ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-4" ]
-      [ text "Name"
-      ]
+      [ text "Name" ]
     , div [ class "col-lg-8" ]
-      [ text "S.S.S. Kickstart"
-      ]
+      [ text "S.S.S. Kickstart" ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-4" ]
-      [ text "Type"
-      ]
+      [ text "Type" ]
     , div [ class "col-lg-8" ]
-      [ text "Destroyer"
-      ]
+      [ text "Destroyer" ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-4" ]
-      [ text "Tonnage"
-      ]
+      [ text "Tonnage" ]
     , div [ class "col-lg-8" ]
-      [ text "150/150"
-      ]
+      [ text "150/150" ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-4" ]
-      [ text "Shields"
-      ]
+      [ text "Shields" ]
     , div [ class "col-lg-8" ]
-      [ text "0"
-      ]
+      [ text "0" ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-4" ]
-      [ text "Ordnance"
-      ]
+      [ text "Ordnance" ]
     , div [ class "col-lg-8" ]
-      [ text "15"
-      ]
+      [ text "15" ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-4" ]
-      [ text "Supply"
-      ]
+      [ text "Supply" ]
     , div [ class "col-lg-8" ]
-      [ text "100"
-      ]
+      [ text "100" ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-4" ]
-      [ text "Cost"
-      ]
+      [ text "Cost" ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-11 col-lg-offset-1" ]
@@ -164,9 +158,11 @@ selectableComponent : Component -> Html Msg
 selectableComponent component =
   div [] 
   [ div [ class "row" ]
-    [ div [ class "col-lg-12" ]
-      [ text component.name
-      ]
+    [ div [ class "col-lg-10" ]
+      [ text component.name ]
+    , div [ class "col-lg-1" ] [
+      button [ onClick <| AddComponent component.name ] [ text "+" ]
+    ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-1 col-lg-offset-1" ]
@@ -190,8 +186,7 @@ componentList model =
     <| List.append 
       [ div [ class "row" ]
         [ div [ class "col-lg-12 design-panel-title" ]
-          [ text "Components"
-          ]
+          [ text "Components" ]
         ]     
       ]
       <| List.map selectableComponent model.components
@@ -209,8 +204,8 @@ middlePanel model =
   [ div [ class "row design-panel" ]
     [ div [ class "row" ]
       [ div [ class "col-lg-12 design-panel-title" ]
-        [ text "Selected components"
-        ]
+        --[ text "Selected components" ]
+        [ text model.message ]
       ]
     ]
   ]
@@ -221,8 +216,7 @@ rightPanel model =
   [ div [ class "design-panel" ]
     [ div [ class "row" ]
       [ div [ class "col-lg-12 design-panel-title" ]
-        [ text "Warnings"
-        ]
+        [ text "Warnings" ]
       ]
     ]
   ]
@@ -231,14 +225,11 @@ view : Model -> Html Msg
 view model =
   div [ class "container" ]
     [ div [ class "row" ] 
-      [ div [ class "col-lg-4" ]
-        [ leftPanel model
-        ]
+      [ div [ class "col-lg-3" ]
+        [ leftPanel model ]
+      , div [ class "col-lg-5" ]
+        [ middlePanel model ]
       , div [ class "col-lg-4" ]
-        [ middlePanel model
-        ]
-      , div [ class "col-lg-4" ]
-        [ rightPanel model
-        ]
+        [ rightPanel model ]
       ]
     ]
