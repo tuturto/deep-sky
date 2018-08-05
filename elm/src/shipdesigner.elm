@@ -1,6 +1,6 @@
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+--import Html.Events exposing (..)
 import Http
 import Debug exposing (log)
 import Json.Decode.Extra exposing ((|:))
@@ -18,6 +18,7 @@ type alias Component =
   { name : String
   , description : String
   , weight : Int
+  , slots : List EquipmentSlot
   }
 
 type alias Model =
@@ -41,13 +42,21 @@ init =
   in
     (newModel, cmd)
 
-stringToSlot : String -> EquipmentSlot
+stringToSlot : String -> Decode.Decoder EquipmentSlot
 stringToSlot s =
   case s of
-    "I" -> InnerSlot
-    "O" -> OuterSlot
-    "A" -> ArmourSlot
-    _ -> UnknownSlot
+    "InnerSlot" -> Decode.succeed InnerSlot
+    "OuterSlot" -> Decode.succeed OuterSlot
+    "ArmourSlot" -> Decode.succeed ArmourSlot
+    _ -> Decode.succeed UnknownSlot
+
+slotDecoder : Decode.Decoder EquipmentSlot
+slotDecoder =
+  Decode.string |> Decode.andThen stringToSlot
+
+slotListDecoder : Decode.Decoder (List EquipmentSlot)
+slotListDecoder = 
+  Decode.list slotDecoder
 
 componentDecoder : Decode.Decoder Component
 componentDecoder =
@@ -55,6 +64,7 @@ componentDecoder =
     |: (Decode.field "name" Decode.string)
     |: (Decode.field "desc" Decode.string)
     |: (Decode.field "weight" Decode.int)
+    |: (Decode.field "slots" slotListDecoder)
 
 -- SUBSCRIPTIONS
 
@@ -161,10 +171,10 @@ selectableComponent component =
       ]
     ]
   , div [ class "row" ]
-    [ div [ class "col-lg-4 col-lg-offset-1"]
+    [ div [ class "col-lg-1 col-lg-offset-1" ]
       [ text <| toString component.weight ]
-    , div [] []
-        -- <| List.map equipmentSlotIndicator component.slots      
+    , div [ class "col-lg-1" ]
+        <| List.map equipmentSlotIndicator component.slots
     ]
   ]
 
@@ -174,7 +184,7 @@ equipmentSlotIndicator slot =
     InnerSlot -> text "I"
     OuterSlot -> text "O"
     ArmourSlot -> text "A"
-    UnknownSlot -> text ""
+    UnknownSlot -> text "U"
 
 componentList : Model -> Html Msg
 componentList model =
