@@ -7,6 +7,7 @@
 module Handler.Designer where
 
 import Data.Aeson (object, (.=))
+import Data.Aeson.TH
 import Import
 
 getDesignerR :: Handler Html
@@ -31,19 +32,30 @@ getNewDesignR = do
         addStylesheet $ StaticR css_site_css
         $(widgetFile "shipdesigner")
 
-data ComponentDto = ComponentDto { cdName :: String
-                                 , cdDescription :: String
-                                 , cdWeight :: Int }
+data ComponentDto = ComponentDto { dCompName :: String
+                                 , dCompDescription :: String
+                                 , dCompWeight :: Int 
+                                 , dCompSlots :: [EquipmentSlot] }
+    deriving (Show, Read, Eq)
 
 instance ToJSON ComponentDto where
-    toJSON (ComponentDto name desc weight) = object [ "name" .= name
-                                                    , "desc" .= desc
-                                                    , "weight" .= weight ]
+    toJSON (ComponentDto name desc weight slots) = 
+        object [ "name" .= name
+               , "desc" .= desc
+               , "weight" .= weight
+               , "slots" .= slots ]
+
+data EquipmentSlot = InnerSlot
+                   | OuterSlot
+                   | ArmourSlot
+    deriving (Show, Read, Eq)
+$(deriveJSON defaultOptions ''EquipmentSlot)
 
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
-    let obj1 = ComponentDto "Long range sensors" "Long range sensors let you see long" 1
-    let obj2 = ComponentDto "Engines" "Engines let you move" 2
-    let objList = [ obj1, obj2 ]
-    let json = toJSON objList
+    let json = toJSON [ ComponentDto "Long range sensors" "Long range sensors let you see long" 1 [ OuterSlot ]
+                      , ComponentDto "Engines" "Engines let you move" 2 [ OuterSlot ] 
+                      , ComponentDto "Armor" "Protects ship" 10 [ ArmourSlot ]
+                      , ComponentDto "Bridge" "Control center of ship" 10 [ InnerSlot, OuterSlot ]
+                      ]
     return json

@@ -2,14 +2,16 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
-import Json.Decode as Decode
 import Debug exposing (log)
+import Json.Decode.Extra exposing ((|:))
+import Json.Decode as Decode
+-- import Json.Decode exposing ((:=))
 
 main =
   program { init = init
           , view = view
           , update = update 
-          , subscriptions = subscriptions}
+          , subscriptions = subscriptions }
   
 
 type alias Component = 
@@ -22,6 +24,12 @@ type alias Model =
   { components : List Component
   }
 
+type EquipmentSlot = InnerSlot
+                   | OuterSlot
+                   | ArmourSlot
+                   | UnknownSlot
+
+
 -- MODEL
 
 init : (Model, Cmd Msg)
@@ -29,20 +37,24 @@ init =
   let newModel = { components = []
                  }
       url = "http://localhost:3000/api/components"
-      cmd = Http.send AvailableComponents (Http.get url decodeStuff)
+      cmd = Http.send AvailableComponents (Http.get url (Decode.list componentDecoder))
   in
     (newModel, cmd)
 
-decodeStuff : Decode.Decoder (List Component)
-decodeStuff =
-  Decode.list componentDecoder
+stringToSlot : String -> EquipmentSlot
+stringToSlot s =
+  case s of
+    "I" -> InnerSlot
+    "O" -> OuterSlot
+    "A" -> ArmourSlot
+    _ -> UnknownSlot
 
 componentDecoder : Decode.Decoder Component
 componentDecoder =
-  Decode.map3 Component
-    (Decode.field "name" Decode.string)
-    (Decode.field "desc" Decode.string)
-    (Decode.field "weight" Decode.int)
+  Decode.succeed Component
+    |: (Decode.field "name" Decode.string)
+    |: (Decode.field "desc" Decode.string)
+    |: (Decode.field "weight" Decode.int)
 
 -- SUBSCRIPTIONS
 
@@ -151,8 +163,18 @@ selectableComponent component =
   , div [ class "row" ]
     [ div [ class "col-lg-4 col-lg-offset-1"]
       [ text <| toString component.weight ]
+    , div [] []
+        -- <| List.map equipmentSlotIndicator component.slots      
     ]
   ]
+
+equipmentSlotIndicator : EquipmentSlot -> Html Msg
+equipmentSlotIndicator slot =
+  case slot of
+    InnerSlot -> text "I"
+    OuterSlot -> text "O"
+    ArmourSlot -> text "A"
+    UnknownSlot -> text ""
 
 componentList : Model -> Html Msg
 componentList model =
