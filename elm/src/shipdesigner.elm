@@ -92,8 +92,7 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     AvailableComponents (Ok components) ->
-      ({ model | components = components
-       }
+      ( model & modelComponents .= components
       , Cmd.none)
     AvailableComponents (Err data) ->
       (model, Cmd.none)
@@ -137,6 +136,9 @@ removeComponent model component =
         compRemoved = model & modelShipF => shipComponentsF $= List.filter (\x -> not <| search x)
       in
         compRemoved & modelShipF => shipComponentsF $= List.append [InstalledComponent component newCount]
+
+modelComponents : Setter Model Model (List Component) (List Component)
+modelComponents f model = { model | components = f model.components }
 
 modelShipF : Setter Model Model Ship Ship
 modelShipF f model = { model | ship = f model.ship }
