@@ -4,6 +4,7 @@ import Html.Events exposing (..)
 import Http
 import Json.Decode.Extra exposing ((|:))
 import Json.Decode as Decode
+import Focus exposing (..)
 
 main : Program Never Model Msg
 main =
@@ -99,12 +100,13 @@ update msg model =
 
 addComponent : Model -> Component -> Model
 addComponent model component =
-  let 
-    comps = model.ship.components
-    newComps = List.append comps [component]
-    ship = model.ship
-  in 
-    { model | ship = { ship | components = newComps }}
+    model & modelShipF => shipComponentsF $= List.append [component]
+
+modelShipF : Setter Model Model Ship Ship
+modelShipF f model = { model | ship = f model.ship }
+
+shipComponentsF : Setter Ship Ship (List Component) (List Component)
+shipComponentsF f ship = { ship | components = f ship.components }
 
 -- VIEW
 
@@ -182,6 +184,25 @@ selectableComponent component =
     ]
   ]
 
+selectedComponent : Component -> Html Msg
+selectedComponent component =
+  div [] 
+  [ div [ class "row" ]
+    [ div [ class "col-lg-12" ]
+      [ text component.name ]
+    ]
+  , div [class "row" ]
+    [ div [ class "col-lg-11 col-lg-offset-1" ]
+      [ text component.description ]
+    ]
+  , div [ class "row" ]
+    [ div [ class "col-lg-1 col-lg-offset-1" ]
+      [ text <| toString component.weight ]
+    , div [ class "col-lg-1" ]
+        <| List.map equipmentSlotIndicator component.slots
+    ]
+  ]
+
 equipmentSlotIndicator : EquipmentSlot -> Html Msg
 equipmentSlotIndicator slot =
   case slot of
@@ -218,7 +239,7 @@ middlePanel model =
         [ text "Selected components" ]
       ]        
     ]
-    <| List.map selectableComponent model.ship.components
+    <| List.map selectedComponent model.ship.components
   ]
   
 rightPanel : Model -> Html Msg
