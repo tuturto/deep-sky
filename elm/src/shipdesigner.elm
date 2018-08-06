@@ -20,6 +20,7 @@ type alias Component =
   , description : String
   , weight : Int
   , slots : List EquipmentSlot
+  , bridge : Bool
   }
 
 type InstalledComponent = InstalledComponent Component Int
@@ -27,9 +28,15 @@ type InstalledComponent = InstalledComponent Component Int
 type alias Ship =
   { components : List InstalledComponent }
 
+type alias Chassis =
+  { name : String
+  , maxTonnage : Int 
+  , requiresBridge : Bool }
+
 type alias Model =
   { components : List Component
   , ship : Ship
+  , chassis : Chassis
   }
 
 type EquipmentSlot = InnerSlot
@@ -37,6 +44,7 @@ type EquipmentSlot = InnerSlot
                    | ArmourSlot
                    | UnknownSlot
 
+type alias ShipValidator = Model -> Maybe String
 
 -- MODEL
 
@@ -44,8 +52,11 @@ init : (Model, Cmd Msg)
 init =
   let newModel = { components = []
                  , ship = Ship []
+                 , chassis = { name = "Destroyer"
+                             , maxTonnage = 150
+                             , requiresBridge = True }
                  }
-      url = "http://localhost:3000/api/components"
+      url = "/api/components"
       cmd = Http.send AvailableComponents (Http.get url (Decode.list componentDecoder))
   in
     (newModel, cmd)
@@ -74,6 +85,7 @@ componentDecoder =
     |: (Decode.field "description" Decode.string)
     |: (Decode.field "weight" Decode.int)
     |: (Decode.field "slots" slotListDecoder)
+    |: (Decode.field "bridge" Decode.bool)
 
 -- SUBSCRIPTIONS
 
@@ -146,6 +158,33 @@ modelShipF f model = { model | ship = f model.ship }
 shipComponentsF : Setter Ship Ship (List InstalledComponent) (List InstalledComponent)
 shipComponentsF f ship = { ship | components = f ship.components }
 
+totalTonnage : Ship -> Int
+totalTonnage ship =
+  List.foldr (\(InstalledComponent component amount) acc -> component.weight * amount + acc) 0 ship.components
+
+tonnageCheck : ShipValidator
+tonnageCheck model =
+  if totalTonnage model.ship > model.chassis.maxTonnage
+  then Just "Ship design exceeds max tonnage"
+  else Nothing
+
+bridgeCheck : ShipValidator
+bridgeCheck model =
+  let 
+    bridgeFound = List.any (\(InstalledComponent comp _) -> comp.bridge) model.ship.components
+  in
+    if model.chassis.requiresBridge && not bridgeFound
+    then Just "Bridge is required"
+    else Nothing
+
+validators : List ShipValidator
+validators = [ tonnageCheck 
+             , bridgeCheck ]
+
+validateDesign : Model -> List String
+validateDesign model =
+  List.filterMap identity <| List.map (\x -> x model) validators
+
 -- VIEW
 
 statisticsPanel : Model -> Html Msg
@@ -165,7 +204,7 @@ statisticsPanel model =
     [ div [ class "col-lg-4" ]
       [ text "Type" ]
     , div [ class "col-lg-8" ]
-      [ text "Destroyer" ]
+      [ text model.chassis.name ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-4" ]
@@ -173,7 +212,7 @@ statisticsPanel model =
     , div [ class "col-lg-8" ]
       [ text <| toString <| List.foldr (\(InstalledComponent component amount) acc -> component.weight * amount + acc) 0 model.ship.components 
       , text " / "
-      , text "150" ]
+      , text <| toString model.chassis.maxTonnage ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-4" ]
@@ -231,12 +270,12 @@ selectedComponent (InstalledComponent component amount) =
     [ div [ class "col-lg-12" ]
       [ text component.name
       , div [ class "btn btn-outline-dark btn-sm"
-               , onClick <| AddComponent component ] 
-        [ text " + "]
+               , onClick <| RemoveComponent component ] 
+        [ text " - "]
       , text <| toString amount
       , div [ class "btn btn-outline-dark btn-sm"
-            , onClick <| RemoveComponent component ] 
-        [ text " - "]
+            , onClick <| AddComponent component ] 
+        [ text " + "]
       ]
     ]
   , div [class "row" ]
@@ -289,17 +328,30 @@ middlePanel model =
     ]
     <| List.map selectedComponent model.ship.components
   ]
-  
+
+warningMessages : List String -> List (Html Msg)
+warningMessages s =
+  let 
+    mapper err = div [ class "row" ]
+                 [ div [ class "col-lg-12" ]
+                   [ text err]
+                 ]
+  in
+    List.map mapper s
+
+
 rightPanel : Model -> Html Msg
 rightPanel model =
   div []
-  [ div [ class "design-panel" ]
-    [ div [ class "row" ]
-      [ div [ class "col-lg-12 design-panel-title" ]
-        [ text "Warnings" ]
-      ]
+  <| List.append
+    [ div [ class "design-panel" ]
+      [ div [ class "row" ]
+        [ div [ class "col-lg-12 design-panel-title" ]
+          [ text "Warnings" ]
+        ]
+      ]      
     ]
-  ]
+    <| warningMessages <| validateDesign model   
 
 view : Model -> Html Msg
 view model =

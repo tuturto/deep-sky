@@ -36,16 +36,18 @@ data ComponentDto = ComponentDto { dCompId :: Int
                                  , dCompName :: String
                                  , dCompDescription :: String
                                  , dCompWeight :: Int 
-                                 , dCompSlots :: [EquipmentSlot] }
+                                 , dCompSlots :: [EquipmentSlot] 
+                                 , dCompBridge :: Bool }
     deriving (Show, Read, Eq)
 
 instance ToJSON ComponentDto where
-    toJSON (ComponentDto id name desc weight slots) = 
-        object [ "id" .= id
+    toJSON (ComponentDto idKey name desc weight slots bridge) = 
+        object [ "id" .= idKey
                , "name" .= name
                , "description" .= desc
                , "weight" .= weight
-               , "slots" .= slots ]
+               , "slots" .= slots 
+               , "bridge" .= bridge ]
 
 data EquipmentSlot = InnerSlot
                    | OuterSlot
@@ -55,9 +57,9 @@ $(deriveJSON defaultOptions ''EquipmentSlot)
 
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
-    let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 [ OuterSlot ]
-                      , ComponentDto 2"Engines" "Engines let you move" 2 [ OuterSlot ] 
-                      , ComponentDto 3 "Armor" "Protects ship" 10 [ ArmourSlot ]
-                      , ComponentDto 4 "Bridge" "Control center of ship" 10 [ InnerSlot, OuterSlot ]
+    let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 [ OuterSlot ] False
+                      , ComponentDto 2"Engines" "Engines let you move" 2 [ OuterSlot ]  False
+                      , ComponentDto 3 "Armor" "Protects ship" 10 [ ArmourSlot ] False
+                      , ComponentDto 4 "Bridge" "Control center of ship" 10 [ InnerSlot, OuterSlot ] True
                       ]
     return json
