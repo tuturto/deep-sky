@@ -14,15 +14,19 @@ main =
   
 
 type alias Component = 
-  { name : String
+  { id : Int
+  , name : String
   , description : String
   , weight : Int
   , slots : List EquipmentSlot
   }
 
+type alias Ship =
+  { components : List Component }
+
 type alias Model =
   { components : List Component
-  , message : String
+  , ship : Ship
   }
 
 type EquipmentSlot = InnerSlot
@@ -36,7 +40,7 @@ type EquipmentSlot = InnerSlot
 init : (Model, Cmd Msg)
 init =
   let newModel = { components = []
-                 , message = ""
+                 , ship = Ship []
                  }
       url = "http://localhost:3000/api/components"
       cmd = Http.send AvailableComponents (Http.get url (Decode.list componentDecoder))
@@ -62,8 +66,9 @@ slotListDecoder =
 componentDecoder : Decode.Decoder Component
 componentDecoder =
   Decode.succeed Component
+    |: (Decode.field "id" Decode.int)
     |: (Decode.field "name" Decode.string)
-    |: (Decode.field "desc" Decode.string)
+    |: (Decode.field "description" Decode.string)
     |: (Decode.field "weight" Decode.int)
     |: (Decode.field "slots" slotListDecoder)
 
@@ -77,7 +82,7 @@ subscriptions model =
 -- UPDATE
 
 type Msg = AvailableComponents (Result Http.Error (List Component))
-         | AddComponent String
+         | AddComponent Component
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -88,10 +93,18 @@ update msg model =
       , Cmd.none)
     AvailableComponents (Err data) ->
       (model, Cmd.none)
-    AddComponent msg ->
-      ({ model | message = msg
-       }
+    AddComponent component ->
+      ( addComponent model component
       , Cmd.none)
+
+addComponent : Model -> Component -> Model
+addComponent model component =
+  let 
+    comps = model.ship.components
+    newComps = List.append comps [component]
+    ship = model.ship
+  in 
+    { model | ship = { ship | components = newComps }}
 
 -- VIEW
 
@@ -156,13 +169,10 @@ statisticsPanel model =
 
 selectableComponent : Component -> Html Msg
 selectableComponent component =
-  div [] 
+  div [ onClick <| AddComponent component ] 
   [ div [ class "row" ]
-    [ div [ class "col-lg-10" ]
+    [ div [ class "col-lg-12" ]
       [ text component.name ]
-    , div [ class "col-lg-1" ] [
-      button [ onClick <| AddComponent component.name ] [ text "+" ]
-    ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-1 col-lg-offset-1" ]
@@ -178,7 +188,7 @@ equipmentSlotIndicator slot =
     InnerSlot -> text "I"
     OuterSlot -> text "O"
     ArmourSlot -> text "A"
-    UnknownSlot -> text "U"
+    UnknownSlot -> text "?"
 
 componentList : Model -> Html Msg
 componentList model =
@@ -202,12 +212,13 @@ middlePanel : Model -> Html Msg
 middlePanel model =
   div []
   [ div [ class "row design-panel" ]
+    <| List.append
     [ div [ class "row" ]
       [ div [ class "col-lg-12 design-panel-title" ]
-        --[ text "Selected components" ]
-        [ text model.message ]
-      ]
+        [ text "Selected components" ]
+      ]        
     ]
+    <| List.map selectableComponent model.ship.components
   ]
   
 rightPanel : Model -> Html Msg

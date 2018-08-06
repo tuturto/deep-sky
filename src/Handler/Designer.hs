@@ -32,16 +32,18 @@ getNewDesignR = do
         addStylesheet $ StaticR css_site_css
         $(widgetFile "shipdesigner")
 
-data ComponentDto = ComponentDto { dCompName :: String
+data ComponentDto = ComponentDto { dCompId :: Int
+                                 , dCompName :: String
                                  , dCompDescription :: String
                                  , dCompWeight :: Int 
                                  , dCompSlots :: [EquipmentSlot] }
     deriving (Show, Read, Eq)
 
 instance ToJSON ComponentDto where
-    toJSON (ComponentDto name desc weight slots) = 
-        object [ "name" .= name
-               , "desc" .= desc
+    toJSON (ComponentDto id name desc weight slots) = 
+        object [ "id" .= id
+               , "name" .= name
+               , "description" .= desc
                , "weight" .= weight
                , "slots" .= slots ]
 
@@ -53,9 +55,9 @@ $(deriveJSON defaultOptions ''EquipmentSlot)
 
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
-    let json = toJSON [ ComponentDto "Long range sensors" "Long range sensors let you see long" 1 [ OuterSlot ]
-                      , ComponentDto "Engines" "Engines let you move" 2 [ OuterSlot ] 
-                      , ComponentDto "Armor" "Protects ship" 10 [ ArmourSlot ]
-                      , ComponentDto "Bridge" "Control center of ship" 10 [ InnerSlot, OuterSlot ]
+    let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 [ OuterSlot ]
+                      , ComponentDto 2"Engines" "Engines let you move" 2 [ OuterSlot ] 
+                      , ComponentDto 3 "Armor" "Protects ship" 10 [ ArmourSlot ]
+                      , ComponentDto 4 "Bridge" "Control center of ship" 10 [ InnerSlot, OuterSlot ]
                       ]
     return json
