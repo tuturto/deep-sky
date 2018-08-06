@@ -32,34 +32,39 @@ getNewDesignR = do
         addStylesheet $ StaticR css_site_css
         $(widgetFile "shipdesigner")
 
-data ComponentDto = ComponentDto { dCompId :: Int
-                                 , dCompName :: String
-                                 , dCompDescription :: String
-                                 , dCompWeight :: Int 
-                                 , dCompSlots :: [EquipmentSlot] 
-                                 , dCompBridge :: Bool }
-    deriving (Show, Read, Eq)
-
-instance ToJSON ComponentDto where
-    toJSON (ComponentDto idKey name desc weight slots bridge) = 
-        object [ "id" .= idKey
-               , "name" .= name
-               , "description" .= desc
-               , "weight" .= weight
-               , "slots" .= slots 
-               , "bridge" .= bridge ]
-
 data EquipmentSlot = InnerSlot
                    | OuterSlot
                    | ArmourSlot
     deriving (Show, Read, Eq)
 $(deriveJSON defaultOptions ''EquipmentSlot)
 
+data EquipmentType = BridgeEquipment
+                   | SensorEquipment
+    deriving (Show, Read, Eq)
+$(deriveJSON defaultOptions ''EquipmentType)
+
+data ComponentDto = ComponentDto { dCompId :: Int
+                                 , dCompName :: String
+                                 , dCompDescription :: String
+                                 , dCompWeight :: Int 
+                                 , dCompSlots :: [EquipmentSlot] 
+                                 , dCompType :: [EquipmentType] }
+    deriving (Show, Read, Eq)
+
+instance ToJSON ComponentDto where
+    toJSON (ComponentDto idKey name desc weight slots types) = 
+        object [ "id" .= idKey
+               , "name" .= name
+               , "description" .= desc
+               , "weight" .= weight
+               , "slots" .= slots 
+               , "types" .= types ]
+
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
-    let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 [ OuterSlot ] False
-                      , ComponentDto 2"Engines" "Engines let you move" 2 [ OuterSlot ]  False
-                      , ComponentDto 3 "Armor" "Protects ship" 10 [ ArmourSlot ] False
-                      , ComponentDto 4 "Bridge" "Control center of ship" 10 [ InnerSlot, OuterSlot ] True
+    let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 [ OuterSlot ] [ SensorEquipment ]
+                      , ComponentDto 2 "Engines" "Engines let you move" 2 [ OuterSlot ]  []
+                      , ComponentDto 3 "Armor" "Protects ship" 10 [ ArmourSlot ] []
+                      , ComponentDto 4 "Bridge" "Control center of ship" 10 [ InnerSlot, OuterSlot ] [ BridgeEquipment ]
                       ]
     return json

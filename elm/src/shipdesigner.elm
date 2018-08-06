@@ -20,7 +20,7 @@ type alias Component =
   , description : String
   , weight : Int
   , slots : List EquipmentSlot
-  , bridge : Bool
+  , types : List EquipmentType
   }
 
 type InstalledComponent = InstalledComponent Component Int
@@ -31,7 +31,7 @@ type alias Ship =
 type alias Chassis =
   { name : String
   , maxTonnage : Int 
-  , requiresBridge : Bool }
+  , requiredTypes : List (Int, EquipmentType) }
 
 type alias Model =
   { components : List Component
@@ -44,6 +44,10 @@ type EquipmentSlot = InnerSlot
                    | ArmourSlot
                    | UnknownSlot
 
+type EquipmentType = BridgeEquipment
+                   | SensorEquipment                   
+                   | UnknowEquipmentType
+
 type alias ShipValidator = Model -> Maybe String
 
 -- MODEL
@@ -54,7 +58,7 @@ init =
                  , ship = Ship []
                  , chassis = { name = "Destroyer"
                              , maxTonnage = 150
-                             , requiresBridge = True }
+                             , requiredTypes = [ (1, BridgeEquipment) ] }
                  }
       url = "/api/components"
       cmd = Http.send AvailableComponents (Http.get url (Decode.list componentDecoder))
@@ -73,9 +77,16 @@ slotDecoder : Decode.Decoder EquipmentSlot
 slotDecoder =
   Decode.string |> Decode.andThen stringToSlot
 
-slotListDecoder : Decode.Decoder (List EquipmentSlot)
-slotListDecoder = 
-  Decode.list slotDecoder
+stringToEqType : String -> Decode.Decoder EquipmentType
+stringToEqType s =
+  case s of
+    "BridgeEquipment" -> Decode.succeed BridgeEquipment
+    "SensorEquipment" -> Decode.succeed SensorEquipment
+    _ -> Decode.succeed UnknowEquipmentType
+
+equipmentTypeDecoder : Decode.Decoder EquipmentType
+equipmentTypeDecoder =
+  Decode.string |> Decode.andThen stringToEqType
 
 componentDecoder : Decode.Decoder Component
 componentDecoder =
@@ -84,8 +95,8 @@ componentDecoder =
     |: (Decode.field "name" Decode.string)
     |: (Decode.field "description" Decode.string)
     |: (Decode.field "weight" Decode.int)
-    |: (Decode.field "slots" slotListDecoder)
-    |: (Decode.field "bridge" Decode.bool)
+    |: (Decode.field "slots" <| Decode.list slotDecoder)
+    |: (Decode.field "types" <| Decode.list equipmentTypeDecoder)
 
 -- SUBSCRIPTIONS
 
@@ -168,18 +179,30 @@ tonnageCheck model =
   then Just "Ship design exceeds max tonnage"
   else Nothing
 
-bridgeCheck : ShipValidator
-bridgeCheck model =
+equipmentRequirementToString : (Int, EquipmentType) -> String
+equipmentRequirementToString (n, equipment) =
+  case equipment of
+    BridgeEquipment -> 
+      "at least n bridges are required"
+    SensorEquipment ->
+      "at least n sensors are required"
+    UnknowEquipmentType ->
+      "unknown type"
+
+componentCheck : ShipValidator
+componentCheck model =
   let 
-    bridgeFound = List.any (\(InstalledComponent comp _) -> comp.bridge) model.ship.components
+    --bridgeFound = List.any (\(InstalledComponent comp _) -> comp.bridge) model.ship.components
+    bridgeFound = True
   in
-    if model.chassis.requiresBridge && not bridgeFound
-    then Just "Bridge is required"
-    else Nothing
+    --if model.chassis.requiresBridge && not bridgeFound
+    --then Just "Bridge is required"
+    --else Nothing
+    Nothing
 
 validators : List ShipValidator
 validators = [ tonnageCheck 
-             , bridgeCheck ]
+             , componentCheck ]
 
 validateDesign : Model -> List String
 validateDesign model =
