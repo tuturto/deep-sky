@@ -20,7 +20,7 @@ type alias Component =
   , description : String
   , weight : Int
   , slots : List EquipmentSlot
-  , types : List EquipmentType
+  , types : List EquipmentLevel
   }
 
 type InstalledComponent = InstalledComponent Component Int
@@ -31,7 +31,7 @@ type alias Ship =
 type alias Chassis =
   { name : String
   , maxTonnage : Int 
-  , requiredTypes : List (Int, EquipmentType) }
+  , requiredTypes : List EquipmentLevel }
 
 type alias Model =
   { components : List Component
@@ -48,7 +48,9 @@ type EquipmentType = BridgeEquipment
                    | SensorEquipment                   
                    | UnknowEquipmentType
 
-type alias ShipValidator = Model -> Maybe String
+type EquipmentLevel = EquipmentLevel Int EquipmentType
+
+type alias ShipValidator = Model -> List (Maybe String)
 
 -- MODEL
 
@@ -58,7 +60,7 @@ init =
                  , ship = Ship []
                  , chassis = { name = "Destroyer"
                              , maxTonnage = 150
-                             , requiredTypes = [ (1, BridgeEquipment) ] }
+                             , requiredTypes = [ EquipmentLevel 1 BridgeEquipment ] }
                  }
       url = "/api/components"
       cmd = Http.send AvailableComponents (Http.get url (Decode.list componentDecoder))
@@ -84,9 +86,11 @@ stringToEqType s =
     "SensorEquipment" -> Decode.succeed SensorEquipment
     _ -> Decode.succeed UnknowEquipmentType
 
-equipmentTypeDecoder : Decode.Decoder EquipmentType
-equipmentTypeDecoder =
-  Decode.string |> Decode.andThen stringToEqType
+equipmentLevelDecoder : Decode.Decoder EquipmentLevel
+equipmentLevelDecoder =
+  Decode.succeed EquipmentLevel
+    |: (Decode.field "level" Decode.int)
+    |: (Decode.field "type" Decode.string |> Decode.andThen stringToEqType)
 
 componentDecoder : Decode.Decoder Component
 componentDecoder =
@@ -96,7 +100,7 @@ componentDecoder =
     |: (Decode.field "description" Decode.string)
     |: (Decode.field "weight" Decode.int)
     |: (Decode.field "slots" <| Decode.list slotDecoder)
-    |: (Decode.field "types" <| Decode.list equipmentTypeDecoder)
+    |: (Decode.field "types" <| Decode.list equipmentLevelDecoder)
 
 -- SUBSCRIPTIONS
 
@@ -176,29 +180,33 @@ totalTonnage ship =
 tonnageCheck : ShipValidator
 tonnageCheck model =
   if totalTonnage model.ship > model.chassis.maxTonnage
-  then Just "Ship design exceeds max tonnage"
-  else Nothing
+  then [ Just "Ship design exceeds max tonnage" ]
+  else [ Nothing ]
 
-equipmentRequirementToString : (Int, EquipmentType) -> String
-equipmentRequirementToString (n, equipment) =
-  case equipment of
-    BridgeEquipment -> 
-      "at least n bridges are required"
+equipmentRequirementToString : EquipmentLevel -> String
+equipmentRequirementToString (EquipmentLevel lvl eType) =
+  case eType of
+    BridgeEquipment ->
+      "at least " ++ (toString lvl) ++ " points worth of bridges is required"
     SensorEquipment ->
-      "at least n sensors are required"
+      "at least " ++ (toString lvl) ++ " points worth of sensors is required"
     UnknowEquipmentType ->
       "unknown type"
 
 componentCheck : ShipValidator
 componentCheck model =
   let 
-    --bridgeFound = List.any (\(InstalledComponent comp _) -> comp.bridge) model.ship.components
-    bridgeFound = True
+    checkSingle (EquipmentLevel n equipment) = 
+      let 
+        matching = List.filter (\(InstalledComponent comp level) -> 
+          List.any (\(EquipmentLevel _ eType) -> eType == equipment) comp.types) model.ship.components
+        total = List.foldr (\(InstalledComponent _ lvl) acc -> acc + lvl) 0 matching
+      in
+        if total >= n
+        then Nothing
+        else Just <| equipmentRequirementToString (EquipmentLevel n equipment)
   in
-    --if model.chassis.requiresBridge && not bridgeFound
-    --then Just "Bridge is required"
-    --else Nothing
-    Nothing
+    List.map checkSingle model.chassis.requiredTypes
 
 validators : List ShipValidator
 validators = [ tonnageCheck 
@@ -206,7 +214,7 @@ validators = [ tonnageCheck
 
 validateDesign : Model -> List String
 validateDesign model =
-  List.filterMap identity <| List.map (\x -> x model) validators
+  List.filterMap identity <| List.concatMap (\x -> x model) validators
 
 -- VIEW
 

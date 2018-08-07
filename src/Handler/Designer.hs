@@ -43,12 +43,21 @@ data EquipmentType = BridgeEquipment
     deriving (Show, Read, Eq)
 $(deriveJSON defaultOptions ''EquipmentType)
 
+data ComponentLevel = ComponentLevel { compLeLevel :: Int
+                                     , compLeType :: EquipmentType }
+    deriving (Show, Read, Eq)
+
+instance ToJSON ComponentLevel where
+    toJSON (ComponentLevel lvl compType) =
+        object [ "level" .= lvl
+               , "type" .= compType ]
+
 data ComponentDto = ComponentDto { dCompId :: Int
                                  , dCompName :: String
                                  , dCompDescription :: String
                                  , dCompWeight :: Int 
                                  , dCompSlots :: [EquipmentSlot] 
-                                 , dCompType :: [EquipmentType] }
+                                 , dCompType :: [ComponentLevel] }
     deriving (Show, Read, Eq)
 
 instance ToJSON ComponentDto where
@@ -58,13 +67,13 @@ instance ToJSON ComponentDto where
                , "description" .= desc
                , "weight" .= weight
                , "slots" .= slots 
-               , "types" .= types ]
+               , "types" .= array types ]
 
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
-    let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 [ OuterSlot ] [ SensorEquipment ]
+    let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 [ OuterSlot ] [ ComponentLevel 1 SensorEquipment ]
                       , ComponentDto 2 "Engines" "Engines let you move" 2 [ OuterSlot ]  []
                       , ComponentDto 3 "Armor" "Protects ship" 10 [ ArmourSlot ] []
-                      , ComponentDto 4 "Bridge" "Control center of ship" 10 [ InnerSlot, OuterSlot ] [ BridgeEquipment ]
+                      , ComponentDto 4 "Bridge" "Control center of ship" 10 [ InnerSlot, OuterSlot ] [ ComponentLevel 1 BridgeEquipment ]
                       ]
     return json
