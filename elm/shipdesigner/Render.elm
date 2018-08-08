@@ -30,7 +30,7 @@ statisticsPanel model =
     [ div [ class "col-lg-4" ]
       [ text "Tonnage" ]
     , div [ class "col-lg-8" ]
-      [ text <| toString <| List.foldr (\(InstalledComponent component amount) acc -> component.weight * amount + acc) 0 model.ship.components 
+      [ text <| toString <| totalTonnage model.ship
       , text " / "
       , text <| toString model.chassis.maxTonnage ]
     ]
