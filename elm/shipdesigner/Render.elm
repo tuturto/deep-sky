@@ -126,7 +126,7 @@ componentList model =
           [ text "Components" ]
         ]     
       ]
-      <| List.map selectableComponent model.components
+      <| List.map selectableComponent <| List.sortWith sortComponentByAlpha model.components
 
 leftPanel : Model -> Html Msg
 leftPanel model =
@@ -145,7 +145,7 @@ middlePanel model =
         [ text "Selected components" ]
       ]        
     ]
-    <| List.map selectedComponent model.ship.components
+    <| List.map selectedComponent <| List.sortWith sortInstalledByAlpha model.ship.components
   ]
 
 warningMessages : List String -> List (Html Msg)

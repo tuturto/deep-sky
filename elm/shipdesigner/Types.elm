@@ -53,3 +53,11 @@ shipComponentsF f ship = { ship | components = f ship.components }
 totalTonnage : Ship -> Int
 totalTonnage ship =
   List.foldr (\(InstalledComponent component amount) acc -> component.weight * amount + acc) 0 ship.components
+
+sortInstalledByAlpha : InstalledComponent -> InstalledComponent -> Order
+sortInstalledByAlpha (InstalledComponent a _) (InstalledComponent b _) =
+  compare a.name b.name
+
+sortComponentByAlpha : Component -> Component -> Order
+sortComponentByAlpha a b =
+  compare a.name b.name
