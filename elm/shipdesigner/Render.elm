@@ -79,7 +79,7 @@ selectableComponent component =
     [ div [ class "col-lg-1 col-lg-offset-1" ]
       [ text <| toString component.weight ]
     , div [ class "col-lg-1" ]
-        <| List.map equipmentSlotIndicator component.slots
+        <| List.intersperse (text ",") <| List.map equipmentSlotIndicator component.slots
     ]
   ]
 
@@ -103,12 +103,26 @@ selectedComponent (InstalledComponent component amount) =
       [ text component.description ]
     ]
   , div [ class "row" ]
+    [
+        div [ class "col-lg-offset-1 col-lg-10" ]
+        [ i [] <| List.intersperse (text ",") <| List.map componentTypes component.types ]
+    ]
+  , div [ class "row" ]
     [ div [ class "col-lg-1 col-lg-offset-1" ]
       [ text <| toString component.weight ]
     , div [ class "col-lg-1" ]
-        <| List.map equipmentSlotIndicator component.slots
+        <| List.intersperse (text ",") <| List.map equipmentSlotIndicator component.slots
     ]
   ]
+componentTypes : EquipmentLevel -> Html Msg
+componentTypes (EquipmentLevel lvl eqType) =
+    text <| eqTypeToString eqType ++ " (" ++ toString lvl ++ ")"
+
+eqTypeToString : EquipmentType -> String
+eqTypeToString eqt =
+    case eqt of
+        BridgeEquipment -> "Bridge"
+        SensorEquipment -> "Sensors"
 
 equipmentSlotIndicator : EquipmentSlot -> Html Msg
 equipmentSlotIndicator slot =
