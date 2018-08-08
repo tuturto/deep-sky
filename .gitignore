@@ -23,5 +23,5 @@ sky.cabal
 .vscode/
 .dir-locals.el
 todo
-elm/src/elm-stuff/
+elm/shipdesigner/elm-stuff/
 static/js/shipdesigner.js
