@@ -114,6 +114,7 @@ selectedComponent (InstalledComponent component amount) =
         <| List.intersperse (text ",") <| List.map equipmentSlotIndicator component.slots
     ]
   ]
+
 componentTypes : EquipmentLevel -> Html Msg
 componentTypes (EquipmentLevel lvl eqType) =
     text <| eqTypeToString eqType ++ " (" ++ toString lvl ++ ")"
