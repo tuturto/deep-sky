@@ -5,11 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Types exposing (..)
-
-
-validateDesign : Model -> List String
-validateDesign _ = []
-
+import Validation exposing (validateDesign)
 
 statisticsPanel : Model -> Html Msg
 statisticsPanel model =
@@ -120,7 +116,6 @@ equipmentSlotIndicator slot =
     InnerSlot -> text "I"
     OuterSlot -> text "O"
     ArmourSlot -> text "A"
-    UnknownSlot -> text "?"
 
 componentList : Model -> Html Msg
 componentList model =

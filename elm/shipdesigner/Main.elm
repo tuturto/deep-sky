@@ -34,7 +34,7 @@ stringToSlot s =
     "InnerSlot" -> Decode.succeed InnerSlot
     "OuterSlot" -> Decode.succeed OuterSlot
     "ArmourSlot" -> Decode.succeed ArmourSlot
-    _ -> Decode.succeed UnknownSlot
+    _ -> Decode.fail "Unknown slot type"
 
 slotDecoder : Decode.Decoder EquipmentSlot
 slotDecoder =
@@ -45,7 +45,7 @@ stringToEqType s =
   case s of
     "BridgeEquipment" -> Decode.succeed BridgeEquipment
     "SensorEquipment" -> Decode.succeed SensorEquipment
-    _ -> Decode.succeed UnknowEquipmentType
+    _ -> Decode.fail "Unknown component type"
 
 equipmentLevelDecoder : Decode.Decoder EquipmentLevel
 equipmentLevelDecoder =
@@ -121,54 +121,3 @@ removeComponent model component =
       in
         compRemoved & modelShipF => shipComponentsF $= List.append [InstalledComponent component newCount]
 
-modelComponents : Setter Model Model (List Component) (List Component)
-modelComponents f model = { model | components = f model.components }
-
-modelShipF : Setter Model Model Ship Ship
-modelShipF f model = { model | ship = f model.ship }
-
-shipComponentsF : Setter Ship Ship (List InstalledComponent) (List InstalledComponent)
-shipComponentsF f ship = { ship | components = f ship.components }
-
-totalTonnage : Ship -> Int
-totalTonnage ship =
-  List.foldr (\(InstalledComponent component amount) acc -> component.weight * amount + acc) 0 ship.components
-
-tonnageCheck : ShipValidator
-tonnageCheck model =
-  if totalTonnage model.ship > model.chassis.maxTonnage
-  then [ Just "Ship design exceeds max tonnage" ]
-  else [ Nothing ]
-
-equipmentRequirementToString : EquipmentLevel -> String
-equipmentRequirementToString (EquipmentLevel lvl eType) =
-  case eType of
-    BridgeEquipment ->
-      "at least " ++ (toString lvl) ++ " points worth of bridges is required"
-    SensorEquipment ->
-      "at least " ++ (toString lvl) ++ " points worth of sensors is required"
-    UnknowEquipmentType ->
-      "unknown type"
-
-componentCheck : ShipValidator
-componentCheck model =
-  let 
-    checkSingle (EquipmentLevel n equipment) = 
-      let 
-        matching = List.filter (\(InstalledComponent comp level) -> 
-          List.any (\(EquipmentLevel _ eType) -> eType == equipment) comp.types) model.ship.components
-        total = List.foldr (\(InstalledComponent _ lvl) acc -> acc + lvl) 0 matching
-      in
-        if total >= n
-        then Nothing
-        else Just <| equipmentRequirementToString (EquipmentLevel n equipment)
-  in
-    List.map checkSingle model.chassis.requiredTypes
-
-validators : List ShipValidator
-validators = [ tonnageCheck 
-             , componentCheck ]
-
-validateDesign : Model -> List String
-validateDesign model =
-  List.filterMap identity <| List.concatMap (\x -> x model) validators

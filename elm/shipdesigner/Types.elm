@@ -1,6 +1,7 @@
 module Types exposing (..)
 
 import Http
+import Focus exposing (Setter)
 
 type Msg = AvailableComponents (Result Http.Error (List Component))
          | AddComponent Component
@@ -18,11 +19,9 @@ type alias Component =
 type EquipmentSlot = InnerSlot
                    | OuterSlot
                    | ArmourSlot
-                   | UnknownSlot
 
 type EquipmentType = BridgeEquipment
                    | SensorEquipment                   
-                   | UnknowEquipmentType
 
 type EquipmentLevel = EquipmentLevel Int EquipmentType
 
@@ -42,4 +41,15 @@ type alias Model =
   , chassis : Chassis
   }
 
-type alias ShipValidator = Model -> List (Maybe String)
+modelComponents : Setter Model Model (List Component) (List Component)
+modelComponents f model = { model | components = f model.components }
+
+modelShipF : Setter Model Model Ship Ship
+modelShipF f model = { model | ship = f model.ship }
+
+shipComponentsF : Setter Ship Ship (List InstalledComponent) (List InstalledComponent)
+shipComponentsF f ship = { ship | components = f ship.components }
+
+totalTonnage : Ship -> Int
+totalTonnage ship =
+  List.foldr (\(InstalledComponent component amount) acc -> component.weight * amount + acc) 0 ship.components
