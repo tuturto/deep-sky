@@ -61,10 +61,8 @@ addComponent model component =
                 Nothing -> 1
   in
     if newCount > 1 then
-      let 
-        compRemoved = model & modelShipF => shipComponentsF $= List.filter (\x -> not <| search x)
-      in
-        compRemoved & modelShipF => shipComponentsF $= List.append [InstalledComponent component newCount]
+        (model & modelShipF => shipComponentsF $= List.filter (\x -> not <| search x)) 
+          & modelShipF => shipComponentsF $= List.append [InstalledComponent component newCount]
     else
       model & modelShipF => shipComponentsF $= List.append [InstalledComponent component 1]
 
@@ -80,8 +78,5 @@ removeComponent model component =
     if newCount == 0 then
       model & modelShipF => shipComponentsF $= List.filter (\x -> not <| search x)
     else
-      let 
-        compRemoved = model & modelShipF => shipComponentsF $= List.filter (\x -> not <| search x)
-      in
-        compRemoved & modelShipF => shipComponentsF $= List.append [InstalledComponent component newCount]
-
+      (model & modelShipF => shipComponentsF $= List.filter (\x -> not <| search x))
+        & modelShipF => shipComponentsF $= List.append [InstalledComponent component newCount]
