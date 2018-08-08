@@ -21,6 +21,7 @@ stringToEqType s =
   case s of
     "BridgeEquipment" -> Decode.succeed BridgeEquipment
     "SensorEquipment" -> Decode.succeed SensorEquipment
+    "EngineEquipment" -> Decode.succeed EngineEquipment
     _ -> Decode.fail "Unknown component type"
 
 equipmentLevelDecoder : Decode.Decoder EquipmentLevel

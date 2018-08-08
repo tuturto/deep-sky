@@ -21,6 +21,8 @@ equipmentRequirementToString (EquipmentLevel lvl eType) =
       "at least " ++ (toString lvl) ++ " points worth of bridges is required"
     SensorEquipment ->
       "at least " ++ (toString lvl) ++ " points worth of sensors is required"
+    EngineEquipment ->
+      "at least " ++ (toString lvl) ++ " points worth of engines is required"
 
 componentCheck : ShipValidator
 componentCheck model =

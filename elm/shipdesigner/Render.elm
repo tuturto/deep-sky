@@ -124,6 +124,7 @@ eqTypeToString eqt =
     case eqt of
         BridgeEquipment -> "Bridge"
         SensorEquipment -> "Sensors"
+        EngineEquipment -> "Engines"
 
 equipmentSlotIndicator : EquipmentSlot -> Html Msg
 equipmentSlotIndicator slot =

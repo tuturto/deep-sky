@@ -40,6 +40,7 @@ $(deriveJSON defaultOptions ''EquipmentSlot)
 
 data EquipmentType = BridgeEquipment
                    | SensorEquipment
+                   | EngineEquipment
     deriving (Show, Read, Eq)
 $(deriveJSON defaultOptions ''EquipmentType)
 
@@ -72,7 +73,7 @@ instance ToJSON ComponentDto where
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
     let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 [ OuterSlot ] [ ComponentLevel 1 SensorEquipment ]
-                      , ComponentDto 2 "Engines" "Engines let you move" 2 [ OuterSlot ]  []
+                      , ComponentDto 2 "Engines" "Engines let you move" 2 [ OuterSlot ] [ ComponentLevel 1 EngineEquipment ]
                       , ComponentDto 3 "Armor" "Protects ship" 10 [ ArmourSlot ] []
                       , ComponentDto 4 "Bridge" "Control center of ship" 10 [ InnerSlot, OuterSlot ] [ ComponentLevel 1 BridgeEquipment ]
                       ]

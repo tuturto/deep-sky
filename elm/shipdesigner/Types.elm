@@ -21,7 +21,8 @@ type EquipmentSlot = InnerSlot
                    | ArmourSlot
 
 type EquipmentType = BridgeEquipment
-                   | SensorEquipment                   
+                   | SensorEquipment
+                   | EngineEquipment                 
 
 type EquipmentLevel = EquipmentLevel Int EquipmentType
 

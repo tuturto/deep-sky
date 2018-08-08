@@ -21,7 +21,8 @@ init =
                  , ship = Ship []
                  , chassis = { name = "Destroyer"
                              , maxTonnage = 150
-                             , requiredTypes = [ EquipmentLevel 1 BridgeEquipment ] }
+                             , requiredTypes = [ EquipmentLevel 1 BridgeEquipment 
+                                               , EquipmentLevel 1 EngineEquipment ] }
                  }
       url = "/api/components"
       cmd = Http.send AvailableComponents (Http.get url (Decode.list Json.componentDecoder))
