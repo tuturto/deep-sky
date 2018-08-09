@@ -30,6 +30,13 @@ equipmentLevelDecoder =
     |: (Decode.field "level" Decode.int)
     |: (Decode.field "type" Decode.string |> Decode.andThen stringToEqType)
 
+componentCostDecoder : Decode.Decoder Cost
+componentCostDecoder =
+    Decode.succeed Cost
+        |: (Decode.field "mechanical" Decode.int)
+        |: (Decode.field "biological" Decode.int)
+        |: (Decode.field "chemical" Decode.int)
+
 componentDecoder : Decode.Decoder Component
 componentDecoder =
   Decode.succeed Component
@@ -39,3 +46,4 @@ componentDecoder =
     |: (Decode.field "weight" Decode.int)
     |: (Decode.field "slots" <| Decode.list slotDecoder)
     |: (Decode.field "types" <| Decode.list equipmentLevelDecoder)
+    |: (Decode.field "cost" <| componentCostDecoder)

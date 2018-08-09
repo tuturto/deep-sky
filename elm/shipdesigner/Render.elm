@@ -9,64 +9,67 @@ import Validation exposing (validateDesign)
 
 statisticsPanel : Model -> Html Msg
 statisticsPanel model =
-  div [ class "design-panel" ]
-  [ div [ class "row" ]
-    [ div [ class "col-lg-12 design-panel-title" ]
+  let
+    cost = totalCost model.ship
+  in      
+    div [ class "design-panel" ]
+    [ div [ class "row" ]
+      [ div [ class "col-lg-12 design-panel-title" ]
       [ text "Design statistics" ]
     ]
-  , div [ class "row" ]
-    [ div [ class "col-lg-4" ]
-      [ text "Name" ]
-    , div [ class "col-lg-8" ]
-      [ text "S.S.S. Kickstart" ]
-    ]
-  , div [ class "row" ]
-    [ div [ class "col-lg-4" ]
-      [ text "Type" ]
-    , div [ class "col-lg-8" ]
-      [ text model.chassis.name ]
-    ]
-  , div [ class "row" ]
-    [ div [ class "col-lg-4" ]
-      [ text "Tonnage" ]
-    , div [ class "col-lg-8" ]
-      [ text <| toString <| totalTonnage model.ship
-      , text " / "
-      , text <| toString model.chassis.maxTonnage ]
-    ]
-  , div [ class "row" ]
-    [ div [ class "col-lg-4" ]
-      [ text "Shields" ]
-    , div [ class "col-lg-8" ]
-      [ text "0" ]
-    ]
-  , div [ class "row" ]
-    [ div [ class "col-lg-4" ]
-      [ text "Ordnance" ]
-    , div [ class "col-lg-8" ]
-      [ text "15" ]
-    ]
-  , div [ class "row" ]
-    [ div [ class "col-lg-4" ]
-      [ text "Supply" ]
-    , div [ class "col-lg-8" ]
-      [ text "100" ]
-    ]
-  , div [ class "row" ]
-    [ div [ class "col-lg-4" ]
-      [ text "Cost" ]
-    ]
-  , div [ class "row" ]
-    [ div [ class "col-lg-11 col-lg-offset-1" ]
-      [ i [ class "fas fa-leaf" ] []
-      , text "150 "
-      , i [ class "fas fa-cogs" ] []
-      , text "150 "
-      , i [ class "fas fa-flask" ] []
-      , text "150"
+    , div [ class "row" ]
+      [ div [ class "col-lg-4" ]
+        [ text "Name" ]
+      , div [ class "col-lg-8" ]
+        [ text "S.S.S. Kickstart" ]
+      ]
+    , div [ class "row" ]
+      [ div [ class "col-lg-4" ]
+        [ text "Type" ]
+      , div [ class "col-lg-8" ]
+        [ text model.chassis.name ]
+      ]
+    , div [ class "row" ]
+      [ div [ class "col-lg-4" ]
+        [ text "Tonnage" ]
+      , div [ class "col-lg-8" ]
+        [ text <| toString <| totalTonnage model.ship
+        , text " / "
+        , text <| toString model.chassis.maxTonnage ]
+      ]
+    , div [ class "row" ]
+      [ div [ class "col-lg-4" ]
+        [ text "Shields" ]
+      , div [ class "col-lg-8" ]
+        [ text "0" ]
+      ]
+    , div [ class "row" ]
+      [ div [ class "col-lg-4" ]
+        [ text "Ordnance" ]
+      , div [ class "col-lg-8" ]
+        [ text "15" ]
+      ]
+    , div [ class "row" ]
+      [ div [ class "col-lg-4" ]
+        [ text "Supply" ]
+      , div [ class "col-lg-8" ]
+        [ text "100" ]
+      ]
+    , div [ class "row" ]
+      [ div [ class "col-lg-4" ]
+        [ text "Cost" ]
+      ]
+    , div [ class "row" ]
+      [ div [ class "col-lg-11 col-lg-offset-1" ]
+        [ i [ class "fas fa-leaf" ] []
+        , text <| " " ++ (toString <| cost.biological) ++ " "
+        , i [ class "fas fa-cogs" ] []
+        , text <| " " ++ (toString <| cost.mechanical) ++ " "
+        , i [ class "fas fa-flask" ] []
+        , text <| " " ++ (toString <| cost.chemical) ++ " "
+        ]
       ]
     ]
-  ]
 
 selectableComponent : Component -> Html Msg
 selectableComponent component =
@@ -103,17 +106,22 @@ selectedComponent (InstalledComponent component amount) =
       [ text component.description ]
     ]
   , div [ class "row" ]
-    [
-        div [ class "col-lg-offset-1 col-lg-10" ]
-        [ i [] <| List.intersperse (text ",") <| List.map componentTypes component.types ]
+    [ div [ class "col-lg-offset-1 col-lg-10" ]
+      [ i [] <| List.intersperse (text ",") <| List.map componentTypes component.types ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-1 col-lg-offset-1" ]
       [ text <| toString component.weight ]
     , div [ class "col-lg-1" ]
         <| List.intersperse (text ",") <| List.map equipmentSlotIndicator component.slots
+    , div [ class "col-lg-3" ]
+        [ text <| costToString component.cost ]
     ]
   ]
+
+costToString : Cost -> String
+costToString cost = 
+    toString cost.biological ++ " / " ++ toString cost.mechanical ++ " / " ++ toString cost.chemical
 
 componentTypes : EquipmentLevel -> Html Msg
 componentTypes (EquipmentLevel lvl eqType) =

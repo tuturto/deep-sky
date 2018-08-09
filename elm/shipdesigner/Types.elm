@@ -14,6 +14,7 @@ type alias Component =
   , weight : Int
   , slots : List EquipmentSlot
   , types : List EquipmentLevel
+  , cost : Cost
   }
 
 type EquipmentSlot = InnerSlot
@@ -27,6 +28,11 @@ type EquipmentType = BridgeEquipment
 type EquipmentLevel = EquipmentLevel Int EquipmentType
 
 type InstalledComponent = InstalledComponent Component Int
+
+type alias Cost =
+  { mechanical : Int
+  , biological : Int
+  , chemical : Int }
 
 type alias Ship =
   { components : List InstalledComponent }
@@ -54,6 +60,16 @@ shipComponentsF f ship = { ship | components = f ship.components }
 totalTonnage : Ship -> Int
 totalTonnage ship =
   List.foldr (\(InstalledComponent component amount) acc -> component.weight * amount + acc) 0 ship.components
+
+totalCost : Ship -> Cost
+totalCost ship =
+  let
+    sumCost (InstalledComponent component amount) acc = 
+      Cost (component.cost.mechanical * amount + acc.mechanical) 
+           (component.cost.biological * amount + acc.biological) 
+           (component.cost.chemical * amount + acc.chemical)
+  in
+    List.foldr sumCost (Cost 0 0 0) ship.components
 
 sortInstalledByAlpha : InstalledComponent -> InstalledComponent -> Order
 sortInstalledByAlpha (InstalledComponent a _) (InstalledComponent b _) =

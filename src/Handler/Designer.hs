@@ -58,23 +58,40 @@ data ComponentDto = ComponentDto { dCompId :: Int
                                  , dCompDescription :: String
                                  , dCompWeight :: Int 
                                  , dCompSlots :: [EquipmentSlot] 
-                                 , dCompType :: [ComponentLevel] }
+                                 , dCompType :: [ComponentLevel] 
+                                 , dCompCost :: ComponentCostDto }
     deriving (Show, Read, Eq)
 
+data ComponentCostDto = ComponentCostDto { ccdMechanicCost :: Int
+                                         , ccdBiologicalCost :: Int
+                                         , ccdChemicalCost :: Int }
+    deriving (Show, Read, Eq)
+
+instance ToJSON ComponentCostDto where
+    toJSON (ComponentCostDto mech bio chem) =
+        object [ "mechanical" .= mech
+               , "biological" .= bio
+               , "chemical" .= chem ]
+
 instance ToJSON ComponentDto where
-    toJSON (ComponentDto idKey name desc weight slots types) = 
+    toJSON (ComponentDto idKey name desc weight slots types cost) = 
         object [ "id" .= idKey
                , "name" .= name
                , "description" .= desc
                , "weight" .= weight
                , "slots" .= slots 
-               , "types" .= array types ]
+               , "types" .= array types
+               , "cost" .= cost ]
 
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
     let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 [ OuterSlot ] [ ComponentLevel 1 SensorEquipment ]
+                            (ComponentCostDto 5 0 1)
                       , ComponentDto 2 "Engines" "Engines let you move" 2 [ OuterSlot ] [ ComponentLevel 1 EngineEquipment ]
+                            (ComponentCostDto 15 0 10)
                       , ComponentDto 3 "Armor" "Protects ship" 10 [ ArmourSlot ] []
+                            (ComponentCostDto 20 0 0)
                       , ComponentDto 4 "Bridge" "Control center of ship" 10 [ InnerSlot, OuterSlot ] [ ComponentLevel 1 BridgeEquipment ]
+                            (ComponentCostDto 10 5 10)
                       ]
     return json
