@@ -1,3 +1,29 @@
 .design-panel-title {    
     font-weight: bold;
 }
+
+.title-left {
+    font-weight: bold;
+    border-top-right-radius: 10px;
+    background:#9292f7;
+}
+
+.title-right {
+    font-weight: bold;
+    border-top-left-radius: 10px;
+    background:#9292f7;
+}
+
+.side-panel {
+    background-color: #e4e4ff;
+}
+
+.side-panel-left {
+    background-color: #e4e4ff;
+    border-bottom-right-radius: 10px;
+}
+
+.side-panel-right {
+    background-color: #e4e4ff;
+    border-bottom-left-radius: 10px;
+}
