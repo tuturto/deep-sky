@@ -61,13 +61,7 @@ statisticsPanel model =
       ]
     , div [ class "row" ]
       [ div [ class "col-lg-11 col-lg-offset-1" ]
-        [ i [ class "fas fa-leaf" ] []
-        , text <| " " ++ (toString <| cost.biological) ++ " "
-        , i [ class "fas fa-cogs" ] []
-        , text <| " " ++ (toString <| cost.mechanical) ++ " "
-        , i [ class "fas fa-flask" ] []
-        , text <| " " ++ (toString <| cost.chemical) ++ " "
-        ]
+        [ costDisplay <| totalCost model.ship ]
       ]
     ]
 
@@ -114,14 +108,21 @@ selectedComponent (InstalledComponent component amount) =
       [ text <| toString component.weight ]
     , div [ class "col-lg-1" ]
         <| List.intersperse (text ",") <| List.map equipmentSlotIndicator component.slots
-    , div [ class "col-lg-3" ]
-        [ text <| costToString component.cost ]
+    , div [ class "col-lg-6" ]
+        [ costDisplay component.cost ]
     ]
   ]
 
-costToString : Cost -> String
-costToString cost = 
-    toString cost.biological ++ " / " ++ toString cost.mechanical ++ " / " ++ toString cost.chemical
+costDisplay : Cost -> Html Msg
+costDisplay cost =
+  div [ ]
+  [ i [ class "fas fa-leaf" ] []
+  , text <| " " ++ (toString <| cost.biological) ++ " "
+  , i [ class "fas fa-cogs" ] []
+  , text <| " " ++ (toString <| cost.mechanical) ++ " "
+  , i [ class "fas fa-flask" ] []
+  , text <| " " ++ (toString <| cost.chemical) ++ " "
+  ]
 
 componentTypes : EquipmentLevel -> Html Msg
 componentTypes (EquipmentLevel lvl eqType) =
@@ -129,10 +130,10 @@ componentTypes (EquipmentLevel lvl eqType) =
 
 eqTypeToString : EquipmentType -> String
 eqTypeToString eqt =
-    case eqt of
-        BridgeEquipment -> "Bridge"
-        SensorEquipment -> "Sensors"
-        EngineEquipment -> "Engines"
+  case eqt of
+    BridgeEquipment -> "Bridge"
+    SensorEquipment -> "Sensors"
+    EngineEquipment -> "Engines"
 
 equipmentSlotIndicator : EquipmentSlot -> Html Msg
 equipmentSlotIndicator slot =
