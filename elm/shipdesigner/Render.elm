@@ -75,8 +75,8 @@ selectableComponent component =
   , div [ class "row" ]
     [ div [ class "col-lg-1 col-lg-offset-1" ]
       [ text <| toString component.weight ]
-    , div [ class "col-lg-1" ]
-        <| List.intersperse (text ",") <| List.map equipmentSlotIndicator component.slots
+    , div [ class "col-lg-2" ]
+      [ equipmentSlotIndicator component.slots ]
     ]
   ]
 
@@ -106,8 +106,8 @@ selectedComponent (InstalledComponent component amount) =
   , div [ class "row" ]
     [ div [ class "col-lg-1 col-lg-offset-1" ]
       [ text <| toString component.weight ]
-    , div [ class "col-lg-1" ]
-        <| List.intersperse (text ",") <| List.map equipmentSlotIndicator component.slots
+    , div [ class "col-lg-2" ]
+        [ equipmentSlotIndicator component.slots ]
     , div [ class "col-lg-6" ]
         [ costDisplay component.cost ]
     ]
@@ -135,12 +135,15 @@ eqTypeToString eqt =
     SensorEquipment -> "Sensors"
     EngineEquipment -> "Engines"
 
-equipmentSlotIndicator : EquipmentSlot -> Html Msg
-equipmentSlotIndicator slot =
-  case slot of
-    InnerSlot -> text "I"
-    OuterSlot -> text "O"
-    ArmourSlot -> text "A"
+equipmentSlotIndicator : List EquipmentSlot -> Html Msg
+equipmentSlotIndicator slots =
+  let slotToString s = 
+    case s of
+      InnerSlot -> "I"
+      OuterSlot -> "O"
+      ArmourSlot -> "A"
+  in
+    text <| List.foldr (++) "" <| List.intersperse "," <| List.map slotToString slots
 
 componentList : Model -> Html Msg
 componentList model =
