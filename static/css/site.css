@@ -27,3 +27,8 @@
     background-color: #e4e4ff;
     border-bottom-left-radius: 10px;
 }
+
+.middle-panel {
+    padding-left: 10px;
+    padding-right: 10px;
+}

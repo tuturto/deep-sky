@@ -166,7 +166,7 @@ leftPanel model =
 middlePanel : Model -> Html Msg
 middlePanel model =
   div []
-  [ div [ class "row design-panel" ]
+  [ div [ class "row design-panel middle-panel" ]
     <| List.append
     [ div [ class "row" ]
       [ div [ class "col-lg-12 design-panel-title" ]
