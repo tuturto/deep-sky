@@ -71,6 +71,12 @@ totalCost ship =
   in
     List.foldr sumCost (Cost 0 0 0) ship.components
 
+totalOrdnance : Ship -> Int
+totalOrdnance ship = 0
+
+totalSupply : Ship -> Int
+totalSupply ship = 0
+
 sortInstalledByAlpha : InstalledComponent -> InstalledComponent -> Order
 sortInstalledByAlpha (InstalledComponent a _) (InstalledComponent b _) =
   compare a.name b.name
