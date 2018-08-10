@@ -19,16 +19,22 @@
 }
 
 .side-panel-left {
-    background-color: #e4e4ff;
+    background:#9292f7;
     border-bottom-right-radius: 10px;
+    min-height: 1vw;
+    margin-bottom: 10px;
 }
 
 .side-panel-right {
-    background-color: #e4e4ff;
+    background:#9292f7;
     border-bottom-left-radius: 10px;
 }
 
 .middle-panel {
     padding-left: 10px;
     padding-right: 10px;
+}
+
+.component-title {
+    font-weight: bold;
 }

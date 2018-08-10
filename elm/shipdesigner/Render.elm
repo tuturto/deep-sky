@@ -59,9 +59,13 @@ statisticsPanel model =
       [ div [ class "col-lg-4" ]
         [ text "Cost" ]
       ]
-    , div [ class "row side-panel-left" ]
+    , div [ class "row side-panel" ]
       [ div [ class "col-lg-11 col-lg-offset-1" ]
         [ costDisplay <| totalCost model.ship ]
+      ]     
+    , div [ class "row side-panel-left" ]
+      [ div [ class "col-lg-11" ]
+        []
       ]
     ]
 
@@ -69,7 +73,7 @@ selectableComponent : Component -> Html Msg
 selectableComponent component =
   div [ onClick <| AddComponent component ] 
   [ div [ class "row side-panel" ]
-    [ div [ class "col-lg-12" ]
+    [ div [ class "col-lg-12 component-title" ]
       [ text component.name ]
     ]
   , div [ class "row side-panel" ]
@@ -84,7 +88,7 @@ selectedComponent : InstalledComponent -> Html Msg
 selectedComponent (InstalledComponent component amount) =
   div [] 
   [ div [ class "row" ]
-    [ div [ class "col-lg-12" ]
+    [ div [ class "col-lg-12 component-title" ]
       [ text component.name
       , div [ class "btn btn-outline-dark btn-sm"
                , onClick <| RemoveComponent component ] 
@@ -148,14 +152,17 @@ equipmentSlotIndicator slots =
 componentList : Model -> Html Msg
 componentList model =
   div [ class "design-panel" ]
-    <| List.append 
-      [ div [ class "row" ]
-        [ div [ class "col-lg-12 title-left" ]
-          [ text "Components" ]
-        ]     
-      ]
-      <| List.map selectableComponent <| List.sortWith sortComponentByAlpha model.components
-
+  [ div [ class "row" ]
+    [ div [ class "col-lg-12 title-left" ]
+      [ text "Components" ]
+    ]
+  , div [] <| List.map selectableComponent <| List.sortWith sortComponentByAlpha model.components     
+  , div [ class "row side-panel-left" ]
+    [ div [ class "col-lg-11" ]
+      []
+    ]
+  ]
+      
 leftPanel : Model -> Html Msg
 leftPanel model =
   div []
@@ -167,13 +174,12 @@ middlePanel : Model -> Html Msg
 middlePanel model =
   div []
   [ div [ class "row design-panel middle-panel" ]
-    <| List.append
     [ div [ class "row" ]
       [ div [ class "col-lg-12 design-panel-title" ]
         [ text "Selected components" ]
       ]        
     ]
-    <| List.map selectedComponent <| List.sortWith sortInstalledByAlpha model.ship.components
+  , div [] <| List.map selectedComponent <| List.sortWith sortInstalledByAlpha model.ship.components    
   ]
 
 warningMessages : List String -> List (Html Msg)
@@ -190,15 +196,14 @@ warningMessages s =
 rightPanel : Model -> Html Msg
 rightPanel model =
   div []
-  <| List.append
-    [ div [ class "design-panel" ]
-      [ div [ class "row" ]
-        [ div [ class "col-lg-12 title-right" ]
-          [ text "Warnings" ]
-        ]
-      ]      
-    ]
-    <| warningMessages <| validateDesign model   
+  [ div [ class "design-panel" ]
+    [ div [ class "row" ]
+      [ div [ class "col-lg-12 title-right" ]
+        [ text "Warnings" ]
+      ]
+    ]  
+  , div [] <| warningMessages <| validateDesign model       
+  ]
 
 view : Model -> Html Msg
 view model =
