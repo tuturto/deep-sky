@@ -34,10 +34,7 @@ statisticsPanel model =
         [ text "Type" ]
       , div [ class "col-lg-8" ]
         [ select [ on "change" (Decode.map ChassisSelected targetValueMaybeInt), style [ ("width", "100%") ] ]
-          [ option [] [] 
-          , option [ value "1" ] [ text "Destroyer" ] 
-          , option [ value "2" ] [ text "Satellite" ]
-          ] 
+          <| chassisOptions model.chassisList 
         ]
       ]
     , div [ class "row side-panel" ]
@@ -79,6 +76,17 @@ statisticsPanel model =
         []
       ]
     ]
+
+chassisSorter : Chassis -> Chassis -> Order
+chassisSorter a b = compare a.name b.name
+
+chassisOptions : List Chassis -> List (Html Msg)
+chassisOptions chassisList =
+  let 
+    chassisOption x = option [ value <| toString x.id ] [ text x.name ]
+  in
+    List.append [ option [] [] ]
+    <| List.map chassisOption <| List.sortWith chassisSorter chassisList
 
 selectableComponent : Component -> Html Msg
 selectableComponent component =
