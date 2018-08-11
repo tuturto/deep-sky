@@ -27,7 +27,7 @@ statisticsPanel model =
       [ div [ class "col-lg-4" ]
         [ text "Name" ]
       , div [ class "col-lg-8 editor-text" ]
-        [ input [ type_ "text", placeholder "Name", onInput NewShipName, style [ ("width", "100%") ] ] [] ]
+        [ input [ type_ "text", placeholder "Enter name", onInput NewShipName, style [ ("width", "100%") ] ] [] ]
       ]
     , div [ class "row side-panel" ]
       [ div [ class "col-lg-4" ]
@@ -224,13 +224,27 @@ rightPanel model =
   , div [] <| warningMessages <| validateDesign model       
   ]
 
+createErrorEntry : String -> Html Msg
+createErrorEntry err =
+  div [ class "row" ]
+  [ div [ class "col-lg-12" ]
+    [ text err]
+  ]
+
 view : Model -> Html Msg
 view model =
-    div [ class "row" ] 
-      [ div [ class "col-lg-3" ]
-        [ leftPanel model ]
-      , div [ class "col-lg-5" ]
-        [ middlePanel model ]
-      , div [ class "col-lg-4" ]
-        [ rightPanel model ]
-      ]
+  div []
+  [
+    div [ class "row error-bar" ] 
+    [ div [ class "col-lg-12" ]
+      <| List.map createErrorEntry model.errors
+    ]
+  , div [ class "row" ] 
+    [ div [ class "col-lg-3" ]
+      [ leftPanel model ]
+    , div [ class "col-lg-5" ]
+      [ middlePanel model ]
+    , div [ class "col-lg-4" ]
+      [ rightPanel model ]
+    ]
+  ]

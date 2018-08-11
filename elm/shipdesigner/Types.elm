@@ -4,6 +4,7 @@ import Http
 import Focus exposing (Setter)
 
 type Msg = AvailableComponents (Result Http.Error (List Component))
+         | AvailableChassis (Result Http.Error (List Chassis))
          | AddComponent Component
          | RemoveComponent Component
          | NewShipName String
@@ -51,7 +52,11 @@ type alias Model =
   , chassisList : List Chassis
   , ship : Ship
   , chassis : Maybe Chassis
+  , errors : List String
   }
+
+modelErrorsF : Setter Model Model (List String) (List String)
+modelErrorsF f model = { model | errors = f model.errors }
 
 modelComponentsF : Setter Model Model (List Component) (List Component)
 modelComponentsF f model = { model | components = f model.components }

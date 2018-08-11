@@ -1,4 +1,4 @@
-module Json exposing (componentDecoder)
+module Json exposing (componentDecoder, chassisDecoder)
 
 import Json.Decode.Extra exposing ((|:))
 import Json.Decode as Decode
@@ -47,3 +47,11 @@ componentDecoder =
     |: (Decode.field "slots" <| Decode.list slotDecoder)
     |: (Decode.field "types" <| Decode.list equipmentLevelDecoder)
     |: (Decode.field "cost" <| componentCostDecoder)
+
+chassisDecoder : Decode.Decoder Chassis
+chassisDecoder =
+  Decode.succeed Chassis
+  |: (Decode.field "id" Decode.int)
+  |: (Decode.field "name" Decode.string)
+  |: (Decode.field "maxTonnage" Decode.int)
+  |: (Decode.field "requiredTypes" <| Decode.list equipmentLevelDecoder)

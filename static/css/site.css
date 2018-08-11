@@ -38,3 +38,12 @@
 .component-title {
     font-weight: bold;
 }
+
+.error-bar {
+    font-weight: bold;
+    background-color: rgb(211, 74, 74);
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}

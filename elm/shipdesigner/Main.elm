@@ -18,20 +18,14 @@ main =
 init : (Model, Cmd Msg)
 init =
   let newModel = { components = []
-                 , ship = Ship [] "enter ship name"
+                 , ship = Ship [] ""
                  , chassis = Nothing
-                 , chassisList = [ { id = 1
-                                   , name = "Destroyer"
-                                   , maxTonnage = 150
-                                   , requiredTypes = [ EquipmentLevel 1 BridgeEquipment 
-                                                     , EquipmentLevel 1 EngineEquipment ] }
-                                 , { id = 2
-                                   , name = "Satellite"
-                                   , maxTonnage = 20
-                                   , requiredTypes = [] }]
+                 , chassisList = []
+                 , errors = []
                  }                 
-      url = "/api/components"
-      cmd = Http.send AvailableComponents (Http.get url (Decode.list Json.componentDecoder))
+      cmd = Cmd.batch [ Http.send AvailableComponents (Http.get "/api/components" (Decode.list Json.componentDecoder)) 
+                      , Http.send AvailableChassis (Http.get "/api/chassis" (Decode.list Json.chassisDecoder))
+                      ]
   in
     (newModel, cmd)
 
@@ -48,17 +42,23 @@ update msg model =
   case msg of
     AvailableComponents (Ok components) ->
       ( model & modelComponentsF .= components
-      , Cmd.none)
+      , Cmd.none )
     AvailableComponents (Err data) ->
-      (model, Cmd.none)
+      ( model & modelErrorsF $= List.append [ "Failed to load component list" ]
+      , Cmd.none )
     AddComponent component ->
       ( addComponent model component
-      , Cmd.none)
+      , Cmd.none )
     RemoveComponent component ->
       ( removeComponent model component
-      , Cmd.none)
+      , Cmd.none )
     NewShipName name ->
       ( model & modelShipF => shipNameF .= name
+      , Cmd.none )
+    AvailableChassis (Ok chassis) ->
+      ( model, Cmd.none )
+    AvailableChassis (Err data) ->
+      ( model & modelErrorsF $= List.append [ "Failed to load chassis list" ]
       , Cmd.none )
     ChassisSelected chassisId ->
       case chassisId of
@@ -66,7 +66,7 @@ update msg model =
           ( model & modelChassisF .= (selectChassis model.chassisList x)
           , Cmd.none )
         Nothing ->
-          ( model & modelChassisF .= Nothing
+          ( model & modelErrorsF $= List.append [ "unknown chassis id" ]
           , Cmd.none )
 
 selectChassis : List Chassis -> Int -> Maybe Chassis
