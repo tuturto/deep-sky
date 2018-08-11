@@ -235,10 +235,12 @@ view : Model -> Html Msg
 view model =
   div []
   [
-    div [ class "row error-bar" ] 
-    [ div [ class "col-lg-12" ]
-      <| List.map createErrorEntry model.errors
-    ]
+    if (not <| List.isEmpty model.errors)
+    then div [ class "row error-bar" ] 
+         [ div [ class "col-lg-12" ]
+         <| List.map createErrorEntry model.errors
+         ]
+    else div [] []
   , div [ class "row" ] 
     [ div [ class "col-lg-3" ]
       [ leftPanel model ]

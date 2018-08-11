@@ -61,6 +61,9 @@ modelErrorsF f model = { model | errors = f model.errors }
 modelComponentsF : Setter Model Model (List Component) (List Component)
 modelComponentsF f model = { model | components = f model.components }
 
+modelChassisListF : Setter Model Model (List Chassis) (List Chassis)
+modelChassisListF f model = { model | chassisList = f model.chassisList }
+
 modelShipF : Setter Model Model Ship Ship
 modelShipF f model = { model | ship = f model.ship }
 

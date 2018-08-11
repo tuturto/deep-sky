@@ -17,17 +17,16 @@ main =
 
 init : (Model, Cmd Msg)
 init =
-  let newModel = { components = []
-                 , ship = Ship [] ""
-                 , chassis = Nothing
-                 , chassisList = []
-                 , errors = []
-                 }                 
-      cmd = Cmd.batch [ Http.send AvailableComponents (Http.get "/api/components" (Decode.list Json.componentDecoder)) 
-                      , Http.send AvailableChassis (Http.get "/api/chassis" (Decode.list Json.chassisDecoder))
-                      ]
-  in
-    (newModel, cmd)
+  ( { components = []
+    , ship = Ship [] ""
+    , chassis = Nothing
+    , chassisList = []
+    , errors = []
+    }                 
+  , Cmd.batch [ Http.send AvailableComponents (Http.get "/api/components" (Decode.list Json.componentDecoder)) 
+              , Http.send AvailableChassis (Http.get "/api/chassis" (Decode.list Json.chassisDecoder))
+              ]
+  )
 
 -- SUBSCRIPTIONS
 
@@ -43,7 +42,7 @@ update msg model =
     AvailableComponents (Ok components) ->
       ( model & modelComponentsF .= components
       , Cmd.none )
-    AvailableComponents (Err data) ->
+    AvailableComponents (Err _) ->
       ( model & modelErrorsF $= List.append [ "Failed to load component list" ]
       , Cmd.none )
     AddComponent component ->
@@ -56,18 +55,17 @@ update msg model =
       ( model & modelShipF => shipNameF .= name
       , Cmd.none )
     AvailableChassis (Ok chassis) ->
-      ( model, Cmd.none )
-    AvailableChassis (Err data) ->
+      ( model & modelChassisListF .= chassis
+      , Cmd.none )
+    AvailableChassis (Err _) ->
       ( model & modelErrorsF $= List.append [ "Failed to load chassis list" ]
       , Cmd.none )
-    ChassisSelected chassisId ->
-      case chassisId of
-        Just x ->
-          ( model & modelChassisF .= (selectChassis model.chassisList x)
-          , Cmd.none )
-        Nothing ->
-          ( model & modelErrorsF $= List.append [ "unknown chassis id" ]
-          , Cmd.none )
+    ChassisSelected (Just chassisId) ->
+      ( model & modelChassisF .= (selectChassis model.chassisList chassisId)
+      , Cmd.none )
+    ChassisSelected Nothing ->
+      ( model & modelChassisF .= Nothing
+      , Cmd.none )
 
 selectChassis : List Chassis -> Int -> Maybe Chassis
 selectChassis chassisList chassisId =

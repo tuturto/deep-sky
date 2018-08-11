@@ -31,5 +31,6 @@
 
 /api/starsystem                      ApiStarSystemsR   GET
 /api/components                      ApiComponentsR    GET
+/api/chassis                         ApiChassisR       GET
 /admin                               AdminPanelR       GET
 /admin/time                          AdminAdvanceTimeR GET

@@ -83,6 +83,20 @@ instance ToJSON ComponentDto where
                , "types" .= array types
                , "cost" .= cost ]
 
+data ChassisDto = ChassisDto { cdId :: Int
+                             , cdName :: String
+                             , cdMaxTonnage :: Int
+                             , cdRequiredTypes :: [ComponentLevel]}
+    deriving (Show, Read, Eq)
+
+instance ToJSON ChassisDto where
+    toJSON (ChassisDto idKey name maxTonnage types) =
+        object [ "id" .= idKey
+               , "name" .= name
+               , "maxTonnage" .= maxTonnage
+               , "requiredTypes" .= array types 
+               ]
+
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
     let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 [ OuterSlot ] [ ComponentLevel 1 SensorEquipment ]
@@ -93,5 +107,13 @@ getApiComponentsR = do
                             (ComponentCostDto 20 0 0)
                       , ComponentDto 4 "Bridge" "Control center of ship" 10 [ InnerSlot, OuterSlot ] [ ComponentLevel 1 BridgeEquipment ]
                             (ComponentCostDto 10 5 10)
+                      ]
+    return json
+
+getApiChassisR :: Handler Value
+getApiChassisR = do
+    let json = toJSON [ ChassisDto 1 "Destroyer" 150 [ ComponentLevel 1 BridgeEquipment 
+                                                     , ComponentLevel 1 EngineEquipment ]
+                      , ChassisDto 2 "Satellite" 20 [ ]
                       ]
     return json
