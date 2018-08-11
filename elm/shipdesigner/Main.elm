@@ -18,12 +18,18 @@ main =
 init : (Model, Cmd Msg)
 init =
   let newModel = { components = []
-                 , ship = Ship []
-                 , chassis = { name = "Destroyer"
-                             , maxTonnage = 150
-                             , requiredTypes = [ EquipmentLevel 1 BridgeEquipment 
-                                               , EquipmentLevel 1 EngineEquipment ] }
-                 }
+                 , ship = Ship [] "enter ship name"
+                 , chassis = Nothing
+                 , chassisList = [ { id = 1
+                                   , name = "Destroyer"
+                                   , maxTonnage = 150
+                                   , requiredTypes = [ EquipmentLevel 1 BridgeEquipment 
+                                                     , EquipmentLevel 1 EngineEquipment ] }
+                                 , { id = 2
+                                   , name = "Satellite"
+                                   , maxTonnage = 20
+                                   , requiredTypes = [] }]
+                 }                 
       url = "/api/components"
       cmd = Http.send AvailableComponents (Http.get url (Decode.list Json.componentDecoder))
   in
@@ -41,7 +47,7 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     AvailableComponents (Ok components) ->
-      ( model & modelComponents .= components
+      ( model & modelComponentsF .= components
       , Cmd.none)
     AvailableComponents (Err data) ->
       (model, Cmd.none)
@@ -51,6 +57,21 @@ update msg model =
     RemoveComponent component ->
       ( removeComponent model component
       , Cmd.none)
+    NewShipName name ->
+      ( model & modelShipF => shipNameF .= name
+      , Cmd.none )
+    ChassisSelected chassisId ->
+      case chassisId of
+        Just x ->
+          ( model & modelChassisF .= (selectChassis model.chassisList x)
+          , Cmd.none )
+        Nothing ->
+          ( model & modelChassisF .= Nothing
+          , Cmd.none )
+
+selectChassis : List Chassis -> Int -> Maybe Chassis
+selectChassis chassisList chassisId =
+  List.head <| List.filter (\chassis -> chassis.id == chassisId) chassisList
 
 addComponent : Model -> Component -> Model
 addComponent model component =

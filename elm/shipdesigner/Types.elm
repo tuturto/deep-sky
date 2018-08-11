@@ -6,6 +6,8 @@ import Focus exposing (Setter)
 type Msg = AvailableComponents (Result Http.Error (List Component))
          | AddComponent Component
          | RemoveComponent Component
+         | NewShipName String
+         | ChassisSelected (Maybe Int)
 
 type alias Component = 
   { id : Int
@@ -35,27 +37,36 @@ type alias Cost =
   , chemical : Int }
 
 type alias Ship =
-  { components : List InstalledComponent }
+  { components : List InstalledComponent
+  , name : String }
 
 type alias Chassis =
-  { name : String
+  { id : Int
+  , name : String
   , maxTonnage : Int 
   , requiredTypes : List EquipmentLevel }
 
 type alias Model =
   { components : List Component
+  , chassisList : List Chassis
   , ship : Ship
-  , chassis : Chassis
+  , chassis : Maybe Chassis
   }
 
-modelComponents : Setter Model Model (List Component) (List Component)
-modelComponents f model = { model | components = f model.components }
+modelComponentsF : Setter Model Model (List Component) (List Component)
+modelComponentsF f model = { model | components = f model.components }
 
 modelShipF : Setter Model Model Ship Ship
 modelShipF f model = { model | ship = f model.ship }
 
 shipComponentsF : Setter Ship Ship (List InstalledComponent) (List InstalledComponent)
 shipComponentsF f ship = { ship | components = f ship.components }
+
+shipNameF : Setter Ship Ship String String
+shipNameF f ship = { ship | name = f ship.name }
+
+modelChassisF : Setter Model Model (Maybe Chassis) (Maybe Chassis)
+modelChassisF f model = { model | chassis = f model.chassis }
 
 totalTonnage : Ship -> Int
 totalTonnage ship =

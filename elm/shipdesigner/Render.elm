@@ -1,16 +1,22 @@
 module Render exposing (view)
 
-import Types exposing (Model)
+import Types exposing (Model, Msg (ChassisSelected))
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Html.Events.Extra exposing (..)
 import Types exposing (..)
 import Validation exposing (validateDesign)
+import Json.Decode as Decode
 
 statisticsPanel : Model -> Html Msg
 statisticsPanel model =
   let
     cost = totalCost model.ship
+    maxTonnage = case model.chassis of 
+                        Just chassis ->
+                          toString chassis.maxTonnage
+                        Nothing -> "-"
   in      
     div [ class "design-panel" ]
     [ div [ class "row" ]
@@ -20,14 +26,19 @@ statisticsPanel model =
     , div [ class "row side-panel" ]
       [ div [ class "col-lg-4" ]
         [ text "Name" ]
-      , div [ class "col-lg-8" ]
-        [ text "S.S.S. Kickstart" ]
+      , div [ class "col-lg-8 editor-text" ]
+        [ input [ type_ "text", placeholder "Name", onInput NewShipName, style [ ("width", "100%") ] ] [] ]
       ]
     , div [ class "row side-panel" ]
       [ div [ class "col-lg-4" ]
         [ text "Type" ]
       , div [ class "col-lg-8" ]
-        [ text model.chassis.name ]
+        [ select [ on "change" (Decode.map ChassisSelected targetValueMaybeInt), style [ ("width", "100%") ] ]
+          [ option [] [] 
+          , option [ value "1" ] [ text "Destroyer" ] 
+          , option [ value "2" ] [ text "Satellite" ]
+          ] 
+        ]
       ]
     , div [ class "row side-panel" ]
       [ div [ class "col-lg-4" ]
@@ -35,7 +46,7 @@ statisticsPanel model =
       , div [ class "col-lg-8" ]
         [ text <| toString <| totalTonnage model.ship
         , text " / "
-        , text <| toString model.chassis.maxTonnage ]
+        , text maxTonnage ]
       ]
     , div [ class "row side-panel" ]
       [ div [ class "col-lg-4" ]
