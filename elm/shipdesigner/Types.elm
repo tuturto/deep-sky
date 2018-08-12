@@ -9,13 +9,15 @@ type Msg = AvailableComponents (Result Http.Error (List Component))
          | RemoveComponent Component
          | NewShipName String
          | ChassisSelected (Maybe Int)
+         | SaveDesign
+         | DesignSaved (Result Http.Error Ship)
 
 type alias Component = 
   { id : Int
   , name : String
   , description : String
   , weight : Int
-  , slots : List EquipmentSlot
+  , slot : EquipmentSlot
   , types : List EquipmentLevel
   , cost : Cost
   }
@@ -23,6 +25,9 @@ type alias Component =
 type EquipmentSlot = InnerSlot
                    | OuterSlot
                    | ArmourSlot
+                   | SensorSlot
+                   | WeaponSlot
+                   | EngineSlot
 
 type EquipmentType = BridgeEquipment
                    | SensorEquipment

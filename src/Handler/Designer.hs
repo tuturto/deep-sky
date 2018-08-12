@@ -35,6 +35,9 @@ getNewDesignR = do
 data EquipmentSlot = InnerSlot
                    | OuterSlot
                    | ArmourSlot
+                   | SensorSlot
+                   | WeaponSlot
+                   | EngineSlot
     deriving (Show, Read, Eq)
 $(deriveJSON defaultOptions ''EquipmentSlot)
 
@@ -57,7 +60,7 @@ data ComponentDto = ComponentDto { dCompId :: Int
                                  , dCompName :: String
                                  , dCompDescription :: String
                                  , dCompWeight :: Int 
-                                 , dCompSlots :: [EquipmentSlot] 
+                                 , dCompSlot :: EquipmentSlot
                                  , dCompType :: [ComponentLevel] 
                                  , dCompCost :: ComponentCostDto }
     deriving (Show, Read, Eq)
@@ -79,7 +82,7 @@ instance ToJSON ComponentDto where
                , "name" .= name
                , "description" .= desc
                , "weight" .= weight
-               , "slots" .= slots 
+               , "slot" .= slots 
                , "types" .= array types
                , "cost" .= cost ]
 
@@ -97,15 +100,36 @@ instance ToJSON ChassisDto where
                , "requiredTypes" .= array types 
                ]
 
+data SaveDesign = SaveDesign { sdName :: String
+                             , sdComponents :: [ InstalledComponent ]
+                             , sdChassisId :: Int }
+    deriving (Show, Read, Eq)
+
+instance ToJSON SaveDesign where
+    toJSON (SaveDesign name components chassisId) =
+        object [ "chassis" .= chassisId
+               , "name" .= name
+               , "components" .= array components ]
+
+-- TODO: component id to real key
+data InstalledComponent = InstalledComponent { icComponentId :: Int
+                                             , icAmount :: Int }
+    deriving (Show, Read, Eq)
+
+instance ToJSON InstalledComponent where
+    toJSON (InstalledComponent cid camount) =
+        object [ "id" .= cid
+               , "amount" .= camount ]
+    
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
-    let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 [ OuterSlot ] [ ComponentLevel 1 SensorEquipment ]
+    let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 SensorSlot [ ComponentLevel 1 SensorEquipment ]
                             (ComponentCostDto 5 0 1)
-                      , ComponentDto 2 "Engines" "Engines let you move" 2 [ OuterSlot ] [ ComponentLevel 1 EngineEquipment ]
+                      , ComponentDto 2 "Engines" "Engines let you move" 2 EngineSlot [ ComponentLevel 1 EngineEquipment ]
                             (ComponentCostDto 15 0 10)
-                      , ComponentDto 3 "Armor" "Protects ship" 10 [ ArmourSlot ] []
+                      , ComponentDto 3 "Armor" "Protects ship" 10 ArmourSlot []
                             (ComponentCostDto 20 0 0)
-                      , ComponentDto 4 "Bridge" "Control center of ship" 10 [ InnerSlot, OuterSlot ] [ ComponentLevel 1 BridgeEquipment ]
+                      , ComponentDto 4 "Bridge" "Control center of ship" 10 InnerSlot [ ComponentLevel 1 BridgeEquipment ]
                             (ComponentCostDto 10 5 10)
                       ]
     return json
@@ -116,4 +140,9 @@ getApiChassisR = do
                                                      , ComponentLevel 1 EngineEquipment ]
                       , ChassisDto 2 "Satellite" 20 [ ]
                       ]
+    return json
+
+postApiDesignR :: Handler Value
+postApiDesignR = do
+    let json = toJSON $ SaveDesign "S.S. Kickstart" [] 1
     return json

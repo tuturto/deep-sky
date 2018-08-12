@@ -99,7 +99,7 @@ selectableComponent component =
     [ div [ class "col-lg-1 col-lg-offset-1" ]
       [ text <| toString component.weight ]
     , div [ class "col-lg-2" ]
-      [ equipmentSlotIndicator component.slots ]
+      [ equipmentSlotIndicator component.slot ]
     ]
   ]
 
@@ -130,7 +130,7 @@ selectedComponent (InstalledComponent component amount) =
     [ div [ class "col-lg-1 col-lg-offset-1" ]
       [ text <| toString component.weight ]
     , div [ class "col-lg-2" ]
-        [ equipmentSlotIndicator component.slots ]
+        [ equipmentSlotIndicator component.slot ]
     , div [ class "col-lg-6" ]
         [ costDisplay component.cost ]
     ]
@@ -158,15 +158,15 @@ eqTypeToString eqt =
     SensorEquipment -> "Sensors"
     EngineEquipment -> "Engines"
 
-equipmentSlotIndicator : List EquipmentSlot -> Html Msg
-equipmentSlotIndicator slots =
-  let slotToString s = 
-    case s of
-      InnerSlot -> "I"
-      OuterSlot -> "O"
-      ArmourSlot -> "A"
-  in
-    text <| List.foldr (++) "" <| List.intersperse "," <| List.map slotToString slots
+equipmentSlotIndicator : EquipmentSlot -> Html Msg
+equipmentSlotIndicator slot =
+  case slot of
+    InnerSlot -> text "Inner"
+    OuterSlot -> text "Outer"
+    ArmourSlot -> text "Armour"
+    SensorSlot -> text "Sensor"
+    WeaponSlot -> text "Weapon"
+    EngineSlot -> text "Engine"
 
 componentList : Model -> Html Msg
 componentList model =
@@ -201,6 +201,26 @@ middlePanel model =
   , div [] <| List.map selectedComponent <| List.sortWith sortInstalledByAlpha model.ship.components    
   ]
 
+savePanel : Model -> Html Msg
+savePanel model =
+  div [ class "design-panel" ]
+  [ div [ class "row" ]
+    [ div [ class "col-lg-12 title-right" ]
+      [ text "Options" ]
+    ]
+  , div [ class "row side-panel" ]
+    [ div [ class "col-lg-4" ]
+      [ div [ class "btn", onClick <| SaveDesign ]
+        [ text "Save" ]
+      ]
+    ]
+  , div [ class "row side-panel-right" ]
+    [ div [ class "col-lg-11" ]
+      []
+    ]
+  ]
+
+
 warningMessages : List String -> List (Html Msg)
 warningMessages s =
   let 
@@ -215,7 +235,8 @@ warningMessages s =
 rightPanel : Model -> Html Msg
 rightPanel model =
   div []
-  [ div [ class "design-panel" ]
+  [ savePanel model
+  , div [ class "design-panel" ]
     [ div [ class "row" ]
       [ div [ class "col-lg-12 title-right" ]
         [ text "Warnings" ]

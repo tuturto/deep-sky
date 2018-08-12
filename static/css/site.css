@@ -28,6 +28,8 @@
 .side-panel-right {
     background:#9292f7;
     border-bottom-left-radius: 10px;
+    min-height: 1vw;
+    margin-bottom: 10px;
 }
 
 .middle-panel {
