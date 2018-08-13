@@ -18,7 +18,7 @@ type alias Component =
   , description : String
   , weight : Int
   , slot : EquipmentSlot
-  , types : List EquipmentLevel
+  , types : List ComponentLevel
   , cost : Cost
   }
 
@@ -29,11 +29,11 @@ type EquipmentSlot = InnerSlot
                    | WeaponSlot
                    | EngineSlot
 
-type EquipmentType = BridgeEquipment
-                   | SensorEquipment
-                   | EngineEquipment                 
+type ComponentType = BridgeComponent
+                   | SensorComponent
+                   | EngineComponent
 
-type EquipmentLevel = EquipmentLevel Int EquipmentType
+type ComponentLevel = ComponentLevel Int ComponentType
 
 type InstalledComponent = InstalledComponent Component Int
 
@@ -55,7 +55,7 @@ type alias Chassis =
   { id : Int
   , name : String
   , maxTonnage : Int 
-  , requiredTypes : List EquipmentLevel }
+  , requiredTypes : List ComponentLevel }
 
 type alias Model =
   { components : List Component

@@ -86,7 +86,9 @@ data ComponentId = CidLongRangeSensors
 
 component :: ComponentId -> CLevel -> Component
 component CidLongRangeSensors level = 
-    Component CidLongRangeSensors level "Long range sensors" "description" (Weight 5) SensorSlot [] $ ComponentCost (Cost 1) (Cost 1) (Cost 1)
+    Component CidLongRangeSensors level "Long range sensors" "description" (Weight 5) SensorSlot 
+        [ ComponentLevel (CLevel 1) SensorComponent ] $ 
+        ComponentCost (Cost 1) (Cost 1) (Cost 1)
 component CidArmour level =
     Component CidArmour level "Armour" "description" (Weight 20) ArmourSlot [] $ ComponentCost (Cost 20) (Cost 0) (Cost 0)
 component CidBridge level =

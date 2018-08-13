@@ -147,16 +147,16 @@ costDisplay cost =
   , text <| " " ++ (toString <| cost.chemical) ++ " "
   ]
 
-componentTypes : EquipmentLevel -> Html Msg
-componentTypes (EquipmentLevel lvl eqType) =
+componentTypes : ComponentLevel -> Html Msg
+componentTypes (ComponentLevel lvl eqType) =
     text <| eqTypeToString eqType ++ " (" ++ toString lvl ++ ")"
 
-eqTypeToString : EquipmentType -> String
+eqTypeToString : ComponentType -> String
 eqTypeToString eqt =
   case eqt of
-    BridgeEquipment -> "Bridge"
-    SensorEquipment -> "Sensors"
-    EngineEquipment -> "Engines"
+    BridgeComponent -> "Bridge"
+    SensorComponent -> "Sensors"
+    EngineComponent -> "Engines"
 
 equipmentSlotIndicator : EquipmentSlot -> Html Msg
 equipmentSlotIndicator slot =
