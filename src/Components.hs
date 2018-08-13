@@ -3,17 +3,18 @@
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 
 module Components where
 
-import Data.Aeson (object, (.=))
-import Data.Aeson.TH
-import Import
-import CustomTypes
+import Data.Aeson (object, (.=), ToJSON(..))
+import Data.Aeson.TH 
+import Data.Text 
+import CustomTypes 
+import Database.Persist.TH
+import ClassyPrelude.Yesod   as Import
 
 -- Types
 

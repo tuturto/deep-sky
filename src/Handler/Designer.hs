@@ -82,17 +82,7 @@ instance ToJSON SaveDesign where
 instance ToJSON ComponentDto where
     toJSON (ComponentDto _ _ _ _ _ _ _) =
         object [ "name" .= ("placeholder" :: String)]
-
--- TODO: component id to real key
-data InstalledComponent = InstalledComponent { icComponentId :: Int
-                                             , icAmount :: Int }
-    deriving (Show, Read, Eq)
-
-instance ToJSON InstalledComponent where
-    toJSON (InstalledComponent cid camount) =
-        object [ "id" .= cid
-               , "amount" .= camount ]
-    
+   
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
     let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 SensorSlot []

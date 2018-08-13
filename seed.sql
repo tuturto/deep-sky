@@ -32,10 +32,10 @@ insert into faction (name, home_system, biologicals, mechanicals, chemicals) val
 insert into user (ident, faction_id) values ('tuukka', 1);
 insert into user_role (user_id, role) values (1, 'RoleAdministrator');
 
-insert into ship (name, type, star_system_id, planet_id, landed, owner_id) values ('Sputnik', 'Satellite', 1, 3, 0, 1);
-insert into ship_component (ship_id, type, level) values (1, 'Sensors', 1);
-insert into ship (name, type, star_system_id, planet_id, landed, owner_id) values ('Telstar', 'Satellite', 1, 3, 1, 1);
-insert into ship_component (ship_id, type, level) values (2, 'Sensors', 2);
+--insert into ship (name, type, star_system_id, planet_id, landed, owner_id) values ('Sputnik', 'Satellite', 1, 3, 0, 1);
+--insert into ship_component (ship_id, type, level) values (1, 'Sensors', 1);
+--insert into ship (name, type, star_system_id, planet_id, landed, owner_id) values ('Telstar', 'Satellite', 1, 3, 1, 1);
+--insert into ship_component (ship_id, type, level) values (2, 'Sensors', 2);
 
 insert into building (planet_id, type, level, construction, damage) values (3, 'SensorStation', 1, 1.0, 0);
 insert into building (planet_id, type, level, construction, damage) values (3, 'ResearchComplex', 1, 1.0, 0.25);

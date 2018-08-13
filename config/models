@@ -84,6 +84,24 @@ Ship json
     ownerId FactionId
     deriving Show
 
+Design json
+    name Text
+    ownerId FactionId
+    deriving Show
+
+PlannedComponent json
+    designId DesignId
+    componentId ComponentId
+    level Int
+    deriving Show Read Eq
+
+InstalledComponent json
+    shipId ShipId
+    componentId ComponentId
+    level Int
+    damage Double
+    deriving Show Read Eq
+
 StarSystemReport json
     starSystemId StarSystemId 
     name Text Maybe
