@@ -85,14 +85,10 @@ instance ToJSON ComponentDto where
    
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
-    let json = toJSON [ ComponentDto 1 "Long range sensors" "Long range sensors let you see long" 1 SensorSlot []
-                            (ComponentCostDto 5 0 1)
-                      , ComponentDto 2 "Engines" "Engines let you move" 2 EngineSlot []
-                            (ComponentCostDto 15 0 10)
-                      , ComponentDto 3 "Armor" "Protects ship" 10 ArmourSlot []
-                            (ComponentCostDto 20 0 0)
-                      , ComponentDto 4 "Bridge" "Control center of ship" 10 InnerSlot []
-                            (ComponentCostDto 10 5 10)
+    let json = toJSON [ component CidArmour $ CLevel 1
+                      , component CidEngine $ CLevel 1
+                      , component CidBridge $ CLevel 1
+                      , component CidLongRangeSensors $ CLevel 1
                       ]
     return json
 
