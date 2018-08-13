@@ -35,15 +35,28 @@ equipmentLevelDecoder =
 
 componentCostDecoder : Decode.Decoder Cost
 componentCostDecoder =
-    Decode.succeed Cost
-        |: (Decode.field "mechanical" Decode.int)
-        |: (Decode.field "biological" Decode.int)
-        |: (Decode.field "chemical" Decode.int)
+  Decode.succeed Cost
+    |: (Decode.field "mechanical" Decode.int)
+    |: (Decode.field "biological" Decode.int)
+    |: (Decode.field "chemical" Decode.int)
+
+stringToComponentId : String -> Decode.Decoder ComponentId
+stringToComponentId s =
+  case s of
+    "CidLongRangeSensors" -> Decode.succeed CidLongRangeSensors
+    "CidArmour" -> Decode.succeed CidArmour
+    "CidBridge" -> Decode.succeed CidBridge
+    "CidEngine" -> Decode.succeed CidEngine
+    _ ->Decode.fail "not implemented"
+
+componentIdDecoder : Decode.Decoder ComponentId
+componentIdDecoder =
+  Decode.string |> Decode.andThen stringToComponentId
 
 componentDecoder : Decode.Decoder Component
 componentDecoder =
   Decode.succeed Component
-    |: (Decode.field "id" Decode.int)
+    |: (Decode.field "id" componentIdDecoder)
     |: (Decode.field "name" Decode.string)
     |: (Decode.field "description" Decode.string)
     |: (Decode.field "weight" Decode.int)

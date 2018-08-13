@@ -13,7 +13,7 @@ type Msg = AvailableComponents (Result Http.Error (List Component))
          | DesignSaved (Result Http.Error Ship)
 
 type alias Component = 
-  { id : Int
+  { id : ComponentId
   , name : String
   , description : String
   , weight : Int
@@ -36,6 +36,11 @@ type EquipmentType = BridgeEquipment
 type EquipmentLevel = EquipmentLevel Int EquipmentType
 
 type InstalledComponent = InstalledComponent Component Int
+
+type ComponentId = CidLongRangeSensors
+  | CidArmour
+  | CidBridge
+  | CidEngine
 
 type alias Cost =
   { mechanical : Int
