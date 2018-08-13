@@ -34,33 +34,6 @@ instance ToMarkup BuildingType where
                         ResearchComplex -> toMarkup ("Research complex" :: Text)
                         Farm            -> toMarkup ("Farm" :: Text)
 
-data ComponentType = Sensors
-                   | CombatSensors
-                   | Armour
-                   | FerrousArmour
-                   | SubSpaceSensors
-                   | TachyonSensors
-                   | IonEngine
-                   | LifeSupport
-                   | CrewQuarters
-                   | Bridge
-    deriving (Show, Read, Eq)
-derivePersistField "ComponentType"
-
-instance ToMarkup ComponentType where
-    toMarkup component = 
-        case component of
-            Sensors         -> toMarkup ("Sensors" :: Text)
-            CombatSensors   -> toMarkup ("Combat Sensors" :: Text)
-            Armour          -> toMarkup ("Armour" :: Text)
-            FerrousArmour   -> toMarkup ("Ferrous Armour" :: Text)
-            SubSpaceSensors -> toMarkup ("Sub-Space Sensors" :: Text)
-            TachyonSensors  -> toMarkup ("Tachyon Sensors" :: Text)
-            IonEngine       -> toMarkup ("Ion Engine" :: Text)
-            LifeSupport     -> toMarkup ("Life Support" :: Text)
-            CrewQuarters    -> toMarkup ("Crew Quarters" :: Text)
-            Bridge          -> toMarkup ("Bridge" :: Text)
-
 data ShipType = Satellite
               | Fighter
               | Destroyer
@@ -93,10 +66,19 @@ instance ToMarkup Role where
     toMarkup RoleUser = toMarkup ("User" :: Text)
     toMarkup RoleAdministrator = toMarkup ("Administrator" :: Text)
 
+data ComponentSlot = InnerSlot
+                   | OuterSlot
+                   | ArmourSlot
+                   | SensorSlot
+                   | WeaponSlot
+                   | EngineSlot
+    deriving (Show, Read, Eq)
+derivePersistField "ComponentSlot"
+
 $(deriveJSON defaultOptions ''Role)
 $(deriveJSON defaultOptions ''Coordinates)
 $(deriveJSON defaultOptions ''SpectralType)
 $(deriveJSON defaultOptions ''LuminosityClass)
 $(deriveJSON defaultOptions ''BuildingType)
-$(deriveJSON defaultOptions ''ComponentType)
+$(deriveJSON defaultOptions ''ComponentSlot)
 $(deriveJSON defaultOptions ''ShipType)

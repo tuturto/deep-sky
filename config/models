@@ -84,12 +84,6 @@ Ship json
     ownerId FactionId
     deriving Show
 
-ShipComponent json
-    shipId ShipId
-    type ComponentType
-    level Int
-    deriving Show
-
 StarSystemReport json
     starSystemId StarSystemId 
     name Text Maybe
