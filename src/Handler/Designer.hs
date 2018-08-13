@@ -1,15 +1,13 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module Handler.Designer where
 
 import Data.Aeson (object, (.=))
-import Data.Aeson.TH
 import Import
-import CustomTypes
 import Components
 
 getDesignerR :: Handler Html
@@ -33,26 +31,6 @@ getNewDesignR = do
         addScript $ StaticR js_shipdesigner_js
         addStylesheet $ StaticR css_site_css
         $(widgetFile "shipdesigner")
-
-data ComponentDto = ComponentDto { dCompId :: Int
-                                 , dCompName :: String
-                                 , dCompDescription :: String
-                                 , dCompWeight :: Int 
-                                 , dCompSlot :: ComponentSlot
-                                 , dCompType :: [ComponentLevel] 
-                                 , dCompCost :: ComponentCostDto }
-    deriving Show
-
-data ComponentCostDto = ComponentCostDto { ccdMechanicCost :: Int
-                                         , ccdBiologicalCost :: Int
-                                         , ccdChemicalCost :: Int }
-    deriving (Show, Read, Eq)
-
-instance ToJSON ComponentCostDto where
-    toJSON (ComponentCostDto mech bio chem) =
-        object [ "mechanical" .= mech
-               , "biological" .= bio
-               , "chemical" .= chem ]
 
 data ChassisDto = ChassisDto { cdId :: Int
                              , cdName :: String
@@ -78,10 +56,6 @@ instance ToJSON SaveDesign where
         object [ "chassis" .= chassisId
                , "name" .= name
                , "components" .= array components ]
-
-instance ToJSON ComponentDto where
-    toJSON (ComponentDto _ _ _ _ _ _ _) =
-        object [ "name" .= ("placeholder" :: String)]
    
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
