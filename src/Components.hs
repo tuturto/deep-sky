@@ -51,6 +51,7 @@ data Weight = Weight { unWeight :: Int }
 data ComponentType = BridgeComponent
     | SensorComponent
     | EngineComponent
+    | SupplyComponent
     deriving (Show, Read, Eq)
 
 instance ToJSON Component where
@@ -87,14 +88,18 @@ data ComponentId = CidLongRangeSensors
 component :: ComponentId -> CLevel -> Component
 component CidLongRangeSensors level = 
     Component CidLongRangeSensors level "Long range sensors" "description" (Weight 5) SensorSlot 
-        [ ComponentLevel (CLevel 1) SensorComponent ] $ 
+        [ ComponentLevel level SensorComponent ] $ 
         ComponentCost (Cost 1) (Cost 1) (Cost 1)
 component CidArmour level =
-    Component CidArmour level "Armour" "description" (Weight 20) ArmourSlot [] $ ComponentCost (Cost 20) (Cost 0) (Cost 0)
+    Component CidArmour level "Armour" "description" (Weight 20) ArmourSlot 
+        [] $ ComponentCost (Cost 20) (Cost 0) (Cost 0)
 component CidBridge level =
-    Component CidBridge level "Bridge" "description" (Weight 10) InnerSlot [] $ ComponentCost (Cost 10) (Cost 5) (Cost 10)
+    Component CidBridge level "Bridge" "description" (Weight 10) InnerSlot 
+        [ ComponentLevel level BridgeComponent 
+        , ComponentLevel level SupplyComponent ] $ ComponentCost (Cost 10) (Cost 5) (Cost 10)
 component CidEngine level =
-    Component CidEngine level "Engine" "description" (Weight 2) EngineSlot [] $ ComponentCost (Cost 15) (Cost 0) (Cost 10)
+    Component CidEngine level "Engine" "description" (Weight 2) EngineSlot 
+        [ ComponentLevel level EngineComponent ] $ ComponentCost (Cost 15) (Cost 0) (Cost 10)
 
 derivePersistField "ComponentType"
 derivePersistField "ComponentId"

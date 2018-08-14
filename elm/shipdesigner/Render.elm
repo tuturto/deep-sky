@@ -97,7 +97,7 @@ selectableComponent component =
     ]
   , div [ class "row side-panel" ]
     [ div [ class "col-lg-1 col-lg-offset-1" ]
-      [ text <| toString component.weight ]
+      [ text <| toString component.weight ++ "t" ]
     , div [ class "col-lg-2" ]
       [ componentSlotIndicator component.slot ]
     ]
@@ -124,11 +124,11 @@ selectedComponent (InstalledComponent component amount) =
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-offset-1 col-lg-10" ]
-      [ i [] <| List.intersperse (text ",") <| List.map componentTypes component.types ]
+      [ i [] <| List.intersperse (text ", ") <| List.map componentTypes component.types ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-1 col-lg-offset-1" ]
-      [ text <| toString component.weight ]
+      [ text <| toString component.weight ++ "t" ]
     , div [ class "col-lg-2" ]
         [ componentSlotIndicator component.slot ]
     , div [ class "col-lg-6" ]
@@ -157,6 +157,7 @@ eqTypeToString eqt =
     BridgeComponent -> "Bridge"
     SensorComponent -> "Sensors"
     EngineComponent -> "Engines"
+    SupplyComponent -> "Supply"
 
 componentSlotIndicator : ComponentSlot -> Html Msg
 componentSlotIndicator slot =

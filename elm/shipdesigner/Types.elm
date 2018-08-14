@@ -32,6 +32,7 @@ type ComponentSlot = InnerSlot
 type ComponentType = BridgeComponent
                    | SensorComponent
                    | EngineComponent
+                   | SupplyComponent
 
 type ComponentLevel = ComponentLevel Int ComponentType
 

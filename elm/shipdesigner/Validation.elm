@@ -26,6 +26,8 @@ componentRequirementToString (ComponentLevel lvl eType) =
       "at least " ++ (toString lvl) ++ " points worth of sensors is required"
     EngineComponent ->
       "at least " ++ (toString lvl) ++ " points worth of engines is required"
+    SupplyComponent ->
+      "at least " ++ (toString lvl) ++ " points worth of supply is required"
 
 componentCheck : ShipValidator
 componentCheck model =

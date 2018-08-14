@@ -25,6 +25,7 @@ stringToCompType s =
     "BridgeComponent" -> Decode.succeed BridgeComponent
     "SensorComponent" -> Decode.succeed SensorComponent
     "EngineComponent" -> Decode.succeed EngineComponent
+    "SupplyComponent" -> Decode.succeed SupplyComponent
     _ -> Decode.fail "Unknown component type"
 
 componentLevelDecoder : Decode.Decoder ComponentLevel
