@@ -99,7 +99,7 @@ selectableComponent component =
     [ div [ class "col-lg-1 col-lg-offset-1" ]
       [ text <| toString component.weight ]
     , div [ class "col-lg-2" ]
-      [ equipmentSlotIndicator component.slot ]
+      [ componentSlotIndicator component.slot ]
     ]
   ]
 
@@ -130,7 +130,7 @@ selectedComponent (InstalledComponent component amount) =
     [ div [ class "col-lg-1 col-lg-offset-1" ]
       [ text <| toString component.weight ]
     , div [ class "col-lg-2" ]
-        [ equipmentSlotIndicator component.slot ]
+        [ componentSlotIndicator component.slot ]
     , div [ class "col-lg-6" ]
         [ costDisplay component.cost ]
     ]
@@ -158,8 +158,8 @@ eqTypeToString eqt =
     SensorComponent -> "Sensors"
     EngineComponent -> "Engines"
 
-equipmentSlotIndicator : EquipmentSlot -> Html Msg
-equipmentSlotIndicator slot =
+componentSlotIndicator : ComponentSlot -> Html Msg
+componentSlotIndicator slot =
   case slot of
     InnerSlot -> text "Inner"
     OuterSlot -> text "Outer"

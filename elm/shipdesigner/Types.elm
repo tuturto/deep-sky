@@ -17,12 +17,12 @@ type alias Component =
   , name : String
   , description : String
   , weight : Int
-  , slot : EquipmentSlot
+  , slot : ComponentSlot
   , types : List ComponentLevel
   , cost : Cost
   }
 
-type EquipmentSlot = InnerSlot
+type ComponentSlot = InnerSlot
                    | OuterSlot
                    | ArmourSlot
                    | SensorSlot

@@ -4,7 +4,7 @@ import Json.Decode.Extra exposing ((|:))
 import Json.Decode as Decode
 import Types exposing (..)
 
-stringToSlot : String -> Decode.Decoder EquipmentSlot
+stringToSlot : String -> Decode.Decoder ComponentSlot
 stringToSlot s =
   case s of
     "InnerSlot" -> Decode.succeed InnerSlot
@@ -15,7 +15,7 @@ stringToSlot s =
     "EngineSlot" -> Decode.succeed EngineSlot
     _ -> Decode.fail "Unknown slot type"
 
-slotDecoder : Decode.Decoder EquipmentSlot
+slotDecoder : Decode.Decoder ComponentSlot
 slotDecoder =
   Decode.string |> Decode.andThen stringToSlot
 

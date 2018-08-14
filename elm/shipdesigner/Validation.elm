@@ -17,8 +17,8 @@ tonnageCheck model =
       else []
     Nothing -> []
 
-equipmentRequirementToString : ComponentLevel -> String
-equipmentRequirementToString (ComponentLevel lvl eType) =
+componentRequirementToString : ComponentLevel -> String
+componentRequirementToString (ComponentLevel lvl eType) =
   case eType of
     BridgeComponent ->
       "at least " ++ (toString lvl) ++ " points worth of bridges is required"
@@ -30,15 +30,15 @@ equipmentRequirementToString (ComponentLevel lvl eType) =
 componentCheck : ShipValidator
 componentCheck model =
   let 
-    checkSingle (ComponentLevel n equipment) = 
+    checkSingle (ComponentLevel n component) = 
       let 
         matching = List.filter (\(InstalledComponent comp level) -> 
-          List.any (\(ComponentLevel _ eType) -> eType == equipment) comp.types) model.ship.components
+          List.any (\(ComponentLevel _ eType) -> eType == component) comp.types) model.ship.components
         total = List.foldr (\(InstalledComponent _ lvl) acc -> acc + lvl) 0 matching
       in
         if total >= n
         then Nothing
-        else Just <| equipmentRequirementToString (ComponentLevel n equipment)
+        else Just <| componentRequirementToString (ComponentLevel n component)
   in
     case model.chassis of
       Just chassis -> 
