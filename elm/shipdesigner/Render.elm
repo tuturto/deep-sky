@@ -204,22 +204,27 @@ middlePanel model =
 
 savePanel : Model -> Html Msg
 savePanel model =
-  div [ class "design-panel" ]
-  [ div [ class "row" ]
-    [ div [ class "col-lg-12 title-right" ]
-      [ text "Options" ]
-    ]
-  , div [ class "row side-panel" ]
-    [ div [ class "col-lg-4" ]
-      [ div [ class "btn", onClick <| SaveDesign ]
-        [ text "Save" ]
+  let
+    btnClass = if List.isEmpty <| validateDesign model 
+               then "btn btn-sm active"
+               else "btn btn-sm disabled"
+  in    
+    div [ class "design-panel" ]
+    [ div [ class "row" ]
+      [ div [ class "col-lg-12 title-right" ]
+        [ text "Options" ]
+      ]
+    , div [ class "row side-panel" ]
+      [ div [ class "col-lg-4" ]
+        [ div [ class btnClass, onClick <| SaveDesign ]
+          [ text "Save" ]
+        ]
+      ]
+    , div [ class "row side-panel-right" ]
+      [ div [ class "col-lg-11" ]
+        []
       ]
     ]
-  , div [ class "row side-panel-right" ]
-    [ div [ class "col-lg-11" ]
-      []
-    ]
-  ]
 
 
 warningMessages : List String -> List (Html Msg)
@@ -243,7 +248,7 @@ rightPanel model =
         [ text "Warnings" ]
       ]
     ]  
-  , div [] <| warningMessages <| validateDesign model       
+  , div [] <| warningMessages <| validateDesign model
   ]
 
 createErrorEntry : String -> Html Msg
