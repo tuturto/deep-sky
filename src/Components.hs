@@ -87,18 +87,18 @@ data ComponentId = CidLongRangeSensors
 
 component :: ComponentId -> CLevel -> Component
 component CidLongRangeSensors level = 
-    Component CidLongRangeSensors level "Long range sensors" "description" (Weight 5) SensorSlot 
+    Component CidLongRangeSensors level "Long range sensors" "Various scanners and sensors for long range observation" (Weight 5) SensorSlot 
         [ ComponentLevel level SensorComponent ] $ 
         ComponentCost (Cost 1) (Cost 1) (Cost 1)
 component CidArmour level =
-    Component CidArmour level "Armour" "description" (Weight 20) ArmourSlot 
+    Component CidArmour level "Armour" "Heave protective plating against kinetic damage" (Weight 20) ArmourSlot 
         [] $ ComponentCost (Cost 20) (Cost 0) (Cost 0)
 component CidBridge level =
-    Component CidBridge level "Bridge" "description" (Weight 10) InnerSlot 
+    Component CidBridge level "Bridge" "Nerve center of a ship, containing controls and instruments needed for steering the ship" (Weight 10) InnerSlot 
         [ ComponentLevel level BridgeComponent 
         , ComponentLevel level SupplyComponent ] $ ComponentCost (Cost 10) (Cost 5) (Cost 10)
 component CidEngine level =
-    Component CidEngine level "Engine" "description" (Weight 2) EngineSlot 
+    Component CidEngine level "Engine" "Two stage ion propulsion system" (Weight 2) EngineSlot 
         [ ComponentLevel level EngineComponent ] $ ComponentCost (Cost 15) (Cost 0) (Cost 10)
 
 derivePersistField "ComponentType"

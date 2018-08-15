@@ -68,7 +68,10 @@ getApiComponentsR = do
 
 getApiChassisR :: Handler Value
 getApiChassisR = do
-    let json = toJSON [ ChassisDto 1 "Destroyer" 150 []
+    let json = toJSON [ ChassisDto 1 "Destroyer" 150 [ ComponentLevel (CLevel 1) BridgeComponent
+                                                     , ComponentLevel (CLevel 1) EngineComponent
+                                                     , ComponentLevel (CLevel 1) SensorComponent 
+                                                     , ComponentLevel (CLevel 1) SupplyComponent ]
                       , ChassisDto 2 "Satellite" 20 []
                       ]
     return json

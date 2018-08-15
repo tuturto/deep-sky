@@ -101,11 +101,24 @@ totalCost ship =
   in
     List.foldr sumCost (Cost 0 0 0) ship.components
 
+levelSupply : Int -> ComponentLevel -> Int
+levelSupply amount (ComponentLevel supply componentType) =
+  case componentType of
+    SupplyComponent -> amount * supply
+    _ -> 0
+
+componentSupply : Int -> Component -> Int
+componentSupply amount component = 
+  List.map (levelSupply amount) component.types
+  |> List.sum
+
 totalOrdnance : Ship -> Int
 totalOrdnance ship = 0
 
 totalSupply : Ship -> Int
-totalSupply ship = 0
+totalSupply ship =
+  List.map (\(InstalledComponent component amount) -> componentSupply amount component) ship.components
+  |> List.sum
 
 sortInstalledByAlpha : InstalledComponent -> InstalledComponent -> Order
 sortInstalledByAlpha (InstalledComponent a _) (InstalledComponent b _) =
