@@ -43,6 +43,7 @@ type ComponentId = CidLongRangeSensors
   | CidArmour
   | CidBridge
   | CidEngine
+  | CidSupplyPod
 
 type alias Cost =
   { mechanical : Int

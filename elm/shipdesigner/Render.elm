@@ -205,9 +205,7 @@ middlePanel model =
 savePanel : Model -> Html Msg
 savePanel model =
   let
-    btnClass = if List.isEmpty <| validateDesign model 
-               then "btn btn-sm active"
-               else "btn btn-sm disabled"
+    saveEnabled = List.isEmpty <| validateDesign model 
   in    
     div [ class "design-panel" ]
     [ div [ class "row" ]
@@ -216,9 +214,11 @@ savePanel model =
       ]
     , div [ class "row side-panel" ]
       [ div [ class "col-lg-4" ]
-        [ div [ class btnClass, onClick <| SaveDesign ]
-          [ text "Save" ]
-        ]
+        <| if saveEnabled
+           then [ div [ class "btn btn-sm active", onClick <| SaveDesign ]
+                  [ text "Save" ] ]
+           else [ div [ class "btn btn-sm disabled" ]
+                  [ text "Save" ] ]
       ]
     , div [ class "row side-panel-right" ]
       [ div [ class "col-lg-11" ]

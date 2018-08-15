@@ -63,6 +63,7 @@ getApiComponentsR = do
                       , component CidEngine $ CLevel 1
                       , component CidBridge $ CLevel 1
                       , component CidLongRangeSensors $ CLevel 1
+                      , component CidSupplyPod $ CLevel 2
                       ]
     return json
 
@@ -71,7 +72,8 @@ getApiChassisR = do
     let json = toJSON [ ChassisDto 1 "Destroyer" 150 [ ComponentLevel (CLevel 1) BridgeComponent
                                                      , ComponentLevel (CLevel 1) EngineComponent
                                                      , ComponentLevel (CLevel 1) SensorComponent 
-                                                     , ComponentLevel (CLevel 1) SupplyComponent ]
+                                                     , ComponentLevel (CLevel 1) SupplyComponent 
+                                                     ]
                       , ChassisDto 2 "Satellite" 20 []
                       ]
     return json

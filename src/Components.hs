@@ -45,6 +45,10 @@ data Cost = Cost { unCost :: Int }
 data CLevel = CLevel { unCLevel :: Int }
     deriving (Show, Read, Eq)
 
+scaleLevel :: CLevel -> Int -> CLevel
+scaleLevel (CLevel lvl) scale =
+    CLevel $ lvl * scale
+
 data Weight = Weight { unWeight :: Int }
     deriving (Show, Read, Eq)
 
@@ -83,6 +87,7 @@ data ComponentId = CidLongRangeSensors
     | CidArmour
     | CidBridge
     | CidEngine
+    | CidSupplyPod
     deriving (Show, Read, Eq)
 
 component :: ComponentId -> CLevel -> Component
@@ -96,10 +101,14 @@ component CidArmour level =
 component CidBridge level =
     Component CidBridge level "Bridge" "Nerve center of a ship, containing controls and instruments needed for steering the ship" (Weight 10) InnerSlot 
         [ ComponentLevel level BridgeComponent 
-        , ComponentLevel level SupplyComponent ] $ ComponentCost (Cost 10) (Cost 5) (Cost 10)
+        , ComponentLevel (scaleLevel level 5) SupplyComponent ] $ ComponentCost (Cost 10) (Cost 5) (Cost 10)
 component CidEngine level =
     Component CidEngine level "Engine" "Two stage ion propulsion system" (Weight 2) EngineSlot 
-        [ ComponentLevel level EngineComponent ] $ ComponentCost (Cost 15) (Cost 0) (Cost 10)
+        [ ComponentLevel level EngineComponent 
+        , ComponentLevel (scaleLevel level 5) SupplyComponent ] $ ComponentCost (Cost 15) (Cost 0) (Cost 10)
+component CidSupplyPod level =
+    Component CidSupplyPod level "Supply pod" "Storage system for supplies needed by the crew and the ship" (Weight 10) InnerSlot
+        [ ComponentLevel (scaleLevel level 10) SupplyComponent ] $ ComponentCost (Cost 5) (Cost 50) (Cost 5)
 
 derivePersistField "ComponentType"
 derivePersistField "ComponentId"

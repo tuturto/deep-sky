@@ -48,6 +48,7 @@ stringToComponentId s =
     "CidArmour" -> Decode.succeed CidArmour
     "CidBridge" -> Decode.succeed CidBridge
     "CidEngine" -> Decode.succeed CidEngine
+    "CidSupplyPod" -> Decode.succeed CidSupplyPod
     _ ->Decode.fail "not implemented"
 
 componentIdDecoder : Decode.Decoder ComponentId
