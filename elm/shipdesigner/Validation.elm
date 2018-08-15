@@ -53,7 +53,14 @@ chassisSelectedCheck model =
     Just x -> []
     Nothing -> [ Just "Chassis has not been selected" ]
 
+nameProvidedCheck : ShipValidator
+nameProvidedCheck model =
+  if String.isEmpty model.ship.name
+  then [ Just "Design needs a name" ]
+  else []
+
 validators : List ShipValidator
 validators = [ tonnageCheck 
              , componentCheck
-             , chassisSelectedCheck ]
+             , chassisSelectedCheck 
+             , nameProvidedCheck ]
