@@ -64,6 +64,7 @@ componentDecoder =
     |: (Decode.field "slot" slotDecoder)
     |: (Decode.field "types" <| Decode.list componentLevelDecoder)
     |: (Decode.field "cost" <| componentCostDecoder)
+    |: (Decode.field "level" <| Decode.int)
 
 chassisDecoder : Decode.Decoder Chassis
 chassisDecoder =

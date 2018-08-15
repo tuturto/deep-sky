@@ -20,6 +20,7 @@ type alias Component =
   , slot : ComponentSlot
   , types : List ComponentLevel
   , cost : Cost
+  , level : Int
   }
 
 type ComponentSlot = InnerSlot

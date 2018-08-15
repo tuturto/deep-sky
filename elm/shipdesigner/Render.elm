@@ -93,7 +93,7 @@ selectableComponent component =
   div [ onClick <| AddComponent component ] 
   [ div [ class "row side-panel" ]
     [ div [ class "col-lg-12 component-title" ]
-      [ text component.name ]
+      [ text <| component.name ++ " (" ++ (toString component.level) ++ ")" ]
     ]
   , div [ class "row side-panel" ]
     [ div [ class "col-lg-1 col-lg-offset-1" ]
@@ -108,7 +108,7 @@ selectedComponent (InstalledComponent component amount) =
   div [] 
   [ div [ class "row" ]
     [ div [ class "col-lg-12 component-title" ]
-      [ text component.name
+      [ text <| component.name ++ " (" ++ (toString component.level) ++ ")"
       , div [ class "btn btn-outline-dark btn-sm"
                , onClick <| RemoveComponent component ] 
         [ text " - "]
