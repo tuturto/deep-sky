@@ -68,7 +68,7 @@ update msg model =
       , Cmd.none )
     SaveDesign ->
       ( model
-      , Http.send DesignSaved <| Http.post "/api/design" (Http.jsonBody <| Json.shipSaveEncoder model.ship) Json.shipDecoder)
+      , Http.send DesignSaved <| Http.post "/api/design" (Http.jsonBody <| Json.shipSaveEncoder model.ship model.chassis) Json.shipDecoder)
     DesignSaved (Ok ship) ->
       ( model & modelShipF .= ship
       , Cmd.none )

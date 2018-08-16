@@ -129,6 +129,14 @@ chassisDecoder =
   |: (Decode.field "maxTonnage" Decode.int)
   |: (Decode.field "requiredTypes" <| Decode.list componentLevelDecoder)
 
+chassisEncoder : Chassis -> Encode.Value
+chassisEncoder chassis =
+  Encode.object [ ("id", Encode.int chassis.id)
+                , ("name", Encode.string chassis.name)
+                , ("maxTonnage", Encode.int chassis.maxTonnage)
+                , ("requiredTypes", Encode.list <| List.map componentLevelEncoder chassis.requiredTypes)
+                ]
+
 installedComponentDecoder : Decode.Decoder InstalledComponent
 installedComponentDecoder =
   Decode.succeed InstalledComponent
@@ -147,8 +155,13 @@ installedComponentEncoder (InstalledComponent component amount) =
                 , ("amount", Encode.int amount )
                 ]
 
-shipSaveEncoder : Ship -> Encode.Value
-shipSaveEncoder ship = 
-  Encode.object [ ("name", Encode.string ship.name) 
-                , ("components", Encode.list <| List.map installedComponentEncoder ship.components)
-                ]
+shipSaveEncoder : Ship -> Maybe Chassis -> Encode.Value
+shipSaveEncoder ship chassis = 
+  case chassis of
+    Just c -> Encode.object [ ("name", Encode.string ship.name) 
+                            , ("components", Encode.list <| List.map installedComponentEncoder ship.components)
+                            , ("chassis", chassisEncoder c)
+                            ]
+    Nothing -> Encode.object [ ("name", Encode.string ship.name) 
+                             , ("components", Encode.list <| List.map installedComponentEncoder ship.components)
+                             ]
