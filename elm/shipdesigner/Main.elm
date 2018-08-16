@@ -68,16 +68,13 @@ update msg model =
       , Cmd.none )
     SaveDesign ->
       ( model
-      , Http.send DesignSaved (Http.post "/api/design" Http.emptyBody Json.shipDecoder) )
+      , Http.send DesignSaved <| Http.post "/api/design" (Http.jsonBody <| Json.shipSaveEncoder model.ship) Json.shipDecoder)
     DesignSaved (Ok ship) ->
       ( model & modelShipF .= ship
       , Cmd.none )
     DesignSaved (Err x) ->
-      let
-        _ = Debug.log "design saved" x
-      in
-        ( model & modelErrorsF $= List.append [ "Failed to save design" ]
-        , Cmd.none )
+      ( model & modelErrorsF $= List.append [ "Failed to save design" ]
+      , Cmd.none )
 
 selectChassis : List Chassis -> Int -> Maybe Chassis
 selectChassis chassisList chassisId =
