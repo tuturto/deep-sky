@@ -33,7 +33,7 @@ getNewDesignR = do
         $(widgetFile "shipdesigner")
 
 data ChassisDto = ChassisDto { cdId :: Int
-                             , cdName :: String
+                             , cdName :: Text
                              , cdMaxTonnage :: Int
                              , cdRequiredTypes :: [ComponentLevel]}
     deriving Show
@@ -68,18 +68,25 @@ getApiChassisR = do
     return json
 
 postApiDesignR :: Handler Value
-postApiDesignR = do
-    msg <- requireJsonBody
-    let json = toJSON $ ShipDesign (Just 1) (saveDesignName msg) (saveDesignChassisId msg)
-    return json
+postApiDesignR = do    
+    (_, user) <- requireAuthPair   
+    fId <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    msg <- requireJsonBody 
+    case (validateSaveDesign msg) of
+        False -> sendResponseStatus status400 ("Validation failed" :: Text)
+        True -> do 
+            newId <- runDB $ insert $ Design (saveDesignName msg) fId
+            let json = toJSON $ ShipDesign (Just newId) (saveDesignName msg) (saveDesignChassisId msg)
+            return json
 
-validateSaveDesign :: Either String SaveDesign -> Bool
-validateSaveDesign (Left _) = False
-validateSaveDesign (Right _) = True
+validateSaveDesign :: SaveDesign -> Bool
+validateSaveDesign _ = True
 
 data ShipDesign = ShipDesign
-    { designId :: Maybe Int
-    , designName :: String
+    { designId :: Maybe (Key Design)
+    , designName :: Text
     , designChassisId :: Int
     } deriving Show
 
@@ -103,7 +110,7 @@ data SaveInstalledComponent = SaveInstalledComponent
 data SaveDesign = SaveDesign
     { saveDesignId :: Maybe Int
     , saveDesignChassisId :: Int
-    , saveDesignName :: String
+    , saveDesignName :: Text
     , saveDesignComponents :: [ SaveInstalledComponent ]
     } deriving Show
 
