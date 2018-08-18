@@ -77,18 +77,35 @@ postApiDesignR = do
     case (validateSaveDesign msg) of
         False -> sendResponseStatus status400 ("Validation failed" :: Text)
         True -> do 
-            newId <- runDB $ insert $ Design (saveDesignName msg) fId
-            cIds <- runDB $ mapM (\(SaveInstalledComponent (SaveComponent cId level) amount) -> insert $ PlannedComponent newId cId level amount) 
-                                    (saveDesignComponents msg)
-            let json = toJSON $ ShipDesign (Just newId) (saveDesignName msg) (saveDesignChassisId msg)
-            return json
+            savedDesign <- runDB $ saveDesign msg fId
+            return $ toJSON savedDesign
 
 validateSaveDesign :: SaveDesign -> Bool
 validateSaveDesign _ = True
 
+saveDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
+    BaseBackend backend ~ SqlBackend) =>
+    SaveDesign -> Key Faction -> ReaderT backend m SaveDesign
+saveDesign design fId = do
+    newId <- insert $ Design (saveDesignName design) fId
+    cIds <- mapM insert $ map (saveComponentToPlannetComponent newId) (saveDesignComponents design)
+    newDesign <- get newId
+    newComponents <- selectList [ PlannedComponentDesignId ==. newId ] []
+    let x = case newDesign of
+                Just x -> designToSaveDesign (newId, x) []
+    return x
+
+designToSaveDesign :: (Key Design, Design) -> [ PlannedComponent ] -> SaveDesign
+designToSaveDesign (newId, design) comps = 
+    SaveDesign (Just newId) 0 (designName design) []
+
+saveComponentToPlannetComponent :: Key Design -> SaveInstalledComponent -> PlannedComponent
+saveComponentToPlannetComponent dId (SaveInstalledComponent (SaveComponent cId level) amount) =
+    PlannedComponent dId cId level amount
+
 data ShipDesign = ShipDesign
     { designId :: Maybe (Key Design)
-    , designName :: Text
+    , sdesignName :: Text
     , designChassisId :: Int
     } deriving Show
 
@@ -122,11 +139,23 @@ instance FromJSON SaveComponent where
                       <*> v .: "level"
     parseJSON _ = mzero
 
+instance ToJSON SaveComponent where
+    toJSON (SaveComponent cId level) =
+        object [ "id" .= cId
+               , "level" .= level
+               ]
+
 instance FromJSON SaveInstalledComponent where
     parseJSON (Object v) =
         SaveInstalledComponent <$> v .: "component"
                                <*> v .: "amount"
     parseJSON _ = mzero
+
+instance ToJSON SaveInstalledComponent where
+    toJSON (SaveInstalledComponent comp amount) =
+        object [ "component" .= comp
+               , "amount" .= amount 
+               ]
 
 instance FromJSON SaveDesign where
     parseJSON (Object v) =
@@ -135,3 +164,11 @@ instance FromJSON SaveDesign where
                    <*> v .: "name"
                    <*> v .: "components"
     parseJSON _ = mzero
+
+instance ToJSON SaveDesign where
+    toJSON (SaveDesign dId chassisId name components) =
+        object [ "id" .= dId
+               , "chassisId" .= chassisId
+               , "name" .= name
+               , "components" .= components
+               ]
