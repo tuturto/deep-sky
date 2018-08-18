@@ -110,7 +110,7 @@ data SaveInstalledComponent = SaveInstalledComponent
     } deriving Show
 
 data SaveDesign = SaveDesign
-    { saveDesignId :: Maybe Int
+    { saveDesignId :: Maybe (Key Design)
     , saveDesignChassisId :: Int
     , saveDesignName :: Text
     , saveDesignComponents :: [ SaveInstalledComponent ]
