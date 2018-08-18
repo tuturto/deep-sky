@@ -92,12 +92,18 @@ saveDesign design fId = do
     newDesign <- get newId
     newComponents <- selectList [ PlannedComponentDesignId ==. newId ] []
     let x = case newDesign of
-                Just x -> designToSaveDesign (newId, x) []
+                Just x -> designToSaveDesign (newId, x) newComponents
     return x
 
-designToSaveDesign :: (Key Design, Design) -> [ PlannedComponent ] -> SaveDesign
+designToSaveDesign :: (Key Design, Design) -> [ Entity PlannedComponent ] -> SaveDesign
 designToSaveDesign (newId, design) comps = 
-    SaveDesign (Just newId) 0 (designName design) []
+    SaveDesign (Just newId) 0 (designName design) $ map plannedComponentToSaveComponent comps
+
+plannedComponentToSaveComponent :: Entity PlannedComponent -> SaveInstalledComponent
+plannedComponentToSaveComponent entity =
+    SaveInstalledComponent (SaveComponent (plannedComponentComponentId comp) (plannedComponentLevel comp)) (plannedComponentAmount comp)
+    where
+        comp = entityVal entity
 
 saveComponentToPlannetComponent :: Key Design -> SaveInstalledComponent -> PlannedComponent
 saveComponentToPlannetComponent dId (SaveInstalledComponent (SaveComponent cId level) amount) =
