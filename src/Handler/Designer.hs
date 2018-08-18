@@ -6,7 +6,7 @@
 
 module Handler.Designer where
 
-import Data.Aeson (object, (.=))
+import Data.Aeson (object, (.=), (.:?))
 import Import
 import Components
 
@@ -45,17 +45,6 @@ instance ToJSON ChassisDto where
                , "maxTonnage" .= maxTonnage
                , "requiredTypes" .= array types 
                ]
-
-data SaveDesign = SaveDesign { sdName :: String
-                             , sdComponents :: [ InstalledComponent ]
-                             , sdChassisId :: Int }
-    deriving (Show, Read, Eq)
-
-instance ToJSON SaveDesign where
-    toJSON (SaveDesign name components chassisId) =
-        object [ "chassis" .= chassisId
-               , "name" .= name
-               , "components" .= array components ]
    
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
@@ -80,5 +69,60 @@ getApiChassisR = do
 
 postApiDesignR :: Handler Value
 postApiDesignR = do
-    let json = toJSON $ SaveDesign "S.S. Kickstart" [] 1
+    msg <- requireJsonBody
+    let json = toJSON $ ShipDesign (Just 1) (saveDesignName msg) (saveDesignChassisId msg)
     return json
+
+validateSaveDesign :: Either String SaveDesign -> Bool
+validateSaveDesign (Left _) = False
+validateSaveDesign (Right _) = True
+
+data ShipDesign = ShipDesign
+    { designId :: Maybe Int
+    , designName :: String
+    , designChassisId :: Int
+    } deriving Show
+
+instance ToJSON ShipDesign where
+    toJSON (ShipDesign dId name chassis) =
+        object [ "id" .= dId
+               , "name" .= name
+               , "chassisId" .= chassis
+               ]
+
+data SaveComponent = SaveComponent
+    { saveComponentId :: ComponentId
+    , saveComponentLevel :: Int
+    } deriving Show
+
+data SaveInstalledComponent = SaveInstalledComponent
+    { saveInstalledComponentComponents :: SaveComponent
+    , saveInstalledComponentAmount :: Int
+    } deriving Show
+
+data SaveDesign = SaveDesign
+    { saveDesignId :: Maybe Int
+    , saveDesignChassisId :: Int
+    , saveDesignName :: String
+    , saveDesignComponents :: [ SaveInstalledComponent ]
+    } deriving Show
+
+instance FromJSON SaveComponent where
+    parseJSON (Object v) =
+        SaveComponent <$> v .: "id"
+                      <*> v .: "level"
+    parseJSON _ = mzero
+
+instance FromJSON SaveInstalledComponent where
+    parseJSON (Object v) =
+        SaveInstalledComponent <$> v .: "component"
+                               <*> v .: "amount"
+    parseJSON _ = mzero
+
+instance FromJSON SaveDesign where
+    parseJSON (Object v) =
+        SaveDesign <$> v .:? "id"
+                   <*> v .: "chassisId"
+                   <*> v .: "name"
+                   <*> v .: "components"
+    parseJSON _ = mzero
