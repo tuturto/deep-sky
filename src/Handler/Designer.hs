@@ -78,6 +78,8 @@ postApiDesignR = do
         False -> sendResponseStatus status400 ("Validation failed" :: Text)
         True -> do 
             newId <- runDB $ insert $ Design (saveDesignName msg) fId
+            cIds <- runDB $ mapM (\(SaveInstalledComponent (SaveComponent cId level) amount) -> insert $ PlannedComponent newId cId level amount) 
+                                    (saveDesignComponents msg)
             let json = toJSON $ ShipDesign (Just newId) (saveDesignName msg) (saveDesignChassisId msg)
             return json
 

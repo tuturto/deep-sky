@@ -93,6 +93,7 @@ PlannedComponent json
     designId DesignId
     componentId ComponentId
     level Int
+    amount Int
     deriving Show Read Eq
 
 InstalledComponent json
