@@ -7,6 +7,7 @@
 module Handler.Designer where
 
 import Data.Aeson (object, (.=), (.:?))
+import Data.Maybe (fromJust)
 import Import
 import Components
 
@@ -80,6 +81,19 @@ postApiDesignR = do
             savedDesign <- runDB $ saveDesign msg fId
             return $ toJSON savedDesign
 
+putApiDesignR :: Handler Value
+putApiDesignR = do    
+    (_, user) <- requireAuthPair   
+    fId <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    msg <- requireJsonBody 
+    case (validateSaveDesign msg) of
+        False -> sendResponseStatus status400 ("Validation failed" :: Text)
+        True -> do 
+            savedDesign <- runDB $ updateDesign msg fId
+            return $ toJSON savedDesign
+
 validateSaveDesign :: SaveDesign -> Bool
 validateSaveDesign _ = True
 
@@ -94,6 +108,16 @@ saveDesign design fId = do
     let x = case newDesign of
                 Just x -> designToSaveDesign (newId, x) newComponents
     return x
+
+updateDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
+    PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
+    SaveDesign -> Key Faction -> ReaderT backend m SaveDesign
+updateDesign design fId = do
+    let newId = fromJust $ saveDesignId design
+    _ <- replace newId $ Design (saveDesignName design) fId
+    _ <- deleteWhere [ PlannedComponentDesignId ==. newId ]
+    cIds <- mapM insert $ map (saveComponentToPlannetComponent newId) (saveDesignComponents design)
+    return design
 
 designToSaveDesign :: (Key Design, Design) -> [ Entity PlannedComponent ] -> SaveDesign
 designToSaveDesign (newId, design) comps = 
