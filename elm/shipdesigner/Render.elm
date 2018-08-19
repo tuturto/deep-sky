@@ -193,7 +193,11 @@ leftPanel model =
 middlePanel : Model -> Html Msg
 middlePanel model =
   div []
-    (editPanel model)
+    <| case model.mode of
+         EditMode ->
+           editPanel model
+         LoadMode ->
+           loadPanel model
 
 editPanel : Model -> List (Html Msg)
 editPanel model =
@@ -206,10 +210,22 @@ editPanel model =
   , div [] <| List.map selectedComponent <| List.sortWith sortInstalledByAlpha model.ship.components    
   ]
 
+loadPanel : Model -> List (Html Msg)
+loadPanel model =
+  [ div [ class "row design-panel middle-panel" ]
+    [ div [ class "row" ]
+      [ div [ class "col-lg-12 design-panel-title" ]
+        [ text "Available designs" ]
+      ]        
+    ]  
+  ]
+
 savePanel : Model -> Html Msg
 savePanel model =
   let
-    saveEnabled = List.isEmpty <| validateDesign model 
+    saveEnabled = List.isEmpty <| validateDesign model
+    resetEnabled = False
+    copyEnabled = False
   in    
     div [ class "design-panel" ]
     [ div [ class "row" ]
@@ -223,11 +239,23 @@ savePanel model =
                   [ text "Save" ] ]
            else [ div [ class "btn btn-sm disabled" ]
                   [ text "Save" ] ]
+      , if model.mode == EditMode
+        then
+          div [ class "col-lg-2" ]
+          [ div [ class "btn btn-sm active", onClick <| LoadDesign ]
+            [ text "Load" ] ]
+        else
+          div [ class "col-lg-2" ]
+          [ div [ class "btn btn-sm active", onClick <| CancelLoad ]
+            [ text "Cancel" ] ]
       , div [ class "col-lg-2" ]
-        [ div [ class "btn btn-sm active", onClick <| LoadDesign ]
-          [ text "Load" ] ]
+        <| if copyEnabled
+           then [ div [ class "btn btn-sm active", onClick <| ResetDesign ]
+                  [ text "Copy" ] ]
+           else [ div [ class "btn btn-sm disabled" ]
+                  [ text "Copy" ] ]
       , div [ class "col-lg-2" ]
-        <| if saveEnabled
+        <| if resetEnabled
            then [ div [ class "btn btn-sm active", onClick <| ResetDesign ]
                   [ text "Reset" ] ]
            else [ div [ class "btn btn-sm disabled" ]

@@ -77,7 +77,11 @@ update msg model =
       ( model & modelErrorsF $= List.append [ "Failed to save design" ]
       , Cmd.none )
     LoadDesign ->
-      ( model, Cmd.none )
+      ( { model | mode = LoadMode }
+      , Cmd.none )
+    CancelLoad ->
+      ( { model | mode = EditMode }
+      , Cmd.none )
     ResetDesign ->
       ( model, Cmd.none )
 

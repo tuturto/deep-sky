@@ -12,6 +12,7 @@ type Msg = AvailableComponents (Result Http.Error (List Component))
          | SaveDesign
          | DesignSaved (Result Http.Error ShipDto)
          | LoadDesign
+         | CancelLoad
          | ResetDesign
 
 type alias Component = 
