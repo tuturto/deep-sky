@@ -10,7 +10,7 @@ type Msg = AvailableComponents (Result Http.Error (List Component))
          | NewShipName String
          | ChassisSelected (Maybe Int)
          | SaveDesign
-         | DesignSaved (Result Http.Error Ship)
+         | DesignSaved (Result Http.Error ShipDto)
 
 type alias Component = 
   { id : ComponentId
@@ -20,6 +20,11 @@ type alias Component =
   , slot : ComponentSlot
   , types : List ComponentLevel
   , cost : Cost
+  , level : Int
+  }
+
+type alias ComponentDto = 
+  { id : ComponentId
   , level : Int
   }
 
@@ -39,6 +44,8 @@ type ComponentLevel = ComponentLevel Int ComponentType
 
 type InstalledComponent = InstalledComponent Component Int
 
+type InstalledComponentDto = InstalledComponentDto ComponentDto Int
+
 type ComponentId = CidLongRangeSensors
   | CidArmour
   | CidBridge
@@ -52,6 +59,10 @@ type alias Cost =
 
 type alias Ship =
   { components : List InstalledComponent
+  , name : String }
+
+type alias ShipDto =
+  { components : List InstalledComponentDto
   , name : String }
 
 type alias Chassis =

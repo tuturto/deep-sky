@@ -70,7 +70,7 @@ update msg model =
       ( model
       , Http.send DesignSaved <| Http.post "/api/design" (Http.jsonBody <| Json.shipSaveEncoder model.ship model.chassis) Json.shipDecoder)
     DesignSaved (Ok ship) ->
-      ( model & modelShipF .= ship
+      ( model & modelShipF .= Json.dtoToShip ship model.components
       , Cmd.none )
     DesignSaved (Err x) ->
       ( model & modelErrorsF $= List.append [ "Failed to save design" ]

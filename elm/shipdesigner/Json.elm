@@ -1,5 +1,5 @@
 module Json exposing ( componentDecoder, chassisDecoder, shipDecoder
-                     , shipSaveEncoder )
+                     , shipSaveEncoder, dtoToShip )
 
 import Json.Decode.Extra exposing ((|:))
 import Json.Decode as Decode
@@ -78,6 +78,12 @@ componentDecoder =
     |: (Decode.field "cost" <| componentCostDecoder)
     |: (Decode.field "level" <| Decode.int)
 
+componentDtoDecoder : Decode.Decoder ComponentDto
+componentDtoDecoder =
+  Decode.succeed ComponentDto
+    |: (Decode.field "id" componentIdDecoder)
+    |: (Decode.field "level" <| Decode.int)
+
 componentEncoder : Component -> Encode.Value
 componentEncoder component =
   Encode.object [ ("id", componentIdEncoder component.id)
@@ -92,15 +98,15 @@ chassisDecoder =
   |: (Decode.field "maxTonnage" Decode.int)
   |: (Decode.field "requiredTypes" <| Decode.list componentLevelDecoder)
 
-installedComponentDecoder : Decode.Decoder InstalledComponent
+installedComponentDecoder : Decode.Decoder InstalledComponentDto
 installedComponentDecoder =
-  Decode.succeed InstalledComponent
-  |: (Decode.field "component" componentDecoder)
+  Decode.succeed InstalledComponentDto
+  |: (Decode.field "component" componentDtoDecoder)
   |: (Decode.field "amount" Decode.int)
 
-shipDecoder : Decode.Decoder Ship
+shipDecoder : Decode.Decoder ShipDto
 shipDecoder =
-  Decode.succeed Ship
+  Decode.succeed ShipDto
   |: (Decode.field "components" <| Decode.list installedComponentDecoder)
   |: (Decode.field "name" Decode.string)
 
@@ -109,6 +115,24 @@ installedComponentEncoder (InstalledComponent component amount) =
   Encode.object [ ("component", componentEncoder component)
                 , ("amount", Encode.int amount )
                 ]
+
+dtoToShip : ShipDto -> List Component -> Ship
+dtoToShip dto comps =
+  let
+    components = List.filterMap (dtoToComponent comps) dto.components
+  in
+    Ship components dto.name
+
+dtoToComponent : List Component -> InstalledComponentDto -> Maybe InstalledComponent
+dtoToComponent comps (InstalledComponentDto comp amount) = 
+  let
+    finder x = x.id == comp.id
+    matches = List.filter finder comps
+    match = List.head matches
+  in
+    case match of
+      Nothing -> Nothing
+      Just x -> Just <| InstalledComponent x amount
 
 shipSaveEncoder : Ship -> Maybe Chassis -> Encode.Value
 shipSaveEncoder ship chassis = 
