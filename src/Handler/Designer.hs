@@ -68,8 +68,8 @@ getApiChassisR = do
                       ]
     return json
 
-postApiDesignR :: Handler Value
-postApiDesignR = do    
+postApiNewDesignR :: Handler Value
+postApiNewDesignR = do    
     (_, user) <- requireAuthPair   
     fId <- case (userFactionId user) of
                         Just x -> return x
@@ -81,8 +81,8 @@ postApiDesignR = do
             savedDesign <- runDB $ saveDesign msg fId
             return $ toJSON savedDesign
 
-putApiDesignR :: Handler Value
-putApiDesignR = do    
+putApiUpdateDesignR :: Key Design -> Handler Value
+putApiUpdateDesignR _ = do    
     (_, user) <- requireAuthPair   
     fId <- case (userFactionId user) of
                         Just x -> return x

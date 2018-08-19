@@ -232,10 +232,11 @@ instance Yesod App where
         return res
 
     -- API routes
-    isAuthorized ApiStarSystemsR _ = isAuthenticated
-    isAuthorized ApiComponentsR _  = isAuthenticated
-    isAuthorized ApiChassisR _     = isAuthenticated
-    isAuthorized ApiDesignR _      = isAuthenticated
+    isAuthorized ApiStarSystemsR _      = isAuthenticated
+    isAuthorized ApiComponentsR _       = isAuthenticated
+    isAuthorized ApiChassisR _          = isAuthenticated
+    isAuthorized ApiNewDesignR _        = isAuthenticated
+    isAuthorized (ApiUpdateDesignR _) _ = isAuthenticated
     
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
