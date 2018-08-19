@@ -193,6 +193,10 @@ leftPanel model =
 middlePanel : Model -> Html Msg
 middlePanel model =
   div []
+    (editPanel model)
+
+editPanel : Model -> List (Html Msg)
+editPanel model =
   [ div [ class "row design-panel middle-panel" ]
     [ div [ class "row" ]
       [ div [ class "col-lg-12 design-panel-title" ]
@@ -213,12 +217,21 @@ savePanel model =
         [ text "Options" ]
       ]
     , div [ class "row side-panel" ]
-      [ div [ class "col-lg-4" ]
+      [ div [ class "col-lg-2" ]
         <| if saveEnabled
            then [ div [ class "btn btn-sm active", onClick <| SaveDesign ]
                   [ text "Save" ] ]
            else [ div [ class "btn btn-sm disabled" ]
                   [ text "Save" ] ]
+      , div [ class "col-lg-2" ]
+        [ div [ class "btn btn-sm active", onClick <| LoadDesign ]
+          [ text "Load" ] ]
+      , div [ class "col-lg-2" ]
+        <| if saveEnabled
+           then [ div [ class "btn btn-sm active", onClick <| ResetDesign ]
+                  [ text "Reset" ] ]
+           else [ div [ class "btn btn-sm disabled" ]
+                  [ text "Reset" ] ]
       ]
     , div [ class "row side-panel-right" ]
       [ div [ class "col-lg-11" ]

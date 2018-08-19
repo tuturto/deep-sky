@@ -22,6 +22,7 @@ init =
     , chassis = Nothing
     , chassisList = []
     , errors = []
+    , mode = EditMode
     }                 
   , Cmd.batch [ Http.send AvailableComponents (Http.get "/api/components" (Decode.list Json.componentDecoder)) 
               , Http.send AvailableChassis (Http.get "/api/chassis" (Decode.list Json.chassisDecoder))
@@ -75,6 +76,10 @@ update msg model =
     DesignSaved (Err x) ->
       ( model & modelErrorsF $= List.append [ "Failed to save design" ]
       , Cmd.none )
+    LoadDesign ->
+      ( model, Cmd.none )
+    ResetDesign ->
+      ( model, Cmd.none )
 
 selectChassis : List Chassis -> Int -> Maybe Chassis
 selectChassis chassisList chassisId =

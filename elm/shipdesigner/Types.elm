@@ -11,6 +11,8 @@ type Msg = AvailableComponents (Result Http.Error (List Component))
          | ChassisSelected (Maybe Int)
          | SaveDesign
          | DesignSaved (Result Http.Error ShipDto)
+         | LoadDesign
+         | ResetDesign
 
 type alias Component = 
   { id : ComponentId
@@ -71,12 +73,16 @@ type alias Chassis =
   , maxTonnage : Int 
   , requiredTypes : List ComponentLevel }
 
+type ProgramMode = EditMode
+  | LoadMode
+
 type alias Model =
   { components : List Component
   , chassisList : List Chassis
   , ship : Ship
   , chassis : Maybe Chassis
   , errors : List String
+  , mode : ProgramMode
   }
 
 modelErrorsF : Setter Model Model (List String) (List String)
