@@ -216,9 +216,21 @@ loadPanel model =
     [ div [ class "row" ]
       [ div [ class "col-lg-12 design-panel-title" ]
         [ text "Available designs" ]
-      ]        
+      ]
+    , div []
+      <| List.map showDesign model.designList     
     ]  
   ]
+
+showDesign : Ship -> Html Msg
+showDesign design =
+  div [ class "row" ]
+  [ div [ class "col-lg-4" ] 
+    [
+      text design.name
+    ]
+  ]
+
 
 savePanel : Model -> Html Msg
 savePanel model =

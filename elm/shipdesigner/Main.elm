@@ -23,9 +23,11 @@ init =
     , chassisList = []
     , errors = []
     , mode = EditMode
+    , designList = []
     }                 
-  , Cmd.batch [ Http.send AvailableComponents (Http.get "/api/components" (Decode.list Json.componentDecoder)) 
+  , Cmd.batch [ Http.send AvailableComponents (Http.get "/api/components" (Decode.list Json.componentDecoder))
               , Http.send AvailableChassis (Http.get "/api/chassis" (Decode.list Json.chassisDecoder))
+              , Http.send AvailableDesigns (Http.get "/api/design" (Decode.list Json.shipDecoder))
               ]
   )
 
@@ -61,6 +63,12 @@ update msg model =
     AvailableChassis (Err _) ->
       ( model & modelErrorsF $= List.append [ "Failed to load chassis list" ]
       , Cmd.none )
+    AvailableDesigns (Err x) ->
+      ( model & modelErrorsF $= List.append [ "Failed to load design list" ]
+      , Cmd.none )
+    AvailableDesigns (Ok designs) ->
+      ( model & modelDesignsF .= List.map (flip Json.dtoToShip <| model.components) designs
+      , Cmd.none )
     ChassisSelected (Just chassisId) ->
       ( model & modelChassisF .= (selectChassis model.chassisList chassisId)
       , Cmd.none )
@@ -78,7 +86,7 @@ update msg model =
       , Cmd.none )
     LoadDesign ->
       ( { model | mode = LoadMode }
-      , Cmd.none )
+      , Http.send AvailableDesigns (Http.get "/api/design" (Decode.list Json.shipDecoder)))
     CancelLoad ->
       ( { model | mode = EditMode }
       , Cmd.none )

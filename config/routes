@@ -32,7 +32,7 @@
 /api/starsystem                      ApiStarSystemsR   GET
 /api/components                      ApiComponentsR    GET
 /api/chassis                         ApiChassisR       GET
-/api/design                          ApiNewDesignR     POST
+/api/design                          ApiDesignR        GET POST
 /api/design/#DesignId                ApiUpdateDesignR  PUT
 /admin                               AdminPanelR       GET
 /admin/time                          AdminAdvanceTimeR GET

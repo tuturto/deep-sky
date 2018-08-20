@@ -5,6 +5,7 @@ import Focus exposing (Setter)
 
 type Msg = AvailableComponents (Result Http.Error (List Component))
          | AvailableChassis (Result Http.Error (List Chassis))
+         | AvailableDesigns (Result Http.Error (List ShipDto))
          | AddComponent Component
          | RemoveComponent Component
          | NewShipName String
@@ -90,6 +91,7 @@ type alias Model =
   , chassis : Maybe Chassis
   , errors : List String
   , mode : ProgramMode
+  , designList : List Ship
   }
 
 modelErrorsF : Setter Model Model (List String) (List String)
@@ -100,6 +102,9 @@ modelComponentsF f model = { model | components = f model.components }
 
 modelChassisListF : Setter Model Model (List Chassis) (List Chassis)
 modelChassisListF f model = { model | chassisList = f model.chassisList }
+
+modelDesignsF : Setter Model Model (List Ship) (List Ship)
+modelDesignsF f model = { model | designList = f model.designList }
 
 modelShipF : Setter Model Model Ship Ship
 modelShipF f model = { model | ship = f model.ship }

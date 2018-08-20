@@ -68,8 +68,21 @@ getApiChassisR = do
                       ]
     return json
 
-postApiNewDesignR :: Handler Value
-postApiNewDesignR = do    
+getApiDesignR :: Handler Value
+getApiDesignR = do
+    (_, user) <- requireAuthPair   
+    fId <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    loadedDesigns <- runDB $ selectList [ DesignOwnerId ==. fId ] []
+    loadedComponents <- runDB $ selectList [ PlannedComponentDesignId <-. map entityKey loadedDesigns ] []
+    let designs = map (\d -> designToSaveDesign (entityKey d, entityVal d)
+                    $ filter (\c -> (plannedComponentDesignId (entityVal c)) == (entityKey d)) loadedComponents) 
+                    loadedDesigns
+    return $ toJSON designs
+
+postApiDesignR :: Handler Value
+postApiDesignR = do    
     (_, user) <- requireAuthPair   
     fId <- case (userFactionId user) of
                         Just x -> return x
