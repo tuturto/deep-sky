@@ -96,6 +96,17 @@ PlannedComponent json
     amount Int
     deriving Show Read Eq
 
+Chassis json
+    name Text
+    tonnage Int
+    deriving Show Read Eq 
+
+RequiredComponent json
+    chassisId ChassisId
+    componentId ComponentId
+    level Int
+    deriving Show Read Eq
+
 InstalledComponent json
     shipId ShipId
     componentId ComponentId

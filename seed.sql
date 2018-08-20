@@ -27,15 +27,18 @@ insert into star (name, star_system_id, spectral_type, luminosity_class) values 
 insert into star_lane (star_system1, star_system2) values (1, 2);
 insert into star_lane (star_system1, star_system2) values (2, 3);
 
+insert into chassis (name, tonnage) values ('Satellite', 20);
+insert into chassis (name, tonnage) values ('Shuttle', 100);
+
+insert into required_component (chassis_id, component_id, level) values (2, 'BridgeComponent', 1);
+insert into required_component (chassis_id, component_id, level) values (2, 'EngineComponent', 1);
+insert into required_component (chassis_id, component_id, level) values (2, 'SensorComponent', 1);
+insert into required_component (chassis_id, component_id, level) values (2, 'SupplyComponent', 1);
+
 insert into faction (name, home_system, biologicals, mechanicals, chemicals) values ('Terrans', 1, 10000, 7500, 7500);
 insert into faction (name, home_system, biologicals, mechanicals, chemicals) values ('Republic of Aclael', 2, 5000, 5000, 5000);
 insert into user (ident, faction_id) values ('tuukka', 1);
 insert into user_role (user_id, role) values (1, 'RoleAdministrator');
-
---insert into ship (name, type, star_system_id, planet_id, landed, owner_id) values ('Sputnik', 'Satellite', 1, 3, 0, 1);
---insert into ship_component (ship_id, type, level) values (1, 'Sensors', 1);
---insert into ship (name, type, star_system_id, planet_id, landed, owner_id) values ('Telstar', 'Satellite', 1, 3, 1, 1);
---insert into ship_component (ship_id, type, level) values (2, 'Sensors', 2);
 
 insert into building (planet_id, type, level, construction, damage) values (3, 'SensorStation', 1, 1.0, 0);
 insert into building (planet_id, type, level, construction, damage) values (3, 'ResearchComplex', 1, 1.0, 0.25);
