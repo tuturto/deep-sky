@@ -18,7 +18,7 @@ main =
 init : (Model, Cmd Msg)
 init =
   ( { components = []
-    , ship = Ship [] ""
+    , ship = Ship [] "" Nothing
     , chassis = Nothing
     , chassisList = []
     , errors = []
@@ -69,7 +69,7 @@ update msg model =
       , Cmd.none )
     SaveDesign ->
       ( model
-      , Http.send DesignSaved <| Http.post "/api/design" (Http.jsonBody <| Json.shipSaveEncoder model.ship model.chassis) Json.shipDecoder)
+      , Http.send DesignSaved <| saveCommand model.ship model.chassis)
     DesignSaved (Ok ship) ->
       ( model & modelShipF .= Json.dtoToShip ship model.components
       , Cmd.none )
@@ -84,6 +84,27 @@ update msg model =
       , Cmd.none )
     ResetDesign ->
       ( model, Cmd.none )
+
+
+send : String -> String -> Http.Body -> Decode.Decoder a -> Http.Request a
+send method url body decoder =
+  Http.request
+    { method = method
+    , headers = []
+    , url = url
+    , body = body
+    , expect = Http.expectJson decoder
+    , timeout = Nothing
+    , withCredentials = False
+    }
+
+saveCommand : Ship -> Maybe Chassis -> Http.Request ShipDto
+saveCommand ship chassis =
+  case ship.id of
+    Nothing ->
+      send "POST" "/api/design" (Http.jsonBody <| Json.shipSaveEncoder ship chassis) Json.shipDecoder
+    Just id ->
+      send "PUT" ("/api/design/" ++ toString id) (Http.jsonBody <| Json.shipSaveEncoder ship chassis) Json.shipDecoder
 
 selectChassis : List Chassis -> Int -> Maybe Chassis
 selectChassis chassisList chassisId =

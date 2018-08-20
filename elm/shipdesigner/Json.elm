@@ -109,6 +109,7 @@ shipDecoder =
   Decode.succeed ShipDto
   |: (Decode.field "components" <| Decode.list installedComponentDecoder)
   |: (Decode.field "name" Decode.string)
+  |: (Decode.maybe <| Decode.field "id" Decode.int)
 
 installedComponentEncoder : InstalledComponent -> Encode.Value
 installedComponentEncoder (InstalledComponent component amount) =
@@ -121,7 +122,7 @@ dtoToShip dto comps =
   let
     components = List.filterMap (dtoToComponent comps) dto.components
   in
-    Ship components dto.name
+    Ship components dto.name dto.id
 
 dtoToComponent : List Component -> InstalledComponentDto -> Maybe InstalledComponent
 dtoToComponent comps (InstalledComponentDto comp amount) = 

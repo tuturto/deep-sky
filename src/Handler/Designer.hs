@@ -82,7 +82,7 @@ postApiNewDesignR = do
             return $ toJSON savedDesign
 
 putApiUpdateDesignR :: Key Design -> Handler Value
-putApiUpdateDesignR _ = do    
+putApiUpdateDesignR dId = do    
     (_, user) <- requireAuthPair   
     fId <- case (userFactionId user) of
                         Just x -> return x
@@ -91,7 +91,7 @@ putApiUpdateDesignR _ = do
     case (validateSaveDesign msg) of
         False -> sendResponseStatus status400 ("Validation failed" :: Text)
         True -> do 
-            savedDesign <- runDB $ updateDesign msg fId
+            savedDesign <- runDB $ updateDesign dId msg fId
             return $ toJSON savedDesign
 
 validateSaveDesign :: SaveDesign -> Bool
@@ -111,13 +111,16 @@ saveDesign design fId = do
 
 updateDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
-    SaveDesign -> Key Faction -> ReaderT backend m SaveDesign
-updateDesign design fId = do
-    let newId = fromJust $ saveDesignId design
-    _ <- replace newId $ Design (saveDesignName design) fId
-    _ <- deleteWhere [ PlannedComponentDesignId ==. newId ]
-    cIds <- mapM insert $ map (saveComponentToPlannetComponent newId) (saveDesignComponents design)
-    return design
+    Key Design -> SaveDesign -> Key Faction -> ReaderT backend m SaveDesign
+updateDesign dId design fId = do
+    _ <- replace dId $ Design (saveDesignName design) fId
+    _ <- deleteWhere [ PlannedComponentDesignId ==. dId ]
+    cIds <- mapM insert $ map (saveComponentToPlannetComponent dId) (saveDesignComponents design)
+    newDesign <- get dId
+    newComponents <- selectList [ PlannedComponentDesignId ==. dId ] []
+    let x = case newDesign of
+                Just x -> designToSaveDesign (dId, x) newComponents
+    return x
 
 designToSaveDesign :: (Key Design, Design) -> [ Entity PlannedComponent ] -> SaveDesign
 designToSaveDesign (newId, design) comps = 

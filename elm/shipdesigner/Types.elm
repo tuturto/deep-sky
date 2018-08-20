@@ -58,21 +58,27 @@ type ComponentId = CidLongRangeSensors
 type alias Cost =
   { mechanical : Int
   , biological : Int
-  , chemical : Int }
+  , chemical : Int 
+  }
 
 type alias Ship =
   { components : List InstalledComponent
-  , name : String }
+  , name : String 
+  , id : Maybe Int 
+  }
 
 type alias ShipDto =
   { components : List InstalledComponentDto
-  , name : String }
+  , name : String 
+  , id : Maybe Int 
+  }
 
 type alias Chassis =
   { id : Int
   , name : String
   , maxTonnage : Int 
-  , requiredTypes : List ComponentLevel }
+  , requiredTypes : List ComponentLevel 
+  }
 
 type ProgramMode = EditMode
   | LoadMode
