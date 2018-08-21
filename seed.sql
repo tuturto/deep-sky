@@ -30,10 +30,10 @@ insert into star_lane (star_system1, star_system2) values (2, 3);
 insert into chassis (name, tonnage) values ('Satellite', 20);
 insert into chassis (name, tonnage) values ('Shuttle', 100);
 
-insert into required_component (chassis_id, component_id, level) values (2, 'BridgeComponent', 1);
-insert into required_component (chassis_id, component_id, level) values (2, 'EngineComponent', 1);
-insert into required_component (chassis_id, component_id, level) values (2, 'SensorComponent', 1);
-insert into required_component (chassis_id, component_id, level) values (2, 'SupplyComponent', 1);
+insert into required_component (chassis_id, component_type, level) values (2, 'BridgeComponent', 1);
+insert into required_component (chassis_id, component_type, level) values (2, 'EngineComponent', 1);
+insert into required_component (chassis_id, component_type, level) values (2, 'SensorComponent', 1);
+insert into required_component (chassis_id, component_type, level) values (2, 'SupplyComponent', 1);
 
 insert into faction (name, home_system, biologicals, mechanicals, chemicals) values ('Terrans', 1, 10000, 7500, 7500);
 insert into faction (name, home_system, biologicals, mechanicals, chemicals) values ('Republic of Aclael', 2, 5000, 5000, 5000);

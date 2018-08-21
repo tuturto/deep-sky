@@ -33,10 +33,10 @@ getNewDesignR = do
         addStylesheet $ StaticR css_site_css
         $(widgetFile "shipdesigner")
 
-data ChassisDto = ChassisDto { cdId :: Int
+data ChassisDto = ChassisDto { cdId :: Key Chassis
                              , cdName :: Text
                              , cdMaxTonnage :: Int
-                             , cdRequiredTypes :: [ComponentLevel]}
+                             , cdRequiredTypes :: [ ComponentLevel ]}
     deriving Show
 
 instance ToJSON ChassisDto where
@@ -59,14 +59,14 @@ getApiComponentsR = do
 
 getApiChassisR :: Handler Value
 getApiChassisR = do
-    let json = toJSON [ ChassisDto 1 "Destroyer" 150 [ ComponentLevel (CLevel 1) BridgeComponent
-                                                     , ComponentLevel (CLevel 1) EngineComponent
-                                                     , ComponentLevel (CLevel 1) SensorComponent 
-                                                     , ComponentLevel (CLevel 1) SupplyComponent 
-                                                     ]
-                      , ChassisDto 2 "Satellite" 20 []
-                      ]
-    return json
+    loadedChassis <- runDB $ selectList [] []
+    loadedRequirements <- runDB $ selectList [ RequiredComponentChassisId <-. map entityKey loadedChassis ] []
+    let chassis = map (\c -> ChassisDto (entityKey c) (chassisName (entityVal c)) (chassisTonnage (entityVal c)) 
+                             $ map (\r -> ComponentLevel (CLevel $ requiredComponentLevel $ entityVal r) 
+                                                         $ requiredComponentComponentType $ entityVal r)
+                             $ filter (\r -> (requiredComponentChassisId (entityVal r)) == entityKey c) loadedRequirements) 
+                      loadedChassis
+    return $ toJSON chassis
 
 getApiDesignR :: Handler Value
 getApiDesignR = do

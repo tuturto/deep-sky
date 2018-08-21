@@ -103,7 +103,7 @@ Chassis json
 
 RequiredComponent json
     chassisId ChassisId
-    componentId ComponentId
+    componentType ComponentType
     level Int
     deriving Show Read Eq
 
