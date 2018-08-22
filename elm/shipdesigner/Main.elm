@@ -83,9 +83,12 @@ update msg model =
     DesignSaved (Err x) ->
       ( model & modelErrorsF $= List.append [ "Failed to save design" ]
       , Cmd.none )
-    LoadDesign ->
+    ShowLoadPanel ->
       ( { model | mode = LoadMode }
       , Http.send AvailableDesigns (Http.get "/api/design" (Decode.list Json.shipDecoder)))
+    LoadDesign ship ->
+      ( { model | ship = ship, mode = EditMode }
+      , Cmd.none )
     CancelLoad ->
       ( { model | mode = EditMode }
       , Cmd.none )

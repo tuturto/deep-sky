@@ -223,7 +223,7 @@ loadPanel model =
 
 showDesign : Ship -> Html Msg
 showDesign design =
-  div [ class "row" ]
+  div [ class "row", onClick <| LoadDesign design ]
   [ div [ class "col-lg-4" ] 
     [
       text design.name
@@ -260,7 +260,7 @@ savePanel model =
       , if model.mode == EditMode
         then
           div [ class "col-lg-2" ]
-          [ div [ class "btn btn-sm active", onClick LoadDesign ]
+          [ div [ class "btn btn-sm active", onClick ShowLoadPanel ]
             [ text "Load" ] ]
         else
           div [ class "col-lg-2" ]
@@ -279,7 +279,7 @@ savePanel model =
            else [ div [ class "btn btn-sm disabled" ]
                   [ text "Reset" ] ]
       , div [ class "col-lg-2" ]
-        [ div [ class "btn btn-sm-active", onClick NewDesign ]
+        [ div [ class "btn btn-sm active", onClick NewDesign ]
           [ text "New" ] ]
       ]
     , div [ class "row side-panel-right" ]

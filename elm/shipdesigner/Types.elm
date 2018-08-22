@@ -12,7 +12,8 @@ type Msg = AvailableComponents (Result Http.Error (List Component))
          | ChassisSelected (Maybe Int)
          | SaveDesign
          | DesignSaved (Result Http.Error ShipDto)
-         | LoadDesign
+         | ShowLoadPanel
+         | LoadDesign Ship
          | CancelLoad
          | ResetDesign
          | NewDesign
