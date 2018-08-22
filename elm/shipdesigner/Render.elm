@@ -16,6 +16,10 @@ statisticsPanel model =
                         Just chassis ->
                           toString chassis.maxTonnage
                         Nothing -> "-"
+    chassisId = case model.ship.chassis of
+                        Just chassis ->
+                          toString chassis.id
+                        nothing -> ""
   in      
     div [ class "design-panel" ]
     [ div [ class "row" ]
@@ -26,13 +30,13 @@ statisticsPanel model =
       [ div [ class "col-lg-4" ]
         [ text "Name" ]
       , div [ class "col-lg-8 editor-text" ]
-        [ input [ type_ "text", placeholder "Enter name", onInput NewShipName, style [ ("width", "100%") ] ] [] ]
+        [ input [ type_ "text", placeholder "Enter name", value model.ship.name, onInput NewShipName, style [ ("width", "100%") ] ] [] ]
       ]
     , div [ class "row side-panel" ]
       [ div [ class "col-lg-4" ]
         [ text "Type" ]
       , div [ class "col-lg-8" ]
-        [ select [ on "change" (Decode.map ChassisSelected targetValueMaybeInt), style [ ("width", "100%") ] ]
+        [ select [ on "change" (Decode.map ChassisSelected targetValueMaybeInt), value chassisId, style [ ("width", "100%") ] ]
           <| chassisOptions model.chassisList 
         ]
       ]
