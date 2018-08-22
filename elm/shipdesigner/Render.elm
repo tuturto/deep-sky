@@ -245,9 +245,13 @@ showDesign design =
 savePanel : Model -> Html Msg
 savePanel model =
   let
-    saveEnabled = List.isEmpty <| validateDesign model
-    resetEnabled = False
-    copyEnabled = False
+    saveEnabled = model.mode == EditMode && (List.isEmpty <| validateDesign model)
+    resetEnabled = model.mode == EditMode && case model.ship.id of
+                                              Nothing -> False
+                                              Just _ -> True
+    newEnabled = model.mode == EditMode
+    copyEnabled = resetEnabled
+    loadEnabled = model.mode == EditMode
   in    
     div [ class "design-panel" ]
     [ div [ class "row" ]
@@ -261,7 +265,7 @@ savePanel model =
                   [ text "Save" ] ]
            else [ div [ class "btn btn-sm disabled" ]
                   [ text "Save" ] ]
-      , if model.mode == EditMode
+      , if loadEnabled
         then
           div [ class "col-lg-2" ]
           [ div [ class "btn btn-sm active", onClick ShowLoadPanel ]
@@ -272,7 +276,7 @@ savePanel model =
             [ text "Cancel" ] ]
       , div [ class "col-lg-2" ]
         <| if copyEnabled
-           then [ div [ class "btn btn-sm active", onClick ResetDesign ]
+           then [ div [ class "btn btn-sm active", onClick CopyDesign ]
                   [ text "Copy" ] ]
            else [ div [ class "btn btn-sm disabled" ]
                   [ text "Copy" ] ]
@@ -283,8 +287,11 @@ savePanel model =
            else [ div [ class "btn btn-sm disabled" ]
                   [ text "Reset" ] ]
       , div [ class "col-lg-2" ]
-        [ div [ class "btn btn-sm active", onClick NewDesign ]
-          [ text "New" ] ]
+        <| if newEnabled
+           then [ div [ class "btn btn-sm active", onClick NewDesign ]
+                  [ text "New" ] ]
+           else [ div [ class "btn btn-sm disabled" ]
+                  [ text "New" ] ]
       ]
     , div [ class "row side-panel-right" ]
       [ div [ class "col-lg-11" ]

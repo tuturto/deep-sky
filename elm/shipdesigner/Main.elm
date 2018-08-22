@@ -93,10 +93,25 @@ update msg model =
       ( { model | mode = EditMode }
       , Cmd.none )
     ResetDesign ->
-      ( model, Cmd.none )
+      ( model & modelShipF .= (resetDesign model.designList model.ship.id)
+      , Cmd.none )
     NewDesign ->
       ( model & modelShipF .= Ship [] "" Nothing Nothing
       , Cmd.none )
+    CopyDesign ->
+      ( model & modelShipF => shipIdF .= Nothing
+      , Cmd.none )
+
+resetDesign : List Ship -> Maybe Int -> Ship
+resetDesign designs id =
+  let
+    match = designs
+            |> List.filter (\design -> design.id == id)
+            |> List.head
+  in
+    case match of
+      Nothing -> Ship [] "" Nothing Nothing
+      Just design -> design
 
 send : String -> String -> Http.Body -> Decode.Decoder a -> Http.Request a
 send method url body decoder =

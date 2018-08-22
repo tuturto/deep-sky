@@ -17,6 +17,7 @@ type Msg = AvailableComponents (Result Http.Error (List Component))
          | CancelLoad
          | ResetDesign
          | NewDesign
+         | CopyDesign
 
 type alias Component = 
   { id : ComponentId
@@ -120,6 +121,9 @@ shipNameF f ship = { ship | name = f ship.name }
 
 shipChassisF : Setter Ship Ship (Maybe Chassis) (Maybe Chassis)
 shipChassisF f ship = { ship | chassis = f ship.chassis }
+
+shipIdF : Setter Ship Ship (Maybe Int) (Maybe Int)
+shipIdF f ship = { ship | id = f ship.id }
 
 totalTonnage : Ship -> Int
 totalTonnage ship =
