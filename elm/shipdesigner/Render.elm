@@ -12,8 +12,7 @@ import Json.Decode as Decode
 statisticsPanel : Model -> Html Msg
 statisticsPanel model =
   let
-    cost = totalCost model.ship
-    maxTonnage = case model.chassis of 
+    maxTonnage = case model.ship.chassis of 
                         Just chassis ->
                           toString chassis.maxTonnage
                         Nothing -> "-"
@@ -229,8 +228,15 @@ showDesign design =
     [
       text design.name
     ]
+  , div [ class "col-lg-4" ]
+    [
+        text <| case design.chassis of
+                  Nothing -> "xxx"
+                  Just chassis -> chassis.name
+    ]
+  , div [ class "col-lg-4" ]
+    [ costDisplay <| totalCost design ]
   ]
-
 
 savePanel : Model -> Html Msg
 savePanel model =

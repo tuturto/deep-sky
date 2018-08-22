@@ -110,6 +110,7 @@ shipDecoder =
   |: (Decode.field "components" <| Decode.list installedComponentDecoder)
   |: (Decode.field "name" Decode.string)
   |: (Decode.maybe <| Decode.field "id" Decode.int)
+  |: (Decode.field "chassisId" Decode.int)
 
 installedComponentEncoder : InstalledComponent -> Encode.Value
 installedComponentEncoder (InstalledComponent component amount) =
@@ -117,12 +118,15 @@ installedComponentEncoder (InstalledComponent component amount) =
                 , ("amount", Encode.int amount )
                 ]
 
-dtoToShip : ShipDto -> List Component -> Ship
-dtoToShip dto comps =
+dtoToShip : ShipDto -> List Component -> List Chassis -> Ship
+dtoToShip dto comps chassisList =
   let
     components = List.filterMap (dtoToComponent comps) dto.components
+    chassis = chassisList 
+              |> List.filter (\x -> x.id == dto.chassis) 
+              |> List.head
   in
-    Ship components dto.name dto.id
+    Ship components dto.name chassis dto.id
 
 dtoToComponent : List Component -> InstalledComponentDto -> Maybe InstalledComponent
 dtoToComponent comps (InstalledComponentDto comp amount) = 

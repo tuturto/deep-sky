@@ -87,6 +87,7 @@ Ship json
 Design json
     name Text
     ownerId FactionId
+    chassisId ChassisId
     deriving Show
 
 PlannedComponent json

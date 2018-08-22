@@ -118,7 +118,7 @@ saveDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     BaseBackend backend ~ SqlBackend) =>
     SaveDesign -> Key Faction -> ReaderT backend m SaveDesign
 saveDesign design fId = do
-    newId <- insert $ Design (saveDesignName design) fId
+    newId <- insert $ Design (saveDesignName design) fId (saveDesignChassisId design)
     cIds <- mapM insert $ map (saveComponentToPlannetComponent newId) (saveDesignComponents design)
     newDesign <- get newId
     newComponents <- selectList [ PlannedComponentDesignId ==. newId ] []
@@ -130,7 +130,7 @@ updateDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
     Key Design -> SaveDesign -> Key Faction -> ReaderT backend m SaveDesign
 updateDesign dId design fId = do
-    _ <- replace dId $ Design (saveDesignName design) fId
+    _ <- replace dId $ Design (saveDesignName design) fId (saveDesignChassisId design)
     _ <- deleteWhere [ PlannedComponentDesignId ==. dId ]
     cIds <- mapM insert $ map (saveComponentToPlannetComponent dId) (saveDesignComponents design)
     newDesign <- get dId
@@ -141,7 +141,7 @@ updateDesign dId design fId = do
 
 designToSaveDesign :: (Key Design, Design) -> [ Entity PlannedComponent ] -> SaveDesign
 designToSaveDesign (newId, design) comps = 
-    SaveDesign (Just newId) 0 (designName design) $ map plannedComponentToSaveComponent comps
+    SaveDesign (Just newId) (designChassisId design) (designName design) $ map plannedComponentToSaveComponent comps
 
 plannedComponentToSaveComponent :: Entity PlannedComponent -> SaveInstalledComponent
 plannedComponentToSaveComponent entity =
@@ -152,19 +152,6 @@ plannedComponentToSaveComponent entity =
 saveComponentToPlannetComponent :: Key Design -> SaveInstalledComponent -> PlannedComponent
 saveComponentToPlannetComponent dId (SaveInstalledComponent (SaveComponent cId level) amount) =
     PlannedComponent dId cId level amount
-
-data ShipDesign = ShipDesign
-    { designId :: Maybe (Key Design)
-    , sdesignName :: Text
-    , designChassisId :: Int
-    } deriving Show
-
-instance ToJSON ShipDesign where
-    toJSON (ShipDesign dId name chassis) =
-        object [ "id" .= dId
-               , "name" .= name
-               , "chassisId" .= chassis
-               ]
 
 data SaveComponent = SaveComponent
     { saveComponentId :: ComponentId
@@ -178,7 +165,7 @@ data SaveInstalledComponent = SaveInstalledComponent
 
 data SaveDesign = SaveDesign
     { saveDesignId :: Maybe (Key Design)
-    , saveDesignChassisId :: Int
+    , saveDesignChassisId :: Key Chassis
     , saveDesignName :: Text
     , saveDesignComponents :: [ SaveInstalledComponent ]
     } deriving Show

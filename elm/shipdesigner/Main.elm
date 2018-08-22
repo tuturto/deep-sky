@@ -18,8 +18,7 @@ main =
 init : (Model, Cmd Msg)
 init =
   ( { components = []
-    , ship = Ship [] "" Nothing
-    , chassis = Nothing
+    , ship = Ship [] "" Nothing Nothing
     , chassisList = []
     , errors = []
     , mode = EditMode
@@ -67,19 +66,19 @@ update msg model =
       ( model & modelErrorsF $= List.append [ "Failed to load design list" ]
       , Cmd.none )
     AvailableDesigns (Ok designs) ->
-      ( model & modelDesignsF .= List.map (flip Json.dtoToShip <| model.components) designs
+      ( model & modelDesignsF .= List.map (\x -> Json.dtoToShip x model.components model.chassisList) designs
       , Cmd.none )
     ChassisSelected (Just chassisId) ->
-      ( model & modelChassisF .= (selectChassis model.chassisList chassisId)
+      ( model & modelShipF => shipChassisF .= (selectChassis model.chassisList chassisId)
       , Cmd.none )
     ChassisSelected Nothing ->
-      ( model & modelChassisF .= Nothing
+      ( model & modelShipF => shipChassisF .= Nothing
       , Cmd.none )
     SaveDesign ->
       ( model
-      , Http.send DesignSaved <| saveCommand model.ship model.chassis)
+      , Http.send DesignSaved <| saveCommand model.ship model.ship.chassis)
     DesignSaved (Ok ship) ->
-      ( model & modelShipF .= Json.dtoToShip ship model.components
+      ( model & modelShipF .= Json.dtoToShip ship model.components model.chassisList
       , Cmd.none )
     DesignSaved (Err x) ->
       ( model & modelErrorsF $= List.append [ "Failed to save design" ]

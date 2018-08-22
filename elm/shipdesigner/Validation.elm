@@ -10,7 +10,7 @@ type alias ShipValidator = Model -> List (Maybe String)
 
 tonnageCheck : ShipValidator
 tonnageCheck model =
-  case model.chassis of
+  case model.ship.chassis of
     Just chassis ->
       if totalTonnage model.ship > chassis.maxTonnage
       then [ Just "Ship design exceeds max tonnage" ]
@@ -42,14 +42,14 @@ componentCheck model =
         then Nothing
         else Just <| componentRequirementToString (ComponentLevel n component)
   in
-    case model.chassis of
+    case model.ship.chassis of
       Just chassis -> 
         List.map checkSingle chassis.requiredTypes
       Nothing -> []
 
 chassisSelectedCheck : ShipValidator
 chassisSelectedCheck model =
-  case model.chassis of
+  case model.ship.chassis of
     Just x -> []
     Nothing -> [ Just "Chassis has not been selected" ]
 

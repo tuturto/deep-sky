@@ -65,6 +65,7 @@ type alias Cost =
 type alias Ship =
   { components : List InstalledComponent
   , name : String 
+  , chassis : Maybe Chassis
   , id : Maybe Int 
   }
 
@@ -72,6 +73,7 @@ type alias ShipDto =
   { components : List InstalledComponentDto
   , name : String 
   , id : Maybe Int 
+  , chassis : Int
   }
 
 type alias Chassis =
@@ -87,8 +89,7 @@ type ProgramMode = EditMode
 type alias Model =
   { components : List Component
   , chassisList : List Chassis
-  , ship : Ship
-  , chassis : Maybe Chassis
+  , ship : Ship  
   , errors : List String
   , mode : ProgramMode
   , designList : List Ship
@@ -115,8 +116,8 @@ shipComponentsF f ship = { ship | components = f ship.components }
 shipNameF : Setter Ship Ship String String
 shipNameF f ship = { ship | name = f ship.name }
 
-modelChassisF : Setter Model Model (Maybe Chassis) (Maybe Chassis)
-modelChassisF f model = { model | chassis = f model.chassis }
+shipChassisF : Setter Ship Ship (Maybe Chassis) (Maybe Chassis)
+shipChassisF f ship = { ship | chassis = f ship.chassis }
 
 totalTonnage : Ship -> Int
 totalTonnage ship =
