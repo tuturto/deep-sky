@@ -231,7 +231,7 @@ showDesign design =
   , div [ class "col-lg-4" ]
     [
         text <| case design.chassis of
-                  Nothing -> "xxx"
+                  Nothing -> "Unknown"
                   Just chassis -> chassis.name
     ]
   , div [ class "col-lg-4" ]
@@ -253,38 +253,40 @@ savePanel model =
     , div [ class "row side-panel" ]
       [ div [ class "col-lg-2" ]
         <| if saveEnabled
-           then [ div [ class "btn btn-sm active", onClick <| SaveDesign ]
+           then [ div [ class "btn btn-sm active", onClick SaveDesign ]
                   [ text "Save" ] ]
            else [ div [ class "btn btn-sm disabled" ]
                   [ text "Save" ] ]
       , if model.mode == EditMode
         then
           div [ class "col-lg-2" ]
-          [ div [ class "btn btn-sm active", onClick <| LoadDesign ]
+          [ div [ class "btn btn-sm active", onClick LoadDesign ]
             [ text "Load" ] ]
         else
           div [ class "col-lg-2" ]
-          [ div [ class "btn btn-sm active", onClick <| CancelLoad ]
+          [ div [ class "btn btn-sm active", onClick CancelLoad ]
             [ text "Cancel" ] ]
       , div [ class "col-lg-2" ]
         <| if copyEnabled
-           then [ div [ class "btn btn-sm active", onClick <| ResetDesign ]
+           then [ div [ class "btn btn-sm active", onClick ResetDesign ]
                   [ text "Copy" ] ]
            else [ div [ class "btn btn-sm disabled" ]
                   [ text "Copy" ] ]
       , div [ class "col-lg-2" ]
         <| if resetEnabled
-           then [ div [ class "btn btn-sm active", onClick <| ResetDesign ]
+           then [ div [ class "btn btn-sm active", onClick ResetDesign ]
                   [ text "Reset" ] ]
            else [ div [ class "btn btn-sm disabled" ]
                   [ text "Reset" ] ]
+      , div [ class "col-lg-2" ]
+        [ div [ class "btn btn-sm-active", onClick NewDesign ]
+          [ text "New" ] ]
       ]
     , div [ class "row side-panel-right" ]
       [ div [ class "col-lg-11" ]
         []
       ]
     ]
-
 
 warningMessages : List String -> List (Html Msg)
 warningMessages s =

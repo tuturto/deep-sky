@@ -91,7 +91,9 @@ update msg model =
       , Cmd.none )
     ResetDesign ->
       ( model, Cmd.none )
-
+    NewDesign ->
+      ( model & modelShipF .= Ship [] "" Nothing Nothing
+      , Cmd.none )
 
 send : String -> String -> Http.Body -> Decode.Decoder a -> Http.Request a
 send method url body decoder =
