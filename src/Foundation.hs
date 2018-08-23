@@ -218,7 +218,6 @@ instance Yesod App where
     isAuthorized ResearchR _       = isAuthenticated
     isAuthorized FleetR _          = isAuthenticated
     isAuthorized DesignerR _       = isAuthenticated
-    isAuthorized NewDesignR _      = isAuthenticated
     isAuthorized ConstructionR _   = isAuthenticated
 
     -- Special authorization
@@ -236,7 +235,7 @@ instance Yesod App where
     isAuthorized ApiComponentsR _       = isAuthenticated
     isAuthorized ApiChassisR _          = isAuthenticated
     isAuthorized ApiDesignR _           = isAuthenticated
-    isAuthorized (ApiUpdateDesignR _) _ = isAuthenticated
+    isAuthorized (ApiDesignIdR _) _     = isAuthenticated
     
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -295,7 +294,6 @@ instance YesodBreadcrumbs App where
         return (name, Just (StarSystemR systemId))
     breadcrumb FleetR = return ("Fleet", Just HomeR)
     breadcrumb DesignerR = return ("Designer", Just HomeR)
-    breadcrumb NewDesignR = return ("New design", Just DesignerR)
     breadcrumb ResearchR = return ("Research", Just HomeR)
     breadcrumb ConstructionR = return ("Construction", Just HomeR)
     breadcrumb BasesR = return ("Bases", Just HomeR)

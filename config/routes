@@ -22,7 +22,6 @@
 /construction                        ConstructionR     GET
 
 /designer                            DesignerR         GET
-/designer/new                        NewDesignR        GET
 
 /base                                BasesR            GET
 /base/#StarSystemId/#PlanetId        BaseR             GET
@@ -33,6 +32,6 @@
 /api/components                      ApiComponentsR    GET
 /api/chassis                         ApiChassisR       GET
 /api/design                          ApiDesignR        GET POST
-/api/design/#DesignId                ApiUpdateDesignR  PUT
+/api/design/#DesignId                ApiDesignIdR      PUT
 /admin                               AdminPanelR       GET
 /admin/time                          AdminAdvanceTimeR GET

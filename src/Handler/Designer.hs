@@ -18,16 +18,6 @@ getDesignerR = do
                         Just x -> return x
                         Nothing -> redirect ProfileR
     defaultLayout $ do
-        setTitle "Deep Sky - Designs"
-        $(widgetFile "shipdesigns")
-
-getNewDesignR :: Handler Html
-getNewDesignR = do
-    (_, user) <- requireAuthPair   
-    _ <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> redirect ProfileR
-    defaultLayout $ do
         setTitle "Deep Sky - Ship designer"
         addScript $ StaticR js_shipdesigner_js
         addStylesheet $ StaticR css_site_css
@@ -98,8 +88,8 @@ postApiDesignR = do
             savedDesign <- runDB $ saveDesign msg fId
             return $ toJSON savedDesign
 
-putApiUpdateDesignR :: Key Design -> Handler Value
-putApiUpdateDesignR dId = do    
+putApiDesignIdR :: Key Design -> Handler Value
+putApiDesignIdR dId = do    
     (_, user) <- requireAuthPair   
     fId <- case (userFactionId user) of
                         Just x -> return x
