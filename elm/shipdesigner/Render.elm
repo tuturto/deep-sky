@@ -260,11 +260,7 @@ savePanel model =
       ]
     , div [ class "row side-panel" ]
       [ div [ class "col-lg-2" ]
-        <| if saveEnabled
-           then [ div [ class "btn btn-sm active", onClick SaveDesign ]
-                  [ text "Save" ] ]
-           else [ div [ class "btn btn-sm disabled" ]
-                  [ text "Save" ] ]
+        [ addButton saveEnabled "Save" SaveDesign ]
       , if loadEnabled
         then
           div [ class "col-lg-2" ]
@@ -275,29 +271,25 @@ savePanel model =
           [ div [ class "btn btn-sm active", onClick CancelLoad ]
             [ text "Cancel" ] ]
       , div [ class "col-lg-2" ]
-        <| if copyEnabled
-           then [ div [ class "btn btn-sm active", onClick CopyDesign ]
-                  [ text "Copy" ] ]
-           else [ div [ class "btn btn-sm disabled" ]
-                  [ text "Copy" ] ]
+        [ addButton copyEnabled "Copy" CopyDesign ]
       , div [ class "col-lg-2" ]
-        <| if resetEnabled
-           then [ div [ class "btn btn-sm active", onClick ResetDesign ]
-                  [ text "Reset" ] ]
-           else [ div [ class "btn btn-sm disabled" ]
-                  [ text "Reset" ] ]
+        [ addButton resetEnabled "Reset" ResetDesign ]
       , div [ class "col-lg-2" ]
-        <| if newEnabled
-           then [ div [ class "btn btn-sm active", onClick NewDesign ]
-                  [ text "New" ] ]
-           else [ div [ class "btn btn-sm disabled" ]
-                  [ text "New" ] ]
+        [ addButton newEnabled "New" NewDesign ]
       ]
     , div [ class "row side-panel-right" ]
       [ div [ class "col-lg-11" ]
         []
       ]
     ]
+
+addButton : Bool -> String -> msg -> Html msg
+addButton enabled btnText msg =
+  if enabled
+  then div [ class "btn btn-sm active", onClick msg ]
+       [ text btnText ]
+  else div [ class "btn btn-sm disabled" ]
+         [ text btnText ]
 
 warningMessages : List String -> List (Html Msg)
 warningMessages s =
