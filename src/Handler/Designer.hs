@@ -6,6 +6,7 @@
 
 module Handler.Designer where
 
+import Database.Persist.Sql (fromSqlKey)
 import Data.Aeson (object, (.=), (.:?))
 import Data.Maybe (fromJust)
 import Import
@@ -100,6 +101,16 @@ putApiDesignIdR dId = do
         True -> do 
             savedDesign <- runDB $ updateDesign dId msg fId
             return $ toJSON savedDesign
+
+deleteApiDesignIdR :: Key Design -> Handler Value
+deleteApiDesignIdR dId = do
+    (_, user) <- requireAuthPair   
+    fId <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    _ <- runDB $ deleteWhere [ PlannedComponentDesignId ==. dId ]
+    _ <- runDB $ delete dId
+    sendResponseStatus status200 $ show $ fromSqlKey dId
 
 validateSaveDesign :: SaveDesign -> Bool
 validateSaveDesign _ = True

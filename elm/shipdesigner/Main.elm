@@ -62,7 +62,7 @@ update msg model =
     AvailableChassis (Err _) ->
       ( model & modelErrorsF $= List.append [ "Failed to load chassis list" ]
       , Cmd.none )
-    AvailableDesigns (Err x) ->
+    AvailableDesigns (Err _) ->
       ( model & modelErrorsF $= List.append [ "Failed to load design list" ]
       , Cmd.none )
     AvailableDesigns (Ok designs) ->
@@ -100,6 +100,18 @@ update msg model =
       , Cmd.none )
     CopyDesign ->
       ( model & modelShipF => shipIdF .= Nothing
+      , Cmd.none )
+    DeleteDesign design ->
+      case design.id of
+        Nothing -> ( model, Cmd.none )
+        Just dId ->
+          ( model
+          , Http.send DesignDeleted (send "DELETE" ("/api/design/" ++ toString dId) Http.emptyBody Decode.int))
+    DesignDeleted (Ok id) ->
+      (model & modelDesignsF $= (List.filter <| \x -> x.id /= Just id)
+      , Cmd.none)
+    DesignDeleted (Err _) ->
+      ( model & modelErrorsF $= List.append [ "Failed to delete design" ]
       , Cmd.none )
 
 resetDesign : List Ship -> Maybe Int -> Ship

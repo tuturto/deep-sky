@@ -18,6 +18,8 @@ type Msg = AvailableComponents (Result Http.Error (List Component))
          | ResetDesign
          | NewDesign
          | CopyDesign
+         | DeleteDesign Ship
+         | DesignDeleted (Result Http.Error Int)
 
 type alias Component = 
   { id : ComponentId

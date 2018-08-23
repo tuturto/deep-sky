@@ -224,22 +224,25 @@ loadPanel model =
       <| List.map showDesign <| List.sortWith sortDesignsByTypeAndAlpha model.designList
     ]  
   ]
-
+-- 
 showDesign : Ship -> Html Msg
 showDesign design =
-  div [ class "row", onClick <| LoadDesign design ]
-  [ div [ class "col-lg-4" ] 
+  div [ class "row" ]
+  [ div [ class "col-lg-1" ]
+    [ i [ class "fas fa-trash-alt", onClick <| DeleteDesign design ] [] ]
+  , div [ onClick <| LoadDesign design ]
     [
-      text design.name
+      div [ class "col-lg-4" ] 
+      [ text design.name ]
+    , div [ class "col-lg-3" ]
+      [
+          text <| case design.chassis of
+                    Nothing -> "Unknown"
+                    Just chassis -> chassis.name
+      ]
+    , div [ class "col-lg-4" ]
+      [ costDisplay <| totalCost design ]
     ]
-  , div [ class "col-lg-4" ]
-    [
-        text <| case design.chassis of
-                  Nothing -> "Unknown"
-                  Just chassis -> chassis.name
-    ]
-  , div [ class "col-lg-4" ]
-    [ costDisplay <| totalCost design ]
   ]
 
 savePanel : Model -> Html Msg

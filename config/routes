@@ -32,6 +32,6 @@
 /api/components                      ApiComponentsR    GET
 /api/chassis                         ApiChassisR       GET
 /api/design                          ApiDesignR        GET POST
-/api/design/#DesignId                ApiDesignIdR      PUT
+/api/design/#DesignId                ApiDesignIdR      PUT DELETE
 /admin                               AdminPanelR       GET
 /admin/time                          AdminAdvanceTimeR GET
