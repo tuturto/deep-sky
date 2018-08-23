@@ -165,3 +165,19 @@ sortInstalledByAlpha (InstalledComponent a _) (InstalledComponent b _) =
 sortComponentByAlpha : Component -> Component -> Order
 sortComponentByAlpha a b =
   compare a.name b.name
+
+sortDesignsByTypeAndAlpha : Ship -> Ship -> Order
+sortDesignsByTypeAndAlpha a b =
+  case a.chassis of
+    Nothing -> 
+      case b.chassis of
+        Nothing -> compare a.name b.name
+        Just chb -> LT
+    Just cha -> 
+      case b.chassis of
+        Nothing -> GT
+        Just chb -> 
+          case compare cha.name chb.name of
+            GT -> GT
+            LT -> LT
+            EQ -> compare a.name b.name

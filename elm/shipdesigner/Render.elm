@@ -221,7 +221,7 @@ loadPanel model =
         [ text "Available designs" ]
       ]
     , div []
-      <| List.map showDesign model.designList     
+      <| List.map showDesign <| List.sortWith sortDesignsByTypeAndAlpha model.designList
     ]  
   ]
 
