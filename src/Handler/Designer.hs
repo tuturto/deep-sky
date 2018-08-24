@@ -9,6 +9,7 @@ module Handler.Designer where
 import Database.Persist.Sql (fromSqlKey)
 import Data.Aeson (object, (.=), (.:?))
 import Data.Maybe (fromJust)
+import Dto.Ship
 import Import
 import Components
 
@@ -23,20 +24,6 @@ getDesignerR = do
         addScript $ StaticR js_shipdesigner_js
         addStylesheet $ StaticR css_site_css
         $(widgetFile "shipdesigner")
-
-data ChassisDto = ChassisDto { cdId :: Key Chassis
-                             , cdName :: Text
-                             , cdMaxTonnage :: Int
-                             , cdRequiredTypes :: [ ComponentLevel ]}
-    deriving Show
-
-instance ToJSON ChassisDto where
-    toJSON (ChassisDto idKey name maxTonnage types) =
-        object [ "id" .= idKey
-               , "name" .= name
-               , "maxTonnage" .= maxTonnage
-               , "requiredTypes" .= array types 
-               ]
    
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
@@ -112,12 +99,12 @@ deleteApiDesignIdR dId = do
     _ <- runDB $ delete dId
     sendResponseStatus status200 $ show $ fromSqlKey dId
 
-validateSaveDesign :: SaveDesign -> Bool
+validateSaveDesign :: DesignDto -> Bool
 validateSaveDesign _ = True
 
 saveDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     BaseBackend backend ~ SqlBackend) =>
-    SaveDesign -> Key Faction -> ReaderT backend m SaveDesign
+    DesignDto -> Key Faction -> ReaderT backend m DesignDto
 saveDesign design fId = do
     newId <- insert $ Design (saveDesignName design) fId (saveDesignChassisId design)
     cIds <- mapM insert $ map (saveComponentToPlannetComponent newId) (saveDesignComponents design)
@@ -129,7 +116,7 @@ saveDesign design fId = do
 
 updateDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
-    Key Design -> SaveDesign -> Key Faction -> ReaderT backend m SaveDesign
+    Key Design -> DesignDto -> Key Faction -> ReaderT backend m DesignDto
 updateDesign dId design fId = do
     _ <- replace dId $ Design (saveDesignName design) fId (saveDesignChassisId design)
     _ <- deleteWhere [ PlannedComponentDesignId ==. dId ]
@@ -139,74 +126,3 @@ updateDesign dId design fId = do
     let x = case newDesign of
                 Just x -> designToSaveDesign (dId, x) newComponents
     return x
-
-designToSaveDesign :: (Key Design, Design) -> [ Entity PlannedComponent ] -> SaveDesign
-designToSaveDesign (newId, design) comps = 
-    SaveDesign (Just newId) (designChassisId design) (designName design) $ map plannedComponentToSaveComponent comps
-
-plannedComponentToSaveComponent :: Entity PlannedComponent -> SaveInstalledComponent
-plannedComponentToSaveComponent entity =
-    SaveInstalledComponent (SaveComponent (plannedComponentComponentId comp) (plannedComponentLevel comp)) (plannedComponentAmount comp)
-    where
-        comp = entityVal entity
-
-saveComponentToPlannetComponent :: Key Design -> SaveInstalledComponent -> PlannedComponent
-saveComponentToPlannetComponent dId (SaveInstalledComponent (SaveComponent cId level) amount) =
-    PlannedComponent dId cId level amount
-
-data SaveComponent = SaveComponent
-    { saveComponentId :: ComponentId
-    , saveComponentLevel :: Int
-    } deriving Show
-
-data SaveInstalledComponent = SaveInstalledComponent
-    { saveInstalledComponentComponents :: SaveComponent
-    , saveInstalledComponentAmount :: Int
-    } deriving Show
-
-data SaveDesign = SaveDesign
-    { saveDesignId :: Maybe (Key Design)
-    , saveDesignChassisId :: Key Chassis
-    , saveDesignName :: Text
-    , saveDesignComponents :: [ SaveInstalledComponent ]
-    } deriving Show
-
-instance FromJSON SaveComponent where
-    parseJSON (Object v) =
-        SaveComponent <$> v .: "id"
-                      <*> v .: "level"
-    parseJSON _ = mzero
-
-instance ToJSON SaveComponent where
-    toJSON (SaveComponent cId level) =
-        object [ "id" .= cId
-               , "level" .= level
-               ]
-
-instance FromJSON SaveInstalledComponent where
-    parseJSON (Object v) =
-        SaveInstalledComponent <$> v .: "component"
-                               <*> v .: "amount"
-    parseJSON _ = mzero
-
-instance ToJSON SaveInstalledComponent where
-    toJSON (SaveInstalledComponent comp amount) =
-        object [ "component" .= comp
-               , "amount" .= amount 
-               ]
-
-instance FromJSON SaveDesign where
-    parseJSON (Object v) =
-        SaveDesign <$> v .:? "id"
-                   <*> v .: "chassisId"
-                   <*> v .: "name"
-                   <*> v .: "components"
-    parseJSON _ = mzero
-
-instance ToJSON SaveDesign where
-    toJSON (SaveDesign dId chassisId name components) =
-        object [ "id" .= dId
-               , "chassisId" .= chassisId
-               , "name" .= name
-               , "components" .= components
-               ]

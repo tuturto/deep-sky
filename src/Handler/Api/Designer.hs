@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 
-module Handler.Api.Ship where
+module Handler.Api.Designer where
 
 import Database.Persist.Sql (fromSqlKey)
 import Data.Aeson (object, (.=), (.:?))
