@@ -3,23 +3,29 @@ module Types exposing (..)
 import Http
 import Focus exposing (Setter)
 
-type Msg = AvailableComponents (Result Http.Error (List Component))
-         | AvailableChassis (Result Http.Error (List Chassis))
-         | AvailableDesigns (Result Http.Error (List ShipDto))
-         | AddComponent Component
-         | RemoveComponent Component
-         | NewShipName String
-         | ChassisSelected (Maybe Int)
-         | SaveDesign
-         | DesignSaved (Result Http.Error ShipDto)
-         | ShowLoadPanel
-         | LoadDesign Ship
-         | CancelLoad
-         | ResetDesign
-         | NewDesign
-         | CopyDesign
-         | DeleteDesign Ship
-         | DesignDeleted (Result Http.Error Int)
+type Msg = NetworkMsg ApiMsg
+  | ButtonMsg UiMsg
+  | EditMsg ShipMsg
+
+type ShipMsg = AddComponent Component
+  | RemoveComponent Component
+  | NewShipName String
+  | ChassisSelected (Maybe Int)                  
+
+type UiMsg = SaveDesign
+  | ShowLoadPanel
+  | LoadDesign Ship
+  | CancelLoad
+  | ResetDesign
+  | NewDesign
+  | CopyDesign
+  | DeleteDesign Ship
+
+type ApiMsg = AvailableComponents (Result Http.Error (List Component))
+  | AvailableChassis (Result Http.Error (List Chassis))
+  | AvailableDesigns (Result Http.Error (List ShipDto))
+  | DesignDeleted (Result Http.Error Int)
+  | DesignSaved (Result Http.Error ShipDto)
 
 type alias Component = 
   { id : ComponentId

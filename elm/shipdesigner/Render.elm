@@ -1,6 +1,6 @@
 module Render exposing (view)
 
-import Types exposing (Model, Msg (ChassisSelected))
+import Types exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -30,13 +30,13 @@ statisticsPanel model =
       [ div [ class "col-lg-4" ]
         [ text "Name" ]
       , div [ class "col-lg-8 editor-text" ]
-        [ input [ type_ "text", placeholder "Enter name", value model.ship.name, onInput NewShipName, style [ ("width", "100%") ] ] [] ]
+        [ input [ type_ "text", placeholder "Enter name", value model.ship.name, onInput (EditMsg << NewShipName), style [ ("width", "100%") ] ] [] ]
       ]
     , div [ class "row side-panel" ]
       [ div [ class "col-lg-4" ]
         [ text "Type" ]
       , div [ class "col-lg-8" ]
-        [ select [ on "change" (Decode.map ChassisSelected targetValueMaybeInt), value chassisId, style [ ("width", "100%") ] ]
+        [ select [ on "change" (Decode.map (EditMsg << ChassisSelected) targetValueMaybeInt), value chassisId, style [ ("width", "100%") ] ]
           <| chassisOptions model.chassisList 
         ]
       ]
@@ -93,7 +93,7 @@ chassisOptions chassisList =
 
 selectableComponent : Component -> Html Msg
 selectableComponent component =
-  div [ onClick <| AddComponent component ] 
+  div [ onClick (EditMsg (AddComponent component)) ] 
   [ div [ class "row side-panel" ]
     [ div [ class "col-lg-12 component-title" ]
       [ text <| component.name ++ " (" ++ (toString component.level) ++ ")" ]
@@ -113,11 +113,11 @@ selectedComponent (InstalledComponent component amount) =
     [ div [ class "col-lg-12 component-title" ]
       [ text <| component.name ++ " (" ++ (toString component.level) ++ ")"
       , div [ class "btn btn-outline-dark btn-sm"
-               , onClick <| RemoveComponent component ] 
+               , onClick (EditMsg (RemoveComponent component)) ] 
         [ text " - "]
       , text <| toString amount
       , div [ class "btn btn-outline-dark btn-sm"
-            , onClick <| AddComponent component ] 
+            , onClick (EditMsg (AddComponent component)) ] 
         [ text " + "]
       ]
     ]
@@ -229,8 +229,8 @@ showDesign : Ship -> Html Msg
 showDesign design =
   div [ class "row" ]
   [ div [ class "col-lg-1" ]
-    [ i [ class "fas fa-trash-alt", onClick <| DeleteDesign design ] [] ]
-  , div [ onClick <| LoadDesign design ]
+    [ i [ class "fas fa-trash-alt", onClick <| (ButtonMsg (DeleteDesign design)) ] [] ]
+  , div [ onClick <| (ButtonMsg (LoadDesign design)) ]
     [
       div [ class "col-lg-4" ] 
       [ text design.name ]
@@ -263,22 +263,22 @@ savePanel model =
       ]
     , div [ class "row side-panel" ]
       [ div [ class "col-lg-2" ]
-        [ addButton saveEnabled "Save" SaveDesign ]
+        [ addButton saveEnabled "Save" (ButtonMsg SaveDesign) ]
       , if loadEnabled
         then
           div [ class "col-lg-2" ]
-          [ div [ class "btn btn-sm active", onClick ShowLoadPanel ]
+          [ div [ class "btn btn-sm active", onClick (ButtonMsg ShowLoadPanel) ]
             [ text "Load" ] ]
         else
           div [ class "col-lg-2" ]
-          [ div [ class "btn btn-sm active", onClick CancelLoad ]
+          [ div [ class "btn btn-sm active", onClick (ButtonMsg CancelLoad) ]
             [ text "Cancel" ] ]
       , div [ class "col-lg-2" ]
-        [ addButton copyEnabled "Copy" CopyDesign ]
+        [ addButton copyEnabled "Copy" (ButtonMsg CopyDesign) ]
       , div [ class "col-lg-2" ]
-        [ addButton resetEnabled "Reset" ResetDesign ]
+        [ addButton resetEnabled "Reset" (ButtonMsg ResetDesign) ]
       , div [ class "col-lg-2" ]
-        [ addButton newEnabled "New" NewDesign ]
+        [ addButton newEnabled "New"(ButtonMsg NewDesign) ]
       ]
     , div [ class "row side-panel-right" ]
       [ div [ class "col-lg-11" ]

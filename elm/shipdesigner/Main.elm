@@ -24,9 +24,9 @@ init =
     , mode = EditMode
     , designList = []
     }                 
-  , Cmd.batch [ Http.send AvailableComponents (Http.get "/api/components" (Decode.list Json.componentDecoder))
-              , Http.send AvailableChassis (Http.get "/api/chassis" (Decode.list Json.chassisDecoder))
-              , Http.send AvailableDesigns (Http.get "/api/design" (Decode.list Json.shipDecoder))
+  , Cmd.batch [ Http.send (NetworkMsg << AvailableComponents) (Http.get "/api/components" (Decode.list Json.componentDecoder))
+              , Http.send (NetworkMsg << AvailableChassis) (Http.get "/api/chassis" (Decode.list Json.chassisDecoder))
+              , Http.send (NetworkMsg << AvailableDesigns) (Http.get "/api/design" (Decode.list Json.shipDecoder))
               ]
   )
 
@@ -40,13 +40,17 @@ subscriptions model =
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
+  case msg of   
+    EditMsg msg ->
+      handleEditMsg msg model
+    NetworkMsg msg ->
+      handleNetworkMsg msg model
+    ButtonMsg msg ->
+      handleButtonMsg msg model
+
+handleEditMsg : ShipMsg -> Model -> (Model, Cmd Msg)
+handleEditMsg msg model =
   case msg of
-    AvailableComponents (Ok components) ->
-      ( model & modelComponentsF .= components
-      , Cmd.none )
-    AvailableComponents (Err _) ->
-      ( model & modelErrorsF $= List.append [ "Failed to load component list" ]
-      , Cmd.none )
     AddComponent component ->
       ( addComponent model component
       , Cmd.none )
@@ -56,36 +60,22 @@ update msg model =
     NewShipName name ->
       ( model & modelShipF => shipNameF .= name
       , Cmd.none )
-    AvailableChassis (Ok chassis) ->
-      ( model & modelChassisListF .= chassis
-      , Cmd.none )
-    AvailableChassis (Err _) ->
-      ( model & modelErrorsF $= List.append [ "Failed to load chassis list" ]
-      , Cmd.none )
-    AvailableDesigns (Err _) ->
-      ( model & modelErrorsF $= List.append [ "Failed to load design list" ]
-      , Cmd.none )
-    AvailableDesigns (Ok designs) ->
-      ( model & modelDesignsF .= List.map (\x -> Json.dtoToShip x model.components model.chassisList) designs
-      , Cmd.none )
     ChassisSelected (Just chassisId) ->
       ( model & modelShipF => shipChassisF .= (selectChassis model.chassisList chassisId)
       , Cmd.none )
     ChassisSelected Nothing ->
       ( model & modelShipF => shipChassisF .= Nothing
       , Cmd.none )
+
+handleButtonMsg : UiMsg -> Model -> (Model, Cmd Msg)
+handleButtonMsg msg model =
+  case msg of
     SaveDesign ->
       ( model
-      , Http.send DesignSaved <| saveCommand model.ship model.ship.chassis)
-    DesignSaved (Ok ship) ->
-      ( model & modelShipF .= Json.dtoToShip ship model.components model.chassisList
-      , Cmd.none )
-    DesignSaved (Err x) ->
-      ( model & modelErrorsF $= List.append [ "Failed to save design" ]
-      , Cmd.none )
+      , Http.send (NetworkMsg << DesignSaved) <| saveCommand model.ship model.ship.chassis)
     ShowLoadPanel ->
       ( { model | mode = LoadMode }
-      , Http.send AvailableDesigns (Http.get "/api/design" (Decode.list Json.shipDecoder)))
+      , Http.send (NetworkMsg << AvailableDesigns) (Http.get "/api/design" (Decode.list Json.shipDecoder)))
     LoadDesign ship ->
       ( { model | ship = ship, mode = EditMode }
       , Cmd.none )
@@ -106,12 +96,40 @@ update msg model =
         Nothing -> ( model, Cmd.none )
         Just dId ->
           ( model
-          , Http.send DesignDeleted (send "DELETE" ("/api/design/" ++ toString dId) Http.emptyBody Decode.int))
+          , Http.send (NetworkMsg << DesignDeleted) (send "DELETE" ("/api/design/" ++ toString dId) Http.emptyBody Decode.int))
+
+handleNetworkMsg : ApiMsg -> Model -> (Model, Cmd Msg)
+handleNetworkMsg msg model =
+  case msg of
+    AvailableComponents (Ok components) ->
+      ( model & modelComponentsF .= components
+      , Cmd.none )
+    AvailableComponents (Err _) ->
+      ( model & modelErrorsF $= List.append [ "Failed to load component list" ]
+      , Cmd.none )
+    AvailableChassis (Ok chassis) ->
+      ( model & modelChassisListF .= chassis
+      , Cmd.none )
+    AvailableChassis (Err _) ->
+      ( model & modelErrorsF $= List.append [ "Failed to load chassis list" ]
+      , Cmd.none )
+    AvailableDesigns (Err _) ->
+      ( model & modelErrorsF $= List.append [ "Failed to load design list" ]
+      , Cmd.none )
+    AvailableDesigns (Ok designs) ->
+      ( model & modelDesignsF .= List.map (\x -> Json.dtoToShip x model.components model.chassisList) designs
+      , Cmd.none )
     DesignDeleted (Ok id) ->
       (model & modelDesignsF $= (List.filter <| \x -> x.id /= Just id)
       , Cmd.none)
     DesignDeleted (Err _) ->
       ( model & modelErrorsF $= List.append [ "Failed to delete design" ]
+      , Cmd.none )
+    DesignSaved (Ok ship) ->
+      ( model & modelShipF .= Json.dtoToShip ship model.components model.chassisList
+      , Cmd.none )
+    DesignSaved (Err x) ->
+      ( model & modelErrorsF $= List.append [ "Failed to save design" ]
       , Cmd.none )
 
 resetDesign : List Ship -> Maybe Int -> Ship
