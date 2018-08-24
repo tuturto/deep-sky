@@ -12,6 +12,7 @@
 module Simulation.Time where
 
 import Import
+import Data.Maybe (fromJust)
 import Database.Persist.Sql (toSqlKey)
 
 -- | advance time stored in database by one (decimal) month
@@ -21,8 +22,7 @@ advanceTime :: (BaseBackend backend ~ SqlBackend,
 advanceTime = do
     let timeId = toSqlKey 1
     time <- get timeId
-    _ <- case time of
-            (Just t) -> update timeId [ TimeCurrentTime =. (timeCurrentTime t + 1)]
+    _ <- update timeId [ TimeCurrentTime =. (timeCurrentTime (fromJust time) + 1)]
     time' <- selectFirst [] []
     let res = case time' of
                 (Just t) -> entityVal t

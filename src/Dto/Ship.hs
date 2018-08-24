@@ -6,9 +6,7 @@
 
 module Dto.Ship where
 
-import Database.Persist.Sql (fromSqlKey)
 import Data.Aeson (object, (.=), (.:?))
-import Data.Maybe (fromJust)
 import Import
 import Components
 

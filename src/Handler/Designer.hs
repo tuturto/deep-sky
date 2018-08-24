@@ -7,7 +7,6 @@
 module Handler.Designer where
 
 import Database.Persist.Sql (fromSqlKey)
-import Data.Aeson (object, (.=), (.:?))
 import Data.Maybe (fromJust)
 import Dto.Ship
 import Import
@@ -123,6 +122,5 @@ updateDesign dId design fId = do
     cIds <- mapM insert $ map (saveComponentToPlannetComponent dId) (saveDesignComponents design)
     newDesign <- get dId
     newComponents <- selectList [ PlannedComponentDesignId ==. dId ] []
-    let x = case newDesign of
-                Just x -> designToSaveDesign (dId, x) newComponents
+    let x = designToSaveDesign (dId, fromJust newDesign) newComponents
     return x
