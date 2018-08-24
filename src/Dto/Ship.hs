@@ -10,10 +10,10 @@ import Data.Aeson (object, (.=), (.:?))
 import Import
 import Components
 
-data ChassisDto = ChassisDto { cdId :: Key Chassis
-                             , cdName :: Text
-                             , cdMaxTonnage :: Int
-                             , cdRequiredTypes :: [ ComponentLevel ]}
+data ChassisDto = ChassisDto { chassisDtoId :: Key Chassis
+                             , chassisDtoName :: Text
+                             , chassisDtoMaxTonnage :: Int
+                             , chassisDtoRequiredTypes :: [ ComponentLevel ]}
     deriving Show
 
 instance ToJSON ChassisDto where
@@ -25,20 +25,20 @@ instance ToJSON ChassisDto where
                ]
 
 data ComponentDto = ComponentDto
-    { saveComponentId :: ComponentId
-    , saveComponentLevel :: Int
+    { componentDtoId :: ComponentId
+    , componentDtoLevel :: Int
     } deriving Show
 
 data InstalledComponentDto = InstalledComponentDto
-    { saveInstalledComponentComponents :: ComponentDto
-    , saveInstalledComponentAmount :: Int
+    { installedComponentDtoComponents :: ComponentDto
+    , installedComponentDtoAmount :: Int
     } deriving Show
 
 data DesignDto = DesignDto
-    { saveDesignId :: Maybe (Key Design)
-    , saveDesignChassisId :: Key Chassis
-    , saveDesignName :: Text
-    , saveDesignComponents :: [ InstalledComponentDto ]
+    { designDtoId :: Maybe (Key Design)
+    , designDtoChassisId :: Key Chassis
+    , designDtoName :: Text
+    , designDtoComponents :: [ InstalledComponentDto ]
     } deriving Show
 
 instance FromJSON ComponentDto where
@@ -81,16 +81,16 @@ instance ToJSON DesignDto where
                , "components" .= components
                ]
 
-designToSaveDesign :: (Key Design, Design) -> [ Entity PlannedComponent ] -> DesignDto
-designToSaveDesign (newId, design) comps = 
-    DesignDto (Just newId) (designChassisId design) (designName design) $ map plannedComponentToSaveComponent comps
+designToDesignDto :: (Key Design, Design) -> [ Entity PlannedComponent ] -> DesignDto
+designToDesignDto (newId, design) comps = 
+    DesignDto (Just newId) (designChassisId design) (designName design) $ map plannedComponentToComponentDto comps
 
-plannedComponentToSaveComponent :: Entity PlannedComponent -> InstalledComponentDto
-plannedComponentToSaveComponent entity =
+plannedComponentToComponentDto :: Entity PlannedComponent -> InstalledComponentDto
+plannedComponentToComponentDto entity =
     InstalledComponentDto (ComponentDto (plannedComponentComponentId comp) (plannedComponentLevel comp)) (plannedComponentAmount comp)
     where
         comp = entityVal entity
 
-saveComponentToPlannetComponent :: Key Design -> InstalledComponentDto -> PlannedComponent
-saveComponentToPlannetComponent dId (InstalledComponentDto (ComponentDto cId level) amount) =
+componentDtoToPlannedComponent :: Key Design -> InstalledComponentDto -> PlannedComponent
+componentDtoToPlannedComponent dId (InstalledComponentDto (ComponentDto cId level) amount) =
     PlannedComponent dId cId level amount

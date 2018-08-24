@@ -57,7 +57,7 @@ getApiDesignR = do
                         Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
     loadedDesigns <- runDB $ selectList [ DesignOwnerId ==. fId ] []
     loadedComponents <- runDB $ selectList [ PlannedComponentDesignId <-. map entityKey loadedDesigns ] []
-    let designs = map (\d -> designToSaveDesign (entityKey d, entityVal d)
+    let designs = map (\d -> designToDesignDto (entityKey d, entityVal d)
                     $ filter (\c -> (plannedComponentDesignId (entityVal c)) == (entityKey d)) loadedComponents) 
                     loadedDesigns
     return $ toJSON designs
@@ -105,22 +105,22 @@ saveDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     BaseBackend backend ~ SqlBackend) =>
     DesignDto -> Key Faction -> ReaderT backend m DesignDto
 saveDesign design fId = do
-    newId <- insert $ Design (saveDesignName design) fId (saveDesignChassisId design)
-    cIds <- mapM insert $ map (saveComponentToPlannetComponent newId) (saveDesignComponents design)
+    newId <- insert $ Design (designDtoName design) fId (designDtoChassisId design)
+    cIds <- mapM insert $ map (componentDtoToPlannedComponent newId) (designDtoComponents design)
     newDesign <- get newId
     newComponents <- selectList [ PlannedComponentDesignId ==. newId ] []
     let x = case newDesign of
-                Just x -> designToSaveDesign (newId, x) newComponents
+                Just x -> designToDesignDto (newId, x) newComponents
     return x
 
 updateDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
     Key Design -> DesignDto -> Key Faction -> ReaderT backend m DesignDto
 updateDesign dId design fId = do
-    _ <- replace dId $ Design (saveDesignName design) fId (saveDesignChassisId design)
+    _ <- replace dId $ Design (designDtoName design) fId (designDtoChassisId design)
     _ <- deleteWhere [ PlannedComponentDesignId ==. dId ]
-    cIds <- mapM insert $ map (saveComponentToPlannetComponent dId) (saveDesignComponents design)
+    cIds <- mapM insert $ map (componentDtoToPlannedComponent dId) (designDtoComponents design)
     newDesign <- get dId
     newComponents <- selectList [ PlannedComponentDesignId ==. dId ] []
-    let x = designToSaveDesign (dId, fromJust newDesign) newComponents
+    let x = designToDesignDto (dId, fromJust newDesign) newComponents
     return x
