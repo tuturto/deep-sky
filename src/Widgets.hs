@@ -36,5 +36,8 @@ shipList :: Foldable t => t (Ship, Faction) -> WidgetFor site ()
 shipList ships = $(widgetFile "widgets/shipListW")
 
 newsArticleWidget :: NewsArticle -> WidgetFor App ()
-newsArticleWidget (StarFoundNews starName systemName systemId date) = $(widgetFile "widgets/news/starFoundW")
-newsArticleWidget (PlanetFoundNews planetName systemName systemId planetId date) = $(widgetFile "widgets/news/planetFoundW")
+newsArticleWidget article = $(widgetFile "widgets/news/articleW")
+ 
+newsContentWidget :: NewsArticle -> WidgetFor App ()
+newsContentWidget (StarFoundNews starName systemName systemId _) = $(widgetFile "widgets/news/starFoundW")
+newsContentWidget (PlanetFoundNews planetName systemName systemId planetId _) = $(widgetFile "widgets/news/planetFoundW")
