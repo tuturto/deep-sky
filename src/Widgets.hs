@@ -9,6 +9,7 @@ module Widgets where
 import Import
 import Report
 import MenuHelpers (toDisplayDate)
+import News
 
 systemDetails :: CollatedStarSystemReport -> WidgetFor site ()
 systemDetails systemReport = $(widgetFile "widgets/systemDetailsW")
@@ -33,3 +34,7 @@ populationList populationReports = $(widgetFile "widgets/populationListW")
 
 shipList :: Foldable t => t (Ship, Faction) -> WidgetFor site ()
 shipList ships = $(widgetFile "widgets/shipListW")
+
+newsArticleWidget :: NewsArticle -> WidgetFor App ()
+newsArticleWidget (StarFoundNews starName systemName systemId date) = $(widgetFile "widgets/news/starFoundW")
+newsArticleWidget (PlanetFoundNews planetName systemName systemId planetId date) = $(widgetFile "widgets/news/planetFoundW")
