@@ -9,7 +9,8 @@ module Handler.Messages where
 import Import
 import Database.Persist.Sql (toSqlKey)
 import Widgets (newsArticleWidget)
-import News ( parseNews )
+import News (parseNews)
+import Data.Maybe (isJust, fromJust)
 
 getMessageListR :: Handler Html
 getMessageListR = do
@@ -18,7 +19,7 @@ getMessageListR = do
                         Just x -> return x
                         Nothing -> redirect ProfileR
     let loadedNews = loadNewsEntries
-    let entries = map parseNews loadedNews
+    let entries = map fromJust $ filter isJust $ map parseNews loadedNews    
     defaultLayout $ do
         addStylesheet $ StaticR css_site_css
         setTitle "Deep Sky - Messages"
@@ -26,7 +27,6 @@ getMessageListR = do
 
 loadNewsEntries :: [News]
 loadNewsEntries =
-    [ News "{ type: \"star found\", starName: \"Sun\", systemName: \"Sol\", systemId: 1, date: 20199}" (toSqlKey 1) 20199 True
-    , News "{ type: \"planet found\", planetName: \"Mercury\", systemName: \"Sol\", systemId: 1, planetId: 1, date: 20199}" (toSqlKey 1) 20199 False
+    [ News "{\"tag\":\"StarFoundNews\",\"starFoundNewsSystemName\":\"Sol\",\"starFoundNewsSystemId\":1,\"starFoundNewsStarName\":\"Sun\",\"starFoundNewsDate\":20199}" (toSqlKey 1) 20199 True
+    , News "{\"tag\":\"PlanetFoundNews\",\"planetFoundNewsPlanetName\":\"Mercury\",\"planetFoundNewsSystemName\":\"Sol\",\"planetFoundNewsSystemId\":1,\"planetFoundNewsPlanetId\":1,\"planetFoundNewsDate\":20199}" (toSqlKey 1) 20199 True
     ]
- 

@@ -1,14 +1,18 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module News ( NewsArticle(..), parseNews )
     where
 
 import Import
 import Database.Persist.Sql (toSqlKey)
+import Data.Aeson.TH 
+import Data.Aeson (decode)
+import Data.Text.Encoding (encodeUtf8Builder)
+import Data.ByteString.Builder(toLazyByteString)
 
 data NewsArticle = 
     StarFoundNews
@@ -25,10 +29,8 @@ data NewsArticle =
         , planetFoundNewsDate :: Int
         }
 
-parseNews :: News -> NewsArticle
+parseNews :: News -> Maybe NewsArticle
 parseNews entry =
-    if (newsDismissed entry)
-    then
-        StarFoundNews "Sun" "Sol" (toSqlKey 1) 20199
-    else
-        PlanetFoundNews "Mercury" "Sol" (toSqlKey 1) (toSqlKey 1) 20199
+    (decode . toLazyByteString . encodeUtf8Builder . newsContent) entry
+
+$(deriveJSON defaultOptions ''NewsArticle)
