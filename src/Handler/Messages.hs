@@ -10,7 +10,7 @@ import Import
 import Database.Persist.Sql (toSqlKey)
 import Widgets (newsArticleWidget)
 import News (parseNews)
-import Data.Maybe (isJust, fromJust)
+import Common (filterMap)
 
 getMessageListR :: Handler Html
 getMessageListR = do
@@ -19,7 +19,7 @@ getMessageListR = do
                         Just x -> return x
                         Nothing -> redirect ProfileR
     let loadedNews = loadNewsEntries
-    let entries = map fromJust $ filter isJust $ map parseNews loadedNews    
+    let entries = filterMap parseNews loadedNews    
     defaultLayout $ do
         addStylesheet $ StaticR css_site_css
         setTitle "Deep Sky - Messages"

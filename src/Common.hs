@@ -1,7 +1,8 @@
-module Common (maybeGet, chooseOne)
+module Common (maybeGet, chooseOne, filterMap)
     where
 
 import System.Random
+import Data.Maybe (fromJust, isJust)
 
 -- | Get item from list with given index
 --   If item is within bounds, return Just it, otherwise Nothing
@@ -17,3 +18,8 @@ chooseOne item1 item2 = do
     return $ case n of
                 0 -> item1
                 _ -> item2
+
+-- | do map and filter out Nothings
+filterMap :: (a -> Maybe b) -> [a] -> [b]
+filterMap f a =
+    map fromJust $ filter isJust $ map f a
