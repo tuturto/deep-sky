@@ -154,6 +154,11 @@ instance Yesod App where
                     , menuItemRoute = ConstructionR
                     , menuItemAccessCallback = isJust muser
                     }
+                , NavbarLeft $ MenuItem
+                    { menuItemLabel = "Messages"
+                    , menuItemRoute = MessagesR
+                    , menuItemAccessCallback = isJust muser
+                    }
                 , NavbarRight $ MenuItem
                     { menuItemLabel = "Admin"
                     , menuItemRoute = AdminPanelR
@@ -219,6 +224,7 @@ instance Yesod App where
     isAuthorized FleetR _          = isAuthenticated
     isAuthorized DesignerR _       = isAuthenticated
     isAuthorized ConstructionR _   = isAuthenticated
+    isAuthorized MessagesR _       = isAuthenticated
 
     -- Special authorization
     isAuthorized AdminPanelR _     = do
