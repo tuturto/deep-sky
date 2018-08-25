@@ -49,3 +49,12 @@
     padding-top: 10px;
     padding-bottom: 10px;
 }
+
+.news-article {
+    padding: 10px;
+    margin: 10px;
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 10px;
+    border-color: #9292f7;
+}

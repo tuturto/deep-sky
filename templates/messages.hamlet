@@ -1,3 +1,5 @@
+<div>
+    Current news
 <div .container>
     $forall entry <- entries
         ^{newsArticleWidget entry}

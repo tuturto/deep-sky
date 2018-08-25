@@ -43,3 +43,7 @@ newsArticleWidget article = $(widgetFile "widgets/news/articleW")
 newsContentWidget :: NewsArticle -> WidgetFor App ()
 newsContentWidget (StarFoundNews starName systemName systemId _) = $(widgetFile "widgets/news/starFoundW")
 newsContentWidget (PlanetFoundNews planetName systemName systemId planetId _) = $(widgetFile "widgets/news/planetFoundW")
+
+newsImage :: NewsArticle -> Route App
+newsImage (StarFoundNews _ _ _ _) = StaticR images_news_sun_png
+newsImage (PlanetFoundNews _ _ _ _ _) = StaticR images_news_planet_png

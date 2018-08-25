@@ -20,6 +20,7 @@ getMessageListR = do
     let loadedNews = loadNewsEntries
     let entries = map parseNews loadedNews
     defaultLayout $ do
+        addStylesheet $ StaticR css_site_css
         setTitle "Deep Sky - Messages"
         $(widgetFile "messages")
 

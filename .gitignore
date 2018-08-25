@@ -25,3 +25,4 @@ sky.cabal
 todo
 elm/shipdesigner/elm-stuff/
 static/js/shipdesigner.js
+static/images/*
