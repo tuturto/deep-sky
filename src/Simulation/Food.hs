@@ -9,7 +9,8 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Simulation.Food where
+module Simulation.Food 
+    where
 
 import Import
 import CustomTypes

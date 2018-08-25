@@ -9,7 +9,7 @@ module Handler.Messages where
 import Import
 import Database.Persist.Sql (toSqlKey)
 import Widgets (newsArticleWidget)
-import News
+import News ( parseNews )
 
 getMessageListR :: Handler Html
 getMessageListR = do

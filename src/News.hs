@@ -4,7 +4,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module News where
+module News ( NewsArticle(..), parseNews )
+    where
 
 import Import
 import Database.Persist.Sql (toSqlKey)

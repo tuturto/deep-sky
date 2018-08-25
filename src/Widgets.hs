@@ -4,7 +4,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Widgets where
+module Widgets ( systemDetails, planetReportList, planetDetails, starReportList
+               , starLaneList, buildingList, populationList, shipList, newsArticleWidget )
+    where
 
 import Import
 import Report

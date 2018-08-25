@@ -1,4 +1,5 @@
-module Common where
+module Common (maybeGet, chooseOne)
+    where
 
 import System.Random
 
