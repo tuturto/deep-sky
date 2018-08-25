@@ -28,7 +28,7 @@
 
 /faction                             FactionR          GET POST
 
-/message                             MessagesR          GET
+/message                             MessageListR      GET
 
 /api/starsystem                      ApiStarSystemsR   GET
 /api/components                      ApiComponentsR    GET

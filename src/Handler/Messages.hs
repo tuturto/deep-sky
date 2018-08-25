@@ -8,8 +8,8 @@ module Handler.Messages where
 
 import Import
 
-getMessagesR :: Handler Html
-getMessagesR = do
+getMessageListR :: Handler Html
+getMessageListR = do
     (_, user) <- requireAuthPair   
     _ <- case (userFactionId user) of
                         Just x -> return x

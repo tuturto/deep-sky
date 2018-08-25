@@ -156,7 +156,7 @@ instance Yesod App where
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Messages"
-                    , menuItemRoute = MessagesR
+                    , menuItemRoute = MessageListR
                     , menuItemAccessCallback = isJust muser
                     }
                 , NavbarRight $ MenuItem
@@ -206,25 +206,25 @@ instance Yesod App where
         -> Bool       -- ^ Whether or not this is a "write" request.
         -> Handler AuthResult
     -- Routes not requiring authentication
-    isAuthorized (AuthR _) _       = return Authorized
-    isAuthorized HomeR _           = return Authorized
-    isAuthorized FaviconR _        = return Authorized
-    isAuthorized RobotsR _         = return Authorized
-    isAuthorized (StaticR _) _     = return Authorized
+    isAuthorized (AuthR _) _         = return Authorized
+    isAuthorized HomeR _             = return Authorized
+    isAuthorized FaviconR _          = return Authorized
+    isAuthorized RobotsR _           = return Authorized
+    isAuthorized (StaticR _) _       = return Authorized
 
     -- Routes requiring authentication
-    isAuthorized ProfileR _        = isAuthenticated
-    isAuthorized FactionR _        = isAuthenticated
-    isAuthorized StarSystemsR _    = isAuthenticated
-    isAuthorized (StarSystemR _) _ = isAuthenticated
-    isAuthorized (PlanetR _ _) _   = isAuthenticated
-    isAuthorized BasesR _          = isAuthenticated
-    isAuthorized (BaseR _ _) _     = isAuthenticated
-    isAuthorized ResearchR _       = isAuthenticated
-    isAuthorized FleetR _          = isAuthenticated
-    isAuthorized DesignerR _       = isAuthenticated
-    isAuthorized ConstructionR _   = isAuthenticated
-    isAuthorized MessagesR _       = isAuthenticated
+    isAuthorized ProfileR _          = isAuthenticated
+    isAuthorized FactionR _          = isAuthenticated
+    isAuthorized StarSystemsR _      = isAuthenticated
+    isAuthorized (StarSystemR _) _   = isAuthenticated
+    isAuthorized (PlanetR _ _) _     = isAuthenticated
+    isAuthorized BasesR _            = isAuthenticated
+    isAuthorized (BaseR _ _) _       = isAuthenticated
+    isAuthorized ResearchR _         = isAuthenticated
+    isAuthorized FleetR _            = isAuthenticated
+    isAuthorized DesignerR _         = isAuthenticated
+    isAuthorized ConstructionR _     = isAuthenticated
+    isAuthorized MessageListR _      = isAuthenticated
 
     -- Special authorization
     isAuthorized AdminPanelR _     = do
@@ -308,6 +308,7 @@ instance YesodBreadcrumbs App where
         return (name, Just BasesR)
     breadcrumb AdminPanelR = return ("Admin", Just HomeR)
     breadcrumb AdminAdvanceTimeR = return ("Time management", Just AdminPanelR)
+    breadcrumb MessageListR = return ("Messages", Just HomeR)
     breadcrumb _ = return ("home", Nothing)
 
 -- How to run database actions.

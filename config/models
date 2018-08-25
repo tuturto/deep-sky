@@ -115,6 +115,13 @@ InstalledComponent json
     damage Double
     deriving Show Read Eq
 
+News json
+    content Text
+    factionId FactionId
+    date Int
+    dismissed Bool
+    deriving Show Read Eq
+
 StarSystemReport json
     starSystemId StarSystemId 
     name Text Maybe
