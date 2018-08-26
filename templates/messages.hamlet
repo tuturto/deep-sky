@@ -6,4 +6,21 @@
         $forall entry <- entries
             ^{newsArticleWidget entry}
     <div .col-lg-4>
-        Foo Bar Baz
+        <div .row .title-right>
+            <div .col-lg-12>
+                Options
+        <div .row .side-panel>
+            <div .col-lg-12>
+                <i .fas .fa-angle-left>
+                <i .fas .fa-angle-double-left>
+                #{currentPage} / #{totalPages}
+                <i .fas .fa-angle-double-right>
+                <i .fas .fa-angle-right>
+        <div .row .side-panel>
+            <div .col-lg-12>
+                Currently showing recent unread messages
+        <div .row .side-panel>
+            <div .col-lg-12>
+                There are total of #{totalUnread} unread messages
+        <div .row .side-panel-right>
+            <div .col-lg-12>

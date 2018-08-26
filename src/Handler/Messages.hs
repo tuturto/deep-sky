@@ -18,6 +18,9 @@ getMessageListR = do
                         Nothing -> redirect ProfileR
     loadedNews <- runDB $ loadNewsEntries fId
     let entries = parseNewsEntities loadedNews
+    let currentPage = (1 :: Int)
+    let totalPages = (1 :: Int)
+    let totalUnread = (2 :: Int)
     defaultLayout $ do
         addStylesheet $ StaticR css_site_css
         setTitle "Deep Sky - Messages"
@@ -31,7 +34,7 @@ getMessageDeleteR nId = do
             Nothing -> redirect ProfileR
     _ <- runDB $ update nId [ NewsDismissed =. True ]
     redirect MessageListR
-
+ 
 loadNewsEntries :: (PersistQueryRead backend, MonadIO m,
     BaseBackend backend ~ SqlBackend) =>
     Key Faction -> ReaderT backend m [Entity News]
