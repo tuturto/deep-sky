@@ -1,8 +1,7 @@
-<div .col-lg-8>
-    A new planet has been discovered in 
-    <a href=@{StarSystemR systemId}>
-        #{systemName}
-    system and scientists have named it
-    <a href=@{PlanetR systemId planetId}>
-        #{planetName} 
-    .
+A new planet has been discovered in 
+<a href=@{StarSystemR systemId}>
+    #{systemName}
+system and scientists have named it
+<a href=@{PlanetR systemId planetId}>
+    #{planetName} 
+.

@@ -1,5 +1,9 @@
-<div>
-    Current news
-<div .container>
-    $forall entry <- entries
-        ^{newsArticleWidget entry}
+<div .row>
+    <div .col-lg-12>
+        Current news
+<div .row>
+    <div .col-lg-8>
+        $forall entry <- entries
+            ^{newsArticleWidget entry}
+    <div .col-lg-4>
+        Foo Bar Baz

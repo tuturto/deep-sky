@@ -1,6 +1,5 @@
-<div .col-lg-8>
-    A new star named #{starName}
-    has been discovered in 
-    <a href=@{StarSystemR systemId}>
-        #{systemName}
-    system.
+A new star named #{starName}
+has been discovered in 
+<a href=@{StarSystemR systemId}>
+    #{systemName}
+system.

@@ -1,9 +1,11 @@
 <div .row .news-article>
-    <div .col-lg-1>
+    <div .col-lg-2 .news-icon>
         <img src=@{newsImage (snd article)} width=75 height=75>
 
-    ^{newsContentWidget (snd article)}
+    <div .col-lg-9>
+        ^{newsContentWidget (snd article)}
 
     <div .col-lg-1>
         <a href=@{MessageDeleteR (fst article)}>
             <i class="fas fa-check-circle"></i>
+ 

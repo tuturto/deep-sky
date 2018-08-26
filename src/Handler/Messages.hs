@@ -22,7 +22,7 @@ getMessageListR = do
         addStylesheet $ StaticR css_site_css
         setTitle "Deep Sky - Messages"
         $(widgetFile "messages")
-
+ 
 getMessageDeleteR :: Key News -> Handler Html
 getMessageDeleteR nId = do
     (_, user) <- requireAuthPair   
