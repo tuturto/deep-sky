@@ -24,3 +24,13 @@
                 There are total of #{totalUnread} unread messages
         <div .row .side-panel-right>
             <div .col-lg-12>
+
+        <div .row .title-right>
+            <div .col-lg-12>
+                Submit news
+        <div .row .side-panel>
+            <div .col-lg-12>
+                <form .form-horizontal method="post" action=@{MessageListR}>
+                    ^{userNewsForm}
+        <div .row .side-panel-right>
+            <div .col-lg-12>

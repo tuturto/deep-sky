@@ -4,11 +4,11 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 
-module News ( NewsArticle(..), parseNews, parseNewsEntity, parseNewsEntities )
+module News ( NewsArticle(..), parseNews, parseNewsEntity, parseNewsEntities
+            , UserNewsIcon(..) )
     where
 
 import Import
-import Database.Persist.Sql (toSqlKey)
 import Data.Aeson.TH 
 import Data.Aeson (decode)
 import Data.Text.Encoding (encodeUtf8Builder)
@@ -29,6 +29,18 @@ data NewsArticle =
         , planetFoundNewsPlanetId :: Key Planet
         , planetFoundNewsDate :: Int
         }
+    | UserWrittenNews
+        { userWrittenNewsContent :: Text
+        , userWrittenNewsIcon :: UserNewsIcon
+        , userWrittenNewsDate :: Int
+        , userWrittenNewsUser :: Text
+        }
+
+data UserNewsIcon =
+    GenericUserNews
+    | JubilationUserNews
+    | CatUserNews
+    deriving (Show, Read, Eq)
 
 parseNews :: News -> Maybe NewsArticle
 parseNews entry =
@@ -51,4 +63,5 @@ parseNewsEntities entities =
     in
         map simplify $ filter removeFailed parsed
 
+$(deriveJSON defaultOptions ''UserNewsIcon)
 $(deriveJSON defaultOptions ''NewsArticle)

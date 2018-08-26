@@ -43,7 +43,16 @@ newsArticleWidget article = $(widgetFile "widgets/news/articleW")
 newsContentWidget :: NewsArticle -> WidgetFor App ()
 newsContentWidget (StarFoundNews starName systemName systemId _) = $(widgetFile "widgets/news/starFoundW")
 newsContentWidget (PlanetFoundNews planetName systemName systemId planetId _) = $(widgetFile "widgets/news/planetFoundW")
-
+newsContentWidget (UserWrittenNews content _ date user) = $(widgetFile "widgets/news/userNewsW")
+ 
 newsImage :: NewsArticle -> Route App
 newsImage (StarFoundNews _ _ _ _) = StaticR images_news_sun_png
 newsImage (PlanetFoundNews _ _ _ _ _) = StaticR images_news_planet_png
+newsImage (UserWrittenNews _ icon _ _) = 
+    case icon of
+        GenericUserNews ->
+            StaticR images_news_planet_png
+        JubilationUserNews ->
+            StaticR images_news_planet_png
+        CatUserNews ->
+            StaticR images_news_planet_png
