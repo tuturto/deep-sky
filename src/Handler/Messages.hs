@@ -26,16 +26,11 @@ getMessageListR = do
 getMessageDeleteR :: Key News -> Handler Html
 getMessageDeleteR nId = do
     (_, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> redirect ProfileR
+    _ <- case (userFactionId user) of
+            Just x -> return x
+            Nothing -> redirect ProfileR
     _ <- runDB $ update nId [ NewsDismissed =. True ]
-    loadedNews <- runDB $ loadNewsEntries fId
-    let entries = parseNewsEntities loadedNews
-    defaultLayout $ do
-        addStylesheet $ StaticR css_site_css
-        setTitle "Deep Sky - Messages"
-        $(widgetFile "messages")    
+    redirect MessageListR
 
 loadNewsEntries :: (PersistQueryRead backend, MonadIO m,
     BaseBackend backend ~ SqlBackend) =>
