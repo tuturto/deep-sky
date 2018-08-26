@@ -8,8 +8,7 @@ module Handler.Messages where
 
 import Import
 import Widgets (newsArticleWidget)
-import News (parseNews)
-import Common (filterMap)
+import News (parseNewsEntities)
 
 getMessageListR :: Handler Html
 getMessageListR = do
@@ -18,11 +17,25 @@ getMessageListR = do
                         Just x -> return x
                         Nothing -> redirect ProfileR
     loadedNews <- runDB $ loadNewsEntries fId
-    let entries = filterMap parseNews $ map entityVal loadedNews    
+    let entries = parseNewsEntities loadedNews
     defaultLayout $ do
         addStylesheet $ StaticR css_site_css
         setTitle "Deep Sky - Messages"
         $(widgetFile "messages")
+
+getMessageDeleteR :: Key News -> Handler Html
+getMessageDeleteR nId = do
+    (_, user) <- requireAuthPair   
+    fId <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> redirect ProfileR
+    _ <- runDB $ update nId [ NewsDismissed =. True ]
+    loadedNews <- runDB $ loadNewsEntries fId
+    let entries = parseNewsEntities loadedNews
+    defaultLayout $ do
+        addStylesheet $ StaticR css_site_css
+        setTitle "Deep Sky - Messages"
+        $(widgetFile "messages")    
 
 loadNewsEntries :: (PersistQueryRead backend, MonadIO m,
     BaseBackend backend ~ SqlBackend) =>

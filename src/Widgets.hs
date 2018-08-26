@@ -37,7 +37,7 @@ populationList populationReports = $(widgetFile "widgets/populationListW")
 shipList :: Foldable t => t (Ship, Faction) -> WidgetFor site ()
 shipList ships = $(widgetFile "widgets/shipListW")
 
-newsArticleWidget :: NewsArticle -> WidgetFor App ()
+newsArticleWidget :: (Key News, NewsArticle) -> WidgetFor App ()
 newsArticleWidget article = $(widgetFile "widgets/news/articleW")
  
 newsContentWidget :: NewsArticle -> WidgetFor App ()

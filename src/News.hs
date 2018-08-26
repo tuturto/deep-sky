@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 
-module News ( NewsArticle(..), parseNews )
+module News ( NewsArticle(..), parseNews, parseNewsEntity, parseNewsEntities )
     where
 
 import Import
@@ -13,6 +13,7 @@ import Data.Aeson.TH
 import Data.Aeson (decode)
 import Data.Text.Encoding (encodeUtf8Builder)
 import Data.ByteString.Builder(toLazyByteString)
+import Data.Maybe (isJust, fromJust)
 
 data NewsArticle = 
     StarFoundNews
@@ -32,5 +33,22 @@ data NewsArticle =
 parseNews :: News -> Maybe NewsArticle
 parseNews entry =
     (decode . toLazyByteString . encodeUtf8Builder . newsContent) entry
+
+parseNewsEntity :: Entity News -> (Key News, Maybe NewsArticle)
+parseNewsEntity entity =
+    let
+        nId = entityKey entity
+        news = entityVal entity
+    in
+        (nId, parseNews news)
+
+parseNewsEntities :: [Entity News] -> [(Key News, NewsArticle)]
+parseNewsEntities entities =
+    let
+        parsed = map parseNewsEntity entities
+        removeFailed (_ , article) = isJust article
+        simplify (key, article) = (key, fromJust article)
+    in
+        map simplify $ filter removeFailed parsed
 
 $(deriveJSON defaultOptions ''NewsArticle)

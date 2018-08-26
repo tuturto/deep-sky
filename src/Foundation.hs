@@ -213,18 +213,19 @@ instance Yesod App where
     isAuthorized (StaticR _) _       = return Authorized
 
     -- Routes requiring authentication
-    isAuthorized ProfileR _          = isAuthenticated
-    isAuthorized FactionR _          = isAuthenticated
-    isAuthorized StarSystemsR _      = isAuthenticated
-    isAuthorized (StarSystemR _) _   = isAuthenticated
-    isAuthorized (PlanetR _ _) _     = isAuthenticated
-    isAuthorized BasesR _            = isAuthenticated
-    isAuthorized (BaseR _ _) _       = isAuthenticated
-    isAuthorized ResearchR _         = isAuthenticated
-    isAuthorized FleetR _            = isAuthenticated
-    isAuthorized DesignerR _         = isAuthenticated
-    isAuthorized ConstructionR _     = isAuthenticated
-    isAuthorized MessageListR _      = isAuthenticated
+    isAuthorized ProfileR _           = isAuthenticated
+    isAuthorized FactionR _           = isAuthenticated
+    isAuthorized StarSystemsR _       = isAuthenticated
+    isAuthorized (StarSystemR _) _    = isAuthenticated
+    isAuthorized (PlanetR _ _) _      = isAuthenticated
+    isAuthorized BasesR _             = isAuthenticated
+    isAuthorized (BaseR _ _) _        = isAuthenticated
+    isAuthorized ResearchR _          = isAuthenticated
+    isAuthorized FleetR _             = isAuthenticated
+    isAuthorized DesignerR _          = isAuthenticated
+    isAuthorized ConstructionR _      = isAuthenticated
+    isAuthorized MessageListR _       = isAuthenticated
+    isAuthorized (MessageDeleteR _) _ = isAuthenticated
 
     -- Special authorization
     isAuthorized AdminPanelR _     = do
