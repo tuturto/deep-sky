@@ -63,3 +63,8 @@
     padding-right: 0px;
     margin-right: 0px;
 }
+
+.space-left {
+    padding-left: 10px;
+    margin-left: 10px;
+}

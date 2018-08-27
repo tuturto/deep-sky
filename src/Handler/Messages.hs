@@ -42,7 +42,7 @@ postMessageListR = do
                 FormSuccess x -> return x
                 _ -> redirect FactionR
     date <- runDB $ starDate
-    let content = UserWrittenNews (nfContent res) (nfIcon res) (timeCurrentTime date) (userIdent user)
+    let content = UserWrittenNews (nfContent res) (nfIcon res) (timeCurrentTime date) (userIdent user) 
     let news = News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
     _ <- runDB $ insert news
     redirect MessageListR    

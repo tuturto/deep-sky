@@ -30,7 +30,7 @@
                 Submit news
         <div .row .side-panel>
             <div .col-lg-12>
-                <form .form-horizontal method="post" action=@{MessageListR}>
+                <form .form-horizontal .space-left method="post" action=@{MessageListR}>
                     ^{userNewsForm}
         <div .row .side-panel-right>
             <div .col-lg-12>
