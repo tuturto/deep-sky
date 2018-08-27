@@ -4,14 +4,14 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Handler.Messages where
+module Handler.Messages (getMessageListR, postNewMessageR, getMessageDeleteR)
+    where
 
 import Import
 import Widgets (newsArticleWidget)
-import News (parseNewsEntities, UserNewsIcon(..), NewsArticle(UserWrittenNews))
+import News (parseNewsEntities, UserNewsIcon(..), makeUserWrittenNews)
 import Yesod.Form.Bootstrap3
 import MenuHelpers (starDate)
-import Data.Aeson.Text (encodeToLazyText)
 
 getMessageListR :: Int -> Handler Html
 getMessageListR currentPage = do
@@ -43,19 +43,17 @@ getMessageListR currentPage = do
  
 postNewMessageR :: Handler Html
 postNewMessageR = do
-    (uId, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> redirect ProfileR
+    (_, user) <- requireAuthPair   
+    _ <- case (userFactionId user) of
+                Just x -> return x
+                Nothing -> redirect ProfileR
     
     ((formRes, _), _) <- runFormPost $ renderBootstrap3 BootstrapBasicForm $ newsAForm
     res <- case formRes of
                 FormSuccess x -> return x
                 _ -> redirect FactionR
     date <- runDB $ starDate
-    let content = UserWrittenNews (nfContent res) (nfIcon res) (timeCurrentTime date) (userIdent user) 
-    let news = News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
-    _ <- runDB $ insert news
+    _ <- runDB $ insert $ makeUserWrittenNews (nfContent res) (nfIcon res) date user
     redirect $ MessageListR 1
 
 getMessageDeleteR :: Key News -> Handler Html

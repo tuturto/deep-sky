@@ -5,7 +5,8 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 module News ( NewsArticle(..), parseNews, parseNewsEntity, parseNewsEntities
-            , UserNewsIcon(..) )
+            , makeUserWrittenNews, makePlanetFoundNews, makeStarFoundNews,
+            UserNewsIcon(..) )
     where
 
 import Import
@@ -14,6 +15,7 @@ import Data.Aeson (decode)
 import Data.Text.Encoding (encodeUtf8Builder)
 import Data.ByteString.Builder(toLazyByteString)
 import Data.Maybe (isJust, fromJust)
+import Data.Aeson.Text (encodeToLazyText)
 
 data NewsArticle = 
     StarFoundNews
@@ -65,3 +67,32 @@ parseNewsEntities entities =
 
 $(deriveJSON defaultOptions ''UserNewsIcon)
 $(deriveJSON defaultOptions ''NewsArticle)
+
+makeUserWrittenNews :: Text -> UserNewsIcon -> Time -> User -> News
+makeUserWrittenNews msg icon date user =
+    let
+        content = UserWrittenNews msg icon (timeCurrentTime date) (userIdent user) 
+    in
+        News (toStrict $ encodeToLazyText content) (fromJust $ userFactionId user) (timeCurrentTime date) False
+
+makePlanetFoundNews :: (Entity Planet) -> (Entity StarSystem) -> Time -> (Entity Faction) -> News
+makePlanetFoundNews planetEnt systemEnt date facEnt =
+    let
+        planet = entityVal planetEnt
+        planetKey = entityKey planetEnt
+        system = entityVal systemEnt
+        fId = entityKey facEnt
+        content = PlanetFoundNews (planetName planet) (starSystemName system) (planetStarSystemId planet) planetKey (timeCurrentTime date)
+    in
+        News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
+
+makeStarFoundNews :: (Entity Star) -> (Entity StarSystem) -> Time -> (Entity Faction) -> News
+makeStarFoundNews starEnt systemEnt date facEnt =
+    let
+        star = entityVal starEnt
+        system = entityVal systemEnt
+        systemId = entityKey systemEnt
+        fId = entityKey facEnt
+        content = StarFoundNews (starName star) (starSystemName system) systemId (timeCurrentTime date)
+    in
+        News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
