@@ -28,7 +28,8 @@
 
 /faction                             FactionR          GET POST
 
-/message                             MessageListR      GET POST
+/message/#Int                        MessageListR      GET
+/newmessage                          NewMessageR       POST
 /deletemessage/#NewsId               MessageDeleteR    GET
 
 /api/starsystem                      ApiStarSystemsR   GET

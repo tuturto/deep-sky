@@ -13,25 +13,36 @@ import Yesod.Form.Bootstrap3
 import MenuHelpers (starDate)
 import Data.Aeson.Text (encodeToLazyText)
 
-getMessageListR :: Handler Html
-getMessageListR = do
+getMessageListR :: Int -> Handler Html
+getMessageListR currentPage = do
     (_, user) <- requireAuthPair   
     fId <- case (userFactionId user) of
                         Just x -> return x
                         Nothing -> redirect ProfileR
-    loadedNews <- runDB $ loadNewsEntries fId
+    let pageSize = 6
+    (totalPages, loadedNews) <- runDB $ loadNewsEntries pageSize currentPage fId
     let entries = parseNewsEntities loadedNews
-    let currentPage = (1 :: Int)
-    let totalPages = (1 :: Int)
     let totalUnread = (2 :: Int)
+    let doubleLeftLnk = if currentPage > 1
+                            then Just 1
+                            else Nothing
+    let doubleRightLnk = if currentPage < totalPages
+                            then Just totalPages
+                            else Nothing
+    let leftLnk = if currentPage > 1
+                    then Just $ currentPage - 1
+                    else Nothing
+    let rightLnk = if currentPage < totalPages
+                    then Just $ currentPage + 1
+                    else Nothing
     (userNewsForm, _) <- generateFormPost $ renderBootstrap3 BootstrapBasicForm newsAForm
     defaultLayout $ do
         addStylesheet $ StaticR css_site_css
         setTitle "Deep Sky - Messages"
         $(widgetFile "messages")
  
-postMessageListR :: Handler Html
-postMessageListR = do
+postNewMessageR :: Handler Html
+postNewMessageR = do
     (uId, user) <- requireAuthPair   
     fId <- case (userFactionId user) of
                         Just x -> return x
@@ -45,7 +56,7 @@ postMessageListR = do
     let content = UserWrittenNews (nfContent res) (nfIcon res) (timeCurrentTime date) (userIdent user) 
     let news = News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
     _ <- runDB $ insert news
-    redirect MessageListR    
+    redirect $ MessageListR 1
 
 getMessageDeleteR :: Key News -> Handler Html
 getMessageDeleteR nId = do
@@ -54,15 +65,19 @@ getMessageDeleteR nId = do
             Just x -> return x
             Nothing -> redirect ProfileR
     _ <- runDB $ update nId [ NewsDismissed =. True ]
-    redirect MessageListR
- 
+    redirect (MessageListR 1)
+
 loadNewsEntries :: (PersistQueryRead backend, MonadIO m,
     BaseBackend backend ~ SqlBackend) =>
-    Key Faction -> ReaderT backend m [Entity News]
-loadNewsEntries fId = do
-    selectList [ NewsFactionId ==. fId 
-               , NewsDismissed ==. False ] [ Desc NewsDate ]
-
+    Int -> Int -> Key Faction -> ReaderT backend m (Int, [Entity News])
+loadNewsEntries pageSize page fId = do
+    results <- selectList [ NewsFactionId ==. fId 
+                          , NewsDismissed ==. False ] [ Desc NewsDate ]
+    let totalPages = case (length results) `mod` pageSize of
+                        0 -> (length results `div` pageSize)
+                        _ -> (length results `div` pageSize) + 1
+    return (totalPages, take pageSize $ drop ((page - 1) * pageSize) results) 
+  
 newsAForm :: AForm Handler NewsPostingForm
 newsAForm = NewsPostingForm
         <$> areq (selectFieldList entries) "Icon: " Nothing

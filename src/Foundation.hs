@@ -156,7 +156,7 @@ instance Yesod App where
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Messages"
-                    , menuItemRoute = MessageListR
+                    , menuItemRoute = MessageListR 1
                     , menuItemAccessCallback = isJust muser
                     }
                 , NavbarRight $ MenuItem
@@ -224,7 +224,8 @@ instance Yesod App where
     isAuthorized FleetR _             = isAuthenticated
     isAuthorized DesignerR _          = isAuthenticated
     isAuthorized ConstructionR _      = isAuthenticated
-    isAuthorized MessageListR _       = isAuthenticated
+    isAuthorized (MessageListR _) _   = isAuthenticated
+    isAuthorized NewMessageR _        = isAuthenticated
     isAuthorized (MessageDeleteR _) _ = isAuthenticated
 
     -- Special authorization
@@ -309,7 +310,7 @@ instance YesodBreadcrumbs App where
         return (name, Just BasesR)
     breadcrumb AdminPanelR = return ("Admin", Just HomeR)
     breadcrumb AdminAdvanceTimeR = return ("Time management", Just AdminPanelR)
-    breadcrumb MessageListR = return ("Messages", Just HomeR)
+    breadcrumb (MessageListR _) = return ("Messages", Just HomeR)
     breadcrumb _ = return ("home", Nothing)
 
 -- How to run database actions.

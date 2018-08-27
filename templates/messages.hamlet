@@ -11,11 +11,31 @@
                 Options
         <div .row .side-panel>
             <div .col-lg-12>
-                <i .fas .fa-angle-left>
-                <i .fas .fa-angle-double-left>
+                $maybe lnkId <- doubleLeftLnk
+                    <a href=@{MessageListR lnkId}>
+                        <i .fas .fa-angle-double-left>
+                $nothing
+                    <i .fas .fa-angle-double-left>
+
+                $maybe lnkId <- leftLnk
+                    <a href=@{MessageListR lnkId}>
+                        <i .fas .fa-angle-left>
+                $nothing
+                    <i .fas .fa-angle-left>
+
                 #{currentPage} / #{totalPages}
-                <i .fas .fa-angle-double-right>
-                <i .fas .fa-angle-right>
+
+                $maybe lnkId <- rightLnk
+                    <a href=@{MessageListR lnkId}>
+                        <i .fas .fa-angle-right>
+                $nothing
+                    <i .fas .fa-angle-right>
+
+                $maybe lnkId <- doubleRightLnk
+                    <a href=@{MessageListR lnkId}>
+                        <i .fas .fa-angle-double-right>
+                $nothing
+                    <i .fas .fa-angle-double-right>
         <div .row .side-panel>
             <div .col-lg-12>
                 Currently showing recent unread messages
@@ -30,7 +50,7 @@
                 Submit news
         <div .row .side-panel>
             <div .col-lg-12>
-                <form .form-horizontal .space-left method="post" action=@{MessageListR}>
+                <form .form-horizontal .space-left method="post" action=@{NewMessageR}>
                     ^{userNewsForm}
         <div .row .side-panel-right>
             <div .col-lg-12>
