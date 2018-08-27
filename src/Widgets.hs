@@ -51,8 +51,8 @@ newsImage (PlanetFoundNews _ _ _ _ _) = StaticR images_news_planet_png
 newsImage (UserWrittenNews _ icon _ _) = 
     case icon of
         GenericUserNews ->
-            StaticR images_news_planet_png
+            StaticR images_news_question_png
         JubilationUserNews ->
-            StaticR images_news_planet_png
+            StaticR images_news_jubileum_png
         CatUserNews ->
-            StaticR images_news_planet_png
+            StaticR images_news_cat_png
