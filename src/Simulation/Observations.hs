@@ -17,6 +17,8 @@ import MenuHelpers
 import CustomTypes
 import Report
 import Common
+import News (makePlanetFoundNews, makeStarFoundNews)
+import Data.Maybe (fromJust)
 
 -- | Generate reports for all kinds of things faction can currently observe
 --   Currently these include forces on faction's own planets (population that is),
@@ -108,7 +110,10 @@ observeTarget :: (BaseBackend backend ~ SqlBackend,
 observeTarget _ Nothing _ = do
     return ()
 
-observeTarget faction (Just (OCStar starEntity _)) building = do
+observeTarget _ (Just (OCStarLane _ _)) _ = do
+    return ()
+
+observeTarget faction (Just (OCStar starEntity _ observationType)) building = do
     let star = entityVal starEntity
     let sid = entityKey starEntity
     date <- starDate
@@ -117,26 +122,42 @@ observeTarget faction (Just (OCStar starEntity _)) building = do
     let res = StarReport sid (starStarSystemId star) (Just (starName star)) 
                          aLuminosityClass aSpectralType
                          (entityKey faction) (timeCurrentTime date)
+    system <- get (starStarSystemId star)
+    let news = case observationType of
+                NewObservation ->
+                    Just $ makeStarFoundNews starEntity (Entity (starStarSystemId star) (fromJust system)) date faction
+                UpdatedObservation ->
+                    Nothing
+    _ <- mapM insert news
     _ <- insert res
     return ()
 
-observeTarget faction (Just (OCPlanet planetEntity _)) building = do
+observeTarget faction (Just (OCPlanet planetEntity _ observationType)) building = do
     let planet = entityVal planetEntity
     let pid = entityKey planetEntity
     date <- starDate
     aGravity <- liftIO $ chooseOne (Just (planetGravity planet)) Nothing
     let res = PlanetReport pid (planetOwnerId planet) (planetStarSystemId planet) (Just $ planetName planet)
                            (Just $ planetPosition planet) aGravity (entityKey faction) (timeCurrentTime date)
+    system <- get (planetStarSystemId planet)
+    let news = case observationType of
+                NewObservation ->
+                    Just $ makePlanetFoundNews planetEntity (fromJust system) date faction
+                UpdatedObservation ->
+                    Nothing
+    _ <- mapM insert news
     _ <- insert res
     return ()
 
-observeTarget _ (Just (OCStarLane _ _)) building = do
-    return ()
-
-data ObservationCandidate = OCStar (Entity Star) (Maybe CollatedStarReport)
-                          | OCPlanet (Entity Planet) (Maybe CollatedPlanetReport)
+data ObservationCandidate = OCStar (Entity Star) (Maybe CollatedStarReport) ObservationType
+                          | OCPlanet (Entity Planet) (Maybe CollatedPlanetReport) ObservationType
                           | OCStarLane (Entity StarLane) (Maybe CollatedStarLaneReport)
     deriving Show
+
+data ObservationType =
+    NewObservation
+    | UpdatedObservation
+    deriving (Show, Read, Eq)
 
 -- | given list of stars and collated reports, build list of pairs with star and maybe respective report
 groupStarReports :: [Entity Star] -> [CollatedStarReport] -> [(Entity Star, Maybe CollatedStarReport)]
@@ -165,12 +186,17 @@ groupStarLaneReports lanes reports =
 -- | Map list of star entities and respective reports to observation candidates and filter out fully observed items
 buildOCStarList :: [(Entity Star, Maybe CollatedStarReport)] -> [ObservationCandidate]
 buildOCStarList reports = filter needsObservation $ map combineFn reports
-    where combineFn (star, report) = OCStar star report
+    where combineFn (star, report) = OCStar star report (observationType report)
+          observationType Nothing = NewObservation
+          observationType _ = UpdatedObservation
 
 -- | Map list of planet entities and respective reports to observation candidates and filter out fully observed items
 buildOCPlanetList :: [(Entity Planet, Maybe CollatedPlanetReport)] -> [ObservationCandidate]
-buildOCPlanetList reports = filter needsObservation $ map combineFn reports
-    where combineFn (planet, report) = OCPlanet planet report
+buildOCPlanetList reports = 
+    filter needsObservation $ map combineFn reports
+    where combineFn (planet, report) = OCPlanet planet report (observationType report)
+          observationType Nothing = NewObservation
+          observationType _ = UpdatedObservation
 
 -- | Map list of starlane entities and respective reports to observation candidates and filter out fully observed items
 buildOCStarLaneList :: [(Entity StarLane, Maybe CollatedStarLaneReport)] -> [ObservationCandidate]
@@ -180,18 +206,18 @@ buildOCStarLaneList reports = filter needsObservation $ map combineFn reports
 -- | Does given observation candidate need observing?
 --   If given collated report contains different information than the object it's about, return True
 needsObservation :: ObservationCandidate -> Bool
-needsObservation (OCStar _ Nothing) = True
-needsObservation (OCPlanet _ Nothing) = True
+needsObservation (OCStar _ Nothing _) = True
+needsObservation (OCPlanet _ Nothing _) = True
 needsObservation (OCStarLane _ _) = False
 
-needsObservation (OCStar entity (Just report)) = 
+needsObservation (OCStar entity (Just report) _) = 
     csrSpectralType report /= (Just $ starSpectralType star)
     || csrLuminosityClass report /= (Just $ starLuminosityClass star)
     || csrName report /= (Just $ starName star)
     where
         star = entityVal entity
 
-needsObservation (OCPlanet entity (Just report)) = 
+needsObservation (OCPlanet entity (Just report) _) = 
     cprOwnerId report /= planetOwnerId planet
     || cprName report /= (Just $ planetName planet)
     || cprPosition report /= (Just $ planetPosition planet)
