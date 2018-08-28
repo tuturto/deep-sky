@@ -20,9 +20,8 @@ getMessageListR currentPage = do
                         Just x -> return x
                         Nothing -> redirect ProfileR
     let pageSize = 6
-    (totalPages, loadedNews) <- runDB $ loadNewsEntries pageSize currentPage fId
+    (totalUnread, totalPages, loadedNews) <- runDB $ loadNewsEntries pageSize currentPage fId
     let entries = parseNewsEntities loadedNews
-    let totalUnread = (2 :: Int)
     let doubleLeftLnk = if currentPage > 1
                             then Just 1
                             else Nothing
@@ -67,14 +66,19 @@ getMessageDeleteR nId = do
 
 loadNewsEntries :: (PersistQueryRead backend, MonadIO m,
     BaseBackend backend ~ SqlBackend) =>
-    Int -> Int -> Key Faction -> ReaderT backend m (Int, [Entity News])
+    Int -> Int -> Key Faction -> ReaderT backend m (Int, Int, [Entity News])
 loadNewsEntries pageSize page fId = do
     results <- selectList [ NewsFactionId ==. fId 
-                          , NewsDismissed ==. False ] [ Desc NewsDate ]
-    let totalPages = case (length results) `mod` pageSize of
-                        0 -> (length results `div` pageSize)
-                        _ -> (length results `div` pageSize) + 1
-    return (totalPages, take pageSize $ drop ((page - 1) * pageSize) results) 
+                          , NewsDismissed ==. False ] [ Desc NewsDate 
+                                                      , OffsetBy $ (page - 1) * pageSize
+                                                      , LimitTo pageSize 
+                                                      ]
+    totalRecords <- count [ NewsFactionId ==. fId 
+                          , NewsDismissed ==. False ]
+    let totalPages = case totalRecords `mod` pageSize of
+                        0 -> (totalRecords `div` pageSize)
+                        _ -> (totalRecords `div` pageSize) + 1
+    return (totalRecords, totalPages, results) 
   
 newsAForm :: AForm Handler NewsPostingForm
 newsAForm = NewsPostingForm
