@@ -125,7 +125,7 @@ observeTarget faction (Just (OCStar starEntity _ observationType)) building = do
     system <- get (starStarSystemId star)
     let news = case observationType of
                 NewObservation ->
-                    Just $ makeStarFoundNews starEntity (Entity (starStarSystemId star) (fromJust system)) date faction
+                    Just $ makeStarFoundNews star (Entity (starStarSystemId star) (fromJust system)) date (entityKey faction)
                 UpdatedObservation ->
                     Nothing
     _ <- mapM insert news
@@ -142,7 +142,7 @@ observeTarget faction (Just (OCPlanet planetEntity _ observationType)) building 
     system <- get (planetStarSystemId planet)
     let news = case observationType of
                 NewObservation ->
-                    Just $ makePlanetFoundNews planetEntity (fromJust system) date faction
+                    Just $ makePlanetFoundNews planetEntity (fromJust system) date (entityKey faction)
                 UpdatedObservation ->
                     Nothing
     _ <- mapM insert news

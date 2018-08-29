@@ -75,23 +75,20 @@ makeUserWrittenNews msg icon date user =
     in
         News (toStrict $ encodeToLazyText content) (fromJust $ userFactionId user) (timeCurrentTime date) False
 
-makePlanetFoundNews :: (Entity Planet) -> StarSystem -> Time -> (Entity Faction) -> News
-makePlanetFoundNews planetEnt system date facEnt =
+makePlanetFoundNews :: (Entity Planet) -> StarSystem -> Time -> (Key Faction) -> News
+makePlanetFoundNews planetEnt system date fId =
     let
         planet = entityVal planetEnt
         planetKey = entityKey planetEnt
-        fId = entityKey facEnt
         content = PlanetFoundNews (planetName planet) (starSystemName system) (planetStarSystemId planet) planetKey (timeCurrentTime date)
     in
         News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
 
-makeStarFoundNews :: (Entity Star) -> (Entity StarSystem) -> Time -> (Entity Faction) -> News
-makeStarFoundNews starEnt systemEnt date facEnt =
+makeStarFoundNews :: Star -> (Entity StarSystem) -> Time -> (Key Faction) -> News
+makeStarFoundNews star systemEnt date fId =
     let
-        star = entityVal starEnt
         system = entityVal systemEnt
         systemId = entityKey systemEnt
-        fId = entityKey facEnt
         content = StarFoundNews (starName star) (starSystemName system) systemId (timeCurrentTime date)
     in
         News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
