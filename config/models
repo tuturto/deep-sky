@@ -68,7 +68,6 @@ Building json
     planetId PlanetId
     type BuildingType
     level Int
-    construction Double
     damage Double
     deriving Show
 
@@ -115,21 +114,19 @@ InstalledComponent json
     damage Double
     deriving Show Read Eq
 
-ShipConstructionQueue json
-    shipId ShipId
-    deriving Show Read Eq
-
-PlanetConstructionQueue json
-    planetId PlanetId
-    deriving Show Read Eq
-
 ShipConstruction json
-    planetConstructionQueueId PlanetConstructionQueueId Maybe
-    shipConstructionQueueId ShipConstructionQueueId Maybe
+    shipId ShipId Maybe
+    planetId PlanetId Maybe
     deriving Show Read Eq
 
 BuildingConstruction json
-    planetConstructionQueueId PlanetConstructionQueueId
+    planetId PlanetId
+    index Int
+    progressBiologicals Int
+    progressMechanicals Int
+    progressChemicals Int
+    type BuildingType
+    level Int
     deriving Show Read Eq
 
 News json
