@@ -115,6 +115,23 @@ InstalledComponent json
     damage Double
     deriving Show Read Eq
 
+ShipConstructionQueue json
+    shipId ShipId
+    deriving Show Read Eq
+
+PlanetConstructionQueue json
+    planetId PlanetId
+    deriving Show Read Eq
+
+ShipConstruction json
+    planetConstructionQueueId PlanetConstructionQueueId Maybe
+    shipConstructionQueueId ShipConstructionQueueId Maybe
+    deriving Show Read Eq
+
+BuildingConstruction json
+    planetConstructionQueueId PlanetConstructionQueueId
+    deriving Show Read Eq
+
 News json
     content Text
     factionId FactionId
