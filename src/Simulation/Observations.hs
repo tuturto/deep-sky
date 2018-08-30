@@ -58,10 +58,10 @@ doPlanetObservation faction planet = do
     let popObservations = map (\pop -> PlanetPopulationReport (entityKey planet) (Just $ planetPopulationRaceId $ entityVal pop)
                                                               (Just $ planetPopulationPopulation $ entityVal pop)
                                                               (entityKey faction) (timeCurrentTime time)) pops
-    _ <- mapM insert popObservations
+    _ <- mapM insert popObservations    
     buildings <- selectList [ BuildingPlanetId ==. (entityKey planet)] []
     let bObservations = map (\b -> BuildingReport (entityKey b) (entityKey planet) (Just $ buildingType (entityVal b))
-                                                  (Just $ buildingLevel (entityVal b)) (Just $ buildingConstruction (entityVal b))
+                                                  (Just $ buildingLevel (entityVal b))
                                                   (Just $ buildingDamage (entityVal b))
                                                   (entityKey faction) (timeCurrentTime time)) buildings
     _ <- mapM insert bObservations
@@ -75,7 +75,6 @@ doSensorStationObservations faction planet = do
     let p = entityVal planet
     buildings <- selectList [ BuildingPlanetId ==. (entityKey planet)
                             , BuildingType ==. SensorStation
-                            , BuildingConstruction ==. 1.0 
                             , BuildingDamage <. 0.5 ] []
     stars <- selectList [ StarStarSystemId ==. planetStarSystemId p ] []
     starReports <- createStarReports (planetStarSystemId p) $ entityKey faction

@@ -181,7 +181,6 @@ BuildingReport json
     planetId PlanetId
     type BuildingType Maybe
     level Int Maybe
-    construction Double Maybe
     damage Double Maybe
     factionId FactionId
     date Int

@@ -40,10 +40,10 @@ insert into faction (name, home_system, biologicals, mechanicals, chemicals) val
 insert into user (ident, faction_id) values ('tuukka', 1);
 insert into user_role (user_id, role) values (1, 'RoleAdministrator');
 
-insert into building (planet_id, type, level, construction, damage) values (3, 'SensorStation', 1, 1.0, 0);
-insert into building (planet_id, type, level, construction, damage) values (3, 'ResearchComplex', 1, 1.0, 0.25);
-insert into building (planet_id, type, level, construction, damage) values (3, 'ResearchComplex', 1, 0.5, 0);
-insert into building (planet_id, type, level, construction, damage) values (3, 'Farm', 1, 1.0, 0);
+insert into building (planet_id, type, level, damage) values (3, 'SensorStation', 1, 0);
+insert into building (planet_id, type, level, damage) values (3, 'ResearchComplex', 1, 0.25);
+insert into building (planet_id, type, level, damage) values (3, 'ResearchComplex', 1, 0);
+insert into building (planet_id, type, level, damage) values (3, 'Farm', 1, 0);
 
 insert into star_system_report (star_system_id, name, coord_x, coord_y, faction_id, date) values (1, 'Sol', 0, 0, 1, 18000);
 insert into star_system_report (star_system_id, name, coord_x, coord_y, faction_id, date) values (2, 'Barynth', 5.6, 2.2, 2, 18000);

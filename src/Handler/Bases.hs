@@ -23,6 +23,8 @@ getBasesR = do
     let planetReports = filter (\x -> (Just factionId) == cprOwnerId x) $ collatePlanets $ map entityVal loadedPlanetReports
     baseReports <- mapM addBaseDetails planetReports
 
+    loadedPlanets <- runDB $ selectList [ PlanetOwnerId ==. (Just factionId)] [ Asc PlanetName ]
+
     defaultLayout $ do
         setTitle "Deep Sky - Bases"
         $(widgetFile "bases")

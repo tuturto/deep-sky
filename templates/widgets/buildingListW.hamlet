@@ -19,9 +19,6 @@
                     Unknown
                 
             <div .col-lg-1>
-                $maybe construction <- cbrConstruction building
-                    #{construction * 100}%
-            <div .col-lg-1>
                 $maybe damage <- cbrDamage building
                     #{damage * 100}%
             <div .col-lg-1>

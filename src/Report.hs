@@ -63,7 +63,6 @@ data CollatedBuildingReport = CollatedBuildingReport {
     , cbrPlanetId     :: Key Planet
     , cbrType :: Maybe BuildingType
     , cbrLevel        :: Maybe Int
-    , cbrConstruction :: Maybe Double
     , cbrDamage       :: Maybe Double
     , cbrDate         :: Int
 } deriving Show
@@ -172,12 +171,11 @@ collateStarLanes s@(x:_) = (collateStarLane itemsOfKind) : (collateStarLanes res
 
 collateBuilding :: [BuildingReport] -> CollatedBuildingReport
 collateBuilding = foldr fn initial
-    where initial = CollatedBuildingReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing Nothing 0
+    where initial = CollatedBuildingReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing 0
           fn val acc = CollatedBuildingReport (buildingReportBuildingId val)
                                               (buildingReportPlanetId val)
                                               (combine (buildingReportType val) (cbrType acc))
                                               (combine (buildingReportLevel val) (cbrLevel acc))
-                                              (combine (buildingReportConstruction val) (cbrConstruction acc))
                                               (combine (buildingReportDamage val) (cbrDamage acc))
                                               (max (buildingReportDate val) (cbrDate acc))
 
