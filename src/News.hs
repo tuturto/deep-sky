@@ -5,8 +5,9 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 module News ( NewsArticle(..), parseNews, parseNewsEntity, parseNewsEntities
-            , makeUserWrittenNews, makePlanetFoundNews, makeStarFoundNews,
-            UserNewsIcon(..) )
+            , makeUserWrittenNews, makePlanetFoundNews, makeStarFoundNews
+            , makeDesignCreatedNews
+            , UserNewsIcon(..) )
     where
 
 import Import
@@ -36,6 +37,11 @@ data NewsArticle =
         , userWrittenNewsIcon :: UserNewsIcon
         , userWrittenNewsDate :: Int
         , userWrittenNewsUser :: Text
+        }
+    | DesignCreatedNews
+        { designCreatedNewsDesignId :: Key Design
+        , designCreatedNewsName :: Text
+        , designCreatedDate :: Int
         }
 
 data UserNewsIcon =
@@ -90,5 +96,14 @@ makeStarFoundNews star systemEnt date fId =
         system = entityVal systemEnt
         systemId = entityKey systemEnt
         content = StarFoundNews (starName star) (starSystemName system) systemId (timeCurrentTime date)
+    in
+        News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
+
+makeDesignCreatedNews :: (Entity Design) -> Time -> (Key Faction) -> News
+makeDesignCreatedNews design date fId =
+    let
+        dId = entityKey design
+        name = designName $ entityVal design
+        content = DesignCreatedNews dId name (timeCurrentTime date)
     in
         News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False

@@ -11,6 +11,8 @@ import Data.Maybe (fromJust)
 import Dto.Ship
 import Import
 import Components
+import News (makeDesignCreatedNews)
+import MenuHelpers (starDate)
 
 getDesignerR :: Handler Html
 getDesignerR = do
@@ -72,7 +74,7 @@ postApiDesignR = do
     case (validateSaveDesign msg) of
         False -> sendResponseStatus status400 ("Validation failed" :: Text)
         True -> do 
-            savedDesign <- runDB $ saveDesign msg fId
+            savedDesign <- runDB $ saveDesign msg fId            
             return $ toJSON savedDesign
 
 putApiDesignIdR :: Key Design -> Handler Value
@@ -109,8 +111,9 @@ saveDesign design fId = do
     cIds <- mapM insert $ map (componentDtoToPlannedComponent newId) (designDtoComponents design)
     newDesign <- get newId
     newComponents <- selectList [ PlannedComponentDesignId ==. newId ] []
-    let x = case newDesign of
-                Just x -> designToDesignDto (newId, x) newComponents
+    let x = designToDesignDto (newId, fromJust newDesign) newComponents
+    date <- starDate
+    _ <- insert $ makeDesignCreatedNews (Entity newId $ fromJust newDesign) date fId
     return x
 
 updateDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
