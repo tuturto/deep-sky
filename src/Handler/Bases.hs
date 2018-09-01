@@ -17,14 +17,14 @@ getBasesR = do
         Just x -> return x
         Nothing -> redirect ProfileR
 
-    loadedPlanetReports <- runDB $ selectList [ PlanetReportFactionId ==. factionId ] [ Asc PlanetReportPlanetId
-                                                                                      , Asc PlanetReportDate ]
+    loadedPlanets <- runDB $ selectList [ PlanetOwnerId ==. (Just factionId)] [ Asc PlanetName ]
+    let planetIds = map entityKey loadedPlanets
+    loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId <-. planetIds ] [ Asc PlanetReportPlanetId
+                                                                                     , Asc PlanetReportDate ]
 
     let planetReports = filter (\x -> (Just factionId) == cprOwnerId x) $ collatePlanets $ map entityVal loadedPlanetReports
     baseReports <- mapM addBaseDetails planetReports
-
-    loadedPlanets <- runDB $ selectList [ PlanetOwnerId ==. (Just factionId)] [ Asc PlanetName ]
-
+ 
     defaultLayout $ do
         setTitle "Deep Sky - Bases"
         $(widgetFile "bases")
