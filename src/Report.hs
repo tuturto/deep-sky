@@ -3,7 +3,14 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
 
-module Report where
+module Report ( createPlanetReports, createStarReports, createStarLaneReports, createSystemReport
+              , collatePopulations, collatePlanets, collateStars, collateBuildings, collateSystems
+              , collatePlanet, collateStar, collateBuilding
+              , spectralInfo
+              , CollatedPlanetReport(..), CollatedStarReport(..), CollatedStarLaneReport(..)
+              , CollatedBuildingReport(..), CollatedPopulationReport(..), CollatedStarSystemReport(..)
+              , CollatedBaseReport(..) )
+    where
 
 import Import
 import CustomTypes
@@ -79,6 +86,9 @@ spectralInfo (Just st) Nothing   = pack $ show st
 spectralInfo Nothing (Just lc)   = pack $ show lc
 spectralInfo (Just st) (Just lc) = pack $ show st ++ (show lc)
 
+-- | Combine list of star system reports and form a single collated star system report
+--   Resulting report will have facts from the possibly partially empty reports
+--   If a fact is not present for a given field, Nothing is left there
 collateSystem :: [StarSystemReport] -> CollatedStarSystemReport
 collateSystem = foldr fn initial
     where initial = CollatedStarSystemReport (toSqlKey 0) Nothing (Coordinates 0 0) 0
@@ -87,6 +97,8 @@ collateSystem = foldr fn initial
                                                 (Coordinates (starSystemReportCoordX val) (starSystemReportCoordY val))
                                                 (max (starSystemReportDate val) (cssrDate acc))
 
+-- | Combine list of star system reports and form a list of collated star system reports
+--   Each star system is given their own report
 collateSystems :: [StarSystemReport] -> [CollatedStarSystemReport]
 collateSystems [] = []
 collateSystems s@(x:_) = (collateSystem itemsOfKind) : (collateSystems restOfItems)

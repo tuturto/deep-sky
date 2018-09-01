@@ -15,7 +15,8 @@ import Import
 import System.Random
 import MenuHelpers
 import CustomTypes
-import Report
+import Report ( createPlanetReports, createStarLaneReports, createStarReports
+              , CollatedPlanetReport(..), CollatedStarLaneReport(..), CollatedStarReport(..))
 import Common
 import News (makePlanetFoundNews, makeStarFoundNews)
 import Data.Maybe (fromJust)

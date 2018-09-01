@@ -7,7 +7,9 @@ module Handler.StarSystems where
 
 import Import
 import Text.Blaze.Html5 (toMarkup)
-import Report
+import Report ( collateSystems, collatePopulations, collateBuildings, collatePlanet
+              , createStarLaneReports, createPlanetReports, createStarReports, createSystemReport
+              , CollatedPopulationReport(..), CollatedPlanetReport(..), CollatedStarSystemReport(..) )
 import Widgets
 import MenuHelpers
 import Data.Maybe (fromJust)

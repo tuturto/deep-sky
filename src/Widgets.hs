@@ -9,7 +9,10 @@ module Widgets ( systemDetails, planetReportList, planetDetails, starReportList
     where
 
 import Import
-import Report
+import Report ( spectralInfo, CollatedPopulationReport(..), CollatedBuildingReport(..)
+              , CollatedStarLaneReport(..), CollatedStarReport(..), CollatedPlanetReport(..)
+              , CollatedStarSystemReport(..) )
+import CustomTypes ( SpectralType(..) )
 import MenuHelpers (toDisplayDate)
 import News
 
