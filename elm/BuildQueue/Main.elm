@@ -10,7 +10,7 @@ main =
           , subscriptions = subscriptions }
 
 init : (Model, Cmd Msg)
-init = ( { message = "Hello" }, Cmd.none)
+init = ( { searchText = "" }, Cmd.none)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -19,6 +19,6 @@ subscriptions model =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    NoOp -> 
+    TextSearch _ ->
       ( model
       , Cmd.none )

@@ -1,7 +1,9 @@
 module Types exposing (..)
 
-type Msg = NoOp
+type Msg = 
+  TextSearch String
+
 type alias Model = 
-  { message : String
+  { searchText : String
   }
 

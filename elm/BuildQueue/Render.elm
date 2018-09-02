@@ -2,11 +2,12 @@ module Render exposing ( view )
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing ( onInput )
 import Types exposing (..)
 
 view : Model -> Html Msg
 view model =
-  div [ ]
+  div []
   [ currentQueue model
   , searchField model
   , pagingControls model
@@ -24,9 +25,9 @@ currentQueue model =
 searchField : Model -> Html Msg
 searchField model =
   div [ class "row" ]
-  [ div [ class "col-lg-12" ]
-    [ text "Search field"
-    ]
+  [ div [ class "col-lg-6" ]
+    [ input [ type_ "text", placeholder "Search", value model.searchText, onInput TextSearch, style [ ("width", "100%") ] ] [] ]
+  , i [ class "fas fa-times-circle" ] []
   ]
 
 pagingControls : Model -> Html Msg
