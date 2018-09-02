@@ -23,25 +23,30 @@ instance ToMarkup Coordinates where
     toMarkup (Coordinates x y) = toMarkup $ "(" ++ (show x) ++ ", " ++ (show y) ++ ")"
 
 data BuildingType = SensorStation
-                  | ResearchComplex
-                  | Farm
+    | ResearchComplex
+    | Farm
+    | ParticleAccelerator
+    | NeutronDetector
+    | BlackMatterScanner
+    | GravityWaveSensor
     deriving (Show, Read, Eq)
 derivePersistField "BuildingType"
 
 instance ToMarkup BuildingType where
-    toMarkup building = case building of
-                        SensorStation   -> toMarkup ("Sensor station" :: Text)
-                        ResearchComplex -> toMarkup ("Research complex" :: Text)
-                        Farm            -> toMarkup ("Farm" :: Text)
-
+    toMarkup building = 
+        case building of
+            SensorStation   -> toMarkup ("Sensor station" :: Text)
+            ResearchComplex -> toMarkup ("Research complex" :: Text)
+            Farm            -> toMarkup ("Farm" :: Text)
+ 
 data ShipType = Satellite
-              | Fighter
-              | Destroyer
-              | Frigate
-              | Cruiser
-              | BattleShip
-              | MobileBase
-              | Station
+    | Fighter
+    | Destroyer
+    | Frigate
+    | Cruiser
+    | BattleShip
+    | MobileBase
+    | Station
     deriving (Show, Read, Eq)
 derivePersistField "ShipType"
 
@@ -67,11 +72,11 @@ instance ToMarkup Role where
     toMarkup RoleAdministrator = toMarkup ("Administrator" :: Text)
 
 data ComponentSlot = InnerSlot
-                   | OuterSlot
-                   | ArmourSlot
-                   | SensorSlot
-                   | WeaponSlot
-                   | EngineSlot
+    | OuterSlot
+    | ArmourSlot
+    | SensorSlot
+    | WeaponSlot
+    | EngineSlot
     deriving (Show, Read, Eq)
 derivePersistField "ComponentSlot"
 

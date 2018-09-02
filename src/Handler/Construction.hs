@@ -17,3 +17,11 @@ getConstructionR = do
     defaultLayout $ do
         setTitle "Deep Sky - Construction"
         $(widgetFile "construction")
+
+-- TODO:
+-- load available buildings
+-- load current construction queue
+-- add building into queue
+-- remove building from queue
+-- move building up in queue
+-- move building down in queue
