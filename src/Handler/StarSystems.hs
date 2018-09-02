@@ -89,7 +89,8 @@ getPlanetR _ planetId = do
                                     (Just x) -> x
                                     Nothing  -> "unknown planet"
     defaultLayout $ do
-        setTitle $ toMarkup expl
+        setTitle $ toMarkup expl 
+        addScript $ StaticR js_buildqueue_js
         $(widgetFile "planet")
 
 -- | match entries in given faction and ship lists, producing (Ship, Faction) tuples

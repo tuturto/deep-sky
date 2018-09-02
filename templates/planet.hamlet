@@ -15,6 +15,14 @@
             <div .row>
                 <div .infotitle>
                     Construction queue
+                    <div .code>
+                        <div #constructionQueue>
+
+                    <script>
+                        window.onload = function() {
+                            var node = document.getElementById('constructionQueue');
+                            var app = Elm.Main.embed(node);
+                        }
                 <hr>
 
         <div .col-lg-6>
