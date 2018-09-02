@@ -24,5 +24,7 @@ sky.cabal
 .dir-locals.el
 todo
 elm/shipdesigner/elm-stuff/
+elm/BuildQueue/elm-stuff/
 static/js/shipdesigner.js
+static/js/buildqueue.js
 static/images/*
