@@ -8,7 +8,7 @@ module Dto.Ship where
 
 import Data.Aeson (object, (.=), (.:?))
 import Import
-import Components
+import Components (ComponentLevel, ComponentId)
 
 data ChassisDto = ChassisDto { chassisDtoId :: Key Chassis
                              , chassisDtoName :: Text
