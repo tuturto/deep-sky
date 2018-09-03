@@ -4,6 +4,7 @@
 module CustomTypes where
 
 import Data.Aeson.TH
+import Data.Aeson (object, (.=), ToJSON(..))
 import Database.Persist.TH
 import Text.Blaze.Html5 (ToMarkup, toMarkup)
 import Data.Text
@@ -71,6 +72,7 @@ instance ToMarkup Role where
     toMarkup RoleUser = toMarkup ("User" :: Text)
     toMarkup RoleAdministrator = toMarkup ("Administrator" :: Text)
 
+-- TODO: move into components?
 data ComponentSlot = InnerSlot
     | OuterSlot
     | ArmourSlot
@@ -79,6 +81,24 @@ data ComponentSlot = InnerSlot
     | EngineSlot
     deriving (Show, Read, Eq)
 derivePersistField "ComponentSlot"
+
+data TotalCost = TotalCost
+    { ccdMechanicCost :: Cost
+    , ccdBiologicalCost :: Cost
+    , ccdChemicalCost :: Cost }
+    deriving (Show, Read, Eq)
+
+data Cost = Cost { unCost :: Int }
+    deriving (Show, Read, Eq)
+
+instance ToJSON TotalCost where
+    toJSON (TotalCost mech bio chem) =
+        object [ "mechanical" .= unCost mech
+               , "biological" .= unCost bio
+               , "chemical" .= unCost chem 
+               ]
+
+
 
 $(deriveJSON defaultOptions ''Role)
 $(deriveJSON defaultOptions ''Coordinates)

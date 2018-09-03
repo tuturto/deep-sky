@@ -11,7 +11,7 @@ module Components where
 
 import Data.Aeson (object, (.=), ToJSON(..))
 import Data.Aeson.TH 
-import CustomTypes 
+import CustomTypes (TotalCost(..), Cost(..), ComponentSlot(..))
 import Database.Persist.TH
 import ClassyPrelude.Yesod   as Import
 
@@ -25,21 +25,12 @@ data Component = Component
     , dCompWeight :: Weight 
     , dCompSlot :: ComponentSlot
     , dCompType :: [ ComponentLevel ] 
-    , dCompCost :: ComponentCost }
-    deriving (Show, Read, Eq)
-
-data ComponentCost = ComponentCost
-    { ccdMechanicCost :: Cost
-    , ccdBiologicalCost :: Cost
-    , ccdChemicalCost :: Cost }
+    , dCompCost :: TotalCost }
     deriving (Show, Read, Eq)
 
 data ComponentLevel = ComponentLevel 
     { compLeLevel :: CLevel
     , compLeType :: ComponentType }
-    deriving (Show, Read, Eq)
-
-data Cost = Cost { unCost :: Int }
     deriving (Show, Read, Eq)
 
 data CLevel = CLevel { unCLevel :: Int }
@@ -70,13 +61,6 @@ instance ToJSON Component where
                , "cost" .= cost 
                ]
 
-instance ToJSON ComponentCost where
-    toJSON (ComponentCost mech bio chem) =
-        object [ "mechanical" .= unCost mech
-               , "biological" .= unCost bio
-               , "chemical" .= unCost chem 
-               ]
-
 instance ToJSON ComponentLevel where
     toJSON (ComponentLevel level cType) =
         object [ "level" .= unCLevel level
@@ -94,21 +78,21 @@ component :: ComponentId -> CLevel -> Component
 component CidLongRangeSensors level = 
     Component CidLongRangeSensors level "Long range sensors" "Various scanners and sensors for long range observation" (Weight 5) SensorSlot 
         [ ComponentLevel level SensorComponent ] $ 
-        ComponentCost (Cost 1) (Cost 1) (Cost 1)
+        TotalCost (Cost 1) (Cost 1) (Cost 1)
 component CidArmour level =
     Component CidArmour level "Armour" "Heave protective plating against kinetic damage" (Weight 20) ArmourSlot 
-        [] $ ComponentCost (Cost 20) (Cost 0) (Cost 0)
+        [] $ TotalCost (Cost 20) (Cost 0) (Cost 0)
 component CidBridge level =
     Component CidBridge level "Bridge" "Nerve center of a ship, containing controls and instruments needed for steering the ship" (Weight 10) InnerSlot 
         [ ComponentLevel level BridgeComponent 
-        , ComponentLevel (scaleLevel level 5) SupplyComponent ] $ ComponentCost (Cost 10) (Cost 5) (Cost 10)
+        , ComponentLevel (scaleLevel level 5) SupplyComponent ] $ TotalCost (Cost 10) (Cost 5) (Cost 10)
 component CidEngine level =
     Component CidEngine level "Engine" "Two stage ion propulsion system" (Weight 2) EngineSlot 
         [ ComponentLevel level EngineComponent 
-        , ComponentLevel (scaleLevel level 5) SupplyComponent ] $ ComponentCost (Cost 15) (Cost 0) (Cost 10)
+        , ComponentLevel (scaleLevel level 5) SupplyComponent ] $ TotalCost (Cost 15) (Cost 0) (Cost 10)
 component CidSupplyPod level =
     Component CidSupplyPod level "Supply pod" "Storage system for supplies needed by the crew and the ship" (Weight 10) InnerSlot
-        [ ComponentLevel (scaleLevel level 10) SupplyComponent ] $ ComponentCost (Cost 5) (Cost 50) (Cost 5)
+        [ ComponentLevel (scaleLevel level 10) SupplyComponent ] $ TotalCost (Cost 5) (Cost 50) (Cost 5)
 
 derivePersistField "ComponentType"
 derivePersistField "ComponentId"

@@ -1,4 +1,4 @@
-module Common (maybeGet, chooseOne, filterMap)
+module Common (maybeGet, chooseOne)
     where
 
 import System.Random
@@ -18,8 +18,3 @@ chooseOne item1 item2 = do
     return $ case n of
                 0 -> item1
                 _ -> item2
-
--- | do map and filter out Nothings
-filterMap :: (a -> Maybe b) -> [a] -> [b]
-filterMap f a =
-    map fromJust $ filter isJust $ map f a
