@@ -244,6 +244,7 @@ instance Yesod App where
     isAuthorized ApiChassisR _          = isAuthenticated
     isAuthorized ApiDesignR _           = isAuthenticated
     isAuthorized (ApiDesignIdR _) _     = isAuthenticated
+    isAuthorized ApiBuildingsR _        = isAuthenticated
     
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
