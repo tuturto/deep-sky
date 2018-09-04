@@ -43,6 +43,7 @@ getApiBuildingsR = do
 -- remove building from queue
 -- move building up in queue
 -- move building down in queue
+-- and ships
 
 -- DONE:
 -- load available buildings

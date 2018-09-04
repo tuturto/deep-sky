@@ -1,5 +1,8 @@
 import Html exposing ( program )
+import Http
 import Types exposing (..)
+import Json exposing ( buildingInfoDecoder )
+import Json.Decode as Decode
 import Render
 
 main : Program Never Model Msg
@@ -10,7 +13,14 @@ main =
           , subscriptions = subscriptions }
 
 init : (Model, Cmd Msg)
-init = ( { searchText = "" }, Cmd.none)
+init = 
+  ( { searchText = ""
+    , availableBuildings = [] }
+  , Cmd.batch 
+    [
+       Http.send (NetworkMsg << BuildingsAvailable) (Http.get "/api/construction/buildings" (Decode.list buildingInfoDecoder))
+    ]
+  )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -22,3 +32,14 @@ update msg model =
     TextSearch _ ->
       ( model
       , Cmd.none )
+    NetworkMsg msg ->
+      handleNetworkMessage msg model
+
+handleNetworkMessage : ApiMsg -> Model -> (Model, Cmd Msg)
+handleNetworkMessage msg model =
+  case msg of
+    BuildingsAvailable (Ok buildings) ->
+      (model, Cmd.none)
+    BuildingsAvailable (Err _) ->
+      (model, Cmd.none)
+

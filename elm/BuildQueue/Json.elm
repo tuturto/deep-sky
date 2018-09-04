@@ -1,4 +1,4 @@
-module Json exposing ( componentCostDecoder, buildingTypeDecoder, buildingInfoDecoder )
+module Json exposing ( buildingInfoDecoder )
 
 import Json.Decode.Extra exposing ((|:))
 import Json.Decode as Decode
@@ -25,7 +25,7 @@ stringToBuildingType s =
     _ -> Decode.fail "Unknown slot type"
 
 buildingTypeDecoder : Decode.Decoder BuildingType
-slotDecoder =
+buildingTypeDecoder =
   Decode.string |> Decode.andThen stringToBuildingType
 
 buildingInfoDecoder : Decode.Decoder BuildingInfo

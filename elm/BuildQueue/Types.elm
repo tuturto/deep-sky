@@ -1,10 +1,15 @@
 module Types exposing (..)
 
-type Msg = 
-  TextSearch String
+import Http
+
+type Msg = TextSearch String
+  | NetworkMsg ApiMsg
+
+type ApiMsg = BuildingsAvailable (Result Http.Error (List BuildingInfo))
 
 type alias Model = 
   { searchText : String
+  , availableBuildings : List BuildingInfo
   }
 
 type alias Cost =
@@ -13,10 +18,10 @@ type alias Cost =
   , chemical : Int 
   }
 
-type alias Building =
+type alias BuildingInfo =
   { buildingType : BuildingType
-  , name : String
   , level : Int
+  , name : String 
   , cost : Cost
   , description : String
   }
