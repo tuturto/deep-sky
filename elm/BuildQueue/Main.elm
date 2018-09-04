@@ -1,4 +1,4 @@
-import Html exposing (program)
+import Html exposing ( program )
 import Types exposing (..)
 import Render
 
