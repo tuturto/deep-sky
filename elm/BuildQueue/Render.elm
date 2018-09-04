@@ -46,8 +46,25 @@ pagingControls model =
 
 searchResults : Model -> Html Msg
 searchResults model =
+  div [ ]
+    (List.map searchResult model.availableBuildings)
+
+searchResult : BuildingInfo -> Html Msg
+searchResult building =
   div [ class "row" ]
-  [ div [ class "col-lg-12" ]
-    [ text "Search results"
-    ]
+  [ div [ class "col-lg-6" ]
+    [ text <| building.name ++ " (" ++ (toString building.level) ++ ")" ]
+  , div [ class "col-lg-6" ]
+    [ costDisplay building.cost ]
+  ]
+
+costDisplay : Cost -> Html Msg
+costDisplay cost =
+  div [ ]
+  [ i [ class "fas fa-leaf" ] []
+  , text <| " " ++ (toString <| cost.biological) ++ " "
+  , i [ class "fas fa-cogs" ] []
+  , text <| " " ++ (toString <| cost.mechanical) ++ " "
+  , i [ class "fas fa-flask" ] []
+  , text <| " " ++ (toString <| cost.chemical) ++ " "
   ]

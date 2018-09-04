@@ -39,7 +39,8 @@ handleNetworkMessage : ApiMsg -> Model -> (Model, Cmd Msg)
 handleNetworkMessage msg model =
   case msg of
     BuildingsAvailable (Ok buildings) ->
-      (model, Cmd.none)
+      ( { model | availableBuildings = buildings }
+      , Cmd.none )
     BuildingsAvailable (Err _) ->
       (model, Cmd.none)
 
