@@ -1,44 +1,8 @@
-<div .container>
-    <div .row>
-        <div .col-lg-6>
-            <!-- left panel -->
-            <div .row>
-                <div .infotitle>
-                    Planet details
-                ^{planetDetails planetReport}
-                <hr>
-            <div .row>
-                <div .infotitle>
-                    Population
-                ^{populationList populationReports}
-                <hr>
-            <div .row>
-                <div .infotitle>
-                    Construction queue
-                    <div .code>
-                        <div #constructionQueue>
+<div .code>
+    <div #code>
 
-                    <script>
-                        window.onload = function() {
-                            var node = document.getElementById('constructionQueue');
+    <script>
+        window.onload = function() {
+                            var node = document.getElementById('code');
                             var app = Elm.Main.embed(node);
                         }
-                <hr>
-
-        <div .col-lg-6>
-            <!-- right panel -->
-            <div .row>
-                <div .infotitle>
-                    Buildings
-                ^{buildingList buildingReports}
-                <hr>
-            <div .row>
-                <div .infotitle>
-                    Landed ships
-                ^{shipList landedShips}
-                <hr>
-            <div .row>
-                <div .infotitle>
-                    Orbiting ships
-                ^{shipList orbitingShips}
-                <hr>
