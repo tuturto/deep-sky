@@ -6,10 +6,14 @@ type Msg = TextSearch String
   | NetworkMsg ApiMsg
 
 type ApiMsg = BuildingsAvailable (Result Http.Error (List BuildingInfo))
+  | BuildingsLoaded (Result Http.Error (List Building))
 
 type alias Model = 
   { searchText : String
+  , buildings : List Building
   , availableBuildings : List BuildingInfo
+  , messages : List String
+  , planetId : Int
   }
 
 type alias Cost =
@@ -33,3 +37,11 @@ type BuildingType = SensorStation
   | NeutronDetector
   | BlackMatterScanner
   | GravityWaveSensor
+
+type alias Building = 
+  { id: Int
+  , buildingType : BuildingType
+  , damage : Float
+  , updated : Int
+  , level : Int
+  }

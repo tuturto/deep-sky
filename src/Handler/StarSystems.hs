@@ -13,6 +13,7 @@ import Report ( collateSystems, collatePopulations, collateBuildings, collatePla
 import Widgets
 import MenuHelpers
 import Data.Maybe (fromJust)
+import Database.Persist.Sql (fromSqlKey)
 
 getApiStarSystemsR :: Handler Value
 getApiStarSystemsR = do
@@ -84,6 +85,7 @@ getPlanetR _ planetId = do
     loadOrbitingShips <- runDB $ selectList [ ShipPlanetId ==. Just planetId 
                                             , ShipLanded ==. False ] []
     let orbitingShips = fillFactions factions loadOrbitingShips
+    let foo = fromSqlKey planetId
 
     let expl = "Deep Sky - " ++ case (cprName planetReport) of
                                     (Just x) -> x

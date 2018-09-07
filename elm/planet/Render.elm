@@ -82,7 +82,7 @@ population model =
 
 buildings : Model -> Html Msg
 buildings model = 
-  div []
+  div []  
   [ div [ class "row" ]
     [ div [ class "col-lg-12" ]
       [ text "Buildings" ]
@@ -94,24 +94,41 @@ buildings model =
       [ text "Damage" ]
     , div [ class "col-lg-4" ]
       [ text "Updated" ]
+    , div [ ]
+      <| List.map buildingData model.buildings
     ]
-  , div [ class "row" ]
-    [ div [ class "col-lg-4" ]
-      [ text "Sensor station 1" ]
+  ] 
+
+buildingData : Building -> Html Msg
+buildingData building =
+  div [ class "row" ]
+  [ div [ class "col-lg-4" ]
+    [ buildingTypeToString building.buildingType
+      |> (++) " "
+      |> (++) (toString building.level)
+      |> text ]
     , div [ class "col-lg-4" ]
-      [ text "0%" ]
+      [ building.damage * 100
+        |> toString
+        |> text ]
     , div [ class "col-lg-4" ]
-      [ text "2020.9" ]
-    ]
-  , div [ class "row" ]
-    [ div [ class "col-lg-4" ]
-      [ text "Sensor station 1" ]
-    , div [ class "col-lg-4" ]
-      [ text "0%" ]
-    , div [ class "col-lg-4" ]
-      [ text "2020.9" ]
-    ]
-  ]
+      [ building.updated
+        |> toFloat
+        |> (/) 10
+        |> toString
+        |> text ]
+  ]  
+
+buildingTypeToString : BuildingType -> String
+buildingTypeToString bType =
+  case bType of
+    SensorStation -> "Sensor station"
+    ResearchComplex -> "Research complex"
+    Farm -> "Farm"
+    ParticleAccelerator -> "Particle accelerator"
+    NeutronDetector -> "Neutron Detector"
+    BlackMatterScanner -> "Black matter scanner"
+    GravityWaveSensor -> "Gravity wave sensor"
 
 landedShips : Model -> Html Msg
 landedShips model =
@@ -156,6 +173,7 @@ searchField model =
   , i [ class "fas fa-times-circle" ] []
   ]
 
+-- componentize?
 pagingControls : Model -> Html Msg
 pagingControls model =
   div [ class "row" ]

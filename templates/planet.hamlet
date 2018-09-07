@@ -4,5 +4,5 @@
     <script>
         window.onload = function() {
                             var node = document.getElementById('code');
-                            var app = Elm.Main.embed(node);
+                            var app = Elm.Main.embed(node, #{foo});
                         }

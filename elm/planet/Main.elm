@@ -1,24 +1,27 @@
-import Html exposing ( program )
+import Html exposing ( programWithFlags )
 import Http
 import Types exposing (..)
-import Json exposing ( buildingInfoDecoder )
+import Json exposing ( buildingInfoDecoder, buildingDecoder )
 import Json.Decode as Decode
 import Render
 
-main : Program Never Model Msg
+main : Program Int Model Msg
 main =
-  program { init = init
-          , view = Render.view
-          , update = update 
-          , subscriptions = subscriptions }
+  programWithFlags { init = init
+                   , view = Render.view
+                   , update = update 
+                   , subscriptions = subscriptions }
 
-init : (Model, Cmd Msg)
-init = 
+init : Int -> (Model, Cmd Msg)
+init planetId = 
   ( { searchText = ""
-    , availableBuildings = [] }
+    , buildings = []
+    , availableBuildings = []
+    , messages = []
+    , planetId = planetId }
   , Cmd.batch 
-    [
-       Http.send (NetworkMsg << BuildingsAvailable) (Http.get "/api/construction/buildings" (Decode.list buildingInfoDecoder))
+    [ Http.send (NetworkMsg << BuildingsAvailable) (Http.get "/api/construction/buildings" (Decode.list buildingInfoDecoder))
+    , Http.send (NetworkMsg << BuildingsLoaded) (Http.get ("/api/planet/" ++ (toString planetId) ++ "/buildings") (Decode.list buildingDecoder))
     ]
   )
 
@@ -43,4 +46,8 @@ handleNetworkMessage msg model =
       , Cmd.none )
     BuildingsAvailable (Err _) ->
       (model, Cmd.none)
-
+    BuildingsLoaded (Ok buildings) ->
+      ( { model | buildings = buildings }
+      , Cmd.none )
+    BuildingsLoaded (Err _) ->
+      (model, Cmd.none)
