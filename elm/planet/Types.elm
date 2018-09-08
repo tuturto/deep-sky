@@ -5,7 +5,7 @@ import Http
 type Msg = TextSearch String
   | NetworkMsg ApiMsg
 
-type ApiMsg = BuildingsAvailable (Result Http.Error (List BuildingInfo))
+type ApiMsg = BuildingInfoLoaded (Result Http.Error (List BuildingInfo))
   | BuildingsLoaded (Result Http.Error (List Building))
 
 type alias Model = 

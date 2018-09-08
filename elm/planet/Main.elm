@@ -20,7 +20,7 @@ init planetId =
     , messages = []
     , planetId = planetId }
   , Cmd.batch 
-    [ Http.send (NetworkMsg << BuildingsAvailable) (Http.get "/api/construction/buildings" (Decode.list buildingInfoDecoder))
+    [ Http.send (NetworkMsg << BuildingInfoLoaded) (Http.get "/api/construction/buildings" (Decode.list buildingInfoDecoder))
     , Http.send (NetworkMsg << BuildingsLoaded) (Http.get ("/api/planet/" ++ (toString planetId) ++ "/buildings") (Decode.list buildingDecoder))
     ]
   )
@@ -41,10 +41,10 @@ update msg model =
 handleNetworkMessage : ApiMsg -> Model -> (Model, Cmd Msg)
 handleNetworkMessage msg model =
   case msg of
-    BuildingsAvailable (Ok buildings) ->
+    BuildingInfoLoaded (Ok buildings) ->
       ( { model | availableBuildings = buildings }
       , Cmd.none )
-    BuildingsAvailable (Err _) ->
+    BuildingInfoLoaded (Err _) ->
       (model, Cmd.none)
     BuildingsLoaded (Ok buildings) ->
       ( { model | buildings = buildings }
