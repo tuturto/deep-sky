@@ -11,32 +11,33 @@
 
 /profile ProfileR GET
 
-/starsystem                          StarSystemsR      GET
-/starsystem/#StarSystemId            StarSystemR       GET
-/starsystem/#StarSystemId/#PlanetId  PlanetR           GET
+/starsystem                          StarSystemsR        GET
+/starsystem/#StarSystemId            StarSystemR         GET
+/starsystem/#StarSystemId/#PlanetId  PlanetR             GET
 
-/research                            ResearchR         GET
+/research                            ResearchR           GET
 
-/fleet                               FleetR            GET
+/fleet                               FleetR              GET
 
-/construction                        ConstructionR     GET
+/construction                        ConstructionR       GET
 
-/designer                            DesignerR         GET
+/designer                            DesignerR           GET
 
-/base                                BasesR            GET
-/base/#StarSystemId/#PlanetId        BaseR             GET
+/base                                BasesR              GET
+/base/#StarSystemId/#PlanetId        BaseR               GET
 
-/faction                             FactionR          GET POST
+/faction                             FactionR            GET POST
 
-/message/#Int                        MessageListR      GET
-/newmessage                          NewMessageR       POST
-/deletemessage/#NewsId               MessageDeleteR    GET
+/message/#Int                        MessageListR        GET
+/newmessage                          NewMessageR         POST
+/deletemessage/#NewsId               MessageDeleteR      GET
 
-/api/starsystem                      ApiStarSystemsR   GET
-/api/components                      ApiComponentsR    GET
-/api/chassis                         ApiChassisR       GET
-/api/design                          ApiDesignR        GET POST
-/api/design/#DesignId                ApiDesignIdR      PUT DELETE
-/api/construction/buildings          ApiBuildingsR     GET
-/admin                               AdminPanelR       GET
-/admin/time                          AdminAdvanceTimeR GET
+/api/starsystem                      ApiStarSystemsR     GET
+/api/components                      ApiComponentsR      GET
+/api/chassis                         ApiChassisR         GET
+/api/design                          ApiDesignR          GET POST
+/api/design/#DesignId                ApiDesignIdR        PUT DELETE
+/api/construction/buildings          ApiBuildingsR       GET
+/api/planet/#PlanetId/buildings      ApiPlanetBuildingsR GET
+/admin                               AdminPanelR         GET
+/admin/time                          AdminAdvanceTimeR   GET

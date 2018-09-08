@@ -82,39 +82,37 @@ population model =
 
 buildings : Model -> Html Msg
 buildings model = 
-  div []  
-  [ div [ class "row" ]
-    [ div [ class "col-lg-12" ]
-      [ text "Buildings" ]
+  div []
+  <| List.append
+    [ div [ class "row" ]
+      [ div [ class "col-lg-12" ]
+        [ text "Buildings" ]
+      ]
+    , div [ class "row" ]
+      [ div [ class "col-lg-4" ]
+        [ text "Type" ]
+      , div [ class "col-lg-4" ]
+        [ text "Damage" ]
+      , div [ class "col-lg-4" ]
+        [ text "Updated" ]    
+      ]
     ]
-  , div [ class "row" ]
-    [ div [ class "col-lg-4" ]
-      [ text "Type" ]
-    , div [ class "col-lg-4" ]
-      [ text "Damage" ]
-    , div [ class "col-lg-4" ]
-      [ text "Updated" ]
-    , div [ ]
-      <| List.map buildingData model.buildings
-    ]
-  ] 
+    <| List.map buildingData model.buildings
 
 buildingData : Building -> Html Msg
 buildingData building =
   div [ class "row" ]
   [ div [ class "col-lg-4" ]
     [ buildingTypeToString building.buildingType
-      |> (++) " "
-      |> (++) (toString building.level)
+      |> (\x -> x ++ " " ++ (toString building.level))
       |> text ]
     , div [ class "col-lg-4" ]
       [ building.damage * 100
-        |> toString
+        |> (\x -> (toString x) ++ "%")
         |> text ]
     , div [ class "col-lg-4" ]
-      [ building.updated
-        |> toFloat
-        |> (/) 10
+      [ building.updated      
+        |> (\x -> (toFloat x) / 10)
         |> toString
         |> text ]
   ]  

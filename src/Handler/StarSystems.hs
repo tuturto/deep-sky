@@ -116,3 +116,15 @@ addPopulationDetails report = do
                 (Just x) -> return $ report { cpopRace = Just $ raceName x}
                 Nothing  -> return report
     return res
+
+getApiPlanetBuildingsR :: Key Planet -> Handler Value
+getApiPlanetBuildingsR planetId = do
+    (_, user) <- requireAuthPair   
+    fId <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    loadedBuildingReports <- runDB $ selectList [ BuildingReportPlanetId ==. planetId 
+                                                , BuildingReportFactionId ==. fId ] [ Asc BuildingReportBuildingId
+                                                                                    , Asc BuildingReportDate ]
+    let buildingReports = collateBuildings $ map entityVal loadedBuildingReports
+    return $ toJSON buildingReports

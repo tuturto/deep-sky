@@ -250,3 +250,4 @@ rearrangeStarLanes systemId = map arrangeStarLane
 $(deriveJSON defaultOptions {fieldLabelModifier = drop 4} ''CollatedStarSystemReport)
 $(deriveJSON defaultOptions {fieldLabelModifier = drop 3} ''CollatedPlanetReport)
 $(deriveJSON defaultOptions {fieldLabelModifier = drop 3} ''CollatedBaseReport)
+$(deriveJSON defaultOptions {fieldLabelModifier = drop 3} ''CollatedBuildingReport)

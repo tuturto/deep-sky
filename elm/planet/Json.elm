@@ -40,8 +40,8 @@ buildingInfoDecoder =
 buildingDecoder : Decode.Decoder Building
 buildingDecoder =
   Decode.succeed Building
-  |: (Decode.field "id" Decode.int)
-  |: (Decode.field "type" buildingTypeDecoder)
-  |: (Decode.field "damage" Decode.float)
-  |: (Decode.field "updated" Decode.int)
-  |: (Decode.field "level" Decode.int)
+  |: (Decode.field "BuildingId" Decode.int)
+  |: (Decode.field "Type" buildingTypeDecoder)
+  |: (Decode.field "Damage" Decode.float)
+  |: (Decode.field "Date" Decode.int)
+  |: (Decode.field "Level" Decode.int)
