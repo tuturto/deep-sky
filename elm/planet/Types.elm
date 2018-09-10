@@ -7,6 +7,7 @@ type Msg = TextSearch String
 
 type ApiMsg = BuildingInfoLoaded (Result Http.Error (List BuildingInfo))
   | BuildingsLoaded (Result Http.Error (List Building))
+  | PopulationLoaded (Result Http.Error (List Population))
 
 type alias Model = 
   { searchText : String
@@ -14,6 +15,7 @@ type alias Model =
   , availableBuildings : List BuildingInfo
   , messages : List String
   , planetId : Int
+  , population : List Population
   }
 
 type alias Cost =
@@ -44,4 +46,10 @@ type alias Building =
   , damage : Float
   , updated : Int
   , level : Int
+  }
+
+type alias Population =
+  { race : String
+  , population : Int
+  , updated : Int
   }

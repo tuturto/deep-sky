@@ -62,21 +62,36 @@ planetDetails model =
 population : Model -> Html Msg
 population model =
   div []
-  [ div [ class "row" ]
-    [ div [ class "col-lg-12" ]
-      [ text "Population" ]
+  <| List.append
+    [ div [ class "row" ]
+      [ div [ class "col-lg-12" ]
+        [ text "Population" ]
+      ]
+    , div [ class "row" ]
+      [ div [ class "col-lg-4" ]
+        [ text "Name" ]
+      , div [ class "col-lg-4" ]
+        [ text "Population" ]
+      , div [ class "col-lg-4" ]
+        [ text "Updated" ]
+      ]
     ]
-  , div [ class "row" ]
-    [ div [ class "col-lg-6" ]
-      [ text "Name" ]
-    , div [ class "col-lg-6" ]
-      [ text "Population" ]
-    ]
-  , div [ class "row" ]
-    [ div [ class "col-lg-6" ]
-      [ text "Terrans" ]
-    , div [ class "col-lg-6" ]
-      [ text "10" ]
+    <| List.map populationData model.population
+
+populationData : Population -> Html Msg
+populationData population =
+  div [ class "row" ]
+  [ div [ class "col-lg-4" ]
+    [ text population.race 
+  , div [ class "col-lg-4" ]
+    [ population.population
+      |> toString
+      |> text ]
+  , div [ class "col-lg-4" ]
+    [ population.updated      
+      |> (\x -> (toFloat x) / 10)
+      |> toString
+      |> text ]
     ]
   ]
 

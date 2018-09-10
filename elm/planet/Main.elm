@@ -1,7 +1,7 @@
 import Html exposing ( programWithFlags )
 import Http
 import Types exposing (..)
-import Json exposing ( buildingInfoDecoder, buildingDecoder )
+import Json exposing ( buildingInfoDecoder, buildingDecoder, populationDecoder )
 import Json.Decode as Decode
 import Render
 
@@ -18,10 +18,12 @@ init planetId =
     , buildings = []
     , availableBuildings = []
     , messages = []
-    , planetId = planetId }
+    , planetId = planetId
+    , population = [] }
   , Cmd.batch 
     [ Http.send (NetworkMsg << BuildingInfoLoaded) (Http.get "/api/construction/buildings" (Decode.list buildingInfoDecoder))
     , Http.send (NetworkMsg << BuildingsLoaded) (Http.get ("/api/planet/" ++ (toString planetId) ++ "/buildings") (Decode.list buildingDecoder))
+    , Http.send (NetworkMsg << PopulationLoaded) (Http.get ("/api/planet/" ++ (toString planetId) ++ "/population") (Decode.list populationDecoder))
     ]
   )
 
@@ -50,4 +52,9 @@ handleNetworkMessage msg model =
       ( { model | buildings = buildings }
       , Cmd.none )
     BuildingsLoaded (Err _) ->
+      (model, Cmd.none)
+    PopulationLoaded (Ok population) ->
+      ( { model | population = population }
+      , Cmd.none )
+    PopulationLoaded (Err _) ->
       (model, Cmd.none)

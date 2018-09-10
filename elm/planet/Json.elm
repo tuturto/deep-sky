@@ -1,4 +1,4 @@
-module Json exposing ( buildingInfoDecoder, buildingDecoder )
+module Json exposing ( buildingInfoDecoder, buildingDecoder, populationDecoder )
 
 import Json.Decode.Extra exposing ((|:))
 import Json.Decode as Decode
@@ -45,3 +45,10 @@ buildingDecoder =
   |: (Decode.field "Damage" Decode.float)
   |: (Decode.field "Date" Decode.int)
   |: (Decode.field "Level" Decode.int)
+
+populationDecoder : Decode.Decoder Population
+populationDecoder =
+  Decode.succeed Population
+  |: (Decode.field "Race" Decode.string)
+  |: (Decode.field "Population" Decode.int)
+  |: (Decode.field "Date" Decode.int)
