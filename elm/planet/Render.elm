@@ -82,7 +82,7 @@ populationData : Population -> Html Msg
 populationData population =
   div [ class "row" ]
   [ div [ class "col-lg-4" ]
-    [ text population.race 
+    [ text population.race ]
   , div [ class "col-lg-4" ]
     [ population.population
       |> toString
@@ -92,7 +92,6 @@ populationData population =
       |> (\x -> (toFloat x) / 10)
       |> toString
       |> text ]
-    ]
   ]
 
 buildings : Model -> Html Msg

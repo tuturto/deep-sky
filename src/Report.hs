@@ -251,3 +251,4 @@ $(deriveJSON defaultOptions {fieldLabelModifier = drop 4} ''CollatedStarSystemRe
 $(deriveJSON defaultOptions {fieldLabelModifier = drop 3} ''CollatedPlanetReport)
 $(deriveJSON defaultOptions {fieldLabelModifier = drop 3} ''CollatedBaseReport)
 $(deriveJSON defaultOptions {fieldLabelModifier = drop 3} ''CollatedBuildingReport)
+$(deriveJSON defaultOptions {fieldLabelModifier = drop 4} ''CollatedPopulationReport)
