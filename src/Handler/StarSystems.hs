@@ -66,18 +66,6 @@ getPlanetR _ planetId = do
                                               , PlanetReportFactionId ==. factionId ] [ Asc PlanetReportDate ]
     let planetReport = collatePlanet $ map entityVal loadedPlanetReports
 
-    loadedBuildingReports <- runDB $ selectList [ BuildingReportPlanetId ==. planetId 
-                                                , BuildingReportFactionId ==. factionId ] [ Asc BuildingReportBuildingId
-                                                                                          , Asc BuildingReportDate ]
-    let buildingReports = collateBuildings $ map entityVal loadedBuildingReports
-
-    loadedPopulationReports <- runDB $ selectList [ PlanetPopulationReportPlanetId ==. planetId
-                                                  , PlanetPopulationReportFactionId ==. factionId ] [ Asc PlanetPopulationReportPlanetId
-                                                                                                    , Asc PlanetPopulationReportRaceId
-                                                                                                    , Asc PlanetPopulationReportDate ]
-    let partialPopulationReports = collatePopulations $ map entityVal loadedPopulationReports
-    populationReports <- runDB $ mapM addPopulationDetails partialPopulationReports
-
     factions <- runDB $ selectList [] [ Asc FactionId ]
     loadLandedShips <- runDB $ selectList [ ShipPlanetId ==. Just planetId 
                                           , ShipLanded ==. True ] []
@@ -85,7 +73,7 @@ getPlanetR _ planetId = do
     loadOrbitingShips <- runDB $ selectList [ ShipPlanetId ==. Just planetId 
                                             , ShipLanded ==. False ] []
     let orbitingShips = fillFactions factions loadOrbitingShips
-    let foo = fromSqlKey planetId
+    let planetKey = fromSqlKey planetId
 
     let expl = "Deep Sky - " ++ case (cprName planetReport) of
                                     (Just x) -> x
