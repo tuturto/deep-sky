@@ -37,25 +37,35 @@ planetDetails model =
     [ div [ class "col-lg-6" ]
       [ text "Name"]
     , div [ class "col-lg-6" ]
-      [ text "Earth" ]
+      [ text <| case model.planetDetails of
+                  Nothing -> ""
+                  Just x -> x.name ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-6" ]
       [ text "Position" ]      
     , div [ class "col-lg-6" ]
-      [ text "3" ]
+      [ text <| case model.planetDetails of
+                  Nothing -> ""
+                  Just x -> toString x.position ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-6" ]
       [ text "Gravity" ]
     , div [ class "col-lg-6" ]
-      [ text "1.0g" ]
+      [ text <| case model.planetDetails of
+                  Nothing -> ""
+                  Just x -> (toString x.gravity) ++ "g" ]
     ]
   , div [ class "row" ]
     [ div [ class "col-lg-6" ]
       [ text "Updated"]
     , div [ class "col-lg-6" ]
-      [ text "2020.9" ]
+      [ text <| case model.planetDetails of
+                  Nothing -> ""
+                  Just x -> x.updated      
+                            |> (\x -> (toFloat x) / 10)
+                            |> toString ]
     ]
   ]
 

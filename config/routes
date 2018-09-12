@@ -38,6 +38,7 @@
 /api/design                          ApiDesignR           GET POST
 /api/design/#DesignId                ApiDesignIdR         PUT DELETE
 /api/construction/buildings          ApiBuildingsR        GET
+/api/planet/#PlanetId                ApiPlanetR           GET
 /api/planet/#PlanetId/buildings      ApiPlanetBuildingsR  GET
 /api/planet/#PlanetId/population     ApiPlanetPopulationR GET
 /admin                               AdminPanelR          GET

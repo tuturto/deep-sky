@@ -1,4 +1,4 @@
-module Json exposing ( buildingInfoDecoder, buildingDecoder, populationDecoder )
+module Json exposing ( buildingInfoDecoder, buildingDecoder, populationDecoder, planetDetailsDecoder )
 
 import Json.Decode.Extra exposing ((|:))
 import Json.Decode as Decode
@@ -51,4 +51,14 @@ populationDecoder =
   Decode.succeed Population
   |: (Decode.field "Race" Decode.string)
   |: (Decode.field "Population" Decode.int)
+  |: (Decode.field "Date" Decode.int)
+
+planetDetailsDecoder : Decode.Decoder PlanetDetails
+planetDetailsDecoder =
+  Decode.succeed PlanetDetails
+  |: (Decode.field "PlanetId" Decode.int)
+  |: (Decode.field "SystemId" Decode.int)
+  |: (Decode.field "Name" Decode.string)
+  |: (Decode.field "Position" Decode.int)
+  |: (Decode.field "Gravity" Decode.float)
   |: (Decode.field "Date" Decode.int)

@@ -93,7 +93,6 @@ fillFactions factions ships =
         where fn eShip = (entityVal eShip, entityVal $ fromJust faction)
                 where faction = find compareIds factions
                       compareIds f = (shipOwnerId $ entityVal eShip) == (entityKey f)
--- fromJust
 
 addPopulationDetails :: (BaseBackend backend ~ SqlBackend,
     MonadIO m, PersistStoreRead backend) =>
@@ -104,6 +103,17 @@ addPopulationDetails report = do
                 (Just x) -> return $ report { cpopRace = Just $ raceName x}
                 Nothing  -> return report
     return res
+
+getApiPlanetR :: Key Planet -> Handler Value
+getApiPlanetR planetId = do
+    (_, user) <- requireAuthPair   
+    fId <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId ==. planetId
+                                              , PlanetReportFactionId ==. fId ] [ Asc PlanetReportDate ]
+    let planetReport = collatePlanet $ map entityVal loadedPlanetReports
+    return $ toJSON planetReport
 
 getApiPlanetBuildingsR :: Key Planet -> Handler Value
 getApiPlanetBuildingsR planetId = do
