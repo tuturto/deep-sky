@@ -41,6 +41,10 @@
     font-weight: bold;
 }
 
+.section-title {
+    font-weight: bold;
+}
+
 .error-bar {
     font-weight: bold;
     background-color: rgb(211, 74, 74);

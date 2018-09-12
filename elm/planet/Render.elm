@@ -30,7 +30,7 @@ planetDetails : Model -> Html Msg
 planetDetails model =
   div []
   [ div [ class "row" ]
-    [ div [ class "col-lg-12" ]
+    [ div [ class "col-lg-12 section-title" ]
       [ text "Planet details"]
     ]
   , div [ class "row" ]
@@ -75,7 +75,17 @@ population model =
   <| List.append
     [ div [ class "row" ]
       [ div [ class "col-lg-12" ]
-        [ text "Population" ]
+        [ span [ class "section-title" ] [ text "Population " ]
+        , span [] 
+          [ i [ class "fas fa-angle-double-left" ] []
+          , text " "
+          , i [ class "fas fa-angle-left" ] []
+          , text " 1 / 1 "
+          , i [ class "fas fa-angle-right" ] []
+          , text " "
+          , i [ class "fas fa-angle-double-right" ] []
+          ]
+        ]
       ]
     , div [ class "row" ]
       [ div [ class "col-lg-4" ]
@@ -110,7 +120,17 @@ buildings model =
   <| List.append
     [ div [ class "row" ]
       [ div [ class "col-lg-12" ]
-        [ text "Buildings" ]
+        [ span [ class "section-title" ] [ text "Buildings " ]
+        , span [] 
+          [ i [ class "fas fa-angle-double-left" ] []
+          , text " "
+          , i [ class "fas fa-angle-left" ] []
+          , text " 1 / 1 "
+          , i [ class "fas fa-angle-right" ] []
+          , text " "
+          , i [ class "fas fa-angle-double-right" ] []
+          ]
+        ]
       ]
     , div [ class "row" ]
       [ div [ class "col-lg-4" ]
@@ -157,7 +177,17 @@ landedShips model =
   div []
   [ div [ class "row" ]
     [ div [ class "col-lg-12" ]
-      [ text "Landed ships" ]
+      [ span [ class "section-title" ] [ text "Landed ships " ]
+      , span []
+        [ i [ class "fas fa-angle-double-left" ] []
+        , text " "
+        , i [ class "fas fa-angle-left" ] []
+        , text " - / - "
+        , i [ class "fas fa-angle-right" ] []
+        , text " "
+        , i [ class "fas fa-angle-double-right" ] []
+        ]
+      ]
     ]
   ]
 
@@ -166,14 +196,25 @@ orbitingShips model =
   div []
   [ div [ class "row" ]
     [ div [ class "col-lg-12" ]
-      [ text "Orbiting ships" ]
+      [ span [ class "section-title"] [ text "Orbiting ships " ]
+      , span []
+        [ i [ class "fas fa-angle-double-left" ] []
+        , text " "
+        , i [ class "fas fa-angle-left" ] []
+        , text " - / - "
+        , i [ class "fas fa-angle-right" ] []
+        , text " "
+        , i [ class "fas fa-angle-double-right" ] []
+        ]
+      ]
     ]
   ]
 
 constructionQueue : Model -> Html Msg
 constructionQueue model =
   div []
-  [ currentQueue model
+  [ div [ class "section-title" ] [ text "Construction queue" ]
+  , currentQueue model
   , searchField model
   , pagingControls model
   , searchResults model
