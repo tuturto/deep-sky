@@ -10,6 +10,7 @@ import Import
 import Buildings (building, BLevel(..))
 import CustomTypes (BuildingType(..))
 import Data.Aeson (ToJSON(..))
+import Dto.Construction (buildingConstructionToDto)
 
 getConstructionR :: Handler Html
 getConstructionR = do
@@ -24,7 +25,7 @@ getConstructionR = do
 getApiBuildingsR :: Handler Value
 getApiBuildingsR = do
     (_, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
+    _ <- case (userFactionId user) of
                         Just x -> return x
                         Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
     let json = toJSON [ building SensorStation $ BLevel 1
@@ -36,6 +37,15 @@ getApiBuildingsR = do
                       , building GravityWaveSensor $ BLevel 1
                       ]
     return json
+
+getApiPlanetConstQueueR :: Key Planet -> Handler Value
+getApiPlanetConstQueueR planetId = do
+    (_, user) <- requireAuthPair   
+    _ <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    loadedConstructions <- runDB $ selectList [ BuildingConstructionPlanetId ==. planetId ] []
+    return $ toJSON $ map buildingConstructionToDto loadedConstructions
 
 -- TODO:
 -- load current construction queue
