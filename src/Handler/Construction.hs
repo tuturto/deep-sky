@@ -1,10 +1,11 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies          #-}
 
-module Handler.Construction where
+module Handler.Construction (getConstructionR, getApiBuildingsR, getApiPlanetConstQueueR)
+    where
 
 import Import
 import Buildings (building, BLevel(..))
