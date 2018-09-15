@@ -66,10 +66,10 @@ planetDetailsDecoder =
 
 constructionDecoder : Decode.Decoder Construction
 constructionDecoder =
-  Decode.oneOf [ Decode.succeed BuildingConstruction
-                 |: buildingConstructionDecoder
-               , Decode.succeed ShipConstruction
-                 |: shipConstructionDecoder ]
+  Decode.oneOf [ Decode.succeed ShipConstruction
+                 |: shipConstructionDecoder
+               , Decode.succeed BuildingConstruction
+                 |: buildingConstructionDecoder ]
 
 buildingConstructionDecoder : Decode.Decoder BuildingConstructionData
 buildingConstructionDecoder =
