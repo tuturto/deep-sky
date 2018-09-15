@@ -9,6 +9,7 @@ type ApiMsg = BuildingInfoLoaded (Result Http.Error (List BuildingInfo))
   | BuildingsLoaded (Result Http.Error (List Building))
   | PopulationLoaded (Result Http.Error (List Population))
   | PlanetDetailsLoaded (Result Http.Error PlanetDetails)
+  | ConstructionsLoaded (Result Http.Error (List Construction))
 
 type alias Model = 
   { searchText : String
@@ -18,6 +19,7 @@ type alias Model =
   , planetId : Int
   , population : List Population
   , planetDetails : Maybe PlanetDetails
+  , constructionQueue : List Construction
   }
 
 type alias Cost =
@@ -63,4 +65,11 @@ type alias PlanetDetails =
   , position : Int
   , gravity : Float
   , updated : Int
+  }
+
+type Construction = BuildingConstruction BuildingConstructionData
+
+type alias BuildingConstructionData =
+  { id : Int
+  , name : String
   }
