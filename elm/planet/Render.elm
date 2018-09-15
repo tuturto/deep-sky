@@ -7,22 +7,28 @@ import Types exposing (..)
 
 view : Model -> Html Msg
 view model =
-  div [ class "row" ]
-  [ div [ class "col-lg-6" ]
-    [ planetDetails model 
-    , hr [] [] 
-    , population model
-    , hr [] []
-    , constructionQueue model
-    , hr [] []
+  div []
+  [ div [ class "row" ]
+    [ div [ class "col-lg-12" ]
+      <| messageBanner model.messages
     ]
+  , div [ class "row" ]
+    [ div [ class "col-lg-6" ]
+      [ planetDetails model 
+      , hr [] [] 
+      , population model
+      , hr [] []
+      , constructionQueue model
+      , hr [] []
+      ]
   , div [ class "col-lg-6" ]
-    [ buildings model
-    , hr [] []
-    , landedShips model
-    , hr [] []
-    , orbitingShips model
-    , hr [] []
+      [ buildings model
+      , hr [] []
+      , landedShips model
+      , hr [] []
+      , orbitingShips model
+      , hr [] []
+      ]
     ]
   ]
 
@@ -222,10 +228,25 @@ constructionQueue model =
 
 currentQueue : Model -> Html Msg
 currentQueue model =
-  div [ class "row" ] 
-  [ div [ class "col-lg-12" ]
-    [ text "Current queue"
+  div []
+  <| List.append
+    [ div [ class "row" ] 
+      [ div [ class "col-lg-6" ]
+        [ text "Name" ]
+      ]
     ]
+  <| List.map queueItem model.constructionQueue
+
+queueItem : Construction -> Html Msg
+queueItem construction =
+  case construction of
+    (BuildingConstruction building) -> buildingInQueue building
+
+buildingInQueue : BuildingConstructionData -> Html Msg
+buildingInQueue building =
+  div [ class "row" ]
+  [ div [ class "col-lg-6" ]
+    [ text building.name ]
   ]
 
 searchField : Model -> Html Msg
@@ -275,3 +296,13 @@ costDisplay cost =
   , i [ class "fas fa-flask" ] []
   , text <| " " ++ (toString <| cost.chemical) ++ " "
   ]
+
+messageBanner : List String -> List (Html Msg)
+messageBanner msgs =
+  let
+    mapper err = div [ class "row" ]
+                 [ div [ class "col-lg-12" ]
+                   [ text err ]
+                 ]
+  in
+    List.map mapper msgs

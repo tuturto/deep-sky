@@ -33,6 +33,17 @@ data BuildingType = SensorStation
     deriving (Show, Read, Eq)
 derivePersistField "BuildingType"
 
+buildingTypeName :: BuildingType -> Text
+buildingTypeName bt =
+    case bt of
+        SensorStation -> "Sensor Station"
+        ResearchComplex -> "Research Complex"
+        Farm -> "Farm"
+        ParticleAccelerator -> "Particle Accelerator"
+        NeutronDetector -> "Neutron Detector"
+        BlackMatterScanner -> "Black Matter Scanner"
+        GravityWaveSensor -> "Gravity Wave Sensor"
+
 instance ToMarkup BuildingType where
     toMarkup building = 
         case building of

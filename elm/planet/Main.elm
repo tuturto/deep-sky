@@ -51,24 +51,39 @@ handleNetworkMessage msg model =
       ( { model | availableBuildings = buildings }
       , Cmd.none )
     BuildingInfoLoaded (Err _) ->
-      (model, Cmd.none)
+      let
+        messages = "Error loading building info" :: model.messages 
+      in 
+        ( { model | messages = messages }, Cmd.none)
     BuildingsLoaded (Ok buildings) ->
       ( { model | buildings = buildings }
       , Cmd.none )
     BuildingsLoaded (Err _) ->
-      (model, Cmd.none)
+      let
+        messages = "Error loading buildings" :: model.messages 
+      in 
+        ( { model | messages = messages }, Cmd.none)
     PopulationLoaded (Ok population) ->
       ( { model | population = population }
       , Cmd.none )
     PopulationLoaded (Err _) ->
-      (model, Cmd.none)
+      let
+        messages = "Error loading population" :: model.messages 
+      in 
+        ( { model | messages = messages }, Cmd.none)
     PlanetDetailsLoaded (Ok details) ->
       ( { model | planetDetails = Just details }
       , Cmd.none )
     PlanetDetailsLoaded (Err _) ->
-      (model, Cmd.none)
+      let
+        messages = "Error loading planet details" :: model.messages 
+      in 
+        ( { model | messages = messages }, Cmd.none)
     ConstructionsLoaded (Ok queue) ->
       ( { model | constructionQueue = queue }
       , Cmd.none )
-    ConstructionsLoaded (Err _) ->
-      (model, Cmd.none)
+    ConstructionsLoaded (Err err) ->
+      let
+        messages = "Error loading construction queue" :: model.messages 
+      in 
+        ( { model | messages = messages }, Cmd.none)

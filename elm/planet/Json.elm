@@ -72,5 +72,5 @@ constructionDecoder =
 buildingConstructionDecoder : Decode.Decoder BuildingConstructionData
 buildingConstructionDecoder =
   Decode.succeed BuildingConstructionData
-  |: (Decode.field "Id" Decode.int)
-  |: (Decode.field "Name" Decode.string)
+  |: (Decode.field "id" Decode.int)
+  |: (Decode.field "name" Decode.string)

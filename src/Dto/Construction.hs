@@ -7,6 +7,7 @@
 module Dto.Construction (ConstructionDto(..), buildingConstructionToDto)
   where
 
+import CustomTypes (buildingTypeName)
 import Data.Aeson (object, (.=), (.:?))
 import Import
 
@@ -33,7 +34,7 @@ instance ToJSON ConstructionDto where
 
 buildingConstructionToDto :: Entity BuildingConstruction -> ConstructionDto
 buildingConstructionToDto bce =
-  BuildingConstructionDto key "TODO: name"
+  BuildingConstructionDto key (buildingTypeName $ buildingConstructionType bc)
   where
     bc = entityVal bce
     key = entityKey bce
