@@ -241,12 +241,20 @@ queueItem : Construction -> Html Msg
 queueItem construction =
   case construction of
     (BuildingConstruction building) -> buildingInQueue building
+    (ShipConstruction ship) -> shipInQueue ship
 
 buildingInQueue : BuildingConstructionData -> Html Msg
 buildingInQueue building =
   div [ class "row" ]
   [ div [ class "col-lg-6" ]
     [ text building.name ]
+  ]
+
+shipInQueue : ShipConstructionData -> Html Msg
+shipInQueue ship =
+  div [ class "row" ]
+  [ div [ class "col-lg-6" ]
+    [ text ship.name ]
   ]
 
 searchField : Model -> Html Msg

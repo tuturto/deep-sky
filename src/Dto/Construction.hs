@@ -4,10 +4,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 
-module Dto.Construction (ConstructionDto(..), buildingConstructionToDto)
+module Dto.Construction (ConstructionDto(..), buildingConstructionToDto, shipConstructionToDto)
   where
 
-import CustomTypes (buildingTypeName)
+import CustomTypes (buildingTypeName, ShipType(..))
 import Data.Aeson (object, (.=), (.:?))
 import Import
 
@@ -18,6 +18,7 @@ data ConstructionDto = BuildingConstructionDto
   | ShipConstructionDto
     { scdtoId :: Key ShipConstruction
     , scdtoName :: Text
+    , scdtoShipType :: ShipType
     }
   deriving (Show, Read, Eq)
 
@@ -27,9 +28,10 @@ instance ToJSON ConstructionDto where
            , "name" .= bName
            ]
 
-  toJSON (ShipConstructionDto sId sName) =
+  toJSON (ShipConstructionDto sId sName sType) =
     object [ "id" .= sId
            , "name" .= sName
+           , "shipType" .= sType
            ]
 
 buildingConstructionToDto :: Entity BuildingConstruction -> ConstructionDto
@@ -41,7 +43,7 @@ buildingConstructionToDto bce =
 
 shipConstructionToDto :: Entity ShipConstruction -> ConstructionDto
 shipConstructionToDto sce =
-  ShipConstructionDto key "TODO: name"
+  ShipConstructionDto key "TODO: ship name" Destroyer
   where
     bc = entityVal sce
     key = entityKey sce

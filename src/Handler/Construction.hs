@@ -11,7 +11,7 @@ import Import
 import Buildings (building, BLevel(..))
 import CustomTypes (BuildingType(..))
 import Data.Aeson (ToJSON(..))
-import Dto.Construction (buildingConstructionToDto)
+import Dto.Construction (buildingConstructionToDto, shipConstructionToDto)
 
 getConstructionR :: Handler Html
 getConstructionR = do
@@ -45,8 +45,12 @@ getApiPlanetConstQueueR planetId = do
     _ <- case (userFactionId user) of
                         Just x -> return x
                         Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
-    loadedConstructions <- runDB $ selectList [ BuildingConstructionPlanetId ==. planetId ] []
-    return $ toJSON $ map buildingConstructionToDto loadedConstructions
+    loadedBuildings <- runDB $ selectList [ BuildingConstructionPlanetId ==. planetId ] []
+    loadedShips <- runDB $ selectList [ ShipConstructionPlanetId ==. Just planetId ] []
+    let buildings = map buildingConstructionToDto loadedBuildings
+    let ships = map shipConstructionToDto loadedShips
+    let constructions = buildings ++ ships
+    return $ toJSON constructions 
 
 -- TODO:
 -- load current construction queue

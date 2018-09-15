@@ -68,8 +68,16 @@ type alias PlanetDetails =
   }
 
 type Construction = BuildingConstruction BuildingConstructionData
+  | ShipConstruction ShipConstructionData
 
 type alias BuildingConstructionData =
   { id : Int
   , name : String
+  }
+
+-- TODO: ship type?
+type alias ShipConstructionData =
+  { id : Int
+  , name : String
+  , shipType : String
   }

@@ -117,6 +117,7 @@ InstalledComponent json
 ShipConstruction json
     shipId ShipId Maybe
     planetId PlanetId Maybe
+    shipType ShipType
     deriving Show Read Eq
 
 BuildingConstruction json
