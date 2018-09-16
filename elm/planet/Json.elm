@@ -76,6 +76,7 @@ buildingConstructionDecoder =
   Decode.succeed BuildingConstructionData
   |: (Decode.field "id" Decode.int)
   |: (Decode.field "name" Decode.string)
+  |: (Decode.field "index" Decode.int)
 
 shipConstructionDecoder : Decode.Decoder ShipConstructionData
 shipConstructionDecoder =
@@ -83,3 +84,4 @@ shipConstructionDecoder =
   |: (Decode.field "id" Decode.int)
   |: (Decode.field "name" Decode.string)
   |: (Decode.field "shipType" Decode.string)
+  |: (Decode.field "index" Decode.int)

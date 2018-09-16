@@ -14,36 +14,41 @@ import Import
 data ConstructionDto = BuildingConstructionDto
     { bcdtoId :: Key BuildingConstruction
     , bcdtoName :: Text
+    , bcdtoIndex :: Int
     }
   | ShipConstructionDto
     { scdtoId :: Key ShipConstruction
     , scdtoName :: Text
     , scdtoShipType :: ShipType
+    , scdtoIndex :: Int
     }
   deriving (Show, Read, Eq)
 
 instance ToJSON ConstructionDto where
-  toJSON (BuildingConstructionDto bId bName) =
+  toJSON (BuildingConstructionDto bId bName bIndex) =
     object [ "id" .= bId
            , "name" .= bName
+           , "index" .= bIndex
            ]
 
-  toJSON (ShipConstructionDto sId sName sType) =
+  toJSON (ShipConstructionDto sId sName sType sIndex) =
     object [ "id" .= sId
            , "name" .= sName
            , "shipType" .= sType
+           , "index" .= sIndex
            ]
 
 buildingConstructionToDto :: Entity BuildingConstruction -> ConstructionDto
 buildingConstructionToDto bce =
   BuildingConstructionDto key (buildingTypeName $ buildingConstructionType bc)
+    (buildingConstructionIndex bc)
   where
     bc = entityVal bce
     key = entityKey bce
 
 shipConstructionToDto :: Entity ShipConstruction -> ConstructionDto
 shipConstructionToDto sce =
-  ShipConstructionDto key "TODO: ship name" Destroyer
+  ShipConstructionDto key "TODO: ship name" Destroyer (shipConstructionIndex sc)
   where
-    bc = entityVal sce
+    sc = entityVal sce
     key = entityKey sce

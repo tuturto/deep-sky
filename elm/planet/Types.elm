@@ -73,6 +73,7 @@ type Construction = BuildingConstruction BuildingConstructionData
 type alias BuildingConstructionData =
   { id : Int
   , name : String
+  , index : Int
   }
 
 -- TODO: ship type?
@@ -80,4 +81,19 @@ type alias ShipConstructionData =
   { id : Int
   , name : String
   , shipType : String
+  , index : Int
   }
+
+constructionIndex : Construction -> Int
+constructionIndex c =
+  case c of
+    BuildingConstruction x -> x.index
+    ShipConstruction x -> x.index
+
+constructionIndexSorter : Construction -> Construction -> Order
+constructionIndexSorter a b =
+  let
+    index_a = constructionIndex a
+    index_b = constructionIndex b
+  in
+    compare index_a index_b

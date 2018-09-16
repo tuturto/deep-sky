@@ -118,6 +118,7 @@ ShipConstruction json
     shipId ShipId Maybe
     planetId PlanetId Maybe
     shipType ShipType
+    index Int
     deriving Show Read Eq
 
 BuildingConstruction json

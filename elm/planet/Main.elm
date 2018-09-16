@@ -80,7 +80,7 @@ handleNetworkMessage msg model =
       in 
         ( { model | messages = messages }, Cmd.none)
     ConstructionsLoaded (Ok queue) ->
-      ( { model | constructionQueue = queue }
+      ( { model | constructionQueue = List.sortWith constructionIndexSorter queue }
       , Cmd.none )
     ConstructionsLoaded (Err err) ->
       let
