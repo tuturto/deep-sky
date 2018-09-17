@@ -5,7 +5,8 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 module Handler.Construction ( getConstructionR, getApiBuildingsR, getApiPlanetConstQueueR
-                            , getApiBuildingConstructionR )
+                            , getApiBuildingConstructionR, putApiBuildingConstructionR
+                            , deleteApiBuildingConstructionR, postApiPostBuildingConstructionR )
     where
 
 import Import
@@ -65,13 +66,54 @@ getApiBuildingConstructionR cId = do
                         Nothing -> notFound
     return $ toJSON construction
 
+postApiPostBuildingConstructionR :: Handler Value
+postApiPostBuildingConstructionR = do
+    (_, user) <- requireAuthPair   
+    _ <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    msg <- requireJsonBody
+    --loadedConst <- runDB $ get cId
+    --construction <- case loadedConst of
+    --                    Just x -> return x
+    --                    Nothing -> notFound
+    return $ toJSON (msg :: Text)
+
+putApiBuildingConstructionR :: Key BuildingConstruction -> Handler Value
+putApiBuildingConstructionR cId = do
+    (_, user) <- requireAuthPair   
+    _ <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    msg <- requireJsonBody
+    --loadedConst <- runDB $ get cId
+    --construction <- case loadedConst of
+    --                    Just x -> return x
+    --                    Nothing -> notFound
+    return $ toJSON (msg :: Text)
+
+deleteApiBuildingConstructionR :: Key BuildingConstruction ->Handler Value
+deleteApiBuildingConstructionR cId = do
+    (_, user) <- requireAuthPair   
+    _ <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    msg <- requireJsonBody
+    --loadedConst <- runDB $ get cId
+    --construction <- case loadedConst of
+    --                    Just x -> return x
+    --                    Nothing -> notFound
+    return $ toJSON (msg :: Text)
+
+-- 
+
 -- TODO:
--- load current construction queue
--- add building into queue
--- remove building from queue
--- move building up in queue
--- move building down in queue
+-- add building into queue (post)
+-- remove building from queue (delete)
+-- move building up in queue (put)
+-- move building down in queue (put)
 -- and ships
 
 -- DONE:
 -- load available buildings
+-- load current construction queue
