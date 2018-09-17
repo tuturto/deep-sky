@@ -4,7 +4,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 
-module Handler.Construction (getConstructionR, getApiBuildingsR, getApiPlanetConstQueueR)
+module Handler.Construction ( getConstructionR, getApiBuildingsR, getApiPlanetConstQueueR
+                            , getApiBuildingConstructionR )
     where
 
 import Import
@@ -50,7 +51,19 @@ getApiPlanetConstQueueR planetId = do
     let buildings = map buildingConstructionToDto loadedBuildings
     let ships = map shipConstructionToDto loadedShips
     let constructions = buildings ++ ships
-    return $ toJSON constructions 
+    return $ toJSON constructions
+
+getApiBuildingConstructionR :: Key BuildingConstruction -> Handler Value
+getApiBuildingConstructionR cId = do
+    (_, user) <- requireAuthPair   
+    _ <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    loadedConst <- runDB $ get cId
+    construction <- case loadedConst of
+                        Just x -> return x
+                        Nothing -> notFound
+    return $ toJSON construction
 
 -- TODO:
 -- load current construction queue

@@ -239,16 +239,17 @@ instance Yesod App where
         return res
 
     -- API routes
-    isAuthorized ApiStarSystemsR _          = isAuthenticated
-    isAuthorized ApiComponentsR _           = isAuthenticated
-    isAuthorized ApiChassisR _              = isAuthenticated
-    isAuthorized ApiDesignR _               = isAuthenticated
-    isAuthorized (ApiDesignIdR _) _         = isAuthenticated
-    isAuthorized ApiBuildingsR _            = isAuthenticated
-    isAuthorized (ApiPlanetR _) _           = isAuthenticated
-    isAuthorized (ApiPlanetBuildingsR _) _  = isAuthenticated
-    isAuthorized (ApiPlanetPopulationR _) _ = isAuthenticated
-    isAuthorized (ApiPlanetConstQueueR _) _ = isAuthenticated
+    isAuthorized ApiStarSystemsR _              = isAuthenticated
+    isAuthorized ApiComponentsR _               = isAuthenticated
+    isAuthorized ApiChassisR _                  = isAuthenticated
+    isAuthorized ApiDesignR _                   = isAuthenticated
+    isAuthorized (ApiDesignIdR _) _             = isAuthenticated
+    isAuthorized ApiBuildingsR _                = isAuthenticated
+    isAuthorized (ApiPlanetR _) _               = isAuthenticated
+    isAuthorized (ApiPlanetBuildingsR _) _      = isAuthenticated
+    isAuthorized (ApiPlanetPopulationR _) _     = isAuthenticated
+    isAuthorized (ApiPlanetConstQueueR _) _     = isAuthenticated
+    isAuthorized (ApiBuildingConstructionR _) _ = isAuthenticated
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of
