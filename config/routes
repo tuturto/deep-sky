@@ -37,8 +37,8 @@
 /api/chassis                                        ApiChassisR                     GET
 /api/design                                         ApiDesignR                      GET POST
 /api/design/#DesignId                               ApiDesignIdR                    PUT DELETE
-/api/construction/building                          ApiPostBuildingConstructionR    POST
-/api/construction/building/#BuildingConstructionId  ApiBuildingConstructionR        GET PUT DELETE
+/api/construction/building                          ApiBuildingConstructionR        POST
+/api/construction/building/#BuildingConstructionId  ApiBuildingConstructionIdR      GET PUT DELETE
 
 /api/construction/buildings                         ApiBuildingsR                   GET
 /api/construction/planet/#PlanetId                  ApiPlanetConstQueueR            GET

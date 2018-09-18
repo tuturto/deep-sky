@@ -5,8 +5,8 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 module Handler.Construction ( getConstructionR, getApiBuildingsR, getApiPlanetConstQueueR
-                            , getApiBuildingConstructionR, putApiBuildingConstructionR
-                            , deleteApiBuildingConstructionR, postApiPostBuildingConstructionR )
+                            , getApiBuildingConstructionIdR, putApiBuildingConstructionIdR
+                            , deleteApiBuildingConstructionIdR, postApiBuildingConstructionR )
     where
 
 import Import
@@ -54,8 +54,8 @@ getApiPlanetConstQueueR planetId = do
     let constructions = buildings ++ ships
     return $ toJSON constructions
 
-getApiBuildingConstructionR :: Key BuildingConstruction -> Handler Value
-getApiBuildingConstructionR cId = do
+getApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
+getApiBuildingConstructionIdR cId = do
     (_, user) <- requireAuthPair   
     _ <- case (userFactionId user) of
                         Just x -> return x
@@ -66,8 +66,8 @@ getApiBuildingConstructionR cId = do
                         Nothing -> notFound
     return $ toJSON construction
 
-postApiPostBuildingConstructionR :: Handler Value
-postApiPostBuildingConstructionR = do
+postApiBuildingConstructionR :: Handler Value
+postApiBuildingConstructionR = do
     (_, user) <- requireAuthPair   
     _ <- case (userFactionId user) of
                         Just x -> return x
@@ -79,8 +79,8 @@ postApiPostBuildingConstructionR = do
     --                    Nothing -> notFound
     return $ toJSON (msg :: Text)
 
-putApiBuildingConstructionR :: Key BuildingConstruction -> Handler Value
-putApiBuildingConstructionR cId = do
+putApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
+putApiBuildingConstructionIdR cId = do
     (_, user) <- requireAuthPair   
     _ <- case (userFactionId user) of
                         Just x -> return x
@@ -92,8 +92,8 @@ putApiBuildingConstructionR cId = do
     --                    Nothing -> notFound
     return $ toJSON (msg :: Text)
 
-deleteApiBuildingConstructionR :: Key BuildingConstruction ->Handler Value
-deleteApiBuildingConstructionR cId = do
+deleteApiBuildingConstructionIdR :: Key BuildingConstruction ->Handler Value
+deleteApiBuildingConstructionIdR cId = do
     (_, user) <- requireAuthPair   
     _ <- case (userFactionId user) of
                         Just x -> return x
