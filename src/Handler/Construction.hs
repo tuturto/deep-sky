@@ -44,12 +44,17 @@ getApiBuildingsR = do
 getApiPlanetConstQueueR :: Key Planet -> Handler Value
 getApiPlanetConstQueueR planetId = do
     (_, user, _) <- requireFaction
-    loadedBuildings <- runDB $ selectList [ BuildingConstructionPlanetId ==. planetId ] []
-    loadedShips <- runDB $ selectList [ ShipConstructionPlanetId ==. Just planetId ] []
+    constructions <- runDB $ loadPlanetConstructionQueue planetId
+    return $ toJSON constructions
+
+-- | load construction queue of a given planet
+loadPlanetConstructionQueue planetId = do
+    loadedBuildings <- selectList [ BuildingConstructionPlanetId ==. planetId ] []
+    loadedShips <- selectList [ ShipConstructionPlanetId ==. Just planetId ] []
     let buildings = map buildingConstructionToDto loadedBuildings
     let ships = map shipConstructionToDto loadedShips
     let constructions = buildings ++ ships
-    return $ toJSON constructions
+    return constructions
 
 -- | Retrieve details of given building construction
 getApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
@@ -69,9 +74,11 @@ postApiBuildingConstructionR = do
     (_, user, _) <- requireFaction
     msg <- requireJsonBody
     _ <- runDB $ insert $ dtoToBuildingConstruction msg
-    -- load construction queue and return it
-    return $ toJSON msg
+    constructions <- runDB $ loadPlanetConstructionQueue $ bcdtoPlanet msg
+    return $ toJSON constructions
 
+-- | Check that user has logged in and is member of a faction
+--   In case user is not member of a faction, http 500 will be returned
 requireFaction :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User, Key Faction)
 requireFaction = do
     (authId, user) <- requireAuthPair   
