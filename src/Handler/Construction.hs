@@ -29,10 +29,7 @@ getConstructionR = do
 --   In case multiple levels of a building are available, all are reported
 getApiBuildingsR :: Handler Value
 getApiBuildingsR = do
-    (_, user) <- requireAuthPair   
-    _ <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, user, _) <- requireFaction
     let json = toJSON [ building SensorStation $ BLevel 1
                       , building ResearchComplex $ BLevel 1
                       , building Farm $ BLevel 1
@@ -46,10 +43,7 @@ getApiBuildingsR = do
 -- | Retrieve construction queue of a given planet as JSON
 getApiPlanetConstQueueR :: Key Planet -> Handler Value
 getApiPlanetConstQueueR planetId = do
-    (_, user) <- requireAuthPair   
-    _ <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, user, _) <- requireFaction
     loadedBuildings <- runDB $ selectList [ BuildingConstructionPlanetId ==. planetId ] []
     loadedShips <- runDB $ selectList [ ShipConstructionPlanetId ==. Just planetId ] []
     let buildings = map buildingConstructionToDto loadedBuildings
@@ -60,10 +54,7 @@ getApiPlanetConstQueueR planetId = do
 -- | Retrieve details of given building construction
 getApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
 getApiBuildingConstructionIdR cId = do
-    (_, user) <- requireAuthPair   
-    _ <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, user, _) <- requireFaction
     loadedConst <- runDB $ get cId
     construction <- case loadedConst of
                         Just x -> return x
@@ -75,14 +66,19 @@ getApiBuildingConstructionIdR cId = do
 --   Returns current construction queue of the planet after the insert
 postApiBuildingConstructionR :: Handler Value
 postApiBuildingConstructionR = do
-    (_, user) <- requireAuthPair   
-    _ <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, user, _) <- requireFaction
     msg <- requireJsonBody
     _ <- runDB $ insert $ dtoToBuildingConstruction msg
     -- load construction queue and return it
     return $ toJSON msg
+
+requireFaction :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User, Key Faction)
+requireFaction = do
+    (authId, user) <- requireAuthPair   
+    fId <- case (userFactionId user) of
+                        Just x -> return x
+                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    return (authId, user, fId)
 
 dtoToBuildingConstruction :: ConstructionDto -> BuildingConstruction
 dtoToBuildingConstruction cDto =
@@ -101,10 +97,7 @@ dtoToBuildingConstruction cDto =
 --   In case this method is called to update ship construction http 400 error will be returned
 putApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
 putApiBuildingConstructionIdR cId = do
-    (_, user) <- requireAuthPair   
-    _ <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, user, _) <- requireFaction
     msg <- requireJsonBody
     loadedConst <- case msg of
                     ShipConstructionDto {} -> invalidArgs [ "body" ]
@@ -121,10 +114,7 @@ putApiBuildingConstructionIdR cId = do
 -- | Delete building construction
 deleteApiBuildingConstructionIdR :: Key BuildingConstruction ->Handler Value
 deleteApiBuildingConstructionIdR cId = do
-    (_, user) <- requireAuthPair   
-    _ <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, user, _) <- requireFaction
     msg <- requireJsonBody
     --loadedConst <- runDB $ get cId
     --construction <- case loadedConst of
