@@ -8,7 +8,7 @@ module Dto.Construction (ConstructionDto(..), buildingConstructionToDto, shipCon
   where
 
 import CustomTypes (buildingTypeName, ShipType(..))
-import Data.Aeson (object, (.=), (.:?))
+import Data.Aeson (object, (.=))
 import Import
 
 data ConstructionDto = BuildingConstructionDto
@@ -37,6 +37,18 @@ instance ToJSON ConstructionDto where
            , "shipType" .= sType
            , "index" .= sIndex
            ]
+
+instance FromJSON ConstructionDto where
+  parseJSON (Object v) =
+    asum [ BuildingConstructionDto <$> v .: "id"
+                                   <*> v .: "name"
+                                   <*> v .: "index"
+         , ShipConstructionDto <$> v .: "id"
+                               <*> v .: "name"
+                               <*> v .: "shipType"
+                               <*> v .: "index"
+         ]
+  parseJSON _ = mzero
 
 buildingConstructionToDto :: Entity BuildingConstruction -> ConstructionDto
 buildingConstructionToDto bce =
