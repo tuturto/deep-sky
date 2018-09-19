@@ -25,6 +25,8 @@ getConstructionR = do
         setTitle "Deep Sky - Construction"
         $(widgetFile "construction")
 
+-- | Retrieve list of buildings available for given faction as JSON
+--   In case multiple levels of a building are available, all are reported
 getApiBuildingsR :: Handler Value
 getApiBuildingsR = do
     (_, user) <- requireAuthPair   
@@ -41,6 +43,7 @@ getApiBuildingsR = do
                       ]
     return json
 
+-- | Retrieve construction queue of a given planet as JSON
 getApiPlanetConstQueueR :: Key Planet -> Handler Value
 getApiPlanetConstQueueR planetId = do
     (_, user) <- requireAuthPair   
@@ -54,6 +57,7 @@ getApiPlanetConstQueueR planetId = do
     let constructions = buildings ++ ships
     return $ toJSON constructions
 
+-- | Retrieve details of given building construction
 getApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
 getApiBuildingConstructionIdR cId = do
     (_, user) <- requireAuthPair   
@@ -66,6 +70,8 @@ getApiBuildingConstructionIdR cId = do
                         Nothing -> notFound
     return $ toJSON construction
 
+-- | Create a new building construction
+--   In case this method is called to insert ship construction http 400 error will be returned
 postApiBuildingConstructionR :: Handler Value
 postApiBuildingConstructionR = do
     (_, user) <- requireAuthPair   
@@ -79,6 +85,8 @@ postApiBuildingConstructionR = do
     --                    Nothing -> notFound
     return $ toJSON (msg :: Text)
 
+-- | Update existing building construction
+--   In case this method is called to update ship construction http 400 error will be returned
 putApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
 putApiBuildingConstructionIdR cId = do
     (_, user) <- requireAuthPair   
@@ -92,6 +100,7 @@ putApiBuildingConstructionIdR cId = do
     --                    Nothing -> notFound
     return $ toJSON (msg :: Text)
 
+-- | Delete building construction
 deleteApiBuildingConstructionIdR :: Key BuildingConstruction ->Handler Value
 deleteApiBuildingConstructionIdR cId = do
     (_, user) <- requireAuthPair   

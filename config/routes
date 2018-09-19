@@ -39,6 +39,8 @@
 /api/design/#DesignId                               ApiDesignIdR                    PUT DELETE
 /api/construction/building                          ApiBuildingConstructionR        POST
 /api/construction/building/#BuildingConstructionId  ApiBuildingConstructionIdR      GET PUT DELETE
+-- /api/construction/ship                              ApiShipConstructionR            POST
+-- /api/construction/ship/#ShipConstructionId          ApiShipConstructionIdR          GET PUT DELETE
 
 /api/construction/buildings                         ApiBuildingsR                   GET
 /api/construction/planet/#PlanetId                  ApiPlanetConstQueueR            GET
