@@ -50,10 +50,10 @@ newsContentWidget (UserWrittenNews content _ _ user) = $(widgetFile "widgets/new
 newsContentWidget (DesignCreatedNews _ name _) = $(widgetFile "widgets/news/blueprintW")
  
 newsImage :: NewsArticle -> Route App
-newsImage (StarFoundNews _ _ _ _) = StaticR images_news_sun_png
-newsImage (PlanetFoundNews _ _ _ _ _) = StaticR images_news_planet_png
-newsImage (DesignCreatedNews _ _ _) = StaticR images_news_blueprint_png
-newsImage (UserWrittenNews _ icon _ _) = 
+newsImage (StarFoundNews {}) = StaticR images_news_sun_png
+newsImage (PlanetFoundNews {}) = StaticR images_news_planet_png
+newsImage (DesignCreatedNews {}) = StaticR images_news_blueprint_png
+newsImage (UserWrittenNews { userWrittenNewsIcon = icon }) = 
     case icon of
         GenericUserNews ->
             StaticR images_news_question_png

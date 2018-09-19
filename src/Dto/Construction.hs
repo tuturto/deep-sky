@@ -7,7 +7,7 @@
 module Dto.Construction (ConstructionDto(..), buildingConstructionToDto, shipConstructionToDto)
   where
 
-import CustomTypes (buildingTypeName, ShipType(..))
+import CustomTypes (buildingTypeName, ShipType(..), BuildingType(..))
 import Data.Aeson (object, (.=))
 import Import
 
@@ -15,6 +15,9 @@ data ConstructionDto = BuildingConstructionDto
     { bcdtoId :: Key BuildingConstruction
     , bcdtoName :: Text
     , bcdtoIndex :: Int
+    , bcdtoLevel :: Int
+    , bcdtoType :: BuildingType
+    , bcdtoPlanet :: Key Planet
     }
   | ShipConstructionDto
     { scdtoId :: Key ShipConstruction
@@ -25,10 +28,13 @@ data ConstructionDto = BuildingConstructionDto
   deriving (Show, Read, Eq)
 
 instance ToJSON ConstructionDto where
-  toJSON (BuildingConstructionDto bId bName bIndex) =
+  toJSON (BuildingConstructionDto bId bName bIndex bLevel bType bPlanet) =
     object [ "id" .= bId
            , "name" .= bName
            , "index" .= bIndex
+           , "level" .= bLevel
+           , "type" .= bType
+           , "planet" .= bPlanet
            ]
 
   toJSON (ShipConstructionDto sId sName sType sIndex) =
@@ -43,6 +49,9 @@ instance FromJSON ConstructionDto where
     asum [ BuildingConstructionDto <$> v .: "id"
                                    <*> v .: "name"
                                    <*> v .: "index"
+                                   <*> v .: "level"
+                                   <*> v .: "type"
+                                   <*> v .: "planet"
          , ShipConstructionDto <$> v .: "id"
                                <*> v .: "name"
                                <*> v .: "shipType"
@@ -52,8 +61,13 @@ instance FromJSON ConstructionDto where
 
 buildingConstructionToDto :: Entity BuildingConstruction -> ConstructionDto
 buildingConstructionToDto bce =
-  BuildingConstructionDto key (buildingTypeName $ buildingConstructionType bc)
-    (buildingConstructionIndex bc)
+    BuildingConstructionDto { bcdtoId = key
+                            , bcdtoName = (buildingTypeName $ buildingConstructionType bc)
+                            , bcdtoIndex = (buildingConstructionIndex bc)
+                            , bcdtoLevel = (buildingConstructionLevel bc)
+                            , bcdtoType = (buildingConstructionType bc)
+                            , bcdtoPlanet = (buildingConstructionPlanetId bc)
+                            }
   where
     bc = entityVal bce
     key = entityKey bce

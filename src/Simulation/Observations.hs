@@ -110,7 +110,7 @@ observeTarget :: (BaseBackend backend ~ SqlBackend,
 observeTarget _ Nothing _ = do
     return ()
 
-observeTarget _ (Just (OCStarLane _ _)) _ = do
+observeTarget _ (Just (OCStarLane {})) _ = do
     return ()
 
 observeTarget faction (Just (OCStar starEntity _ observationType)) building = do
@@ -208,7 +208,7 @@ buildOCStarLaneList reports = filter needsObservation $ map combineFn reports
 needsObservation :: ObservationCandidate -> Bool
 needsObservation (OCStar _ Nothing _) = True
 needsObservation (OCPlanet _ Nothing _) = True
-needsObservation (OCStarLane _ _) = False
+needsObservation (OCStarLane {}) = False
 
 needsObservation (OCStar entity (Just report) _) = 
     csrSpectralType report /= (Just $ starSpectralType star)

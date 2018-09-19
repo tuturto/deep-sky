@@ -72,6 +72,7 @@ getApiBuildingConstructionIdR cId = do
 
 -- | Create a new building construction
 --   In case this method is called to insert ship construction http 400 error will be returned
+--   Returns current construction queue of the planet after the insert
 postApiBuildingConstructionR :: Handler Value
 postApiBuildingConstructionR = do
     (_, user) <- requireAuthPair   
@@ -79,11 +80,22 @@ postApiBuildingConstructionR = do
                         Just x -> return x
                         Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
     msg <- requireJsonBody
-    --loadedConst <- runDB $ get cId
-    --construction <- case loadedConst of
-    --                    Just x -> return x
-    --                    Nothing -> notFound
-    return $ toJSON (msg :: Text)
+    _ <- runDB $ insert $ dtoToBuildingConstruction msg
+    -- load construction queue and return it
+    return $ toJSON msg
+
+dtoToBuildingConstruction :: ConstructionDto -> BuildingConstruction
+dtoToBuildingConstruction cDto =
+    case cDto of
+        BuildingConstructionDto bId bName bIndex bLevel bType bPlanetId ->
+            BuildingConstruction { buildingConstructionPlanetId = bPlanetId
+                                 , buildingConstructionIndex = bIndex
+                                 , buildingConstructionProgressBiologicals = 0
+                                 , buildingConstructionProgressMechanicals = 0
+                                 , buildingConstructionProgressChemicals = 0
+                                 , buildingConstructionType = bType
+                                 , buildingConstructionLevel = bLevel
+                                 }
 
 -- | Update existing building construction
 --   In case this method is called to update ship construction http 400 error will be returned
@@ -95,8 +107,8 @@ putApiBuildingConstructionIdR cId = do
                         Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
     msg <- requireJsonBody
     loadedConst <- case msg of
-                    ShipConstructionDto _ _ _ _ -> invalidArgs [ "body" ]
-                    BuildingConstructionDto _ _ _ -> runDB $ get cId
+                    ShipConstructionDto {} -> invalidArgs [ "body" ]
+                    BuildingConstructionDto {} -> runDB $ get cId
     construction <- case loadedConst of
                         Just x -> return x
                         Nothing -> notFound

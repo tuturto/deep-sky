@@ -217,9 +217,9 @@ instance Yesod App where
     isAuthorized FactionR _           = isAuthenticated
     isAuthorized StarSystemsR _       = isAuthenticated
     isAuthorized (StarSystemR _) _    = isAuthenticated
-    isAuthorized (PlanetR _ _) _      = isAuthenticated
+    isAuthorized (PlanetR {}) _      = isAuthenticated
     isAuthorized BasesR _             = isAuthenticated
-    isAuthorized (BaseR _ _) _        = isAuthenticated
+    isAuthorized (BaseR {}) _        = isAuthenticated
     isAuthorized ResearchR _          = isAuthenticated
     isAuthorized FleetR _             = isAuthenticated
     isAuthorized DesignerR _          = isAuthenticated
