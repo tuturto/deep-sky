@@ -67,13 +67,14 @@ getApiBuildingConstructionIdR cId = do
     return $ toJSON construction
 
 -- | Create a new building construction
---   In case this method is called to insert ship construction http 400 error will be returned
+--   In case this method is called to insert ship nothing will be inserted
 --   Returns current construction queue of the planet after the insert
 postApiBuildingConstructionR :: Handler Value
 postApiBuildingConstructionR = do
     (_, user, _) <- requireFaction
     msg <- requireJsonBody
-    _ <- runDB $ insert $ dtoToBuildingConstruction msg
+    let construction = dtoToBuildingConstruction msg
+    _ <- mapM (runDB . insert) construction
     constructions <- runDB $ loadPlanetConstructionQueue $ bcdtoPlanet msg
     return $ toJSON constructions
 
@@ -87,18 +88,21 @@ requireFaction = do
                         Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
     return (authId, user, fId)
 
-dtoToBuildingConstruction :: ConstructionDto -> BuildingConstruction
+-- | Translate construction dto into building construction
+--   In case construction dto is for a ship, Nothing is returned
+dtoToBuildingConstruction :: ConstructionDto -> Maybe BuildingConstruction
 dtoToBuildingConstruction cDto =
     case cDto of
         BuildingConstructionDto bId bName bIndex bLevel bType bPlanetId ->
-            BuildingConstruction { buildingConstructionPlanetId = bPlanetId
-                                 , buildingConstructionIndex = bIndex
-                                 , buildingConstructionProgressBiologicals = 0
-                                 , buildingConstructionProgressMechanicals = 0
-                                 , buildingConstructionProgressChemicals = 0
-                                 , buildingConstructionType = bType
-                                 , buildingConstructionLevel = bLevel
-                                 }
+            Just $ BuildingConstruction { buildingConstructionPlanetId = bPlanetId
+                                        , buildingConstructionIndex = bIndex
+                                        , buildingConstructionProgressBiologicals = 0
+                                        , buildingConstructionProgressMechanicals = 0
+                                        , buildingConstructionProgressChemicals = 0
+                                        , buildingConstructionType = bType
+                                        , buildingConstructionLevel = bLevel
+                                        }
+        ShipConstructionDto {} -> Nothing
 
 -- | Update existing building construction
 --   In case this method is called to update ship construction http 400 error will be returned
