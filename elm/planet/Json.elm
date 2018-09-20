@@ -77,6 +77,9 @@ buildingConstructionDecoder =
   |: (Decode.field "id" Decode.int)
   |: (Decode.field "name" Decode.string)
   |: (Decode.field "index" Decode.int)
+  |: (Decode.field "level" Decode.int)
+  |: (Decode.field "type" buildingTypeDecoder)
+  |: (Decode.field "planet" Decode.int)
 
 shipConstructionDecoder : Decode.Decoder ShipConstructionData
 shipConstructionDecoder =

@@ -74,6 +74,9 @@ type alias BuildingConstructionData =
   { id : Int
   , name : String
   , index : Int
+  , level : Int
+  , buildingType : BuildingType
+  , planet : Int
   }
 
 -- TODO: ship type?
