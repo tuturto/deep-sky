@@ -4,7 +4,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 
-module Dto.Construction (ConstructionDto(..), buildingConstructionToDto, shipConstructionToDto)
+module Dto.Construction 
+  ( ConstructionDto(..), buildingConstructionToDto, shipConstructionToDto
+  , constructionIndex )
   where
 
 import CustomTypes (buildingTypeName, ShipType(..), BuildingType(..))
@@ -58,6 +60,12 @@ instance FromJSON ConstructionDto where
                                <*> v .: "index"
          ]
   parseJSON _ = mzero
+
+constructionIndex :: ConstructionDto -> Int
+constructionIndex c =
+  case c of
+    BuildingConstructionDto { bcdtoIndex = index } -> index
+    ShipConstructionDto { scdtoIndex = index } -> index
 
 buildingConstructionToDto :: Entity BuildingConstruction -> ConstructionDto
 buildingConstructionToDto bce =
