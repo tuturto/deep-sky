@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Handler.Messages (getMessageListR, postNewMessageR, getMessageDeleteR)
+module Handler.Messages ( getMessageListR, postNewMessageR, getMessageDeleteR )
     where
 
 import Import

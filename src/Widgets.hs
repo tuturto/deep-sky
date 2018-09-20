@@ -12,7 +12,6 @@ import Import
 import Report ( spectralInfo, CollatedPopulationReport(..), CollatedBuildingReport(..)
               , CollatedStarLaneReport(..), CollatedStarReport(..), CollatedPlanetReport(..)
               , CollatedStarSystemReport(..) )
-import CustomTypes ( SpectralType(..) )
 import MenuHelpers (toDisplayDate)
 import News
 
@@ -44,10 +43,26 @@ newsArticleWidget :: (Key News, NewsArticle) -> WidgetFor App ()
 newsArticleWidget article = $(widgetFile "widgets/news/articleW")
  
 newsContentWidget :: NewsArticle -> WidgetFor App ()
-newsContentWidget (StarFoundNews starName systemName systemId _) = $(widgetFile "widgets/news/starFoundW")
-newsContentWidget (PlanetFoundNews planetName systemName systemId planetId _) = $(widgetFile "widgets/news/planetFoundW")
-newsContentWidget (UserWrittenNews content _ _ user) = $(widgetFile "widgets/news/userNewsW")
-newsContentWidget (DesignCreatedNews _ name _) = $(widgetFile "widgets/news/blueprintW")
+newsContentWidget (StarFoundNews 
+    { starFoundNewsStarName = starName
+    , starFoundNewsSystemName = systemName
+    , starFoundNewsSystemId = systemId }) = 
+        $(widgetFile "widgets/news/starFoundW")
+
+newsContentWidget (PlanetFoundNews 
+    { planetFoundNewsPlanetName = planetName 
+    , planetFoundNewsSystemName = systemName
+    , planetFoundNewsSystemId = systemId 
+    , planetFoundNewsPlanetId = planetId }) = 
+        $(widgetFile "widgets/news/planetFoundW")
+
+newsContentWidget (UserWrittenNews 
+    { userWrittenNewsContent = content
+    , userWrittenNewsUser = user }) = 
+        $(widgetFile "widgets/news/userNewsW")
+
+newsContentWidget (DesignCreatedNews { designCreatedNewsName = name }) = 
+    $(widgetFile "widgets/news/blueprintW")
  
 newsImage :: NewsArticle -> Route App
 newsImage (StarFoundNews {}) = StaticR images_news_sun_png
