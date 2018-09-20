@@ -10,6 +10,7 @@ module Handler.Construction ( getConstructionR, getApiBuildingsR, getApiPlanetCo
     where
 
 import Import
+import Common (requireFaction)
 import Buildings (building, BLevel(..))
 import CustomTypes (BuildingType(..))
 import Data.Aeson (ToJSON(..))
@@ -77,16 +78,6 @@ postApiBuildingConstructionR = do
     _ <- mapM (runDB . insert) construction
     constructions <- runDB $ loadPlanetConstructionQueue $ bcdtoPlanet msg
     return $ toJSON constructions
-
--- | Check that user has logged in and is member of a faction
---   In case user is not member of a faction, http 500 will be returned
-requireFaction :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User, Key Faction)
-requireFaction = do
-    (authId, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
-    return (authId, user, fId)
 
 -- | Translate construction dto into building construction
 --   In case construction dto is for a ship, Nothing is returned
