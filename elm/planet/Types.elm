@@ -4,12 +4,15 @@ import Http
 
 type Msg = TextSearch String
   | NetworkMsg ApiMsg
+  | UiMsg Action
 
 type ApiMsg = BuildingInfoLoaded (Result Http.Error (List BuildingInfo))
   | BuildingsLoaded (Result Http.Error (List Building))
   | PopulationLoaded (Result Http.Error (List Population))
   | PlanetDetailsLoaded (Result Http.Error PlanetDetails)
   | ConstructionsLoaded (Result Http.Error (List Construction))
+
+type Action = AddBuildingIntoQueue BuildingInfo
 
 type alias Model = 
   { searchText : String

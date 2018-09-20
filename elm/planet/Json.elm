@@ -1,5 +1,5 @@
 module Json exposing ( buildingInfoDecoder, buildingDecoder, populationDecoder, planetDetailsDecoder 
-                     , constructionDecoder )
+                     , constructionDecoder, buildingConstructionEncoder )
 
 import Json.Decode.Extra exposing ((|:))
 import Json.Decode as Decode
@@ -28,6 +28,17 @@ stringToBuildingType s =
 buildingTypeDecoder : Decode.Decoder BuildingType
 buildingTypeDecoder =
   Decode.string |> Decode.andThen stringToBuildingType
+
+buildingTypeEncoder : BuildingType -> Encode.Value
+buildingTypeEncoder bType =
+  Encode.string <| case bType of
+    SensorStation -> "SensorStation"
+    ResearchComplex -> "ResearchComplex"
+    Farm -> "Farm"
+    ParticleAccelerator -> "ParticleAccelerator"
+    NeutronDetector -> "NeutronDetector"
+    BlackMatterScanner -> "BlackMatterScanner"
+    GravityWaveSensor -> "GravityWaveSensor"
 
 buildingInfoDecoder : Decode.Decoder BuildingInfo
 buildingInfoDecoder =
@@ -80,6 +91,16 @@ buildingConstructionDecoder =
   |: (Decode.field "level" Decode.int)
   |: (Decode.field "type" buildingTypeDecoder)
   |: (Decode.field "planet" Decode.int)
+
+buildingConstructionEncoder : BuildingConstructionData -> Encode.Value
+buildingConstructionEncoder building =
+  Encode.object [ ("id", Encode.int 0)
+                , ("name", Encode.string "")
+                , ("index", Encode.int 0)
+                , ("level", Encode.int building.level)
+                , ("type", buildingTypeEncoder building.buildingType)
+                , ("planet", Encode.int building.planet)
+                ]
 
 shipConstructionDecoder : Decode.Decoder ShipConstructionData
 shipConstructionDecoder =

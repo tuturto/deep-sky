@@ -2,7 +2,7 @@ module Render exposing ( view )
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing ( onInput )
+import Html.Events exposing ( onInput, onClick )
 import Types exposing (..)
 
 view : Model -> Html Msg
@@ -287,7 +287,7 @@ searchResults model =
 
 searchResult : BuildingInfo -> Html Msg
 searchResult building =
-  div [ class "row" ]
+  div [ class "row", onClick (UiMsg <| AddBuildingIntoQueue building) ]
   [ div [ class "col-lg-6" ]
     [ text <| building.name ++ " (" ++ (toString building.level) ++ ")" ]
   , div [ class "col-lg-6" ]

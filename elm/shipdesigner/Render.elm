@@ -278,7 +278,7 @@ savePanel model =
       , div [ class "col-lg-2" ]
         [ addButton resetEnabled "Reset" (ButtonMsg ResetDesign) ]
       , div [ class "col-lg-2" ]
-        [ addButton newEnabled "New"(ButtonMsg NewDesign) ]
+        [ addButton newEnabled "New" (ButtonMsg NewDesign) ]
       ]
     , div [ class "row side-panel-right" ]
       [ div [ class "col-lg-11" ]

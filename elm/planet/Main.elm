@@ -1,7 +1,8 @@
 import Html exposing ( programWithFlags )
 import Http
 import Types exposing (..)
-import Json exposing ( buildingInfoDecoder, buildingDecoder, populationDecoder, planetDetailsDecoder, constructionDecoder )
+import Json exposing ( buildingInfoDecoder, buildingDecoder, populationDecoder, planetDetailsDecoder, constructionDecoder 
+                     , buildingConstructionEncoder )
 import Json.Decode as Decode
 import Render
 
@@ -43,6 +44,8 @@ update msg model =
       , Cmd.none )
     NetworkMsg msg ->
       handleNetworkMessage msg model
+    UiMsg msg ->
+      handleUiMsg msg model
 
 handleNetworkMessage : ApiMsg -> Model -> (Model, Cmd Msg)
 handleNetworkMessage msg model =
@@ -87,3 +90,33 @@ handleNetworkMessage msg model =
         messages = "Error loading construction queue" :: model.messages 
       in 
         ( { model | messages = messages }, Cmd.none)
+
+handleUiMsg : Action -> Model -> (Model, Cmd Msg)
+handleUiMsg msg model =
+  case msg of
+    AddBuildingIntoQueue building ->
+      let
+        construction = { id = 0
+                       , name = ""
+                       , index = 0
+                       , level = building.level
+                       , buildingType = building.buildingType
+                       , planet = model.planetId
+                       }
+      in 
+        ( model
+        , Http.send (NetworkMsg << ConstructionsLoaded) 
+                    (send "POST" "/api/construction/building" (Http.jsonBody <| buildingConstructionEncoder construction)
+                    (Decode.list constructionDecoder)))
+
+send : String -> String -> Http.Body -> Decode.Decoder a -> Http.Request a
+send method url body decoder =
+  Http.request
+    { method = method
+    , headers = []
+    , url = url
+    , body = body
+    , expect = Http.expectJson decoder
+    , timeout = Nothing
+    , withCredentials = False
+    }

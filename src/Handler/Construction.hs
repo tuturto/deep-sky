@@ -10,7 +10,7 @@ module Handler.Construction
     where
 
 import Import
-import qualified Prelude as P (maximum)
+import qualified Prelude as P ( maximum, length )
 import Common (requireFaction)
 import Buildings (building, BLevel(..))
 import CustomTypes (BuildingType(..))
@@ -80,7 +80,9 @@ postApiBuildingConstructionR = do
     _ <- requireFaction
     msg <- requireJsonBody
     currentConstructions <- runDB $ loadPlanetConstructionQueue $ bcdtoPlanet msg
-    let nextIndex = (P.maximum $ map constructionIndex currentConstructions) + 1
+    let nextIndex = if P.length currentConstructions == 0
+                        then 0
+                        else (P.maximum $ map constructionIndex currentConstructions) + 1
     let construction = dtoToBuildingConstruction msg
     _ <- mapM (\x -> runDB $ insert x { buildingConstructionIndex = nextIndex }) construction
     newConstructions <- runDB $ loadPlanetConstructionQueue $ bcdtoPlanet msg
