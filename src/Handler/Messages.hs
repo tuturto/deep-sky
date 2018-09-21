@@ -12,13 +12,11 @@ import Widgets (newsArticleWidget)
 import News (parseNewsEntities, UserNewsIcon(..), makeUserWrittenNews)
 import Yesod.Form.Bootstrap3
 import MenuHelpers (starDate)
+import Common (requireFaction)
 
 getMessageListR :: Int -> Handler Html
 getMessageListR currentPage = do
-    (_, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> redirect ProfileR
+    (_, user, fId) <- requireFaction
     let pageSize = 6
     (totalUnread, totalPages, loadedNews) <- runDB $ loadNewsEntries pageSize currentPage fId
     let entries = parseNewsEntities loadedNews
@@ -42,10 +40,7 @@ getMessageListR currentPage = do
  
 postNewMessageR :: Handler Html
 postNewMessageR = do
-    (_, user) <- requireAuthPair   
-    _ <- case (userFactionId user) of
-                Just x -> return x
-                Nothing -> redirect ProfileR
+    (_, user, _) <- requireFaction
     
     ((formRes, _), _) <- runFormPost $ renderBootstrap3 BootstrapBasicForm $ newsAForm
     res <- case formRes of
@@ -57,10 +52,7 @@ postNewMessageR = do
 
 getMessageDeleteR :: Key News -> Handler Html
 getMessageDeleteR nId = do
-    (_, user) <- requireAuthPair   
-    _ <- case (userFactionId user) of
-            Just x -> return x
-            Nothing -> redirect ProfileR
+    (_, user, _) <- requireFaction
     _ <- runDB $ update nId [ NewsDismissed =. True ]
     redirect (MessageListR 1)
 

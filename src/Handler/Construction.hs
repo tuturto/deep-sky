@@ -6,12 +6,13 @@
 
 module Handler.Construction 
     ( getConstructionR, getApiBuildingsR, getApiPlanetConstQueueR, getApiBuildingConstructionIdR
-    , putApiBuildingConstructionIdR, deleteApiBuildingConstructionIdR, postApiBuildingConstructionR )
+    , putApiBuildingConstructionIdR, deleteApiBuildingConstructionIdR, postApiBuildingConstructionR
+    )
     where
 
 import Import
 import qualified Prelude as P ( maximum, length )
-import Common (requireFaction)
+import Common (requireFaction, apiRequireFaction)
 import Buildings (building, BLevel(..))
 import CustomTypes (BuildingType(..))
 import Data.Aeson (ToJSON(..))
@@ -20,10 +21,7 @@ import Dto.Construction ( buildingConstructionToDto, shipConstructionToDto, Cons
 
 getConstructionR :: Handler Html
 getConstructionR = do
-    (_, user) <- requireAuthPair   
-    _ <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> redirect ProfileR
+    _ <- requireFaction
     defaultLayout $ do
         setTitle "Deep Sky - Construction"
         $(widgetFile "construction")
@@ -32,7 +30,7 @@ getConstructionR = do
 --   In case multiple levels of a building are available, all are reported
 getApiBuildingsR :: Handler Value
 getApiBuildingsR = do
-    _ <- requireFaction
+    _ <- apiRequireFaction
     let json = toJSON [ building SensorStation $ BLevel 1
                       , building ResearchComplex $ BLevel 1
                       , building Farm $ BLevel 1
@@ -46,7 +44,7 @@ getApiBuildingsR = do
 -- | Retrieve construction queue of a given planet as JSON
 getApiPlanetConstQueueR :: Key Planet -> Handler Value
 getApiPlanetConstQueueR planetId = do
-    _ <- requireFaction
+    _ <- apiRequireFaction
     constructions <- runDB $ loadPlanetConstructionQueue planetId
     return $ toJSON constructions
 
@@ -65,7 +63,7 @@ loadPlanetConstructionQueue planetId = do
 -- | Retrieve details of given building construction
 getApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
 getApiBuildingConstructionIdR cId = do
-    _ <- requireFaction
+    _ <- apiRequireFaction
     loadedConst <- runDB $ get cId
     construction <- case loadedConst of
                         Just x -> return x
@@ -77,7 +75,7 @@ getApiBuildingConstructionIdR cId = do
 --   Returns current construction queue of the planet after the insert
 postApiBuildingConstructionR :: Handler Value
 postApiBuildingConstructionR = do
-    _ <- requireFaction
+    _ <- apiRequireFaction
     msg <- requireJsonBody
     currentConstructions <- runDB $ loadPlanetConstructionQueue $ bcdtoPlanet msg
     let nextIndex = if P.length currentConstructions == 0
@@ -112,7 +110,7 @@ dtoToBuildingConstruction cDto =
 --   In case this method is called to update ship construction http 400 error will be returned
 putApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
 putApiBuildingConstructionIdR cId = do
-    _ <- requireFaction
+    _ <- apiRequireFaction
     msg <- requireJsonBody
     loadedConst <- case msg of
                     ShipConstructionDto {} -> invalidArgs [ "body" ]
@@ -129,7 +127,7 @@ putApiBuildingConstructionIdR cId = do
 -- | Delete building construction
 deleteApiBuildingConstructionIdR :: Key BuildingConstruction ->Handler Value
 deleteApiBuildingConstructionIdR _ = do
-    _ <- requireFaction
+    _ <- apiRequireFaction
     msg <- requireJsonBody
     --loadedConst <- runDB $ get cId
     --construction <- case loadedConst of
@@ -140,7 +138,6 @@ deleteApiBuildingConstructionIdR _ = do
 -- 
 
 -- TODO:
--- add building into queue (post)
 -- remove building from queue (delete)
 -- move building up in queue (put)
 -- move building down in queue (put)
@@ -149,3 +146,4 @@ deleteApiBuildingConstructionIdR _ = do
 -- DONE:
 -- load available buildings
 -- load current construction queue
+-- add building into queue (post)

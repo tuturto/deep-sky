@@ -13,13 +13,11 @@ import Import
 import Components
 import News (makeDesignCreatedNews)
 import MenuHelpers (starDate)
+import Common (requireFaction, apiRequireFaction)
 
 getDesignerR :: Handler Html
 getDesignerR = do
-    (_, user) <- requireAuthPair   
-    _ <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> redirect ProfileR
+    (_, user, _) <- requireFaction
     defaultLayout $ do
         setTitle "Deep Sky - Ship designer"
         addScript $ StaticR js_shipdesigner_js
@@ -28,6 +26,7 @@ getDesignerR = do
    
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
+    _ <- apiRequireFaction
     let json = toJSON [ component CidArmour $ CLevel 1
                       , component CidEngine $ CLevel 1
                       , component CidBridge $ CLevel 1
@@ -38,10 +37,7 @@ getApiComponentsR = do
 
 getApiChassisR :: Handler Value
 getApiChassisR = do
-    (_, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, user, fId) <- apiRequireFaction
     loadedChassis <- runDB $ selectList [] []
     loadedRequirements <- runDB $ selectList [ RequiredComponentChassisId <-. map entityKey loadedChassis ] []
     let chassis = map (\c -> ChassisDto (entityKey c) (chassisName (entityVal c)) (chassisTonnage (entityVal c)) 
@@ -53,10 +49,7 @@ getApiChassisR = do
 
 getApiDesignR :: Handler Value
 getApiDesignR = do
-    (_, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, user, fId) <- apiRequireFaction
     loadedDesigns <- runDB $ selectList [ DesignOwnerId ==. fId ] []
     loadedComponents <- runDB $ selectList [ PlannedComponentDesignId <-. map entityKey loadedDesigns ] []
     let designs = map (\d -> designToDesignDto (entityKey d, entityVal d)
@@ -66,10 +59,7 @@ getApiDesignR = do
 
 postApiDesignR :: Handler Value
 postApiDesignR = do    
-    (_, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, user, fId) <- apiRequireFaction
     msg <- requireJsonBody 
     case (validateSaveDesign msg) of
         False -> sendResponseStatus status400 ("Validation failed" :: Text)
@@ -79,10 +69,7 @@ postApiDesignR = do
 
 putApiDesignIdR :: Key Design -> Handler Value
 putApiDesignIdR dId = do    
-    (_, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, user, fId) <- apiRequireFaction
     msg <- requireJsonBody 
     case (validateSaveDesign msg) of
         False -> sendResponseStatus status400 ("Validation failed" :: Text)
@@ -92,10 +79,7 @@ putApiDesignIdR dId = do
 
 deleteApiDesignIdR :: Key Design -> Handler Value
 deleteApiDesignIdR dId = do
-    (_, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, user, fId) <- apiRequireFaction
     _ <- runDB $ deleteWhere [ PlannedComponentDesignId ==. dId ]
     _ <- runDB $ delete dId
     sendResponseStatus status200 $ show $ fromSqlKey dId

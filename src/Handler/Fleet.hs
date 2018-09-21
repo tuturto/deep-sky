@@ -7,13 +7,11 @@
 module Handler.Fleet where
 
 import Import
+import Common (requireFaction)
 
 getFleetR :: Handler Html
 getFleetR = do
-    (_, user) <- requireAuthPair   
-    _ <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> redirect ProfileR
+    (_, user, _) <- requireFaction
     defaultLayout $ do
         setTitle "Deep Sky - Fleet"
         $(widgetFile "fleet")

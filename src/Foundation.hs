@@ -217,9 +217,9 @@ instance Yesod App where
     isAuthorized FactionR _           = isAuthenticated
     isAuthorized StarSystemsR _       = isAuthenticated
     isAuthorized (StarSystemR _) _    = isAuthenticated
-    isAuthorized (PlanetR {}) _      = isAuthenticated
+    isAuthorized (PlanetR {}) _       = isAuthenticated
     isAuthorized BasesR _             = isAuthenticated
-    isAuthorized (BaseR {}) _        = isAuthenticated
+    isAuthorized (BaseR {}) _         = isAuthenticated
     isAuthorized ResearchR _          = isAuthenticated
     isAuthorized FleetR _             = isAuthenticated
     isAuthorized DesignerR _          = isAuthenticated
@@ -239,18 +239,18 @@ instance Yesod App where
         return res
 
     -- API routes
-    isAuthorized ApiStarSystemsR _                  = isAuthenticated
-    isAuthorized ApiComponentsR _                   = isAuthenticated
-    isAuthorized ApiChassisR _                      = isAuthenticated
-    isAuthorized ApiDesignR _                       = isAuthenticated
-    isAuthorized (ApiDesignIdR _) _                 = isAuthenticated
-    isAuthorized ApiBuildingsR _                    = isAuthenticated
-    isAuthorized (ApiPlanetR _) _                   = isAuthenticated
-    isAuthorized (ApiPlanetBuildingsR _) _          = isAuthenticated
-    isAuthorized (ApiPlanetPopulationR _) _         = isAuthenticated
-    isAuthorized (ApiPlanetConstQueueR _) _         = isAuthenticated
-    isAuthorized ApiBuildingConstructionR _         = isAuthenticated
-    isAuthorized (ApiBuildingConstructionIdR _) _   = isAuthenticated
+    isAuthorized ApiStarSystemsR _                  = return Authorized
+    isAuthorized ApiComponentsR _                   = return Authorized
+    isAuthorized ApiChassisR _                      = return Authorized
+    isAuthorized ApiDesignR _                       = return Authorized
+    isAuthorized (ApiDesignIdR _) _                 = return Authorized
+    isAuthorized ApiBuildingsR _                    = return Authorized
+    isAuthorized (ApiPlanetR _) _                   = return Authorized
+    isAuthorized (ApiPlanetBuildingsR _) _          = return Authorized
+    isAuthorized (ApiPlanetPopulationR _) _         = return Authorized
+    isAuthorized (ApiPlanetConstQueueR _) _         = return Authorized
+    isAuthorized ApiBuildingConstructionR _         = return Authorized
+    isAuthorized (ApiBuildingConstructionIdR _) _   = return Authorized
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of

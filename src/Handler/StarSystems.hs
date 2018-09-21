@@ -14,9 +14,11 @@ import Widgets
 import MenuHelpers
 import Data.Maybe (fromJust)
 import Database.Persist.Sql (fromSqlKey)
+import Common (requireFaction, apiRequireFaction)
 
 getApiStarSystemsR :: Handler Value
 getApiStarSystemsR = do
+    _ <- apiRequireFaction
     loadedSystemReports <- runDB $ selectList [] [ Asc StarSystemReportId
                                                  , Asc StarSystemReportDate ]
     let systemReports = collateSystems $ map entityVal loadedSystemReports
@@ -24,10 +26,7 @@ getApiStarSystemsR = do
 
 getStarSystemsR :: Handler Html
 getStarSystemsR = do
-    (_, user) <- requireAuthPair   
-    factionId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> redirect ProfileR
+    (_, _, factionId) <- requireFaction
 
     loadedSystemReports <- runDB $ selectList [ StarSystemReportFactionId ==. factionId ] [ Asc StarSystemReportId
                                                                                           , Asc StarSystemReportDate ]
@@ -38,11 +37,7 @@ getStarSystemsR = do
 
 getStarSystemR :: Key StarSystem -> Handler Html
 getStarSystemR systemId = do
-    (_, user) <- requireAuthPair   
-    factionId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> redirect ProfileR
-
+    (_, _, factionId) <- requireFaction
     systemReport <- runDB $ createSystemReport systemId factionId
     starReports <- runDB $ createStarReports systemId factionId
     planetReports <- runDB $ createPlanetReports systemId factionId
@@ -58,10 +53,7 @@ getStarSystemR systemId = do
 
 getPlanetR :: Key StarSystem -> Key Planet -> Handler Html
 getPlanetR _ planetId = do
-    (_, user) <- requireAuthPair   
-    factionId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> redirect ProfileR
+    (_, _, factionId) <- requireFaction
     loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId ==. planetId
                                               , PlanetReportFactionId ==. factionId ] [ Asc PlanetReportDate ]
     let planetReport = collatePlanet $ map entityVal loadedPlanetReports
@@ -107,10 +99,7 @@ addPopulationDetails report = do
 
 getApiPlanetR :: Key Planet -> Handler Value
 getApiPlanetR planetId = do
-    (_, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, _, fId) <- apiRequireFaction
     loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId ==. planetId
                                               , PlanetReportFactionId ==. fId ] [ Asc PlanetReportDate ]
     let planetReport = collatePlanet $ map entityVal loadedPlanetReports
@@ -118,10 +107,7 @@ getApiPlanetR planetId = do
 
 getApiPlanetBuildingsR :: Key Planet -> Handler Value
 getApiPlanetBuildingsR planetId = do
-    (_, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, _, fId) <- apiRequireFaction
     loadedBuildingReports <- runDB $ selectList [ BuildingReportPlanetId ==. planetId 
                                                 , BuildingReportFactionId ==. fId ] [ Asc BuildingReportBuildingId
                                                                                     , Asc BuildingReportDate ]
@@ -130,10 +116,7 @@ getApiPlanetBuildingsR planetId = do
 
 getApiPlanetPopulationR :: Key Planet -> Handler Value
 getApiPlanetPopulationR planetId = do
-    (_, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of faction" :: Text)
+    (_, _, fId) <- apiRequireFaction
     loadedPopulationReports <- runDB $ selectList [ PlanetPopulationReportPlanetId ==. planetId
                                                   , PlanetPopulationReportFactionId ==. fId ] [ Asc PlanetPopulationReportPlanetId
                                                                                               , Asc PlanetPopulationReportRaceId
