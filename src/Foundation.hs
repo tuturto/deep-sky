@@ -104,6 +104,9 @@ instance Yesod App where
         mmsg <- getMessage
 
         muser <- maybeAuthPair
+        let mfaction = case muser of
+                            Nothing -> Nothing
+                            Just (_, user) -> userFactionId user
         mcurrentRoute <- getCurrentRoute
         adminOnly <- case muser of
                         Just (userId, _) -> runDB $ isAdmin userId
@@ -127,37 +130,37 @@ instance Yesod App where
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Star Systems"
                     , menuItemRoute = StarSystemsR
-                    , menuItemAccessCallback = isJust muser
+                    , menuItemAccessCallback = isJust mfaction
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Bases"
                     , menuItemRoute = BasesR
-                    , menuItemAccessCallback = isJust muser
+                    , menuItemAccessCallback = isJust mfaction
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Fleet"
                     , menuItemRoute = FleetR
-                    , menuItemAccessCallback = isJust muser
+                    , menuItemAccessCallback = isJust mfaction
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Designer"
                     , menuItemRoute = DesignerR
-                    , menuItemAccessCallback = isJust muser
+                    , menuItemAccessCallback = isJust mfaction
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Research"
                     , menuItemRoute = ResearchR
-                    , menuItemAccessCallback = isJust muser
+                    , menuItemAccessCallback = isJust mfaction
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Construction"
                     , menuItemRoute = ConstructionR
-                    , menuItemAccessCallback = isJust muser
+                    , menuItemAccessCallback = isJust mfaction
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Messages"
                     , menuItemRoute = MessageListR 1
-                    , menuItemAccessCallback = isJust muser
+                    , menuItemAccessCallback = isJust mfaction
                     }
                 , NavbarRight $ MenuItem
                     { menuItemLabel = "Admin"
@@ -215,18 +218,19 @@ instance Yesod App where
     -- Routes requiring authentication
     isAuthorized ProfileR _           = isAuthenticated
     isAuthorized FactionR _           = isAuthenticated
-    isAuthorized StarSystemsR _       = isAuthenticated
-    isAuthorized (StarSystemR _) _    = isAuthenticated
-    isAuthorized (PlanetR {}) _       = isAuthenticated
-    isAuthorized BasesR _             = isAuthenticated
-    isAuthorized (BaseR {}) _         = isAuthenticated
-    isAuthorized ResearchR _          = isAuthenticated
-    isAuthorized FleetR _             = isAuthenticated
-    isAuthorized DesignerR _          = isAuthenticated
-    isAuthorized ConstructionR _      = isAuthenticated
-    isAuthorized (MessageListR _) _   = isAuthenticated
-    isAuthorized NewMessageR _        = isAuthenticated
-    isAuthorized (MessageDeleteR _) _ = isAuthenticated
+    -- Routes requiring faction membership
+    isAuthorized StarSystemsR _       = isInFaction
+    isAuthorized (StarSystemR _) _    = isInFaction
+    isAuthorized (PlanetR {}) _       = isInFaction
+    isAuthorized BasesR _             = isInFaction
+    isAuthorized (BaseR {}) _         = isInFaction
+    isAuthorized ResearchR _          = isInFaction
+    isAuthorized FleetR _             = isInFaction
+    isAuthorized DesignerR _          = isInFaction
+    isAuthorized ConstructionR _      = isInFaction
+    isAuthorized (MessageListR _) _   = isInFaction
+    isAuthorized NewMessageR _        = isInFaction
+    isAuthorized (MessageDeleteR _) _ = isInFaction
 
     -- Special authorization
     isAuthorized AdminPanelR _     = do
@@ -286,6 +290,15 @@ instance Yesod App where
 
     makeLogger :: App -> IO Logger
     makeLogger = return . appLogger
+
+isInFaction :: Handler AuthResult
+isInFaction = do
+    authPair <- maybeAuthPair
+    return $ case authPair of
+        Nothing -> Unauthorized "You must login to access this page"
+        Just (_, user) -> case (userFactionId user) of
+                            Just _ -> Authorized
+                            Nothing -> Unauthorized "You must be member of a faction"
 
 -- Define breadcrumbs.
 instance YesodBreadcrumbs App where

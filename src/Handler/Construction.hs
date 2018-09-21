@@ -12,7 +12,7 @@ module Handler.Construction
 
 import Import
 import qualified Prelude as P ( maximum, length )
-import Common (requireFaction, apiRequireFaction)
+import Common (apiRequireFaction)
 import Buildings (building, BLevel(..))
 import CustomTypes (BuildingType(..))
 import Data.Aeson (ToJSON(..))
@@ -21,7 +21,6 @@ import Dto.Construction ( buildingConstructionToDto, shipConstructionToDto, Cons
 
 getConstructionR :: Handler Html
 getConstructionR = do
-    _ <- requireFaction
     defaultLayout $ do
         setTitle "Deep Sky - Construction"
         $(widgetFile "construction")

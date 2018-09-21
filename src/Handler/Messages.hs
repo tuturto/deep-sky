@@ -16,7 +16,7 @@ import Common (requireFaction)
 
 getMessageListR :: Int -> Handler Html
 getMessageListR currentPage = do
-    (_, user, fId) <- requireFaction
+    (_, _, fId) <- requireFaction
     let pageSize = 6
     (totalUnread, totalPages, loadedNews) <- runDB $ loadNewsEntries pageSize currentPage fId
     let entries = parseNewsEntities loadedNews
@@ -52,7 +52,6 @@ postNewMessageR = do
 
 getMessageDeleteR :: Key News -> Handler Html
 getMessageDeleteR nId = do
-    (_, user, _) <- requireFaction
     _ <- runDB $ update nId [ NewsDismissed =. True ]
     redirect (MessageListR 1)
 

@@ -13,11 +13,10 @@ import Import
 import Components
 import News (makeDesignCreatedNews)
 import MenuHelpers (starDate)
-import Common (requireFaction, apiRequireFaction)
+import Common (apiRequireFaction)
 
 getDesignerR :: Handler Html
 getDesignerR = do
-    (_, user, _) <- requireFaction
     defaultLayout $ do
         setTitle "Deep Sky - Ship designer"
         addScript $ StaticR js_shipdesigner_js
@@ -37,7 +36,7 @@ getApiComponentsR = do
 
 getApiChassisR :: Handler Value
 getApiChassisR = do
-    (_, user, fId) <- apiRequireFaction
+    _ <- apiRequireFaction
     loadedChassis <- runDB $ selectList [] []
     loadedRequirements <- runDB $ selectList [ RequiredComponentChassisId <-. map entityKey loadedChassis ] []
     let chassis = map (\c -> ChassisDto (entityKey c) (chassisName (entityVal c)) (chassisTonnage (entityVal c)) 
@@ -49,7 +48,7 @@ getApiChassisR = do
 
 getApiDesignR :: Handler Value
 getApiDesignR = do
-    (_, user, fId) <- apiRequireFaction
+    (_, _, fId) <- apiRequireFaction
     loadedDesigns <- runDB $ selectList [ DesignOwnerId ==. fId ] []
     loadedComponents <- runDB $ selectList [ PlannedComponentDesignId <-. map entityKey loadedDesigns ] []
     let designs = map (\d -> designToDesignDto (entityKey d, entityVal d)
@@ -59,7 +58,7 @@ getApiDesignR = do
 
 postApiDesignR :: Handler Value
 postApiDesignR = do    
-    (_, user, fId) <- apiRequireFaction
+    (_, _, fId) <- apiRequireFaction
     msg <- requireJsonBody 
     case (validateSaveDesign msg) of
         False -> sendResponseStatus status400 ("Validation failed" :: Text)
@@ -69,7 +68,7 @@ postApiDesignR = do
 
 putApiDesignIdR :: Key Design -> Handler Value
 putApiDesignIdR dId = do    
-    (_, user, fId) <- apiRequireFaction
+    (_, _, fId) <- apiRequireFaction
     msg <- requireJsonBody 
     case (validateSaveDesign msg) of
         False -> sendResponseStatus status400 ("Validation failed" :: Text)
@@ -79,7 +78,7 @@ putApiDesignIdR dId = do
 
 deleteApiDesignIdR :: Key Design -> Handler Value
 deleteApiDesignIdR dId = do
-    (_, user, fId) <- apiRequireFaction
+    _ <- apiRequireFaction
     _ <- runDB $ deleteWhere [ PlannedComponentDesignId ==. dId ]
     _ <- runDB $ delete dId
     sendResponseStatus status200 $ show $ fromSqlKey dId
@@ -92,7 +91,7 @@ saveDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     DesignDto -> Key Faction -> ReaderT backend m DesignDto
 saveDesign design fId = do
     newId <- insert $ Design (designDtoName design) fId (designDtoChassisId design)
-    cIds <- mapM insert $ map (componentDtoToPlannedComponent newId) (designDtoComponents design)
+    _ <- mapM insert $ map (componentDtoToPlannedComponent newId) (designDtoComponents design)
     newDesign <- get newId
     newComponents <- selectList [ PlannedComponentDesignId ==. newId ] []
     let x = designToDesignDto (newId, fromJust newDesign) newComponents
@@ -106,7 +105,7 @@ updateDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
 updateDesign dId design fId = do
     _ <- replace dId $ Design (designDtoName design) fId (designDtoChassisId design)
     _ <- deleteWhere [ PlannedComponentDesignId ==. dId ]
-    cIds <- mapM insert $ map (componentDtoToPlannedComponent dId) (designDtoComponents design)
+    _ <- mapM insert $ map (componentDtoToPlannedComponent dId) (designDtoComponents design)
     newDesign <- get dId
     newComponents <- selectList [ PlannedComponentDesignId ==. dId ] []
     let x = designToDesignDto (dId, fromJust newDesign) newComponents

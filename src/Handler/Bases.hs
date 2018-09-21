@@ -9,13 +9,11 @@ module Handler.Bases where
 import Import
 import Report
 import Handler.StarSystems
+import Common (requireFaction)
 
 getBasesR :: Handler Html
 getBasesR = do
-    (_, user) <- requireAuthPair
-    factionId <- case (userFactionId user) of
-        Just x -> return x
-        Nothing -> redirect ProfileR
+    (_, _, factionId) <- requireFaction
 
     loadedPlanets <- runDB $ selectList [ PlanetOwnerId ==. (Just factionId)] [ Asc PlanetName ]
     let planetIds = map entityKey loadedPlanets
