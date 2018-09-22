@@ -245,7 +245,7 @@ queueItem construction =
 
 buildingInQueue : BuildingConstructionData -> Html Msg
 buildingInQueue building =
-  div [ class "row" ]
+  div [ class "row", onClick (UiMsg <| DeleteBuildingFromQueue building) ]
   [ div [ class "col-lg-6" ]
     [ text building.name ]
   ]

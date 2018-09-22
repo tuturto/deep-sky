@@ -13,6 +13,7 @@ type ApiMsg = BuildingInfoLoaded (Result Http.Error (List BuildingInfo))
   | ConstructionsLoaded (Result Http.Error (List Construction))
 
 type Action = AddBuildingIntoQueue BuildingInfo
+  | DeleteBuildingFromQueue BuildingConstructionData
 
 type alias Model = 
   { searchText : String

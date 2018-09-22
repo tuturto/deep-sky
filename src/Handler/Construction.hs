@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE FlexibleContexts      #-}
 
 module Handler.Construction 
     ( getConstructionR, getApiBuildingsR, getApiPlanetConstQueueR, getApiBuildingConstructionIdR
@@ -47,18 +48,6 @@ getApiPlanetConstQueueR planetId = do
     constructions <- runDB $ loadPlanetConstructionQueue planetId
     return $ toJSON constructions
 
--- | load construction queue of a given planet
-loadPlanetConstructionQueue :: (PersistQueryRead backend,
-                                MonadIO m, BaseBackend backend ~ SqlBackend) =>
-                                Key Planet -> ReaderT backend m [ConstructionDto]
-loadPlanetConstructionQueue planetId = do
-    loadedBuildings <- selectList [ BuildingConstructionPlanetId ==. planetId ] []
-    loadedShips <- selectList [ ShipConstructionPlanetId ==. Just planetId ] []
-    let buildings = map buildingConstructionToDto loadedBuildings
-    let ships = map shipConstructionToDto loadedShips
-    let constructions = buildings ++ ships
-    return constructions
-
 -- | Retrieve details of given building construction
 getApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
 getApiBuildingConstructionIdR cId = do
@@ -85,6 +74,34 @@ postApiBuildingConstructionR = do
     newConstructions <- runDB $ loadPlanetConstructionQueue $ bcdtoPlanet msg
     return $ toJSON newConstructions
 
+-- | Update existing building construction
+--   In case this method is called to update ship construction http 400 error will be returned
+putApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
+putApiBuildingConstructionIdR cId = do
+    _ <- apiRequireFaction
+    msg <- requireJsonBody
+    loadedConst <- case msg of
+                    ShipConstructionDto {} -> invalidArgs [ "body" ]
+                    BuildingConstructionDto {} -> runDB $ get cId
+    construction <- case loadedConst of
+                        Just x -> return x
+                        Nothing -> notFound
+    -- update construction data
+    -- save construction
+    -- load construction
+    -- return construction
+    return $ toJSON construction
+
+-- | Delete building construction
+deleteApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
+deleteApiBuildingConstructionIdR cId = do
+    _ <- apiRequireFaction
+    loadedConst <- runDB $ get cId
+    res <- runDB $ removeBuildingConstruction cId loadedConst
+    return $ toJSON res
+
+
+    
 -- | Translate construction dto into building construction
 --   In case construction dto is for a ship, Nothing is returned
 dtoToBuildingConstruction :: ConstructionDto -> Maybe BuildingConstruction
@@ -105,37 +122,37 @@ dtoToBuildingConstruction cDto =
                                         }
         ShipConstructionDto {} -> Nothing
 
--- | Update existing building construction
---   In case this method is called to update ship construction http 400 error will be returned
-putApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
-putApiBuildingConstructionIdR cId = do
-    _ <- apiRequireFaction
-    msg <- requireJsonBody
-    loadedConst <- case msg of
-                    ShipConstructionDto {} -> invalidArgs [ "body" ]
-                    BuildingConstructionDto {} -> runDB $ get cId
-    construction <- case loadedConst of
-                        Just x -> return x
-                        Nothing -> notFound
-    -- update construction data
-    -- save construction
-    -- load construction
-    -- return construction
-    return $ toJSON construction
+-- | load construction queue of a given planet
+loadPlanetConstructionQueue :: (PersistQueryRead backend,
+                                MonadIO m, BaseBackend backend ~ SqlBackend) =>
+                                Key Planet -> ReaderT backend m [ConstructionDto]
+loadPlanetConstructionQueue planetId = do
+    loadedBuildings <- selectList [ BuildingConstructionPlanetId ==. planetId ] []
+    loadedShips <- selectList [ ShipConstructionPlanetId ==. Just planetId ] []
+    let buildings = map buildingConstructionToDto loadedBuildings
+    let ships = map shipConstructionToDto loadedShips
+    let constructions = buildings ++ ships
+    return constructions
 
--- | Delete building construction
-deleteApiBuildingConstructionIdR :: Key BuildingConstruction ->Handler Value
-deleteApiBuildingConstructionIdR _ = do
-    _ <- apiRequireFaction
-    msg <- requireJsonBody
-    --loadedConst <- runDB $ get cId
-    --construction <- case loadedConst of
-    --                    Just x -> return x
-    --                    Nothing -> notFound
-    return $ toJSON (msg :: Text)
+-- | Remove building construction from database and update indexes of other buildings in the queue
+removeBuildingConstruction :: (MonadIO m, PersistEntity record, PersistQueryWrite backend,
+                               PersistEntityBackend record ~ BaseBackend backend,
+                               BaseBackend backend ~ SqlBackend) =>
+                               Key record -> Maybe BuildingConstruction -> ReaderT backend m [ConstructionDto]
+removeBuildingConstruction bId (Just buildingInfo) = do
+    let bIndex = buildingConstructionIndex buildingInfo
+    let planetId = buildingConstructionPlanetId buildingInfo
+    _ <- delete bId
+    _ <- updateWhere [ BuildingConstructionPlanetId ==. planetId
+                     , BuildingConstructionIndex >. bIndex ] [ BuildingConstructionIndex -=. 1 ]
+    _ <- updateWhere [ ShipConstructionPlanetId ==. Just planetId
+                     , ShipConstructionIndex >. bIndex ] [ ShipConstructionIndex -=. 1 ]
+    newQueue <- loadPlanetConstructionQueue $ buildingConstructionPlanetId buildingInfo
+    return newQueue
 
--- 
-
+removeBuildingConstruction _ Nothing = do
+    return []
+ 
 -- TODO:
 -- remove building from queue (delete)
 -- move building up in queue (put)

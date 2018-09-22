@@ -108,6 +108,11 @@ handleUiMsg msg model =
         , Http.send (NetworkMsg << ConstructionsLoaded) 
                     (send "POST" "/api/construction/building" (Http.jsonBody <| buildingConstructionEncoder construction)
                     (Decode.list constructionDecoder)))
+    DeleteBuildingFromQueue building ->
+      ( model
+      , Http.send (NetworkMsg << ConstructionsLoaded)
+                  (send "DELETE" ("/api/construction/building/" ++ (toString building.id)) Http.emptyBody
+                  (Decode.list constructionDecoder)))
 
 send : String -> String -> Http.Body -> Decode.Decoder a -> Http.Request a
 send method url body decoder =
