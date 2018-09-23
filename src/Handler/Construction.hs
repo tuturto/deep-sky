@@ -65,12 +65,7 @@ postApiBuildingConstructionR :: Handler Value
 postApiBuildingConstructionR = do
     _ <- apiRequireFaction
     msg <- requireJsonBody
-    currentConstructions <- runDB $ loadPlanetConstructionQueue $ bcdtoPlanet msg
-    let nextIndex = if P.length currentConstructions == 0
-                        then 0
-                        else (P.maximum $ map constructionIndex currentConstructions) + 1
-    let construction = dtoToBuildingConstruction msg
-    _ <- mapM (\x -> runDB $ insert x { buildingConstructionIndex = nextIndex }) construction
+    _ <- runDB $ createBuildingConstruction msg
     newConstructions <- runDB $ loadPlanetConstructionQueue $ bcdtoPlanet msg
     return $ toJSON newConstructions
 
@@ -101,8 +96,20 @@ deleteApiBuildingConstructionIdR cId = do
     return $ toJSON res
 
 
+
+-- | transform building construction dto into building construction and save is into database
+createBuildingConstruction :: (PersistQueryRead backend, MonadIO m,
+                               PersistStoreWrite backend, BaseBackend backend ~ SqlBackend) =>
+                              ConstructionDto -> ReaderT backend m (Maybe (Key BuildingConstruction))
+createBuildingConstruction cDto = do
+    currentConstructions <- loadPlanetConstructionQueue $ bcdtoPlanet cDto
+    let nextIndex = if P.length currentConstructions == 0
+                        then 0
+                        else (P.maximum $ map constructionIndex currentConstructions) + 1
+    let construction = dtoToBuildingConstruction cDto
+    mapM (\x -> insert x { buildingConstructionIndex = nextIndex }) construction
     
--- | Translate construction dto into building construction
+    -- | Translate construction dto into building construction
 --   In case construction dto is for a ship, Nothing is returned
 dtoToBuildingConstruction :: ConstructionDto -> Maybe BuildingConstruction
 dtoToBuildingConstruction cDto =
@@ -154,12 +161,13 @@ removeBuildingConstruction _ Nothing = do
     return []
  
 -- TODO:
--- remove building from queue (delete)
 -- move building up in queue (put)
 -- move building down in queue (put)
 -- and ships
+-- and general clean up of code
 
 -- DONE:
 -- load available buildings
 -- load current construction queue
 -- add building into queue (post)
+-- remove building from queue (delete)
