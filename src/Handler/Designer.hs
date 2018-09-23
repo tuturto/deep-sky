@@ -3,8 +3,11 @@
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE FlexibleContexts      #-}
 
-module Handler.Designer where
+module Handler.Designer ( getDesignerR, getApiComponentsR, getApiChassisR, getApiDesignR
+                        , postApiDesignR, putApiDesignIdR, deleteApiDesignIdR )
+    where
 
 import Database.Persist.Sql (fromSqlKey)
 import Data.Maybe (fromJust)
@@ -79,8 +82,7 @@ putApiDesignIdR dId = do
 deleteApiDesignIdR :: Key Design -> Handler Value
 deleteApiDesignIdR dId = do
     _ <- apiRequireFaction
-    _ <- runDB $ deleteWhere [ PlannedComponentDesignId ==. dId ]
-    _ <- runDB $ delete dId
+    _ <- runDB $ deleteDesign dId
     sendResponseStatus status200 $ show $ fromSqlKey dId
 
 validateSaveDesign :: DesignDto -> Bool
@@ -110,3 +112,11 @@ updateDesign dId design fId = do
     newComponents <- selectList [ PlannedComponentDesignId ==. dId ] []
     let x = designToDesignDto (dId, fromJust newDesign) newComponents
     return x
+
+-- | Delete design and related components from database
+deleteDesign :: (MonadIO m, PersistQueryWrite backend,
+                 BaseBackend backend ~ SqlBackend) =>
+                Key Design -> ReaderT backend m ()
+deleteDesign dId = do
+    _ <- deleteWhere [ PlannedComponentDesignId ==. dId ]
+    delete dId
