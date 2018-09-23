@@ -4,7 +4,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 
-module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair )
+module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
+              , DtoTransform(..) )
     where
 
 import Import
@@ -57,6 +58,10 @@ apiRequireFaction = do
                         Just x -> return x
                         Nothing -> sendStatusJSON status500 $ toJSON $ ErrorJson "Not a member of a faction"
     return (authId, user, fId)
+
+-- | Class to transform dto to respective entity
+class DtoTransform d c where
+    fromDto :: d -> c
 
 data ErrorJson = ErrorJson { unerror :: Text }
 

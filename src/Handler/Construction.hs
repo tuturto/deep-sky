@@ -4,6 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 
 module Handler.Construction 
     ( getConstructionR, getApiBuildingsR, getApiPlanetConstQueueR, getApiBuildingConstructionIdR
@@ -13,7 +14,7 @@ module Handler.Construction
 
 import Import
 import qualified Prelude as P ( maximum, length )
-import Common (apiRequireFaction)
+import Common ( apiRequireFaction, fromDto )
 import Buildings (building, BLevel(..))
 import CustomTypes (BuildingType(..))
 import Data.Aeson (ToJSON(..))
@@ -106,28 +107,7 @@ createBuildingConstruction cDto = do
     let nextIndex = if P.length currentConstructions == 0
                         then 0
                         else (P.maximum $ map constructionIndex currentConstructions) + 1
-    let construction = dtoToBuildingConstruction cDto
-    mapM (\x -> insert x { buildingConstructionIndex = nextIndex }) construction
-    
-    -- | Translate construction dto into building construction
---   In case construction dto is for a ship, Nothing is returned
-dtoToBuildingConstruction :: ConstructionDto -> Maybe BuildingConstruction
-dtoToBuildingConstruction cDto =
-    case cDto of
-        BuildingConstructionDto { bcdtoIndex = bIndex
-                                , bcdtoLevel = bLevel
-                                , bcdtoType = bType
-                                , bcdtoPlanet = bPlanetId
-                                } ->
-            Just $ BuildingConstruction { buildingConstructionPlanetId = bPlanetId
-                                        , buildingConstructionIndex = bIndex
-                                        , buildingConstructionProgressBiologicals = 0
-                                        , buildingConstructionProgressMechanicals = 0
-                                        , buildingConstructionProgressChemicals = 0
-                                        , buildingConstructionType = bType
-                                        , buildingConstructionLevel = bLevel
-                                        }
-        ShipConstructionDto {} -> Nothing
+    mapM (\x -> insert x { buildingConstructionIndex = nextIndex }) $ fromDto cDto
 
 -- | load construction queue of a given planet
 loadPlanetConstructionQueue :: (PersistQueryRead backend,

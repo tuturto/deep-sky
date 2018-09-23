@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE FlexibleInstances     #-}
 
 module Dto.Construction 
   ( ConstructionDto(..), buildingConstructionToDto, shipConstructionToDto
@@ -10,6 +11,7 @@ module Dto.Construction
   where
 
 import CustomTypes (buildingTypeName, ShipType(..), BuildingType(..))
+import Common (DtoTransform(..))
 import Data.Aeson (object, (.=))
 import Import
 
@@ -64,8 +66,8 @@ instance FromJSON ConstructionDto where
 constructionIndex :: ConstructionDto -> Int
 constructionIndex c =
   case c of
-    BuildingConstructionDto { bcdtoIndex = index } -> index
-    ShipConstructionDto { scdtoIndex = index } -> index
+    BuildingConstructionDto { bcdtoIndex = x } -> x
+    ShipConstructionDto { scdtoIndex = x } -> x
 
 buildingConstructionToDto :: Entity BuildingConstruction -> ConstructionDto
 buildingConstructionToDto bce =
@@ -86,3 +88,21 @@ shipConstructionToDto sce =
   where
     sc = entityVal sce
     key = entityKey sce
+
+instance DtoTransform ConstructionDto (Maybe BuildingConstruction) where
+    fromDto dto = 
+        case dto of
+            BuildingConstructionDto { bcdtoIndex = bIndex
+                                    , bcdtoLevel = bLevel
+                                    , bcdtoType = bType
+                                    , bcdtoPlanet = bPlanetId
+                                    } ->
+                Just $ BuildingConstruction { buildingConstructionPlanetId = bPlanetId
+                                            , buildingConstructionIndex = bIndex
+                                            , buildingConstructionProgressBiologicals = 0
+                                            , buildingConstructionProgressMechanicals = 0
+                                            , buildingConstructionProgressChemicals = 0
+                                            , buildingConstructionType = bType
+                                            , buildingConstructionLevel = bLevel
+                                            }
+            ShipConstructionDto {} -> Nothing
