@@ -13,8 +13,8 @@ module Handler.Construction
     where
 
 import Import
-import qualified Prelude as P ( maximum, length )
-import Common ( apiRequireFaction, fromDto, apiNotFound, apiInvalidArgs )
+import qualified Prelude as P ( maximum, length, head )
+import Common ( apiRequireFaction, fromDto, apiNotFound, apiInvalidArgs, apiInternalError )
 import Buildings (building, BLevel(..))
 import CustomTypes (BuildingType(..))
 import Data.Aeson (ToJSON(..))
@@ -77,16 +77,29 @@ putApiBuildingConstructionIdR cId = do
     _ <- apiRequireFaction
     msg <- requireJsonBody
     loadedConst <- case msg of
-                    ShipConstructionDto {} -> apiInvalidArgs [ "body" ]
+                    ShipConstructionDto {} -> apiInvalidArgs [ "body contains ship" ]
                     BuildingConstructionDto {} -> runDB $ get cId
     construction <- case loadedConst of
                         Just x -> return x
                         Nothing -> apiNotFound
-    -- update construction data
-    -- save construction
-    -- load construction
-    -- return construction
-    return $ toJSON construction
+    let oldIndex = buildingConstructionIndex construction
+    let newIndex = bcdtoIndex msg
+    buildingConstructions <- runDB $ selectList [ BuildingConstructionIndex ==. newIndex
+                                                , BuildingConstructionPlanetId ==. buildingConstructionPlanetId construction  ] []
+    -- TODO: handle ship construction
+    -- TODO: handle being first in the list
+    -- TODO: handle being last in the list
+    aIdConst <- case P.length buildingConstructions of
+                    0 -> apiInternalError
+                    _ -> return $ P.head buildingConstructions
+    let aId = entityKey aIdConst
+
+    newConstructions <- runDB $ do
+        _ <- update cId [ BuildingConstructionIndex =. newIndex ]
+        _ <- update aId [ BuildingConstructionIndex =. oldIndex ]
+        loadPlanetConstructionQueue $ bcdtoPlanet msg
+
+    return $ toJSON newConstructions
 
 -- | Delete building construction
 deleteApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value

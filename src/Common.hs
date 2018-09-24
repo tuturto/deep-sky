@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
-              , DtoTransform(..), apiNotFound, apiInvalidArgs )
+              , DtoTransform(..), apiNotFound, apiInvalidArgs, apiInternalError )
     where
 
 import Import
@@ -62,12 +62,17 @@ apiRequireFaction = do
 -- | Send 404 error with json body
 apiNotFound :: HandlerFor App a
 apiNotFound = 
-    sendStatusJSON status404 $ toJSON $ ErrorJson ("Resource not found" :: Text)
+    sendStatusJSON status404 $ toJSON $ ErrorJson "Resource not found"
 
 -- | Send 400 error with json body containing list of names of all invalid arguments
 apiInvalidArgs :: [Text] -> HandlerFor App a
 apiInvalidArgs params =
     sendStatusJSON status400 $ toJSON $ ErrorsJson params
+
+-- | Send 500 error with json body
+apiInternalError :: HandlerFor App a
+apiInternalError =
+    sendStatusJSON status500 $ toJSON $ ErrorJson "Internal error occurred"
 
 -- | Class to transform dto to respective entity
 class DtoTransform d c where
