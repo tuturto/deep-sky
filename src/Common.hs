@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
-              , DtoTransform(..) )
+              , DtoTransform(..), apiNotFound )
     where
 
 import Import
@@ -58,6 +58,10 @@ apiRequireFaction = do
                         Just x -> return x
                         Nothing -> sendStatusJSON status500 $ toJSON $ ErrorJson "Not a member of a faction"
     return (authId, user, fId)
+
+apiNotFound :: HandlerFor App a
+apiNotFound = 
+    sendStatusJSON status404 $ toJSON $ ErrorJson ("Resource not found" :: Text)
 
 -- | Class to transform dto to respective entity
 class DtoTransform d c where

@@ -14,7 +14,7 @@ module Handler.Construction
 
 import Import
 import qualified Prelude as P ( maximum, length )
-import Common ( apiRequireFaction, fromDto )
+import Common ( apiRequireFaction, fromDto, apiNotFound )
 import Buildings (building, BLevel(..))
 import CustomTypes (BuildingType(..))
 import Data.Aeson (ToJSON(..))
@@ -56,7 +56,7 @@ getApiBuildingConstructionIdR cId = do
     loadedConst <- runDB $ get cId
     construction <- case loadedConst of
                         Just x -> return x
-                        Nothing -> notFound
+                        Nothing -> apiNotFound
     return $ toJSON construction
 
 -- | Create a new building construction
@@ -81,7 +81,7 @@ putApiBuildingConstructionIdR cId = do
                     BuildingConstructionDto {} -> runDB $ get cId
     construction <- case loadedConst of
                         Just x -> return x
-                        Nothing -> notFound
+                        Nothing -> apiNotFound
     -- update construction data
     -- save construction
     -- load construction
