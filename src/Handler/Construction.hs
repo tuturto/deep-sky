@@ -14,7 +14,7 @@ module Handler.Construction
 
 import Import
 import qualified Prelude as P ( maximum, length )
-import Common ( apiRequireFaction, fromDto, apiNotFound )
+import Common ( apiRequireFaction, fromDto, apiNotFound, apiInvalidArgs )
 import Buildings (building, BLevel(..))
 import CustomTypes (BuildingType(..))
 import Data.Aeson (ToJSON(..))
@@ -77,7 +77,7 @@ putApiBuildingConstructionIdR cId = do
     _ <- apiRequireFaction
     msg <- requireJsonBody
     loadedConst <- case msg of
-                    ShipConstructionDto {} -> invalidArgs [ "body" ]
+                    ShipConstructionDto {} -> apiInvalidArgs [ "body" ]
                     BuildingConstructionDto {} -> runDB $ get cId
     construction <- case loadedConst of
                         Just x -> return x

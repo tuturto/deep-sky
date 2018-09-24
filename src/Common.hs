@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
-              , DtoTransform(..), apiNotFound )
+              , DtoTransform(..), apiNotFound, apiInvalidArgs )
     where
 
 import Import
@@ -62,6 +62,10 @@ apiRequireFaction = do
 apiNotFound :: HandlerFor App a
 apiNotFound = 
     sendStatusJSON status404 $ toJSON $ ErrorJson ("Resource not found" :: Text)
+
+apiInvalidArgs :: [Text] -> HandlerFor App a
+apiInvalidArgs params =
+    sendStatusJSON status400 $ toJSON $ ErrorJson $ intercalate ", " params
 
 -- | Class to transform dto to respective entity
 class DtoTransform d c where
