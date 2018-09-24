@@ -59,18 +59,21 @@ apiRequireFaction = do
                         Nothing -> sendStatusJSON status500 $ toJSON $ ErrorJson "Not a member of a faction"
     return (authId, user, fId)
 
+-- | Send 404 error with json body
 apiNotFound :: HandlerFor App a
 apiNotFound = 
     sendStatusJSON status404 $ toJSON $ ErrorJson ("Resource not found" :: Text)
 
+-- | Send 400 error with json body containing list of names of all invalid arguments
 apiInvalidArgs :: [Text] -> HandlerFor App a
 apiInvalidArgs params =
-    sendStatusJSON status400 $ toJSON $ ErrorJson $ intercalate ", " params
+    sendStatusJSON status400 $ toJSON $ ErrorsJson params
 
 -- | Class to transform dto to respective entity
 class DtoTransform d c where
     fromDto :: d -> c
 
 data ErrorJson = ErrorJson { unerror :: Text }
+    | ErrorsJson { unerrors :: [Text] }
 
 $(deriveJSON defaultOptions {fieldLabelModifier = drop 2} ''ErrorJson)
