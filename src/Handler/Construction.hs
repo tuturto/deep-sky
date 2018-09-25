@@ -13,8 +13,8 @@ module Handler.Construction
     where
 
 import Import
-import qualified Prelude as P ( maximum, length, head )
-import Common ( apiRequireFaction, fromDto, apiNotFound, apiInvalidArgs, apiInternalError )
+import qualified Prelude as P ( maximum, length )
+import Common ( apiRequireFaction, fromDto, apiNotFound, apiInvalidArgs, apiOk )
 import Buildings (building, BLevel(..))
 import CustomTypes (BuildingType(..))
 import Data.Aeson (ToJSON(..))
@@ -76,6 +76,9 @@ putApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
 putApiBuildingConstructionIdR cId = do
     _ <- apiRequireFaction
     msg <- requireJsonBody
+    newIndex <- if bcdtoIndex msg < 0
+                then apiInvalidArgs [ "negative building index" ]
+                else return $ bcdtoIndex msg
     loadedConst <- case msg of
                     ShipConstructionDto {} -> apiInvalidArgs [ "body contains ship" ]
                     BuildingConstructionDto {} -> runDB $ get cId
@@ -83,21 +86,52 @@ putApiBuildingConstructionIdR cId = do
                         Just x -> return x
                         Nothing -> apiNotFound
     let oldIndex = buildingConstructionIndex construction
-    let newIndex = bcdtoIndex msg
-    buildingConstructions <- runDB $ selectList [ BuildingConstructionIndex ==. newIndex
-                                                , BuildingConstructionPlanetId ==. buildingConstructionPlanetId construction  ] []
-    -- TODO: handle ship construction
-    -- TODO: handle being first in the list
-    -- TODO: handle being last in the list
-    aIdConst <- case P.length buildingConstructions of
-                    0 -> apiInternalError
-                    _ -> return $ P.head buildingConstructions
-    let aId = entityKey aIdConst
-
-    newConstructions <- runDB $ do
-        _ <- update cId [ BuildingConstructionIndex =. newIndex ]
-        _ <- update aId [ BuildingConstructionIndex =. oldIndex ]
-        loadPlanetConstructionQueue $ bcdtoPlanet msg
+    _ <- if oldIndex == newIndex
+         then do
+            queue <- runDB $ loadPlanetConstructionQueue $ bcdtoPlanet msg
+            apiOk queue
+         else return []
+    let pId = buildingConstructionPlanetId construction
+    -- TODO: clean up validation (newIndex, oldIndex, pId are needed values)
+    -- TODO: make update a separate function
+    newConstructions <- if newIndex < oldIndex
+                        then runDB $ do
+                            -- move construction to the new index
+                            _ <- update cId [ BuildingConstructionIndex =. newIndex ]
+                            -- move building constructions +1 if
+                            -- a) they have smaller index than the old one
+                            -- b) they have larger index than the new one
+                            _ <- updateWhere [ BuildingConstructionPlanetId ==. pId
+                                             , BuildingConstructionIndex >=. newIndex
+                                             , BuildingConstructionIndex <. oldIndex
+                                             , BuildingConstructionId !=. cId ]
+                                             [ BuildingConstructionIndex +=. 1 ]
+                            -- perform same move to ship constructions
+                            _ <- updateWhere [ ShipConstructionPlanetId ==. Just pId
+                                             , ShipConstructionIndex >=. newIndex 
+                                             , ShipConstructionIndex <. oldIndex]
+                                             [ ShipConstructionIndex +=. 1 ]
+                            loadPlanetConstructionQueue $ bcdtoPlanet msg
+                        else runDB $ do
+                            -- TODO: go through this section once more and comment it
+                            _ <- update cId [ BuildingConstructionIndex =. newIndex ]
+                            _ <- updateWhere [ BuildingConstructionPlanetId ==. pId
+                                             , BuildingConstructionIndex >=. newIndex
+                                             , BuildingConstructionId !=. cId ]
+                                             [ BuildingConstructionIndex +=. 1 ]
+                            _ <- updateWhere [ BuildingConstructionPlanetId ==. pId
+                                             , BuildingConstructionIndex >=. oldIndex
+                                             , BuildingConstructionIndex <. newIndex
+                                             , BuildingConstructionId !=. cId ]
+                                             [ BuildingConstructionIndex -=. 1 ]
+                            _ <- updateWhere [ ShipConstructionPlanetId ==. Just pId
+                                             , ShipConstructionIndex >=. newIndex ]
+                                             [ ShipConstructionIndex +=. 1 ]
+                            _ <- updateWhere [ ShipConstructionPlanetId ==. Just pId
+                                             , ShipConstructionIndex >=. oldIndex
+                                             , ShipConstructionIndex <. newIndex ]
+                                             [ ShipConstructionIndex -=. 1 ]
+                            loadPlanetConstructionQueue $ bcdtoPlanet msg
 
     return $ toJSON newConstructions
 

@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
-              , DtoTransform(..), apiNotFound, apiInvalidArgs, apiInternalError )
+              , DtoTransform(..), apiNotFound, apiInvalidArgs, apiInternalError, apiOk )
     where
 
 import Import
@@ -73,6 +73,11 @@ apiInvalidArgs params =
 apiInternalError :: HandlerFor App a
 apiInternalError =
     sendStatusJSON status500 $ toJSON $ ErrorJson "Internal error occurred"
+
+-- | Send 200 with json body
+apiOk :: (MonadHandler m, ToJSON a) => a -> m a
+apiOk content =
+    sendStatusJSON status200 $ toJSON content
 
 -- | Class to transform dto to respective entity
 class DtoTransform d c where
