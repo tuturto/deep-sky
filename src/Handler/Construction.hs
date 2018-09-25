@@ -178,13 +178,5 @@ removeBuildingConstruction _ Nothing = do
     return []
  
 -- TODO:
--- move building up in queue (put)
--- move building down in queue (put)
 -- and ships
 -- and general clean up of code
-
--- DONE:
--- load available buildings
--- load current construction queue
--- add building into queue (post)
--- remove building from queue (delete)

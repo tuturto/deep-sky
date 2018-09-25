@@ -94,9 +94,9 @@ buildingConstructionDecoder =
 
 buildingConstructionEncoder : BuildingConstructionData -> Encode.Value
 buildingConstructionEncoder building =
-  Encode.object [ ("id", Encode.int 0)
-                , ("name", Encode.string "")
-                , ("index", Encode.int 0)
+  Encode.object [ ("id", Encode.int building.id)
+                , ("name", Encode.string building.name)
+                , ("index", Encode.int building.index)
                 , ("level", Encode.int building.level)
                 , ("type", buildingTypeEncoder building.buildingType)
                 , ("planet", Encode.int building.planet)

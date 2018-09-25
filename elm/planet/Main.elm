@@ -111,8 +111,19 @@ handleUiMsg msg model =
     DeleteBuildingFromQueue building ->
       ( model
       , Http.send (NetworkMsg << ConstructionsLoaded)
-                  (send "DELETE" ("/api/construction/building/" ++ (toString building.id)) Http.emptyBody
+                  (send "DELETE" ("/api/construction/building/" ++ (toString building.id)) Http.emptyBody              
                   (Decode.list constructionDecoder)))
+    MoveBuilding building index ->
+      ( model
+      , Http.send (NetworkMsg << ConstructionsLoaded)
+                  (send "PUT" ("/api/construction/building/" ++ (toString building.id)) (moveBody building index)
+                  (Decode.list constructionDecoder)))
+
+moveBody : BuildingConstructionData -> Int -> Http.Body
+moveBody building newIndex =
+  { building | index = newIndex }
+  |> buildingConstructionEncoder 
+  |> Http.jsonBody  
 
 send : String -> String -> Http.Body -> Decode.Decoder a -> Http.Request a
 send method url body decoder =

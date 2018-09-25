@@ -228,27 +228,47 @@ constructionQueue model =
 
 currentQueue : Model -> Html Msg
 currentQueue model =
-  div []
-  <| List.append
-    [ div [ class "row" ] 
-      [ div [ class "col-lg-6" ]
-        [ text "Name" ]
+  let
+    maxIndex = case List.maximum <| List.map constructionIndex model.constructionQueue of
+                Just x -> x 
+                Nothing -> 0
+  in
+    div []
+    <| List.append
+      [ div [ class "row" ] 
+        [ div [ class "col-lg-6" ]
+          [ text "Name" ]
+        ]
       ]
-    ]
-  <| List.map queueItem model.constructionQueue
+    <| List.map (queueItem maxIndex) model.constructionQueue
 
-queueItem : Construction -> Html Msg
-queueItem construction =
+queueItem : Int -> Construction -> Html Msg
+queueItem maxIndex construction =
   case construction of
-    (BuildingConstruction building) -> buildingInQueue building
+    (BuildingConstruction building) -> buildingInQueue maxIndex building 
     (ShipConstruction ship) -> shipInQueue ship
 
-buildingInQueue : BuildingConstructionData -> Html Msg
-buildingInQueue building =
-  div [ class "row", onClick (UiMsg <| DeleteBuildingFromQueue building) ]
-  [ div [ class "col-lg-6" ]
-    [ text building.name ]
-  ]
+buildingInQueue : Int -> BuildingConstructionData -> Html Msg
+buildingInQueue maxIndex building =
+  let 
+    up = if building.index > 0
+          then i [ class "fas fa-angle-up", onClick (UiMsg <| MoveBuilding building (building.index - 1)) ] []
+          else i [ class "fas fa-angle-up" ] []
+    down = if building.index < maxIndex
+            then i [ class "fas fa-angle-down", onClick (UiMsg <| MoveBuilding building (building.index + 1)) ] []
+            else i [ class "fas fa-angle-down" ] []
+  in
+    div [ class "row" ]
+    [ div [ class "col-lg-1" ]
+      [ up
+      , down
+      ]
+    , div [ class "col-lg-6" ]
+      [ span [] [ text building.name ]
+      ]
+    , div [ class "col-lg-2" ]
+      [ i [ class "fas fa-trash-alt", onClick (UiMsg <| DeleteBuildingFromQueue building) ] [] ]
+    ]
 
 shipInQueue : ShipConstructionData -> Html Msg
 shipInQueue ship =
