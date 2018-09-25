@@ -76,6 +76,47 @@ putApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
 putApiBuildingConstructionIdR cId = do
     _ <- apiRequireFaction
     msg <- requireJsonBody
+    (newIndex, oldIndex, pId) <- validatePut msg cId
+    let direction = if newIndex < oldIndex
+                    then 1 
+                    else -1
+    let upperBound = max oldIndex newIndex
+    let lowerBound = min oldIndex newIndex
+    newConstructions <- runDB $ do
+                        -- move construction to the new index
+                        _ <- update cId [ BuildingConstructionIndex =. newIndex ]
+                        -- move building constructions that have their index between bounds
+                        _ <- updateWhere [ BuildingConstructionPlanetId ==. pId
+                                         , BuildingConstructionIndex >=. lowerBound
+                                         , BuildingConstructionIndex <=. upperBound
+                                         , BuildingConstructionId !=. cId ]
+                                         [ BuildingConstructionIndex +=. direction ]
+                        -- perform same move to ship constructions
+                        _ <- updateWhere [ ShipConstructionPlanetId ==. Just pId
+                                         , ShipConstructionIndex >=. lowerBound
+                                         , ShipConstructionIndex <=. upperBound ]
+                                         [ ShipConstructionIndex +=. direction ]
+                        loadPlanetConstructionQueue $ bcdtoPlanet msg
+
+    return $ toJSON newConstructions
+
+-- | Delete building construction
+deleteApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
+deleteApiBuildingConstructionIdR cId = do
+    _ <- apiRequireFaction
+    loadedConst <- runDB $ get cId
+    res <- runDB $ removeBuildingConstruction cId loadedConst
+    return $ toJSON res
+
+
+
+-- | Validate update message of building construction
+--   Method will return new index, old index and key for planet if everything is ok
+--   In case message doesn't actually move construction anywhere (old and new index are same)
+--   http 200 is returned with current construction queue as content
+--   In case there is problem with the message, appropriate http error will be returned
+validatePut :: ConstructionDto -> Key BuildingConstruction -> HandlerFor App (Int, Int, Key Planet)
+validatePut msg cId = do
     newIndex <- if bcdtoIndex msg < 0
                 then apiInvalidArgs [ "negative building index" ]
                 else return $ bcdtoIndex msg
@@ -92,59 +133,8 @@ putApiBuildingConstructionIdR cId = do
             apiOk queue
          else return []
     let pId = buildingConstructionPlanetId construction
-    -- TODO: clean up validation (newIndex, oldIndex, pId are needed values)
-    -- TODO: make update a separate function
-    newConstructions <- if newIndex < oldIndex
-                        then runDB $ do
-                            -- move construction to the new index
-                            _ <- update cId [ BuildingConstructionIndex =. newIndex ]
-                            -- move building constructions +1 if
-                            -- a) they have smaller index than the old one
-                            -- b) they have larger index than the new one
-                            _ <- updateWhere [ BuildingConstructionPlanetId ==. pId
-                                             , BuildingConstructionIndex >=. newIndex
-                                             , BuildingConstructionIndex <. oldIndex
-                                             , BuildingConstructionId !=. cId ]
-                                             [ BuildingConstructionIndex +=. 1 ]
-                            -- perform same move to ship constructions
-                            _ <- updateWhere [ ShipConstructionPlanetId ==. Just pId
-                                             , ShipConstructionIndex >=. newIndex 
-                                             , ShipConstructionIndex <. oldIndex]
-                                             [ ShipConstructionIndex +=. 1 ]
-                            loadPlanetConstructionQueue $ bcdtoPlanet msg
-                        else runDB $ do
-                            -- TODO: go through this section once more and comment it
-                            _ <- update cId [ BuildingConstructionIndex =. newIndex ]
-                            _ <- updateWhere [ BuildingConstructionPlanetId ==. pId
-                                             , BuildingConstructionIndex >=. newIndex
-                                             , BuildingConstructionId !=. cId ]
-                                             [ BuildingConstructionIndex +=. 1 ]
-                            _ <- updateWhere [ BuildingConstructionPlanetId ==. pId
-                                             , BuildingConstructionIndex >=. oldIndex
-                                             , BuildingConstructionIndex <. newIndex
-                                             , BuildingConstructionId !=. cId ]
-                                             [ BuildingConstructionIndex -=. 1 ]
-                            _ <- updateWhere [ ShipConstructionPlanetId ==. Just pId
-                                             , ShipConstructionIndex >=. newIndex ]
-                                             [ ShipConstructionIndex +=. 1 ]
-                            _ <- updateWhere [ ShipConstructionPlanetId ==. Just pId
-                                             , ShipConstructionIndex >=. oldIndex
-                                             , ShipConstructionIndex <. newIndex ]
-                                             [ ShipConstructionIndex -=. 1 ]
-                            loadPlanetConstructionQueue $ bcdtoPlanet msg
-
-    return $ toJSON newConstructions
-
--- | Delete building construction
-deleteApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
-deleteApiBuildingConstructionIdR cId = do
-    _ <- apiRequireFaction
-    loadedConst <- runDB $ get cId
-    res <- runDB $ removeBuildingConstruction cId loadedConst
-    return $ toJSON res
-
-
-
+    return (newIndex, oldIndex, pId)
+    
 -- | transform building construction dto into building construction and save is into database
 createBuildingConstruction :: (PersistQueryRead backend, MonadIO m,
                                PersistStoreWrite backend, BaseBackend backend ~ SqlBackend) =>
