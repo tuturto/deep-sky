@@ -102,6 +102,10 @@ handleUiMsg msg model =
                        , level = building.level
                        , buildingType = building.buildingType
                        , planet = model.planetId
+                       , costLeft = { mechanical = 0
+                                    , biological = 0
+                                    , chemical = 0
+                                    }
                        }
       in 
         ( model

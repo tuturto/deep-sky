@@ -236,8 +236,11 @@ currentQueue model =
     div []
     <| List.append
       [ div [ class "row" ] 
-        [ div [ class "col-lg-6" ]
+        [ div [ class "col-lg-1"] []
+        , div [ class "col-lg-6" ]
           [ text "Name" ]
+        , div [ class "col-lg-4"]
+          [ text "Cost left" ]
         ]
       ]
     <| List.map (queueItem maxIndex) model.constructionQueue
@@ -266,7 +269,9 @@ buildingInQueue maxIndex building =
     , div [ class "col-lg-6" ]
       [ span [] [ text building.name ]
       ]
-    , div [ class "col-lg-2" ]
+    , div [ class "col-lg-4" ]
+      [ costDisplay building.costLeft ]
+    , div [ class "col-lg-1" ]
       [ i [ class "fas fa-trash-alt", onClick (UiMsg <| DeleteBuildingFromQueue building) ] [] ]
     ]
 

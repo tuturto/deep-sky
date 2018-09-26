@@ -11,7 +11,6 @@ module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequi
 import Import
 import qualified Prelude as P ( (!!), length )
 import System.Random
-import Data.Maybe (fromJust, isJust)
 import Data.Aeson.TH
 
 -- | Get item from list with given index

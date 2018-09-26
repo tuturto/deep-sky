@@ -82,6 +82,7 @@ type alias BuildingConstructionData =
   , level : Int
   , buildingType : BuildingType
   , planet : Int
+  , costLeft : Cost
   }
 
 -- TODO: ship type?

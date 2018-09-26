@@ -13,6 +13,13 @@ costDecoder =
     |: (Decode.field "biological" Decode.int)
     |: (Decode.field "chemical" Decode.int)
 
+costEncoder : Cost -> Encode.Value
+costEncoder cost =
+  Encode.object [ ("mechanical", Encode.int cost.mechanical)
+                , ("biological", Encode.int cost.biological)
+                , ("chemical", Encode.int cost.chemical)
+                ]
+
 stringToBuildingType : String -> Decode.Decoder BuildingType
 stringToBuildingType s =
   case s of
@@ -47,7 +54,7 @@ buildingInfoDecoder =
   |: (Decode.field "level" Decode.int)
   |: (Decode.field "name" Decode.string)
   |: (Decode.field "cost" costDecoder)
-  |: (Decode.field "description" Decode.string)
+  |: (Decode.field "description" Decode.string)  
 
 buildingDecoder : Decode.Decoder Building
 buildingDecoder =
@@ -91,6 +98,7 @@ buildingConstructionDecoder =
   |: (Decode.field "level" Decode.int)
   |: (Decode.field "type" buildingTypeDecoder)
   |: (Decode.field "planet" Decode.int)
+  |: (Decode.field "costLeft" costDecoder)
 
 buildingConstructionEncoder : BuildingConstructionData -> Encode.Value
 buildingConstructionEncoder building =
@@ -100,6 +108,7 @@ buildingConstructionEncoder building =
                 , ("level", Encode.int building.level)
                 , ("type", buildingTypeEncoder building.buildingType)
                 , ("planet", Encode.int building.planet)
+                , ("costLeft", costEncoder building.costLeft)
                 ]
 
 shipConstructionDecoder : Decode.Decoder ShipConstructionData

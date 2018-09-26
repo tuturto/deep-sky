@@ -10,8 +10,9 @@ module Dto.Construction
   , constructionIndex )
   where
 
-import CustomTypes (buildingTypeName, ShipType(..), BuildingType(..))
+import CustomTypes (buildingTypeName, ShipType(..), BuildingType(..), TotalCost(..), Cost(..))
 import Common (DtoTransform(..))
+import Buildings (building, BLevel(..), buildingInfoCost)
 import Data.Aeson (object, (.=))
 import Import
 
@@ -22,6 +23,7 @@ data ConstructionDto = BuildingConstructionDto
     , bcdtoLevel :: Int
     , bcdtoType :: BuildingType
     , bcdtoPlanet :: Key Planet
+    , bcdtoCostLeft :: TotalCost
     }
   | ShipConstructionDto
     { scdtoId :: Key ShipConstruction
@@ -32,20 +34,21 @@ data ConstructionDto = BuildingConstructionDto
   deriving (Show, Read, Eq)
 
 instance ToJSON ConstructionDto where
-  toJSON (BuildingConstructionDto bId bName bIndex bLevel bType bPlanet) =
-    object [ "id" .= bId
-           , "name" .= bName
-           , "index" .= bIndex
-           , "level" .= bLevel
-           , "type" .= bType
-           , "planet" .= bPlanet
+  toJSON bc@(BuildingConstructionDto {}) =
+    object [ "id" .= bcdtoId bc
+           , "name" .= bcdtoName bc
+           , "index" .= bcdtoIndex bc
+           , "level" .= bcdtoLevel bc
+           , "type" .= bcdtoType bc
+           , "planet" .= bcdtoPlanet bc
+           , "costLeft" .= bcdtoCostLeft bc
            ]
 
-  toJSON (ShipConstructionDto sId sName sType sIndex) =
-    object [ "id" .= sId
-           , "name" .= sName
-           , "shipType" .= sType
-           , "index" .= sIndex
+  toJSON sc@(ShipConstructionDto {}) =
+    object [ "id" .= scdtoId sc
+           , "name" .= scdtoName sc
+           , "shipType" .= scdtoShipType sc
+           , "index" .= scdtoIndex sc
            ]
 
 instance FromJSON ConstructionDto where
@@ -56,6 +59,7 @@ instance FromJSON ConstructionDto where
                                    <*> v .: "level"
                                    <*> v .: "type"
                                    <*> v .: "planet"
+                                   <*> v .: "costLeft"
          , ShipConstructionDto <$> v .: "id"
                                <*> v .: "name"
                                <*> v .: "shipType"
@@ -72,15 +76,22 @@ constructionIndex c =
 buildingConstructionToDto :: Entity BuildingConstruction -> ConstructionDto
 buildingConstructionToDto bce =
     BuildingConstructionDto { bcdtoId = key
-                            , bcdtoName = (buildingTypeName $ buildingConstructionType bc)
-                            , bcdtoIndex = (buildingConstructionIndex bc)
-                            , bcdtoLevel = (buildingConstructionLevel bc)
-                            , bcdtoType = (buildingConstructionType bc)
-                            , bcdtoPlanet = (buildingConstructionPlanetId bc)
+                            , bcdtoName = buildingTypeName $ buildingConstructionType bc
+                            , bcdtoIndex = buildingConstructionIndex bc
+                            , bcdtoLevel = buildingConstructionLevel bc
+                            , bcdtoType = buildingConstructionType bc
+                            , bcdtoPlanet = buildingConstructionPlanetId bc
+                            , bcdtoCostLeft = (TotalCost mech bio chem)
                             }
   where
     bc = entityVal bce
     key = entityKey bce
+    template = building (buildingConstructionType bc) $ BLevel (buildingConstructionLevel bc)
+    cost = buildingInfoCost template
+    mech = Cost $ (unCost $ ccdMechanicalCost cost) - buildingConstructionProgressMechanicals bc
+    bio = Cost $ (unCost $ ccdBiologicalCost cost) - buildingConstructionProgressBiologicals bc
+    chem = Cost $ (unCost $ ccdChemicalCost cost) - buildingConstructionProgressChemicals bc
+
 
 shipConstructionToDto :: Entity ShipConstruction -> ConstructionDto
 shipConstructionToDto sce =

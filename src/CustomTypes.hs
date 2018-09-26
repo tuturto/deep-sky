@@ -1,13 +1,15 @@
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module CustomTypes where
 
 import Data.Aeson.TH
-import Data.Aeson (object, (.=), ToJSON(..))
+import Data.Aeson (object, withObject, (.=), ToJSON(..), FromJSON(..), Object(..))
 import Database.Persist.TH
 import Text.Blaze.Html5 (ToMarkup, toMarkup)
 import Data.Text
+import ClassyPrelude.Yesod   as Import
 
 data SpectralType = O | B | A | F | G | K | M | L | T
     deriving (Show, Read, Eq)
@@ -47,9 +49,13 @@ buildingTypeName bt =
 instance ToMarkup BuildingType where
     toMarkup building = 
         case building of
-            SensorStation   -> toMarkup ("Sensor station" :: Text)
-            ResearchComplex -> toMarkup ("Research complex" :: Text)
-            Farm            -> toMarkup ("Farm" :: Text)
+            SensorStation       -> toMarkup ("Sensor station" :: Text)
+            ResearchComplex     -> toMarkup ("Research complex" :: Text)
+            Farm                -> toMarkup ("Farm" :: Text)
+            ParticleAccelerator -> toMarkup ("Particle accelerator" :: Text)
+            NeutronDetector     -> toMarkup ("Neutron detector" :: Text)
+            BlackMatterScanner  -> toMarkup ("Black matter scanner" :: Text)
+            GravityWaveSensor   -> toMarkup ("Gravity wave sensor" :: Text)
  
 data ShipType = Satellite
     | Fighter
@@ -94,13 +100,17 @@ data ComponentSlot = InnerSlot
 derivePersistField "ComponentSlot"
 
 data TotalCost = TotalCost
-    { ccdMechanicCost :: Cost
+    { ccdMechanicalCost :: Cost
     , ccdBiologicalCost :: Cost
     , ccdChemicalCost :: Cost }
     deriving (Show, Read, Eq)
 
 data Cost = Cost { unCost :: Int }
     deriving (Show, Read, Eq)
+
+costSub :: Cost -> Cost -> Cost
+costSub a b = 
+    Cost $ (unCost a) - (unCost b)
 
 instance ToJSON TotalCost where
     toJSON (TotalCost mech bio chem) =
@@ -109,7 +119,12 @@ instance ToJSON TotalCost where
                , "chemical" .= unCost chem 
                ]
 
-
+instance FromJSON TotalCost where
+    parseJSON = withObject "cost" $ \o -> do
+        mechanical <- o .: "mechanical"
+        biological <- o .: "biological"
+        chemical <- o .: "chemical"
+        return $ TotalCost (Cost mechanical) (Cost biological) (Cost chemical)
 
 $(deriveJSON defaultOptions ''Role)
 $(deriveJSON defaultOptions ''Coordinates)
