@@ -11,7 +11,6 @@ module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequi
 import Import
 import qualified Prelude as P ( (!!), length )
 import System.Random
-import Data.Aeson.TH
 
 -- | Get item from list with given index
 --   If item is within bounds, return Just it, otherwise Nothing
@@ -85,4 +84,9 @@ class DtoTransform d c where
 data ErrorJson = ErrorJson { unerror :: Text }
     | ErrorsJson { unerrors :: [Text] }
 
-$(deriveJSON defaultOptions {fieldLabelModifier = drop 2} ''ErrorJson)
+instance ToJSON ErrorJson where
+    toJSON (ErrorJson { unerror = err }) =
+        object [ "errors" .= [err] ]
+
+    toJSON (ErrorsJson { unerrors = errs }) =
+        object [ "errors" .= errs ]

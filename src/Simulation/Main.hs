@@ -9,7 +9,8 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Simulation.Main where
+module Simulation.Main (processTurn)
+    where
 
 import Import
 import Simulation.Time
