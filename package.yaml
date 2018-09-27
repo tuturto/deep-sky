@@ -48,6 +48,9 @@ dependencies:
 - blaze-html
 - random
 - lens >=4.16.1 && <5.0.0
+- conduit
+- conduit-extra
+- resourcet
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.
