@@ -39,14 +39,14 @@ starIsInCandidateList :: [ObservationCandidate] -> (Entity Star, Maybe CollatedS
 starIsInCandidateList candidates (Entity starId _, _) =
     isJust $ find compareIds candidates
     where
-        compareIds (OCStar ocStar _) = (entityKey ocStar) == starId
+        compareIds (OCStar ocStar _ _) = (entityKey ocStar) == starId
         compareIds _ = False
 
 planetIsInCandidateList :: [ObservationCandidate] -> (Entity Planet, Maybe CollatedPlanetReport) -> Bool
 planetIsInCandidateList candidates (Entity planetId _, _) =
     isJust $ find compareIds candidates
     where
-        compareIds (OCPlanet ocPlanet _) = (entityKey ocPlanet) == planetId
+        compareIds (OCPlanet ocPlanet _ _) = (entityKey ocPlanet) == planetId
         compareIds _ = False
 
 prop_grouped_starlane_report_list_is_as_long_as_starlanes_list :: Property

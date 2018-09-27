@@ -83,9 +83,8 @@ singleBuildingOf :: BuildingType -> Gen Building
 singleBuildingOf bType = do
     let aPlanetId = toSqlKey 0
     aLevel <- choose (1, 5)
-    let aConstruction = 1.0
     let aDamage = 0.0
-    return $ Building aPlanetId bType aLevel aConstruction aDamage
+    return $ Building aPlanetId bType aLevel aDamage
     
 someFarms :: Gen [Building]
 someFarms = do
