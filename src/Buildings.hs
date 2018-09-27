@@ -11,7 +11,6 @@ module Buildings where
 
 import Data.Aeson (object, (.=), ToJSON(..))
 import CustomTypes (TotalCost(..), BuildingType(..), Cost(..))
-import Database.Persist.TH
 import ClassyPrelude.Yesod   as Import
 
 -- Types

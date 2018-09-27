@@ -113,7 +113,7 @@ observeTarget _ Nothing _ = do
 observeTarget _ (Just (OCStarLane {})) _ = do
     return ()
 
-observeTarget faction (Just (OCStar starEntity _ observationType)) building = do
+observeTarget faction (Just (OCStar starEntity _ observationType)) _ = do
     let star = entityVal starEntity
     let sid = entityKey starEntity
     date <- starDate
@@ -132,7 +132,7 @@ observeTarget faction (Just (OCStar starEntity _ observationType)) building = do
     _ <- insert res
     return ()
 
-observeTarget faction (Just (OCPlanet planetEntity _ observationType)) building = do
+observeTarget faction (Just (OCPlanet planetEntity _ observationType)) _ = do
     let planet = entityVal planetEntity
     let pid = entityKey planetEntity
     date <- starDate

@@ -44,14 +44,14 @@ newsArticleWidget article = $(widgetFile "widgets/news/articleW")
  
 newsContentWidget :: NewsArticle -> WidgetFor App ()
 newsContentWidget (StarFoundNews 
-    { starFoundNewsStarName = starName
+    { starFoundNewsStarName = sName
     , starFoundNewsSystemName = systemName
     , starFoundNewsSystemId = systemId }) = 
         $(widgetFile "widgets/news/starFoundW")
 
 newsContentWidget (PlanetFoundNews 
-    { planetFoundNewsPlanetName = planetName 
-    , planetFoundNewsSystemName = systemName
+    { planetFoundNewsPlanetName = pName 
+    , planetFoundNewsSystemName = sName
     , planetFoundNewsSystemId = systemId 
     , planetFoundNewsPlanetId = planetId }) = 
         $(widgetFile "widgets/news/planetFoundW")

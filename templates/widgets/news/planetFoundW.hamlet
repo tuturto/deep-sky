@@ -1,7 +1,7 @@
 A new planet has been discovered in 
 <a href=@{StarSystemR systemId}>
-    #{systemName}
+    #{sName}
 system and scientists have named it
 <a href=@{PlanetR systemId planetId}>
-    #{planetName} 
+    #{pName} 
 .

@@ -16,10 +16,10 @@ import Data.Aeson.TH
 -- | Get item from list with given index
 --   If item is within bounds, return Just it, otherwise Nothing
 maybeGet :: [a] -> Int -> Maybe a
-maybeGet col index
-    | index < 0               = Nothing
-    | index >= (P.length col) = Nothing
-    | otherwise               = Just (col P.!! index)
+maybeGet col i
+    | i < 0               = Nothing
+    | i >= (P.length col) = Nothing
+    | otherwise           = Just (col P.!! i)
 
 chooseOne :: a -> a -> IO a
 chooseOne item1 item2 = do

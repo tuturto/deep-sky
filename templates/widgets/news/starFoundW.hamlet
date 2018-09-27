@@ -1,4 +1,4 @@
-A new star named #{starName}
+A new star named #{sName}
 has been discovered in 
 <a href=@{StarSystemR systemId}>
     #{systemName}

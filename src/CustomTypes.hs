@@ -5,7 +5,7 @@
 module CustomTypes where
 
 import Data.Aeson.TH
-import Data.Aeson (object, withObject, (.=), ToJSON(..), FromJSON(..), Object(..))
+import Data.Aeson (object, withObject, (.=), ToJSON(..), FromJSON(..))
 import Database.Persist.TH
 import Text.Blaze.Html5 (ToMarkup, toMarkup)
 import Data.Text
