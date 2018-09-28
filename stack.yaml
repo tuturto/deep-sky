@@ -39,7 +39,10 @@ packages:
 # using the same syntax as the packages field.
 # (e.g., acme-missiles-0.3)
 # extra-deps: []
-extra-deps: [ test-invariant-0.4.5.0 ]
+extra-deps:
+  - test-invariant-0.4.5.0
+  - git: https://github.com/bitemyapp/esqueleto.git
+    commit: 434f81ed41795e3dd0754dbc5c75c4ed098631b3
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

@@ -3,6 +3,8 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE FlexibleContexts           #-}
+
 module Handler.StarSystems where
 
 import Import
@@ -14,6 +16,7 @@ import Widgets
 import MenuHelpers
 import Data.Maybe (fromJust)
 import Database.Persist.Sql (fromSqlKey)
+import qualified Database.Esqueleto as E
 import Common (requireFaction, apiRequireFaction)
 
 getApiStarSystemsR :: Handler Value
@@ -58,13 +61,8 @@ getPlanetR _ planetId = do
                                               , PlanetReportFactionId ==. factionId ] [ Asc PlanetReportDate ]
     let planetReport = collatePlanet $ map entityVal loadedPlanetReports
 
-    factions <- runDB $ selectList [] [ Asc FactionId ]
-    loadLandedShips <- runDB $ selectList [ ShipPlanetId ==. Just planetId 
-                                          , ShipLanded ==. True ] []
-    let landedShips = fillFactions factions loadLandedShips
-    loadOrbitingShips <- runDB $ selectList [ ShipPlanetId ==. Just planetId 
-                                            , ShipLanded ==. False ] []
-    let orbitingShips = fillFactions factions loadOrbitingShips
+    landedShips <- runDB $ planetShips planetId True
+    orbitingShips <- runDB $ planetShips planetId False
     let planetKey = fromSqlKey planetId
 
     let expl = "Deep Sky - " ++ case (cprName planetReport) of
@@ -86,6 +84,18 @@ fillFactions factions ships =
         where fn eShip = (entityVal eShip, entityVal $ fromJust faction)
                 where faction = find compareIds factions
                       compareIds f = (shipOwnerId $ entityVal eShip) == (entityKey f)
+
+-- | Load ships that are on or around a given planet and their faction info
+planetShips :: (MonadIO m, BackendCompatible SqlBackend backend,
+                PersistQueryRead backend, PersistUniqueRead backend) =>
+               Key Planet -> Bool -> ReaderT backend m [(Entity Ship, Entity Faction)]
+planetShips pId landed = do
+    E.select $
+        E.from $ \(ship `E.InnerJoin` faction) -> do
+                E.on (ship E.^. ShipOwnerId E.==. faction E.^. FactionId)
+                E.where_ ( ship E.^. ShipPlanetId E.==. E.val (Just pId)
+                         E.&&. ship E.^. ShipLanded E.==. E.val landed )
+                return (ship, faction)
 
 addPopulationDetails :: (BaseBackend backend ~ SqlBackend,
     MonadIO m, PersistStoreRead backend) =>

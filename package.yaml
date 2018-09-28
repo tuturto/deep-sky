@@ -51,6 +51,7 @@ dependencies:
 - conduit
 - conduit-extra
 - resourcet
+- esqueleto
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.
