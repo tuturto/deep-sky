@@ -14,7 +14,6 @@ import Report ( collateSystems, collatePopulations, collateBuildings, collatePla
               , CollatedPopulationReport(..), CollatedPlanetReport(..), CollatedStarSystemReport(..) )
 import Widgets
 import MenuHelpers
-import Data.Maybe (fromJust)
 import Database.Persist.Sql (fromSqlKey)
 import qualified Database.Esqueleto as E
 import Common (requireFaction, apiRequireFaction)
@@ -74,17 +73,6 @@ getPlanetR _ planetId = do
         addStylesheet $ StaticR css_site_css
         $(widgetFile "planet")
 
--- | match entries in given faction and ship lists, producing (Ship, Faction) tuples
--- This is temporary fix, until esqueleto is included in stack
-fillFactions :: (SemiSequence seq, Functor f,
-                       Element seq ~ Entity Faction) =>
-                      seq -> f (Entity Ship) -> f (Ship, Faction)
-fillFactions factions ships =
-    map fn ships
-        where fn eShip = (entityVal eShip, entityVal $ fromJust faction)
-                where faction = find compareIds factions
-                      compareIds f = (shipOwnerId $ entityVal eShip) == (entityKey f)
-
 -- | Load ships that are on or around a given planet and their faction info
 planetShips :: (MonadIO m, BackendCompatible SqlBackend backend,
                 PersistQueryRead backend, PersistUniqueRead backend) =>
@@ -93,8 +81,8 @@ planetShips pId landed = do
     E.select $
         E.from $ \(ship `E.InnerJoin` faction) -> do
                 E.on (ship E.^. ShipOwnerId E.==. faction E.^. FactionId)
-                E.where_ ( ship E.^. ShipPlanetId E.==. E.val (Just pId)
-                         E.&&. ship E.^. ShipLanded E.==. E.val landed )
+                E.where_ (ship E.^. ShipPlanetId E.==. E.val (Just pId)
+                          E.&&. ship E.^. ShipLanded E.==. E.val landed)
                 return (ship, faction)
 
 addPopulationDetails :: (BaseBackend backend ~ SqlBackend,
@@ -127,10 +115,22 @@ getApiPlanetBuildingsR planetId = do
 getApiPlanetPopulationR :: Key Planet -> Handler Value
 getApiPlanetPopulationR planetId = do
     (_, _, fId) <- apiRequireFaction
-    loadedPopulationReports <- runDB $ selectList [ PlanetPopulationReportPlanetId ==. planetId
-                                                  , PlanetPopulationReportFactionId ==. fId ] [ Asc PlanetPopulationReportPlanetId
-                                                                                              , Asc PlanetPopulationReportRaceId
-                                                                                              , Asc PlanetPopulationReportDate ]
-    let partialPopulationReports = collatePopulations $ map entityVal loadedPopulationReports
-    populationReports <- runDB $ mapM addPopulationDetails partialPopulationReports
+    loadedPopReports <- runDB $ loadPlanetPopulationReports planetId fId
+    let populationReports = collatePopulations $ map (\(a, b) -> (entityVal a, fmap entityVal b)) loadedPopReports
     return $ toJSON populationReports
+
+-- | Load population reports of a planet and respective races
+loadPlanetPopulationReports :: (MonadIO m, BackendCompatible SqlBackend backend,
+                                PersistQueryRead backend, PersistUniqueRead backend) =>
+                               Key Planet -> Key Faction -> ReaderT backend m [(Entity PlanetPopulationReport, Maybe (Entity Race))]
+loadPlanetPopulationReports pId fId = do
+    E.select $
+        E.from $ \(popReport `E.LeftOuterJoin` pRace) -> do
+            E.on (popReport E.^. PlanetPopulationReportRaceId E.==. pRace E.?. RaceId )
+            E.where_ (popReport E.^. PlanetPopulationReportPlanetId E.==. E.val pId
+                      E.&&. popReport E.^. PlanetPopulationReportFactionId E.==. E.val fId)
+            E.orderBy [ E.asc ( popReport E.^. PlanetPopulationReportPlanetId) 
+                      , E.asc ( popReport E.^. PlanetPopulationReportRaceId)
+                      , E.asc ( popReport E.^. PlanetPopulationReportDate)
+                      ]
+            return (popReport, pRace)

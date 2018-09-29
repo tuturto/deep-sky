@@ -144,21 +144,21 @@ collatePlanets s@(x:_) = (collatePlanet itemsOfKind) : (collatePlanets restOfIte
           itemsOfKind = fst split
           restOfItems = snd split
 
-collatePopulation :: [PlanetPopulationReport] -> CollatedPopulationReport
+collatePopulation :: [(PlanetPopulationReport, Maybe Race)] -> CollatedPopulationReport
 collatePopulation = foldr fn initial
     where initial = CollatedPopulationReport (toSqlKey 0) Nothing Nothing Nothing 0
-          fn val acc = CollatedPopulationReport (planetPopulationReportPlanetId val)
-                                                (combine (planetPopulationReportRaceId val) (cpopRaceId acc))
-                                                (cpopRace acc)
-                                                (combine (planetPopulationReportPopulation val) (cpopPopulation acc))
-                                                (max (planetPopulationReportDate val) (cpopDate acc))
+          fn (val, pRace) acc = CollatedPopulationReport (planetPopulationReportPlanetId val)
+                                                         (combine (planetPopulationReportRaceId val) (cpopRaceId acc))
+                                                         (combine (map raceName pRace) (cpopRace acc))
+                                                         (combine (planetPopulationReportPopulation val) (cpopPopulation acc))
+                                                         (max (planetPopulationReportDate val) (cpopDate acc))
 
-collatePopulations :: [PlanetPopulationReport] -> [CollatedPopulationReport]
+collatePopulations :: [(PlanetPopulationReport, Maybe Race)] -> [CollatedPopulationReport]
 collatePopulations [] = []
-collatePopulations s@(x:_) = (collatePopulation itemsOfKind) : (collatePopulations restOfItems)
+collatePopulations s@((x, _):_) = (collatePopulation itemsOfKind) : (collatePopulations restOfItems)
     where split = span comparer s
-          comparer a = (planetPopulationReportPlanetId a) == (planetPopulationReportPlanetId x) &&
-                       (planetPopulationReportFactionId a) == (planetPopulationReportFactionId x)
+          comparer (a, _) = (planetPopulationReportPlanetId a) == (planetPopulationReportPlanetId x) &&
+                            (planetPopulationReportFactionId a) == (planetPopulationReportFactionId x)
           itemsOfKind = fst split
           restOfItems = snd split
 
