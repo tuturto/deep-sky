@@ -5,18 +5,19 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
-module Handler.StarSystems where
+module Handler.StarSystems ( getApiStarSystemsR, getStarSystemsR, getStarSystemR, getPlanetR
+                           , getApiPlanetR, getApiPlanetBuildingsR, getApiPlanetPopulationR )
+    where
 
 import Import
 import Text.Blaze.Html5 (toMarkup)
 import Report ( collateSystems, collatePopulations, collateBuildings, collatePlanet
               , createStarLaneReports, createPlanetReports, createStarReports, createSystemReport
-              , CollatedPopulationReport(..), CollatedPlanetReport(..), CollatedStarSystemReport(..) )
+              , cprName, CollatedStarSystemReport(..) )
 import Widgets
-import MenuHelpers
 import Database.Persist.Sql (fromSqlKey)
 import Common (requireFaction, apiRequireFaction)
-import Queries (loadPlanetPopulationReports, loadPlanetShips, ShipLandingStatus(..))
+import Queries (loadPlanetPopulationReports)
 
 getApiStarSystemsR :: Handler Value
 getApiStarSystemsR = do
@@ -59,9 +60,6 @@ getPlanetR _ planetId = do
     loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId ==. planetId
                                               , PlanetReportFactionId ==. factionId ] [ Asc PlanetReportDate ]
     let planetReport = collatePlanet $ map entityVal loadedPlanetReports
-
-    landedShips <- runDB $ loadPlanetShips planetId ShipOnPlanet
-    orbitingShips <- runDB $ loadPlanetShips planetId ShipInOrbit
     let planetKey = fromSqlKey planetId
 
     let expl = "Deep Sky - " ++ case (cprName planetReport) of
@@ -72,16 +70,6 @@ getPlanetR _ planetId = do
         addScript $ StaticR js_planet_js
         addStylesheet $ StaticR css_site_css
         $(widgetFile "planet")
-
-addPopulationDetails :: (BaseBackend backend ~ SqlBackend,
-    MonadIO m, PersistStoreRead backend) =>
-    CollatedPopulationReport -> ReaderT backend m CollatedPopulationReport
-addPopulationDetails report = do
-    aRace <- getMaybeEntity $ cpopRaceId report
-    res <- case aRace of
-                (Just x) -> return $ report { cpopRace = Just $ raceName x}
-                Nothing  -> return report
-    return res
 
 getApiPlanetR :: Key Planet -> Handler Value
 getApiPlanetR planetId = do
