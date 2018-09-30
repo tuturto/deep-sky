@@ -66,7 +66,8 @@ postApiDesignR = do
     case (validateSaveDesign msg) of
         False -> sendResponseStatus status400 ("Validation failed" :: Text)
         True -> do 
-            savedDesign <- runDB $ saveDesign msg fId            
+            date <- runDB $ starDate
+            savedDesign <- runDB $ saveDesign date msg fId            
             return $ toJSON savedDesign
 
 putApiDesignIdR :: Key Design -> Handler Value
@@ -90,14 +91,13 @@ validateSaveDesign _ = True
 
 saveDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     BaseBackend backend ~ SqlBackend) =>
-    DesignDto -> Key Faction -> ReaderT backend m DesignDto
-saveDesign design fId = do
+    Time -> DesignDto -> Key Faction -> ReaderT backend m DesignDto
+saveDesign date design fId = do
     newId <- insert $ Design (designDtoName design) fId (designDtoChassisId design)
     _ <- mapM insert $ map (componentDtoToPlannedComponent newId) (designDtoComponents design)
     newDesign <- get newId
     newComponents <- selectList [ PlannedComponentDesignId ==. newId ] []
     let x = designToDesignDto (newId, fromJust newDesign) newComponents
-    date <- starDate
     _ <- insert $ makeDesignCreatedNews (Entity newId $ fromJust newDesign) date fId
     return x
 

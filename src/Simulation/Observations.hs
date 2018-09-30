@@ -13,7 +13,6 @@ module Simulation.Observations where
 
 import Import
 import System.Random
-import MenuHelpers
 import CustomTypes
 import Report ( createPlanetReports, createStarLaneReports, createStarReports
               , CollatedPlanetReport(..), CollatedStarLaneReport(..), CollatedStarReport(..))
@@ -28,8 +27,8 @@ import Data.Maybe (fromJust)
 handleFactionObservations :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, PersistQueryRead backend,
     MonadIO m) =>
-    Entity Faction -> ReaderT backend m ()
-handleFactionObservations faction = do
+    Time -> Entity Faction -> ReaderT backend m ()
+handleFactionObservations date faction = do
     -- observations by on faction's planets
     -- observations of space by planetary sensor arrays (SensorStation and such)
     -- observations by space forces
@@ -40,39 +39,38 @@ handleFactionObservations faction = do
     let populatedPlanets = filter isPopulated factionPlanets
                             where isPopulated planet = elem (entityKey planet)
                                     (map (planetPopulationPlanetId . entityVal) populations)
-    _ <- mapM (doPlanetObservation faction) populatedPlanets
-    _ <- mapM (doSensorStationObservations faction) populatedPlanets
+    _ <- mapM (doPlanetObservation date faction) populatedPlanets
+    _ <- mapM (doSensorStationObservations date faction) populatedPlanets
     return ()
 
 -- | Let forces on populated planet observe their surroundings and write reports
 doPlanetObservation :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, PersistQueryRead backend, MonadIO m) =>
-    Entity Faction -> Entity Planet -> ReaderT backend m ()
-doPlanetObservation faction planet = do
-    time <- starDate
+    Time -> Entity Faction -> Entity Planet -> ReaderT backend m ()
+doPlanetObservation date faction planet = do
     let p = entityVal planet
     let observation = PlanetReport (entityKey planet) (Nothing) (planetStarSystemId p)
                                    (Just $ planetName p) (Just $ planetPosition p) (Just $ planetGravity p)
-                                   (entityKey faction) (timeCurrentTime time)
+                                   (entityKey faction) (timeCurrentTime date)
     _ <- insert observation
     pops <- selectList [ PlanetPopulationPlanetId ==. (entityKey planet)] []
     let popObservations = map (\pop -> PlanetPopulationReport (entityKey planet) (Just $ planetPopulationRaceId $ entityVal pop)
                                                               (Just $ planetPopulationPopulation $ entityVal pop)
-                                                              (entityKey faction) (timeCurrentTime time)) pops
+                                                              (entityKey faction) (timeCurrentTime date)) pops
     _ <- mapM insert popObservations    
     buildings <- selectList [ BuildingPlanetId ==. (entityKey planet)] []
     let bObservations = map (\b -> BuildingReport (entityKey b) (entityKey planet) (Just $ buildingType (entityVal b))
                                                   (Just $ buildingLevel (entityVal b))
                                                   (Just $ buildingDamage (entityVal b))
-                                                  (entityKey faction) (timeCurrentTime time)) buildings
+                                                  (entityKey faction) (timeCurrentTime date)) buildings
     _ <- mapM insert bObservations
     return ()
 
 -- | Let sensor stations on planet observe surrounding space
 doSensorStationObservations :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, PersistQueryRead backend, MonadIO m) =>
-    Entity Faction -> Entity Planet -> ReaderT backend m ()
-doSensorStationObservations faction planet = do
+    Time -> Entity Faction -> Entity Planet -> ReaderT backend m ()
+doSensorStationObservations date faction planet = do
     let p = entityVal planet
     buildings <- selectList [ BuildingPlanetId ==. (entityKey planet)
                             , BuildingType ==. SensorStation
@@ -89,34 +87,33 @@ doSensorStationObservations faction planet = do
     starLaneReports <- createStarLaneReports (planetStarSystemId p) $ entityKey faction
     let starLaneGroups = groupStarLaneReports starLanes starLaneReports
     let candidates = (buildOCStarList starGroups) ++ (buildOCPlanetList planetGroups) ++ (buildOCStarLaneList starLaneGroups)
-    _ <- mapM (observeRandomTarget faction candidates) buildings
+    _ <- mapM (observeRandomTarget date faction candidates) buildings
     return ()
 
 -- | Observe random target on given list of observation candidates
 observeRandomTarget :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, PersistQueryRead backend, MonadIO m) =>
-    Entity Faction -> [ObservationCandidate] -> (Entity Building) -> ReaderT backend m ()
-observeRandomTarget faction candidates building = do
+    Time -> Entity Faction -> [ObservationCandidate] -> (Entity Building) -> ReaderT backend m ()
+observeRandomTarget date faction candidates building = do
     res <- liftIO $ randomRIO (0, (length candidates) - 1)
     let target = maybeGet candidates res
-    _ <- observeTarget faction target building
+    _ <- observeTarget date faction target building
     return ()
 
 -- | Observe given target
 observeTarget :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, PersistQueryRead backend, MonadIO m) =>
-    Entity Faction -> (Maybe ObservationCandidate) -> (Entity Building) -> ReaderT backend m ()
+    Time -> Entity Faction -> (Maybe ObservationCandidate) -> (Entity Building) -> ReaderT backend m ()
 
-observeTarget _ Nothing _ = do
+observeTarget _ _ Nothing _ = do
     return ()
 
-observeTarget _ (Just (OCStarLane {})) _ = do
+observeTarget _ _ (Just (OCStarLane {})) _ = do
     return ()
 
-observeTarget faction (Just (OCStar starEntity _ observationType)) _ = do
+observeTarget date faction (Just (OCStar starEntity _ observationType)) _ = do
     let star = entityVal starEntity
     let sid = entityKey starEntity
-    date <- starDate
     aLuminosityClass <- liftIO $ chooseOne (Just (starSpectralType star)) Nothing
     aSpectralType <- liftIO $ chooseOne (Just (starLuminosityClass star)) Nothing
     let res = StarReport sid (starStarSystemId star) (Just (starName star)) 
@@ -132,10 +129,9 @@ observeTarget faction (Just (OCStar starEntity _ observationType)) _ = do
     _ <- insert res
     return ()
 
-observeTarget faction (Just (OCPlanet planetEntity _ observationType)) _ = do
+observeTarget date faction (Just (OCPlanet planetEntity _ observationType)) _ = do
     let planet = entityVal planetEntity
     let pid = entityKey planetEntity
-    date <- starDate
     aGravity <- liftIO $ chooseOne (Just (planetGravity planet)) Nothing
     let res = PlanetReport pid (planetOwnerId planet) (planetStarSystemId planet) (Just $ planetName planet)
                            (Just $ planetPosition planet) aGravity (entityKey faction) (timeCurrentTime date)

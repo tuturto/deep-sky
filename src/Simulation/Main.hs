@@ -24,14 +24,14 @@ processTurn :: (BaseBackend backend ~ SqlBackend,
 processTurn = do
     newTime <- advanceTime
     factions <- selectList [] [ Asc FactionId ]
-    _ <- mapM handleFaction factions
+    _ <- mapM (handleFaction newTime) factions
     return (newTime)
 
 -- | process single faction, handling all of it's needs, orders and such
 handleFaction :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, MonadIO m, PersistQueryRead backend) =>
-    Entity Faction -> ReaderT backend m ()
-handleFaction faction = do
+    Time -> Entity Faction -> ReaderT backend m ()
+handleFaction date faction = do
     _ <- handleFactionFood faction
-    _ <- handleFactionObservations faction
+    _ <- handleFactionObservations date faction
     return ()
