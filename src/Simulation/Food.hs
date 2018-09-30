@@ -9,7 +9,8 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Simulation.Food 
+module Simulation.Food ( handleFactionFood, getFoodRequirement, getFoodProduction, foodRequirement
+                       , foodProduction )
     where
 
 import Import

@@ -9,7 +9,11 @@
 {-# LANGUAGE InstanceSigs               #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
-module Simulation.Observations where
+module Simulation.Observations ( handleFactionObservations, ObservationCandidate(..)
+                               , ObservationType(..), groupStarReports, groupPlanetReports
+                               , groupStarLaneReports, buildOCStarList, buildOCPlanetList
+                               , buildOCStarLaneList, needsObservation )
+    where
 
 import Import
 import System.Random

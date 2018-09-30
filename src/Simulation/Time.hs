@@ -9,7 +9,8 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Simulation.Time where
+module Simulation.Time (advanceTime)
+    where
 
 import Import
 import Data.Maybe (fromJust)
