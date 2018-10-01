@@ -11,9 +11,9 @@ module Handler.StarSystems ( getApiStarSystemsR, getStarSystemsR, getStarSystemR
 
 import Import
 import Text.Blaze.Html5 (toMarkup)
-import Report ( collateSystems, collatePopulations, collateBuildings, collatePlanet
+import Report ( collateReports, collateReport, collateBuildings
               , createStarLaneReports, createPlanetReports, createStarReports, createSystemReport
-              , cprName, CollatedStarSystemReport(..) )
+              , cprName, CollatedStarSystemReport(..), CollatedPlanetReport(..), CollatedPopulationReport )
 import Widgets
 import Database.Persist.Sql (fromSqlKey)
 import Common (requireFaction, apiRequireFaction)
@@ -24,7 +24,7 @@ getApiStarSystemsR = do
     _ <- apiRequireFaction
     loadedSystemReports <- runDB $ selectList [] [ Asc StarSystemReportId
                                                  , Asc StarSystemReportDate ]
-    let systemReports = collateSystems $ map entityVal loadedSystemReports
+    let systemReports = collateReports $ map entityVal loadedSystemReports :: [CollatedStarSystemReport]
     return $ toJSON systemReports
 
 getStarSystemsR :: Handler Html
@@ -33,7 +33,7 @@ getStarSystemsR = do
 
     loadedSystemReports <- runDB $ selectList [ StarSystemReportFactionId ==. factionId ] [ Asc StarSystemReportId
                                                                                           , Asc StarSystemReportDate ]
-    let systemReports = collateSystems $ map entityVal loadedSystemReports
+    let systemReports = collateReports $ map entityVal loadedSystemReports
     defaultLayout $ do
         setTitle "Deep Sky - Star systems"
         $(widgetFile "starsystems")
@@ -59,7 +59,7 @@ getPlanetR _ planetId = do
     (_, _, factionId) <- requireFaction
     loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId ==. planetId
                                               , PlanetReportFactionId ==. factionId ] [ Asc PlanetReportDate ]
-    let planetReport = collatePlanet $ map entityVal loadedPlanetReports
+    let planetReport = collateReport $ map entityVal loadedPlanetReports
     let planetKey = fromSqlKey planetId
 
     let expl = "Deep Sky - " ++ case (cprName planetReport) of
@@ -76,7 +76,7 @@ getApiPlanetR planetId = do
     (_, _, fId) <- apiRequireFaction
     loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId ==. planetId
                                               , PlanetReportFactionId ==. fId ] [ Asc PlanetReportDate ]
-    let planetReport = collatePlanet $ map entityVal loadedPlanetReports
+    let planetReport = collateReport $ map entityVal loadedPlanetReports :: CollatedPlanetReport
     return $ toJSON planetReport
 
 getApiPlanetBuildingsR :: Key Planet -> Handler Value
@@ -92,7 +92,5 @@ getApiPlanetPopulationR :: Key Planet -> Handler Value
 getApiPlanetPopulationR planetId = do
     (_, _, fId) <- apiRequireFaction
     loadedPopReports <- runDB $ loadPlanetPopulationReports planetId fId
-    let populationReports = collatePopulations $ map (\(a, b) -> (entityVal a, fmap entityVal b)) loadedPopReports
+    let populationReports = collateReports $ map (\(a, b) -> (entityVal a, fmap entityVal b)) loadedPopReports :: [CollatedPopulationReport]
     return $ toJSON populationReports
-
-

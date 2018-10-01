@@ -2,10 +2,12 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE FlexibleInstances          #-}
 
 module Report ( createPlanetReports, createStarReports, createStarLaneReports, createSystemReport
-              , collatePopulations, collatePlanets, collateStars, collateBuildings, collateSystems
-              , collatePlanet, collateStar, collateBuilding
+              , collateBuildings, collateReports, collateReport
+              , collateBuilding
               , spectralInfo
               , CollatedPlanetReport(..), CollatedStarReport(..), CollatedStarLaneReport(..)
               , CollatedBuildingReport(..), CollatedPopulationReport(..), CollatedStarSystemReport(..)
@@ -16,6 +18,15 @@ import Import
 import CustomTypes
 import Database.Persist.Sql (toSqlKey)
 import Data.Aeson.TH
+import Data.Monoid ()
+
+-- | Class to transform a report stored in db to respective collated report
+class ReportTransform a b where
+    fromReport :: a -> b
+
+-- | Class to indicate if two reports are about same entity
+class Grouped a where
+    sameGroup :: a -> a -> Bool
 
 data CollatedStarSystemReport = CollatedStarSystemReport {
       cssrSystemId :: Key StarSystem
@@ -23,6 +34,27 @@ data CollatedStarSystemReport = CollatedStarSystemReport {
     , cssrLocation :: Coordinates
     , cssrDate     :: Int
 } deriving Show
+
+instance Semigroup CollatedStarSystemReport where
+    (<>) a b = CollatedStarSystemReport (cssrSystemId a)
+                                        (combine (cssrName a) (cssrName b))
+                                        (cssrLocation a)
+                                        (max (cssrDate a) (cssrDate b))
+
+instance Monoid CollatedStarSystemReport where
+    mempty = CollatedStarSystemReport (toSqlKey 0) Nothing (Coordinates 0 0) 0
+
+instance ReportTransform StarSystemReport CollatedStarSystemReport where
+    fromReport report =
+        CollatedStarSystemReport (starSystemReportStarSystemId report)
+                                 (starSystemReportName report)
+                                 (Coordinates (starSystemReportCoordX report) (starSystemReportCoordY report))
+                                 (starSystemReportDate report)
+
+instance Grouped StarSystemReport where
+    sameGroup a b = 
+        (starSystemReportStarSystemId a) == (starSystemReportStarSystemId b)
+
 
 data CollatedStarReport = CollatedStarReport {
       csrStarId          :: Key Star
@@ -32,6 +64,30 @@ data CollatedStarReport = CollatedStarReport {
     , csrLuminosityClass :: Maybe LuminosityClass
     , csrDate            :: Int
 } deriving Show
+
+instance Semigroup CollatedStarReport where
+    (<>) a b = CollatedStarReport (csrStarId a)
+                                  (csrSystemId a)
+                                  (combine (csrName a) (csrName b))
+                                  (combine (csrSpectralType a) (csrSpectralType b))
+                                  (combine (csrLuminosityClass a) (csrLuminosityClass b))
+                                  (max (csrDate a) (csrDate b))
+
+instance Monoid CollatedStarReport where
+    mempty = CollatedStarReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing 0
+
+instance ReportTransform StarReport CollatedStarReport where
+    fromReport report =
+        CollatedStarReport (starReportStarId report)
+                           (starReportStarSystemId report)
+                           (starReportName report)
+                           (starReportSpectralType report)
+                           (starReportLuminosityClass report)
+                           (starReportDate report)
+
+instance Grouped StarReport where
+    sameGroup a b = 
+        (starReportStarId a) == (starReportStarId b)
 
 data CollatedPlanetReport = CollatedPlanetReport 
     { cprPlanetId :: Key Planet
@@ -43,6 +99,32 @@ data CollatedPlanetReport = CollatedPlanetReport
     , cprDate     :: Int
     } deriving Show
 
+instance Semigroup CollatedPlanetReport where
+    (<>) a b = CollatedPlanetReport (cprPlanetId a)
+                                    (cprSystemId a)
+                                    (combine (cprOwnerId a) (cprOwnerId b))
+                                    (combine (cprName a) (cprName b))
+                                    (combine (cprPosition a) (cprPosition b))
+                                    (combine (cprGravity a) (cprGravity b))
+                                    (max (cprDate a) (cprDate b))
+
+instance Monoid CollatedPlanetReport where
+    mempty = CollatedPlanetReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing Nothing 0
+
+instance ReportTransform PlanetReport CollatedPlanetReport where
+    fromReport report =
+        CollatedPlanetReport (planetReportPlanetId report)
+                             (planetReportStarSystemId report)
+                             (planetReportOwnerId report)
+                             (planetReportName report)
+                             (planetReportPosition report)
+                             (planetReportGravity report)
+                             (planetReportDate report)
+
+instance Grouped PlanetReport where
+    sameGroup a b = 
+        (planetReportPlanetId a) == (planetReportPlanetId b)
+
 data CollatedPopulationReport = CollatedPopulationReport
     { cpopPlanetId   :: Key Planet
     , cpopRaceId     :: Maybe (Key Race)
@@ -50,6 +132,29 @@ data CollatedPopulationReport = CollatedPopulationReport
     , cpopPopulation :: Maybe Int
     , cpopDate       :: Int
     } deriving Show
+
+instance Semigroup CollatedPopulationReport where
+    (<>) a b = CollatedPopulationReport (cpopPlanetId a)
+                                        (combine (cpopRaceId a) (cpopRaceId b))
+                                        (combine (cpopRace a) (cpopRace b))
+                                        (combine (cpopPopulation a) (cpopPopulation b))
+                                        (max (cpopDate a) (cpopDate b))
+
+instance Monoid CollatedPopulationReport where
+    mempty = CollatedPopulationReport (toSqlKey 0) Nothing Nothing Nothing 0
+
+instance ReportTransform (PlanetPopulationReport, Maybe Race) CollatedPopulationReport where
+    fromReport (report, pRace) =
+        CollatedPopulationReport (planetPopulationReportPlanetId report)
+                                 (planetPopulationReportRaceId report)
+                                 (fmap raceName pRace)
+                                 (planetPopulationReportPopulation report)
+                                 (planetPopulationReportDate report)
+
+instance Grouped (PlanetPopulationReport, Maybe Race) where
+    sameGroup (a, _) (b, _) = 
+        (planetPopulationReportPlanetId a) == (planetPopulationReportPlanetId b) &&
+            (planetPopulationReportRaceId a) == (planetPopulationReportRaceId b)
 
 data CollatedStarLaneReport = CollatedStarLaneReport {
       cslStarLaneId      :: Key StarLane
@@ -86,79 +191,18 @@ spectralInfo (Just st) Nothing   = pack $ show st
 spectralInfo Nothing (Just lc)   = pack $ show lc
 spectralInfo (Just st) (Just lc) = pack $ show st ++ (show lc)
 
--- | Combine list of star system reports and form a single collated star system report
+-- | Combine list of reports and form a single collated report
 --   Resulting report will have facts from the possibly partially empty reports
 --   If a fact is not present for a given field, Nothing is left there
-collateSystem :: [StarSystemReport] -> CollatedStarSystemReport
-collateSystem = foldr fn initial
-    where initial = CollatedStarSystemReport (toSqlKey 0) Nothing (Coordinates 0 0) 0
-          fn val acc = CollatedStarSystemReport (starSystemReportStarSystemId val)
-                                                (combine (starSystemReportName val) (cssrName acc))
-                                                (Coordinates (starSystemReportCoordX val) (starSystemReportCoordY val))
-                                                (max (starSystemReportDate val) (cssrDate acc))
+collateReport :: (Monoid a, ReportTransform b a) => [b] -> a
+collateReport reports = mconcat (map fromReport reports)
 
--- | Combine list of star system reports and form a list of collated star system reports
---   Each star system is given their own report
-collateSystems :: [StarSystemReport] -> [CollatedStarSystemReport]
-collateSystems [] = []
-collateSystems s@(x:_) = (collateSystem itemsOfKind) : (collateSystems restOfItems)
-    where split = span comparer s
-          comparer = \a -> (starSystemReportStarSystemId a) == (starSystemReportStarSystemId x)
-          itemsOfKind = fst split
-          restOfItems = snd split
-
-collateStar :: [StarReport] -> CollatedStarReport
-collateStar = foldr fn initial
-    where initial = CollatedStarReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing 0
-          fn val acc = CollatedStarReport (starReportStarId val)
-                                          (starReportStarSystemId val)
-                                          (combine (starReportName val) (csrName acc))
-                                          (combine (starReportSpectralType val) (csrSpectralType acc))
-                                          (combine (starReportLuminosityClass val) (csrLuminosityClass acc))
-                                          (max (starReportDate val) (csrDate acc))
-
-collateStars :: [StarReport] -> [CollatedStarReport]
-collateStars [] = []
-collateStars s@(x:_) = (collateStar itemsOfKind) : (collateStars restOfItems)
-    where split = span comparer s
-          comparer = \a -> (starReportStarId a) == (starReportStarId x)
-          itemsOfKind = fst split
-          restOfItems = snd split
-
-collatePlanet :: [PlanetReport] -> CollatedPlanetReport
-collatePlanet = foldr fn initial
-    where initial = CollatedPlanetReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing Nothing 0
-          fn val acc = CollatedPlanetReport (planetReportPlanetId val)
-                                            (planetReportStarSystemId val)
-                                            (planetReportOwnerId val)
-                                            (combine (planetReportName val) (cprName acc))
-                                            (combine (planetReportPosition val) (cprPosition acc))
-                                            (combine (planetReportGravity val) (cprGravity acc))
-                                            (max (planetReportDate val) (cprDate acc))
-
-collatePlanets :: [PlanetReport] -> [CollatedPlanetReport]
-collatePlanets [] = []
-collatePlanets s@(x:_) = (collatePlanet itemsOfKind) : (collatePlanets restOfItems)
-    where split = span comparer s
-          comparer = \a -> (planetReportPlanetId a) == (planetReportPlanetId x)
-          itemsOfKind = fst split
-          restOfItems = snd split
-
-collatePopulation :: [(PlanetPopulationReport, Maybe Race)] -> CollatedPopulationReport
-collatePopulation = foldr fn initial
-    where initial = CollatedPopulationReport (toSqlKey 0) Nothing Nothing Nothing 0
-          fn (val, pRace) acc = CollatedPopulationReport (planetPopulationReportPlanetId val)
-                                                         (combine (planetPopulationReportRaceId val) (cpopRaceId acc))
-                                                         (combine (map raceName pRace) (cpopRace acc))
-                                                         (combine (planetPopulationReportPopulation val) (cpopPopulation acc))
-                                                         (max (planetPopulationReportDate val) (cpopDate acc))
-
-collatePopulations :: [(PlanetPopulationReport, Maybe Race)] -> [CollatedPopulationReport]
-collatePopulations [] = []
-collatePopulations s@((x, _):_) = (collatePopulation itemsOfKind) : (collatePopulations restOfItems)
-    where split = span comparer s
-          comparer (a, _) = (planetPopulationReportPlanetId a) == (planetPopulationReportPlanetId x) &&
-                            (planetPopulationReportFactionId a) == (planetPopulationReportFactionId x)
+-- | Combine list of star reports and form a list of collated reports
+--   Each reported entity is given their own report
+collateReports :: (Grouped b, Monoid a, ReportTransform b a) => [b] -> [a]
+collateReports [] = []
+collateReports s@(x:_) = (collateReport itemsOfKind) : (collateReports restOfItems)
+    where split = span (sameGroup x) s
           itemsOfKind = fst split
           restOfItems = snd split
 
@@ -206,7 +250,7 @@ createStarReports systemId factionId = do
     loadedStarReports <- selectList [ StarReportStarSystemId ==. systemId
                                     , StarReportFactionId ==. factionId ] [ Asc StarReportId
                                                                           , Asc StarReportDate ]
-    return $ collateStars $ map entityVal loadedStarReports
+    return $ collateReports $ map entityVal loadedStarReports
 
 createSystemReport :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistQueryRead backend) =>
@@ -214,7 +258,7 @@ createSystemReport :: (BaseBackend backend ~ SqlBackend, MonadIO m,
 createSystemReport systemId factionId = do
     systemReports <- selectList [ StarSystemReportStarSystemId ==. systemId
                                 , StarSystemReportFactionId ==. factionId ] [ Asc StarSystemReportDate ]
-    return $ collateSystem $ map entityVal systemReports
+    return $ collateReport $ map entityVal systemReports
 
 createPlanetReports :: (BaseBackend backend ~ SqlBackend,
     MonadIO m, PersistQueryRead backend) =>
@@ -224,7 +268,7 @@ createPlanetReports systemId factionId = do
     loadedPlanetReports <-  selectList [ PlanetReportPlanetId <-. (map entityKey planets) 
                                        , PlanetReportFactionId ==. factionId ] [ Asc PlanetReportPlanetId
                                                                                , Asc PlanetReportDate ]
-    return $ collatePlanets $ map entityVal loadedPlanetReports
+    return $ collateReports $ map entityVal loadedPlanetReports
 
 createStarLaneReports :: (BaseBackend backend ~ SqlBackend,
     MonadIO m, PersistQueryRead backend) =>

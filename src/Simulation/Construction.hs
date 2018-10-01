@@ -9,5 +9,14 @@
 {-# LANGUAGE InstanceSigs               #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
-module Simulation.Construction where
+module Simulation.Construction ( handleFactionConstruction )
+    where
 
+import Import
+
+-- | handle construction queues for given faction
+handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
+    PersistStoreWrite backend, PersistQueryRead backend, MonadIO m) =>
+    Entity Faction -> ReaderT backend m ()
+handleFactionConstruction faction = do
+    return ()
