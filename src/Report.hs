@@ -37,7 +37,7 @@ data CollatedStarSystemReport = CollatedStarSystemReport {
 
 instance Semigroup CollatedStarSystemReport where
     (<>) a b = CollatedStarSystemReport (cssrSystemId a)
-                                        (combine (cssrName a) (cssrName b))
+                                        ((cssrName a) <|> (cssrName b))
                                         (cssrLocation a)
                                         (max (cssrDate a) (cssrDate b))
 
@@ -68,9 +68,9 @@ data CollatedStarReport = CollatedStarReport {
 instance Semigroup CollatedStarReport where
     (<>) a b = CollatedStarReport (csrStarId a)
                                   (csrSystemId a)
-                                  (combine (csrName a) (csrName b))
-                                  (combine (csrSpectralType a) (csrSpectralType b))
-                                  (combine (csrLuminosityClass a) (csrLuminosityClass b))
+                                  ((csrName a) <|> (csrName b))
+                                  ((csrSpectralType a) <|> (csrSpectralType b))
+                                  ((csrLuminosityClass a) <|> (csrLuminosityClass b))
                                   (max (csrDate a) (csrDate b))
 
 instance Monoid CollatedStarReport where
@@ -102,10 +102,10 @@ data CollatedPlanetReport = CollatedPlanetReport
 instance Semigroup CollatedPlanetReport where
     (<>) a b = CollatedPlanetReport (cprPlanetId a)
                                     (cprSystemId a)
-                                    (combine (cprOwnerId a) (cprOwnerId b))
-                                    (combine (cprName a) (cprName b))
-                                    (combine (cprPosition a) (cprPosition b))
-                                    (combine (cprGravity a) (cprGravity b))
+                                    ((cprOwnerId a) <|> (cprOwnerId b))
+                                    ((cprName a) <|> (cprName b))
+                                    ((cprPosition a) <|> (cprPosition b))
+                                    ((cprGravity a) <|> (cprGravity b))
                                     (max (cprDate a) (cprDate b))
 
 instance Monoid CollatedPlanetReport where
@@ -135,9 +135,9 @@ data CollatedPopulationReport = CollatedPopulationReport
 
 instance Semigroup CollatedPopulationReport where
     (<>) a b = CollatedPopulationReport (cpopPlanetId a)
-                                        (combine (cpopRaceId a) (cpopRaceId b))
-                                        (combine (cpopRace a) (cpopRace b))
-                                        (combine (cpopPopulation a) (cpopPopulation b))
+                                        ((cpopRaceId a) <|> (cpopRaceId b))
+                                        ((cpopRace a) <|> (cpopRace b))
+                                        ((cpopPopulation a) <|> (cpopPopulation b))
                                         (max (cpopDate a) (cpopDate b))
 
 instance Monoid CollatedPopulationReport where
@@ -179,12 +179,6 @@ data CollatedBuildingReport = CollatedBuildingReport {
     , cbrDate         :: Int
 } deriving Show
 
-combine :: Maybe a -> Maybe a -> Maybe a
-combine (Just _) b@(Just _) = b
-combine a@(Just _) Nothing  = a
-combine Nothing b@(Just _)  = b
-combine Nothing Nothing     = Nothing
-
 spectralInfo :: Maybe SpectralType -> Maybe LuminosityClass -> Text
 spectralInfo Nothing Nothing     = ""
 spectralInfo (Just st) Nothing   = pack $ show st
@@ -197,7 +191,7 @@ spectralInfo (Just st) (Just lc) = pack $ show st ++ (show lc)
 collateReport :: (Monoid a, ReportTransform b a) => [b] -> a
 collateReport reports = mconcat (map fromReport reports)
 
--- | Combine list of star reports and form a list of collated reports
+-- | Combine list of reports and form a list of collated reports
 --   Each reported entity is given their own report
 collateReports :: (Grouped b, Monoid a, ReportTransform b a) => [b] -> [a]
 collateReports [] = []
@@ -212,8 +206,8 @@ collateStarLane = foldr fn initial
           fn val acc = CollatedStarLaneReport (starLaneReportStarLaneId val)
                                               (starLaneReportStarSystem1 val)
                                               (starLaneReportStarSystem2 val)
-                                              (combine (starLaneReportStarSystemName1 val) (cslStarSystemName1 acc))
-                                              (combine (starLaneReportStarSystemName2 val) (cslStarSystemName2 acc))
+                                              ((starLaneReportStarSystemName1 val) <|> (cslStarSystemName1 acc))
+                                              ((starLaneReportStarSystemName2 val) <|> (cslStarSystemName2 acc))
                                               (max (starLaneReportDate val) (cslDate acc))
 
 collateStarLanes :: [StarLaneReport] -> [CollatedStarLaneReport]
@@ -230,9 +224,9 @@ collateBuilding = foldr fn initial
     where initial = CollatedBuildingReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing 0
           fn val acc = CollatedBuildingReport (buildingReportBuildingId val)
                                               (buildingReportPlanetId val)
-                                              (combine (buildingReportType val) (cbrType acc))
-                                              (combine (buildingReportLevel val) (cbrLevel acc))
-                                              (combine (buildingReportDamage val) (cbrDamage acc))
+                                              ((buildingReportType val) <|> (cbrType acc))
+                                              ((buildingReportLevel val) <|> (cbrLevel acc))
+                                              ((buildingReportDamage val) <|> (cbrDamage acc))
                                               (max (buildingReportDate val) (cbrDate acc))
 
 collateBuildings :: [BuildingReport] -> [CollatedBuildingReport]
