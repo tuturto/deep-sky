@@ -11,9 +11,10 @@ module Handler.StarSystems ( getApiStarSystemsR, getStarSystemsR, getStarSystemR
 
 import Import
 import Text.Blaze.Html5 (toMarkup)
-import Report ( collateReports, collateReport, collateBuildings
+import Report ( collateReports, collateReport
               , createStarLaneReports, createPlanetReports, createStarReports, createSystemReport
-              , cprName, CollatedStarSystemReport(..), CollatedPlanetReport(..), CollatedPopulationReport )
+              , cprName, CollatedStarSystemReport(..), CollatedPlanetReport(..), CollatedPopulationReport
+              , CollatedBuildingReport(..) )
 import Widgets
 import Database.Persist.Sql (fromSqlKey)
 import Common (requireFaction, apiRequireFaction)
@@ -85,7 +86,7 @@ getApiPlanetBuildingsR planetId = do
     loadedBuildingReports <- runDB $ selectList [ BuildingReportPlanetId ==. planetId 
                                                 , BuildingReportFactionId ==. fId ] [ Asc BuildingReportBuildingId
                                                                                     , Asc BuildingReportDate ]
-    let buildingReports = collateBuildings $ map entityVal loadedBuildingReports
+    let buildingReports = collateReports $ map entityVal loadedBuildingReports :: [CollatedBuildingReport]
     return $ toJSON buildingReports
 
 getApiPlanetPopulationR :: Key Planet -> Handler Value
