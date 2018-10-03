@@ -16,6 +16,7 @@ import Import
 import Simulation.Time
 import Simulation.Food (handleFactionFood)
 import Simulation.Observations (handleFactionObservations)
+import Simulation.Construction (handleFactionConstruction)
 
 -- | simulate a single step
 processTurn :: (BaseBackend backend ~ SqlBackend,
@@ -34,4 +35,5 @@ handleFaction :: (BaseBackend backend ~ SqlBackend,
 handleFaction date faction = do
     _ <- handleFactionFood faction
     _ <- handleFactionObservations date faction
+    _ <- handleFactionConstruction date faction
     return ()

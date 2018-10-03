@@ -5,11 +5,12 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
-module Queries (loadPlanetPopulationReports, loadPlanetShips, ShipLandingStatus(..))
+module Queries (loadPlanetPopulationReports, loadPlanetShips, ShipLandingStatus(..), loadPlanetConstructionQueue)
     where
 
 import Import
 import qualified Database.Esqueleto as E
+import Common (maybeGet)
 
 -- | Load population reports of a planet and respective races
 loadPlanetPopulationReports :: (MonadIO m, BackendCompatible SqlBackend backend,
@@ -43,3 +44,16 @@ loadPlanetShips pId landingStatus = do
                 return (ship, faction)
 
 data ShipLandingStatus = ShipOnPlanet | ShipInOrbit
+
+-- | Load planet with construction queue
+loadPlanetConstructionQueue :: (MonadIO m, BackendCompatible SqlBackend backend, 
+                                PersistQueryRead backend, PersistUniqueRead backend) =>
+                               Key Planet -> ReaderT backend m (Maybe (Entity Planet), [Entity BuildingConstruction])
+loadPlanetConstructionQueue pId = do
+    res <- E.select $
+            E.from $ \(planet `E.LeftOuterJoin` bConstruction) -> do
+                E.on (bConstruction E.^. BuildingConstructionPlanetId E.==. planet E.^. PlanetId)
+                E.where_ (planet E.^. PlanetId E.==. E.val pId)
+                return (planet, bConstruction)
+    let planet = fst <$> maybeGet res 0
+    return (planet, map snd res)

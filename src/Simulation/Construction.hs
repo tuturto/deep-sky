@@ -17,6 +17,6 @@ import Import
 -- | handle construction queues for given faction
 handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, PersistQueryRead backend, MonadIO m) =>
-    Entity Faction -> ReaderT backend m ()
-handleFactionConstruction faction = do
+    Time -> Entity Faction -> ReaderT backend m ()
+handleFactionConstruction date faction = do
     return ()
