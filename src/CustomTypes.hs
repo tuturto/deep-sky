@@ -10,6 +10,7 @@ import Database.Persist.TH
 import Text.Blaze.Html5 (ToMarkup, toMarkup)
 import Data.Text
 import ClassyPrelude.Yesod   as Import
+import Data.Monoid ()
 
 data SpectralType = O | B | A | F | G | K | M | L | T
     deriving (Show, Read, Eq)
@@ -105,8 +106,28 @@ data TotalCost = TotalCost
     , ccdChemicalCost :: Cost }
     deriving (Show, Read, Eq)
 
+instance Semigroup TotalCost where
+    (<>) a b = TotalCost 
+        { ccdMechanicalCost = ccdMechanicalCost a <> ccdMechanicalCost b
+        , ccdBiologicalCost = ccdBiologicalCost a <> ccdBiologicalCost b
+        , ccdChemicalCost = ccdChemicalCost a <> ccdChemicalCost b
+        }
+
+instance Monoid TotalCost where
+    mempty = TotalCost 
+        { ccdMechanicalCost = Cost 0
+        , ccdBiologicalCost = Cost 0
+        , ccdChemicalCost = Cost 0
+        }
+
 data Cost = Cost { unCost :: Int }
     deriving (Show, Read, Eq)
+
+instance Semigroup Cost where
+    (<>) a b = Cost $ (unCost a) + (unCost b)
+
+instance Monoid Cost where
+    mempty = Cost 0
 
 costSub :: Cost -> Cost -> Cost
 costSub a b = 

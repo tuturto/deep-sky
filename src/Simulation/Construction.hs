@@ -13,10 +13,21 @@ module Simulation.Construction ( handleFactionConstruction )
     where
 
 import Import
+import qualified Database.Esqueleto as E
+import Queries (loadPlanetConstructionQueue)
+import CustomTypes (TotalCost(..), Cost(..))
 
--- | handle construction queues for given faction
+
 handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
-    PersistStoreWrite backend, PersistQueryRead backend, MonadIO m) =>
-    Time -> Entity Faction -> ReaderT backend m ()
+                              BackendCompatible SqlBackend backend,
+                              PersistStoreWrite backend, PersistQueryRead backend, PersistUniqueRead backend,
+                              MonadIO m) =>
+                             Time -> Entity Faction -> ReaderT backend m ()
 handleFactionConstruction date faction = do
+    planets <- selectList [ PlanetOwnerId ==. Just (entityKey faction)] []
+    queues <- mapM loadPlanetConstructionQueue $ map entityKey planets
+    let totalCost = mconcat $ map queueCost queues
     return ()
+
+queueCost (planet, bConstructions) =
+    TotalCost (Cost 0) (Cost 0) (Cost 0)

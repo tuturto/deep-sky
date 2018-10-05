@@ -20,6 +20,7 @@ import Simulation.Construction (handleFactionConstruction)
 
 -- | simulate a single step
 processTurn :: (BaseBackend backend ~ SqlBackend,
+    BackendCompatible SqlBackend backend, PersistUniqueRead backend,
     PersistQueryRead backend, PersistStoreWrite backend, MonadIO m) =>
     ReaderT backend m (Time)
 processTurn = do
@@ -30,6 +31,7 @@ processTurn = do
 
 -- | process single faction, handling all of it's needs, orders and such
 handleFaction :: (BaseBackend backend ~ SqlBackend,
+    BackendCompatible SqlBackend backend, PersistUniqueRead backend,
     PersistStoreWrite backend, MonadIO m, PersistQueryRead backend) =>
     Time -> Entity Faction -> ReaderT backend m ()
 handleFaction date faction = do
