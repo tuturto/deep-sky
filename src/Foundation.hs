@@ -16,6 +16,7 @@ import Text.Hamlet          (hamletFile)
 import Text.Jasmine         (minifym)
 import Control.Monad.Logger (LogSource)
 import MenuHelpers
+import CustomTypes (TotalResources(..), Cost(..))
 
 -- Used only when in "auth-dummy-login" setting is enabled.
 import Yesod.Auth.Dummy
@@ -191,7 +192,11 @@ instance Yesod App where
         -- value passed to hamletToRepHtml cannot be a widget, this allows
         -- you to use normal widget features in default-layout.
 
-        (statusBarBiologicals, statusBarMechanicals, statusBarChemicals) <- runDB $ statusBarScore muser
+        -- TODO: remove unCost and just pass total resources to hamlet template
+        totalResources <- runDB $ statusBarScore muser
+        let statusBarBiologicals = (unCost . totalResourcesBiological) totalResources
+        let statusBarMechanicals = (unCost . totalResourcesMechanical) totalResources
+        let statusBarChemicals = (unCost . totalResourcesChemical) totalResources
 
         pc <- widgetToPageContent $ do
             addStylesheet $ StaticR css_bootstrap_css

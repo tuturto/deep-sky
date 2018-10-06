@@ -9,7 +9,7 @@
 {-# LANGUAGE InstanceSigs               #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
-module Simulation.Construction ( handleFactionConstruction )
+module Simulation.Construction ( handleFactionConstruction, queueCostReq, planetConstructionSpeed )
     where
 
 import Import
@@ -17,6 +17,7 @@ import qualified Queries (planetConstructionQueue)
 import CustomTypes (TotalCost(..), Cost(..))
 import Common (safeHead)
 import Construction (ConstructionSpeed(..), Constructable(..))
+import MenuHelpers (getScore)
 
 
 handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
@@ -24,10 +25,13 @@ handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
                               PersistStoreWrite backend, PersistQueryRead backend, PersistUniqueRead backend,
                               MonadIO m) =>
                              Time -> Entity Faction -> ReaderT backend m ()
-handleFactionConstruction date faction = do
-    planets <- selectList [ PlanetOwnerId ==. Just (entityKey faction)] []
+handleFactionConstruction date factionE = do
+    let faction = entityVal factionE
+    planets <- selectList [ PlanetOwnerId ==. Just (entityKey factionE)] []
     queues <- mapM Queries.planetConstructionQueue $ map entityKey planets
     let totalCost = mconcat $ map (queueCostReq . toPlainObjects) queues
+    -- TODO: real type
+    let availableResources = getScore $ Just faction
     return ()
 
 -- | Turn entities into plain objects

@@ -103,7 +103,8 @@ derivePersistField "ComponentSlot"
 data TotalCost = TotalCost
     { ccdMechanicalCost :: Cost
     , ccdBiologicalCost :: Cost
-    , ccdChemicalCost :: Cost }
+    , ccdChemicalCost :: Cost
+    }
     deriving (Show, Read, Eq)
 
 instance Semigroup TotalCost where
@@ -140,6 +141,27 @@ instance Num Cost where
     signum (Cost a) = Cost $ signum a
     fromInteger a = Cost $ fromInteger a
 
+data TotalResources = TotalResources
+    { totalResourcesMechanical :: Cost
+    , totalResourcesBiological :: Cost
+    , totalResourcesChemical :: Cost
+    }
+    deriving (Show, Read, Eq)
+
+instance Semigroup TotalResources where
+    (<>) a b = TotalResources 
+        { totalResourcesMechanical = totalResourcesMechanical a <> totalResourcesMechanical b
+        , totalResourcesBiological = totalResourcesBiological a <> totalResourcesBiological b
+        , totalResourcesChemical = totalResourcesChemical a <> totalResourcesChemical b
+        }
+
+instance Monoid TotalResources where
+    mempty = TotalResources 
+        { totalResourcesMechanical = Cost 0
+        , totalResourcesBiological = Cost 0
+        , totalResourcesChemical = Cost 0
+        }
+
 instance ToJSON TotalCost where
     toJSON (TotalCost mech bio chem) =
         object [ "mechanical" .= unCost mech
@@ -153,6 +175,20 @@ instance FromJSON TotalCost where
         biological <- o .: "biological"
         chemical <- o .: "chemical"
         return $ TotalCost (Cost mechanical) (Cost biological) (Cost chemical)
+
+instance ToJSON TotalResources where
+    toJSON (TotalResources mech bio chem) =
+        object [ "mechanical" .= unCost mech
+               , "biological" .= unCost bio
+               , "chemical" .= unCost chem 
+               ]
+
+instance FromJSON TotalResources where
+    parseJSON = withObject "resources" $ \o -> do
+        mechanical <- o .: "mechanical"
+        biological <- o .: "biological"
+        chemical <- o .: "chemical"
+        return $ TotalResources (Cost mechanical) (Cost biological) (Cost chemical)
 
 $(deriveJSON defaultOptions ''Role)
 $(deriveJSON defaultOptions ''Coordinates)
