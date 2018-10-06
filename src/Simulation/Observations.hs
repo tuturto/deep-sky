@@ -100,7 +100,7 @@ observeRandomTarget :: (BaseBackend backend ~ SqlBackend,
     Time -> Entity Faction -> [ObservationCandidate] -> (Entity Building) -> ReaderT backend m ()
 observeRandomTarget date faction candidates building = do
     res <- liftIO $ randomRIO (0, (length candidates) - 1)
-    let target = maybeGet candidates res
+    let target = maybeGet res candidates
     _ <- observeTarget date faction target building
     return ()
 

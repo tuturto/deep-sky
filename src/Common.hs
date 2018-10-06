@@ -5,7 +5,8 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
-              , DtoTransform(..), apiNotFound, apiInvalidArgs, apiInternalError, apiOk )
+              , DtoTransform(..), apiNotFound, apiInvalidArgs, apiInternalError, apiOk
+              , safeHead )
     where
 
 import Import
@@ -14,11 +15,13 @@ import System.Random
 
 -- | Get item from list with given index
 --   If item is within bounds, return Just it, otherwise Nothing
-maybeGet :: [a] -> Int -> Maybe a
-maybeGet col i
+maybeGet :: Int -> [a] -> Maybe a
+maybeGet i col
     | i < 0               = Nothing
     | i >= (P.length col) = Nothing
     | otherwise           = Just (col P.!! i)
+
+safeHead = maybeGet 0
 
 chooseOne :: a -> a -> IO a
 chooseOne item1 item2 = do

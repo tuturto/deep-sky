@@ -14,8 +14,10 @@ module Simulation.Construction ( handleFactionConstruction )
 
 import Import
 import qualified Database.Esqueleto as E
-import Queries (loadPlanetConstructionQueue)
+import qualified Queries (planetConstructionQueue)
 import CustomTypes (TotalCost(..), Cost(..))
+import Common (maybeGet, safeHead)
+import Construction
 
 
 handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
@@ -25,9 +27,20 @@ handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
                              Time -> Entity Faction -> ReaderT backend m ()
 handleFactionConstruction date faction = do
     planets <- selectList [ PlanetOwnerId ==. Just (entityKey faction)] []
-    queues <- mapM loadPlanetConstructionQueue $ map entityKey planets
-    let totalCost = mconcat $ map queueCost queues
+    queues <- mapM Queries.planetConstructionQueue $ map entityKey planets
+    let totalCost = mconcat $ map queueCostReq queues
     return ()
 
-queueCost (planet, bConstructions) =
+-- | Total requirement of cost for a construction queue for a turn
+--   Take into account speed the planet can construct buildings
+queueCostReq :: (Maybe (Entity Planet), [Entity BuildingConstruction]) -> TotalCost
+queueCostReq (planet, bConstructions) =    
     TotalCost (Cost 0) (Cost 0) (Cost 0)
+    where
+        maxSpeed = planetConstructionSpeed . entityVal <$> planet
+        constLeft = cCost . entityVal <$> safeHead bConstructions
+
+-- | Speed that a planet can build constructions
+planetConstructionSpeed :: Planet -> TotalCost
+planetConstructionSpeed planet =
+    TotalCost (Cost 50) (Cost 50) (Cost 50)
