@@ -13,11 +13,10 @@ module Simulation.Construction ( handleFactionConstruction )
     where
 
 import Import
-import qualified Database.Esqueleto as E
 import qualified Queries (planetConstructionQueue)
 import CustomTypes (TotalCost(..), Cost(..))
-import Common (maybeGet, safeHead)
-import Construction
+import Common (safeHead)
+import Construction (ConstructionSpeed(..), Constructable(..))
 
 
 handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
@@ -28,19 +27,29 @@ handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
 handleFactionConstruction date faction = do
     planets <- selectList [ PlanetOwnerId ==. Just (entityKey faction)] []
     queues <- mapM Queries.planetConstructionQueue $ map entityKey planets
-    let totalCost = mconcat $ map queueCostReq queues
+    let totalCost = mconcat $ map (queueCostReq . toPlainObjects) queues
     return ()
+
+-- | Turn entities into plain objects
+toPlainObjects :: (Maybe (Entity Planet), [Entity BuildingConstruction]) -> (Maybe Planet, [BuildingConstruction])
+toPlainObjects (planet, constructions) =
+    (entityVal <$> planet, map entityVal constructions)
 
 -- | Total requirement of cost for a construction queue for a turn
 --   Take into account speed the planet can construct buildings
-queueCostReq :: (Maybe (Entity Planet), [Entity BuildingConstruction]) -> TotalCost
-queueCostReq (planet, bConstructions) =    
-    TotalCost (Cost 0) (Cost 0) (Cost 0)
+queueCostReq :: (Maybe Planet, [BuildingConstruction]) -> TotalCost
+queueCostReq ((Just planet), bConstructions) = 
+    TotalCost (min (constructionSpeedMechanicalCost planetSpeed) (ccdMechanicalCost constLeft)) 
+              (min (constructionSpeedBiologicalCost planetSpeed) (ccdBiologicalCost constLeft))
+              (min (constructionSpeedChemicalCost planetSpeed) (ccdChemicalCost constLeft))
     where
-        maxSpeed = planetConstructionSpeed . entityVal <$> planet
-        constLeft = cCost . entityVal <$> safeHead bConstructions
+        planetSpeed = planetConstructionSpeed $ planet
+        constLeft = case cCost <$> safeHead bConstructions of
+                        Just x -> x
+                        Nothing -> mempty
+queueCostReq (Nothing, _) = mempty
 
 -- | Speed that a planet can build constructions
-planetConstructionSpeed :: Planet -> TotalCost
-planetConstructionSpeed planet =
-    TotalCost (Cost 50) (Cost 50) (Cost 50)
+planetConstructionSpeed :: Planet -> ConstructionSpeed
+planetConstructionSpeed _ =
+    ConstructionSpeed (Cost 50) (Cost 50) (Cost 50)

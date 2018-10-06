@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
-module Construction
+module Construction (ConstructionSpeed(..), Constructable(..))
     where
 
 import Import
@@ -10,6 +10,12 @@ import CustomTypes (TotalCost(..), Cost(..))
 class Constructable a where
     cIndex :: a -> Int
     cCost :: a -> TotalCost
+
+data ConstructionSpeed = ConstructionSpeed
+    { constructionSpeedMechanicalCost :: Cost
+    , constructionSpeedBiologicalCost :: Cost
+    , constructionSpeedChemicalCost :: Cost }
+    deriving (Show, Read, Eq)
 
 instance Constructable BuildingConstruction where
     cIndex = buildingConstructionIndex

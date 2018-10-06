@@ -124,14 +124,21 @@ data Cost = Cost { unCost :: Int }
     deriving (Show, Read, Eq)
 
 instance Semigroup Cost where
-    (<>) a b = Cost $ (unCost a) + (unCost b)
+    (<>) a b = a + b
 
 instance Monoid Cost where
     mempty = Cost 0
 
-costSub :: Cost -> Cost -> Cost
-costSub a b = 
-    Cost $ (unCost a) - (unCost b)
+instance Ord Cost where
+    (<=) (Cost a) (Cost b) = a <= b
+
+instance Num Cost where
+    (+) (Cost a) (Cost b) = Cost $ a + b
+    (-) (Cost a) (Cost b) = Cost $ a - b
+    (*) (Cost a) (Cost b) = Cost $ a * b
+    abs (Cost a) = Cost $ abs a
+    signum (Cost a) = Cost $ signum a
+    fromInteger a = Cost $ fromInteger a
 
 instance ToJSON TotalCost where
     toJSON (TotalCost mech bio chem) =
