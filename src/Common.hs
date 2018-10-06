@@ -21,7 +21,10 @@ maybeGet i col
     | i >= (P.length col) = Nothing
     | otherwise           = Just (col P.!! i)
 
-safeHead = maybeGet 0
+-- | Get head of a list, if list is empty, return Nothing
+safeHead :: [a] -> Maybe a
+safeHead (x:_) = Just x
+safeHead _ = Nothing
 
 chooseOne :: a -> a -> IO a
 chooseOne item1 item2 = do
