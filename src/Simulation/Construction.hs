@@ -44,14 +44,8 @@ doPlanetConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                         MonadIO m, BaseBackend backend ~ SqlBackend) =>
                         OverallConstructionSpeed -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction)) -> ReaderT backend m ()
 doPlanetConstruction speed ((Just planetE), (Just bConsE)) = do
-    -- will construction be finished
-    --   no? -> update construction left
-    --   yes? -> remove construction from queue, updating indexes
-    --           place new building on planet
-    --           make news entry about finished construction
-    let planet = entityVal planetE
     let bCons = entityVal bConsE
-    let realSpeed = applyOverallSpeed speed $ planetConstructionSpeed planet
+    let realSpeed = applyOverallSpeed speed $ planetConstructionSpeed $ entityVal planetE
     let modelBuilding = building (buildingConstructionType bCons) (BLevel $ buildingConstructionLevel bCons)
     _ <- if constructionWillFinish realSpeed (cProgress bCons) (buildingInfoCost modelBuilding)
          then finishConstruction bConsE
@@ -63,8 +57,9 @@ doPlanetConstruction _ _ = do
 -- | Will construction finish based on speed, progress so far and required construction
 constructionWillFinish :: ConstructionSpeed -> TotalCost -> TotalCost -> Bool
 constructionWillFinish speed progress total = 
-    -- TODO: implement
-    False
+    constructionSpeedMechanicalCost speed >= ccdMechanicalCost total - ccdMechanicalCost progress 
+    && constructionSpeedBiologicalCost speed >= ccdBiologicalCost total - ccdBiologicalCost progress
+    && constructionSpeedChemicalCost speed >= ccdChemicalCost total - ccdChemicalCost progress
 
 finishConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                        MonadIO m, BaseBackend backend ~ SqlBackend) =>
@@ -142,6 +137,7 @@ overallConstructionSpeed cost res =
         mechSpeed = speedPerResource (ccdMechanicalCost cost) (totalResourcesMechanical res)
         chemSpeed = speedPerResource (ccdChemicalCost cost) (totalResourcesChemical res)
 
+-- | Speed that consumes at most available amount of resources or finishes the construction
 speedPerResource :: Cost -> Cost -> ConstructionSpeedCoeff
 speedPerResource cost res =
     if res >= cost
