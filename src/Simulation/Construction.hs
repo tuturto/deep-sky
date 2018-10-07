@@ -14,10 +14,11 @@ module Simulation.Construction ( handleFactionConstruction, queueCostReq, planet
 
 import Import
 import qualified Queries (planetConstructionQueue)
-import CustomTypes (TotalCost(..), Cost(..))
+import CustomTypes (TotalCost(..), Cost(..), TotalResources(..))
 import Common (safeHead)
 import Construction (ConstructionSpeed(..), Constructable(..))
 import MenuHelpers (getScore)
+import qualified Prelude as P (minimum)
 
 
 handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
@@ -30,8 +31,8 @@ handleFactionConstruction date factionE = do
     planets <- selectList [ PlanetOwnerId ==. Just (entityKey factionE)] []
     queues <- mapM Queries.planetConstructionQueue $ map entityKey planets
     let totalCost = mconcat $ map (queueCostReq . toPlainObjects) queues
-    -- TODO: real type
     let availableResources = getScore $ Just faction
+    let consSpeed = overallConstructionSpeed totalCost availableResources
     return ()
 
 -- | Turn entities into plain objects
@@ -57,3 +58,44 @@ queueCostReq (Nothing, _) = mempty
 planetConstructionSpeed :: Planet -> ConstructionSpeed
 planetConstructionSpeed _ =
     ConstructionSpeed (Cost 50) (Cost 50) (Cost 50)
+
+-- | Overall speed coefficient with given total cost and total resources
+--   Used to scale all construction of a faction, so they don't end up using
+--   more resources than they have
+overallConstructionSpeed :: TotalCost -> TotalResources -> OverallConstructionSpeed
+overallConstructionSpeed cost res =
+    OverallConstructionSpeed
+        { overallSpeedBiological = bioSpeed
+        , overallSpeedMechanical = mechSpeed
+        , overallSpeedChemical = chemSpeed
+        }
+    where
+        bioSpeed = speedPerResource (ccdBiologicalCost cost) (totalResourcesBiological res)
+        mechSpeed = speedPerResource (ccdMechanicalCost cost) (totalResourcesMechanical res)
+        chemSpeed = speedPerResource (ccdChemicalCost cost) (totalResourcesChemical res)
+
+speedPerResource :: Cost -> Cost -> ConstructionSpeedCoeff
+speedPerResource cost res =
+    if res >= cost
+    then NormalConstructionSpeed
+    else LimitedConstructionSpeed $ (fromIntegral $ unCost res) / (fromIntegral $ unCost cost)
+
+data ConstructionSpeedCoeff = NormalConstructionSpeed
+    | LimitedConstructionSpeed Double
+    deriving (Show, Read, Eq)
+
+instance Ord ConstructionSpeedCoeff where
+    (<=) (LimitedConstructionSpeed a) NormalConstructionSpeed =
+        a <= 1.0
+    (<=) (LimitedConstructionSpeed a) (LimitedConstructionSpeed b) =
+        a <= b
+    (<=) NormalConstructionSpeed NormalConstructionSpeed = True
+    (<=) NormalConstructionSpeed (LimitedConstructionSpeed a) =
+        a >= 1.0
+
+data OverallConstructionSpeed = OverallConstructionSpeed
+    { overallSpeedBiological :: ConstructionSpeedCoeff
+    , overallSpeedMechanical :: ConstructionSpeedCoeff
+    , overallSpeedChemical :: ConstructionSpeedCoeff
+    }
+    deriving (Show, Read, Eq)
