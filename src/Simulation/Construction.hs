@@ -33,7 +33,28 @@ handleFactionConstruction date factionE = do
     let totalCost = mconcat $ map (queueCostReq . toPlainObjects) queues
     let availableResources = getScore $ Just faction
     let consSpeed = overallConstructionSpeed totalCost availableResources
+    _ <- mapM (doPlanetConstruction consSpeed) $ map (\(planet, queue) -> (planet, safeHead queue)) queues
     return ()
+
+-- | Perform construction on a planet at given speed
+doPlanetConstruction :: Monad m => 
+                        OverallConstructionSpeed -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction)) -> m ()
+doPlanetConstruction speed ((Just planetE), (Just bCons)) = do
+    -- will construction be finished
+    --   no? -> update construction left
+    --   yes? -> remove construction from queue, updating indexes
+    --           place new building on planet
+    --           make news entry about finished construction
+    let planet = entityVal planetE
+    let realSpeed = applyOverallSpeed speed $ planetConstructionSpeed planet
+    return ()
+doPlanetConstruction _ _ = do
+    return ()
+
+applyOverallSpeed :: OverallConstructionSpeed -> ConstructionSpeed -> ConstructionSpeed
+applyOverallSpeed coeffSpeed speed =
+    -- TODO: implement
+    speed
 
 -- | Turn entities into plain objects
 toPlainObjects :: (Maybe (Entity Planet), [Entity BuildingConstruction]) -> (Maybe Planet, [BuildingConstruction])
