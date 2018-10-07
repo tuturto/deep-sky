@@ -9,7 +9,7 @@ import CustomTypes (TotalCost(..), Cost(..))
 
 class Constructable a where
     cIndex :: a -> Int
-    cCost :: a -> TotalCost
+    cProgress :: a -> TotalCost
 
 data ConstructionSpeed = ConstructionSpeed
     { constructionSpeedMechanicalCost :: Cost
@@ -19,7 +19,7 @@ data ConstructionSpeed = ConstructionSpeed
 
 instance Constructable BuildingConstruction where
     cIndex = buildingConstructionIndex
-    cCost a =
+    cProgress a =
         TotalCost (Cost $ buildingConstructionProgressMechanicals a)
                   (Cost $ buildingConstructionProgressBiologicals a)
                   (Cost $ buildingConstructionProgressChemicals a)

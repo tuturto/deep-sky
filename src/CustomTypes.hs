@@ -107,6 +107,14 @@ data TotalCost = TotalCost
     }
     deriving (Show, Read, Eq)
 
+-- | Subtract one totalcost from another
+subTotalCost :: TotalCost -> TotalCost -> TotalCost
+subTotalCost a b =
+    TotalCost { ccdMechanicalCost = ccdMechanicalCost a - ccdMechanicalCost b
+              , ccdBiologicalCost = ccdBiologicalCost a - ccdBiologicalCost b
+              , ccdChemicalCost = ccdChemicalCost a - ccdChemicalCost b
+              }
+
 instance Semigroup TotalCost where
     (<>) a b = TotalCost 
         { ccdMechanicalCost = ccdMechanicalCost a <> ccdMechanicalCost b
