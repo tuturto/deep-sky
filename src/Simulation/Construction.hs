@@ -35,23 +35,34 @@ handleFactionConstruction date factionE = do
     let totalCost = mconcat $ map (queueCostReq . toPlainObjects) queues
     let availableResources = getScore $ Just faction
     let consSpeed = overallConstructionSpeed totalCost availableResources
-    -- TODO: select building with smallest index (should be 0)
-    _ <- mapM (doPlanetConstruction consSpeed) $ map (\(planet, queue) -> (planet, safeHead queue)) queues
+    _ <- mapM (doPlanetConstruction (entityKey factionE) date consSpeed) $ map planetAndFirstConstruction queues
     return ()
+
+-- | Select construction from queue with the smallest construction index
+planetAndFirstConstruction :: (Maybe (Entity Planet), [Entity BuildingConstruction]) -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction))
+planetAndFirstConstruction (planet, queue@(_:_)) =   
+    (planet, safeHead sortedQ)
+    where
+        sortedQ = sortBy sorter queue
+        sorter a b = compare ((cIndex . entityVal) a) ((cIndex . entityVal) b)
+
+planetAndFirstConstruction (planet, []) =
+    (planet, Nothing)
 
 -- | Perform construction on a planet at given speed
 doPlanetConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                         MonadIO m, BaseBackend backend ~ SqlBackend) =>
-                        OverallConstructionSpeed -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction)) -> ReaderT backend m ()
-doPlanetConstruction speed ((Just planetE), (Just bConsE)) = do
+                        Key Faction -> Time -> OverallConstructionSpeed -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction)) 
+                            -> ReaderT backend m ()
+doPlanetConstruction fId date speed ((Just planetE), (Just bConsE)) = do
     let bCons = entityVal bConsE
     let realSpeed = applyOverallSpeed speed $ planetConstructionSpeed $ entityVal planetE
     let modelBuilding = building (buildingConstructionType bCons) (BLevel $ buildingConstructionLevel bCons)
     _ <- if constructionWillFinish realSpeed (cProgress bCons) (buildingInfoCost modelBuilding)
-         then finishConstruction bConsE
+         then finishConstruction fId date bConsE
          else workOnConstruction realSpeed bConsE
     return ()
-doPlanetConstruction _ _ = do
+doPlanetConstruction _ _ _ _ = do
     return ()
 
 -- | Will construction finish based on speed, progress so far and required construction
@@ -63,8 +74,8 @@ constructionWillFinish speed progress total =
 
 finishConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                        MonadIO m, BaseBackend backend ~ SqlBackend) =>
-                       Entity BuildingConstruction -> ReaderT backend m ()
-finishConstruction bConsE = do
+                       Key Faction -> Time -> Entity BuildingConstruction -> ReaderT backend m ()
+finishConstruction fId date bConsE = do
     let bCons = entityVal bConsE
     let bConsId = entityKey bConsE
     let planetId = buildingConstructionPlanetId bCons
@@ -78,6 +89,15 @@ finishConstruction bConsE = do
                                , buildingDamage = 0.0
                                }
     bId <- insert newBuilding
+    let report = BuildingReport { buildingReportBuildingId = bId
+                                , buildingReportPlanetId = planetId
+                                , buildingReportType = Just $ buildingConstructionType bCons
+                                , buildingReportLevel = Just $ buildingConstructionLevel bCons
+                                , buildingReportDamage = Just 0.0
+                                , buildingReportFactionId = fId
+                                , buildingReportDate = timeCurrentTime date
+                                }
+    _ <- insert report
     -- TODO: news entry
     return ()
 
@@ -87,6 +107,7 @@ workOnConstruction :: (PersistQueryWrite backend,
 workOnConstruction speed bConsE = do
     let bCons = entityVal bConsE
     let bConsId = entityKey bConsE
+    -- TODO: make sure not overconstruct
     _ <- update bConsId [ BuildingConstructionProgressBiologicals +=. (unCost $ constructionSpeedBiologicalCost speed)
                         , BuildingConstructionProgressMechanicals +=. (unCost $ constructionSpeedMechanicalCost speed)
                         , BuildingConstructionProgressChemicals +=. (unCost $ constructionSpeedChemicalCost speed) ]
