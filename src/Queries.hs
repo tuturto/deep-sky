@@ -1,6 +1,4 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE FlexibleContexts           #-}
@@ -16,7 +14,7 @@ import Common (safeHead)
 loadPlanetPopulationReports :: (MonadIO m, BackendCompatible SqlBackend backend,
                                 PersistQueryRead backend, PersistUniqueRead backend) =>
                                Key Planet -> Key Faction -> ReaderT backend m [(Entity PlanetPopulationReport, Maybe (Entity Race))]
-loadPlanetPopulationReports pId fId = do
+loadPlanetPopulationReports pId fId = 
     E.select $
         E.from $ \(popReport `E.LeftOuterJoin` pRace) -> do
             E.on (popReport E.^. PlanetPopulationReportRaceId E.==. pRace E.?. RaceId )

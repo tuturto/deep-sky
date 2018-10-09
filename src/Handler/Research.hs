@@ -9,7 +9,7 @@ module Handler.Research where
 import Import
 
 getResearchR :: Handler Html
-getResearchR = do
+getResearchR =
     defaultLayout $ do
         setTitle "Deep Sky - Research"
         $(widgetFile "research")

@@ -37,7 +37,7 @@ postFactionR = do
         setTitle "Deep Sky - Faction"
         $(widgetFile "joinedfaction")
 
-data FactionSelection = FactionSelection
+newtype FactionSelection = FactionSelection
     { fsFactionId :: Key Faction
     }
     deriving Show
@@ -48,5 +48,5 @@ factionAForm factions = FactionSelection
         <*  bootstrapSubmit (BootstrapSubmit ("Submit" :: Text) "btn-default" [])
     where
         facs :: [(Text, Key Faction)]
-        facs = map (\x -> ((factionName $ entityVal x), (entityKey x))) factions
+        facs = map (\x -> (factionName $ entityVal x, entityKey x)) factions
 

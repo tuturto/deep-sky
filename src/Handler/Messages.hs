@@ -42,11 +42,11 @@ postNewMessageR :: Handler Html
 postNewMessageR = do
     (_, user, _) <- requireFaction
     
-    ((formRes, _), _) <- runFormPost $ renderBootstrap3 BootstrapBasicForm $ newsAForm
+    ((formRes, _), _) <- runFormPost $ renderBootstrap3 BootstrapBasicForm newsAForm
     res <- case formRes of
                 FormSuccess x -> return x
                 _ -> redirect FactionR
-    date <- runDB $ starDate
+    date <- runDB starDate
     _ <- runDB $ insert $ makeUserWrittenNews (nfContent res) (nfIcon res) date user
     redirect $ MessageListR 1
 
@@ -67,7 +67,7 @@ loadNewsEntries pageSize page fId = do
     totalRecords <- count [ NewsFactionId ==. fId 
                           , NewsDismissed ==. False ]
     let totalPages = case totalRecords `mod` pageSize of
-                        0 -> (totalRecords `div` pageSize)
+                        0 -> totalRecords `div` pageSize
                         _ -> (totalRecords `div` pageSize) + 1
     return (totalRecords, totalPages, results) 
   

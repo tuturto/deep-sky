@@ -22,7 +22,7 @@ import Dto.Construction ( buildingConstructionToDto, shipConstructionToDto, Cons
                         , constructionIndex )
 
 getConstructionR :: Handler Html
-getConstructionR = do
+getConstructionR = 
     defaultLayout $ do
         setTitle "Deep Sky - Construction"
         $(widgetFile "construction")
@@ -143,7 +143,7 @@ createBuildingConstruction cDto = do
     currentConstructions <- loadPlanetConstructionQueue $ bcdtoPlanet cDto
     let nextIndex = if P.length currentConstructions == 0
                         then 0
-                        else (P.maximum $ map constructionIndex currentConstructions) + 1
+                        else P.maximum (map constructionIndex currentConstructions) + 1
     mapM (\x -> insert x { buildingConstructionIndex = nextIndex }) $ fromDto cDto
 
 -- | load construction queue of a given planet
@@ -171,10 +171,9 @@ removeBuildingConstruction bId (Just buildingInfo) = do
                      , BuildingConstructionIndex >. bIndex ] [ BuildingConstructionIndex -=. 1 ]
     _ <- updateWhere [ ShipConstructionPlanetId ==. Just planetId
                      , ShipConstructionIndex >. bIndex ] [ ShipConstructionIndex -=. 1 ]
-    newQueue <- loadPlanetConstructionQueue $ buildingConstructionPlanetId buildingInfo
-    return newQueue
+    loadPlanetConstructionQueue $ buildingConstructionPlanetId buildingInfo
 
-removeBuildingConstruction _ Nothing = do
+removeBuildingConstruction _ Nothing = 
     return []
  
 -- TODO:

@@ -24,7 +24,7 @@ data Coordinates = Coordinates Double Double
     deriving (Show, Eq)
 
 instance ToMarkup Coordinates where
-    toMarkup (Coordinates x y) = toMarkup $ "(" ++ (show x) ++ ", " ++ (show y) ++ ")"
+    toMarkup (Coordinates x y) = toMarkup $ "(" ++ show x ++ ", " ++ show y ++ ")"
 
 data BuildingType = SensorStation
     | ResearchComplex
@@ -129,7 +129,7 @@ instance Monoid TotalCost where
         , ccdChemicalCost = Cost 0
         }
 
-data Cost = Cost { unCost :: Int }
+newtype Cost = Cost { unCost :: Int }
     deriving (Show, Read, Eq)
 
 instance Semigroup Cost where

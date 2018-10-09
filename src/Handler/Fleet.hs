@@ -9,7 +9,7 @@ module Handler.Fleet where
 import Import
 
 getFleetR :: Handler Html
-getFleetR = do
+getFleetR = 
     defaultLayout $ do
         setTitle "Deep Sky - Fleet"
         $(widgetFile "fleet")

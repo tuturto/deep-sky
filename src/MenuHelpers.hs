@@ -1,9 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE ExplicitForAll             #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE InstanceSigs               #-}
@@ -53,21 +51,21 @@ statusBarScore :: (BaseBackend backend ~ SqlBackend, MonadIO m,
 statusBarScore (Just (_, user)) = do
     faction <- getMaybeEntity $ userFactionId user
     return $ getScore faction
-statusBarScore _ = do
+statusBarScore _ = 
     return mempty
 
 maybeFaction :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistStoreRead backend) =>
     User -> ReaderT backend m (Maybe Faction)
-maybeFaction user = do
-    faction <- getMaybeEntity $ userFactionId user
-    return faction
+maybeFaction user = 
+    getMaybeEntity $ userFactionId user
+    
 
 getMaybeEntity :: (PersistEntityBackend record ~ BaseBackend backend,
     PersistEntity record, PersistStoreRead backend, MonadIO m) =>
     Maybe (Key record) -> ReaderT backend m (Maybe record)
 getMaybeEntity (Just factionId) = get factionId
-getMaybeEntity _ = do
+getMaybeEntity _ = 
     return Nothing
 
 -- TODO: better name and place
@@ -80,14 +78,14 @@ usersRoles :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     Key User -> ReaderT backend m [Role]
 usersRoles userId = do
     roles <- selectList [ UserRoleUserId ==. userId ] []
-    return $ map (\x -> userRoleRole $ entityVal x) roles
+    return $ map (userRoleRole . entityVal) roles
 
 isAdmin :: (BaseBackend backend ~ SqlBackend,
     PersistQueryRead backend, MonadIO m) =>
     Key User -> ReaderT backend m Bool
 isAdmin userId = do
     roles <- usersRoles userId
-    return $ any (RoleAdministrator ==) roles
+    return $ elem RoleAdministrator roles
 
 authorizeAdmin :: (BaseBackend (YesodPersistBackend site)
     ~
@@ -96,12 +94,11 @@ authorizeAdmin :: (BaseBackend (YesodPersistBackend site)
     Maybe (Key User) -> HandlerFor site AuthResult
 authorizeAdmin (Just userId) = do
     checkAdmin <- runDB $ isAdmin userId
-    let res = case checkAdmin of
-                True -> Authorized
-                _ -> Unauthorized "This part is only for administrators"
+    let res = if checkAdmin then Authorized
+                else Unauthorized "This part is only for administrators"
     return res
-authorizeAdmin _ = do
+authorizeAdmin _ = 
     return $ Unauthorized "This part is only for administrators"
 
-toDisplayDate :: Int -> [Char]
-toDisplayDate date = printf "%.1f" $ (fromIntegral date) * (0.1 :: Double)
+toDisplayDate :: Int -> String
+toDisplayDate date = printf "%.1f" $ fromIntegral date * (0.1 :: Double)

@@ -78,9 +78,8 @@ instance Yesod App where
     -- see: https://github.com/yesodweb/yesod/wiki/Overriding-approot
     approot :: Approot App
     approot = ApprootRequest $ \app req ->
-        case appRoot $ appSettings app of
-            Nothing -> getApprootText guessApproot app req
-            Just root -> root
+        (fromMaybe (getApprootText guessApproot app req)
+            (appRoot $ appSettings app))
 
     -- Store session data on the client in encrypted cookies,
     -- default session idle timeout is 120 minutes
@@ -115,7 +114,7 @@ instance Yesod App where
 
         -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
         (title, parents) <- breadcrumbs
-        currentStarDate <- runDB $ starDate
+        currentStarDate <- runDB starDate
         -- Define the menu items of the header.
         let menuItems =
                 [ NavbarLeft $ MenuItem
@@ -226,9 +225,9 @@ instance Yesod App where
     -- Routes requiring faction membership
     isAuthorized StarSystemsR _       = isInFaction
     isAuthorized (StarSystemR _) _    = isInFaction
-    isAuthorized (PlanetR {}) _       = isInFaction
+    isAuthorized PlanetR {} _       = isInFaction
     isAuthorized BasesR _             = isInFaction
-    isAuthorized (BaseR {}) _         = isInFaction
+    isAuthorized BaseR {} _         = isInFaction
     isAuthorized ResearchR _          = isInFaction
     isAuthorized FleetR _             = isInFaction
     isAuthorized DesignerR _          = isInFaction
@@ -240,12 +239,12 @@ instance Yesod App where
     -- Special authorization
     isAuthorized AdminPanelR _     = do
         muid <- maybeAuthId
-        res <- authorizeAdmin muid
-        return res
+        authorizeAdmin muid
+        
     isAuthorized AdminAdvanceTimeR _     = do
         muid <- maybeAuthId
-        res <- authorizeAdmin muid
-        return res
+        authorizeAdmin muid
+        
 
     -- API routes
     isAuthorized ApiStarSystemsR _                  = return Authorized
@@ -301,7 +300,7 @@ isInFaction = do
     authPair <- maybeAuthPair
     return $ case authPair of
         Nothing -> Unauthorized "You must login to access this page"
-        Just (_, user) -> case (userFactionId user) of
+        Just (_, user) -> case userFactionId user of
                             Just _ -> Authorized
                             Nothing -> Unauthorized "You must be member of a faction"
 
@@ -376,7 +375,7 @@ instance YesodAuth App where
 
     -- You can add other plugins like Google Email, email or OAuth here
     authPlugins :: App -> [AuthPlugin App]
-    authPlugins app = [authOpenId Claimed []] ++ extraAuthPlugins
+    authPlugins app = authOpenId Claimed [] : extraAuthPlugins
         -- Enable authDummy login if enabled.
         where extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
 

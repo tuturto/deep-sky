@@ -43,32 +43,32 @@ newsArticleWidget :: (Key News, NewsArticle) -> WidgetFor App ()
 newsArticleWidget article = $(widgetFile "widgets/news/articleW")
  
 newsContentWidget :: NewsArticle -> WidgetFor App ()
-newsContentWidget (StarFoundNews 
+newsContentWidget StarFoundNews 
     { starFoundNewsStarName = sName
     , starFoundNewsSystemName = systemName
-    , starFoundNewsSystemId = systemId }) = 
+    , starFoundNewsSystemId = systemId } = 
         $(widgetFile "widgets/news/starFoundW")
 
-newsContentWidget (PlanetFoundNews 
+newsContentWidget PlanetFoundNews 
     { planetFoundNewsPlanetName = pName 
     , planetFoundNewsSystemName = sName
     , planetFoundNewsSystemId = systemId 
-    , planetFoundNewsPlanetId = planetId }) = 
+    , planetFoundNewsPlanetId = planetId } = 
         $(widgetFile "widgets/news/planetFoundW")
 
-newsContentWidget (UserWrittenNews 
+newsContentWidget UserWrittenNews 
     { userWrittenNewsContent = content
-    , userWrittenNewsUser = user }) = 
+    , userWrittenNewsUser = user } = 
         $(widgetFile "widgets/news/userNewsW")
 
-newsContentWidget (DesignCreatedNews { designCreatedNewsName = name }) = 
+newsContentWidget DesignCreatedNews { designCreatedNewsName = name } = 
     $(widgetFile "widgets/news/blueprintW")
  
 newsImage :: NewsArticle -> Route App
-newsImage (StarFoundNews {}) = StaticR images_news_sun_png
-newsImage (PlanetFoundNews {}) = StaticR images_news_planet_png
-newsImage (DesignCreatedNews {}) = StaticR images_news_blueprint_png
-newsImage (UserWrittenNews { userWrittenNewsIcon = icon }) = 
+newsImage StarFoundNews {} = StaticR images_news_sun_png
+newsImage PlanetFoundNews {} = StaticR images_news_planet_png
+newsImage DesignCreatedNews {} = StaticR images_news_blueprint_png
+newsImage UserWrittenNews { userWrittenNewsIcon = icon } = 
     case icon of
         GenericUserNews ->
             StaticR images_news_question_png

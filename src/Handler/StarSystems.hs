@@ -46,10 +46,7 @@ getStarSystemR systemId = do
     starReports <- runDB $ createStarReports systemId factionId
     planetReports <- runDB $ createPlanetReports systemId factionId
     starLaneReports <- runDB $ createStarLaneReports systemId factionId
-
-    let expl = "Deep Sky - " ++ case (cssrName systemReport) of
-                                    (Just x) -> x
-                                    Nothing  -> "unknown system"
+    let expl = "Deep Sky - " ++ fromMaybe "unknown system" (cssrName systemReport)
 
     defaultLayout $ do
         setTitle $ toMarkup expl
@@ -62,10 +59,8 @@ getPlanetR _ planetId = do
                                               , PlanetReportFactionId ==. factionId ] [ Asc PlanetReportDate ]
     let planetReport = collateReport $ map entityVal loadedPlanetReports
     let planetKey = fromSqlKey planetId
+    let expl = "Deep Sky - " ++ fromMaybe "unknown planet" (cprName planetReport)
 
-    let expl = "Deep Sky - " ++ case (cprName planetReport) of
-                                    (Just x) -> x
-                                    Nothing  -> "unknown planet"
     defaultLayout $ do
         setTitle $ toMarkup expl 
         addScript $ StaticR js_planet_js

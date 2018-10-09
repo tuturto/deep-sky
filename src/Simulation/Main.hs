@@ -1,9 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ExplicitForAll #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE InstanceSigs #-}
@@ -23,12 +20,12 @@ processTurn :: (BaseBackend backend ~ SqlBackend,
     BackendCompatible SqlBackend backend, PersistUniqueRead backend,
     PersistQueryWrite backend,
     PersistQueryRead backend, PersistStoreWrite backend, MonadIO m) =>
-    ReaderT backend m (Time)
+    ReaderT backend m Time
 processTurn = do
     newTime <- advanceTime
     factions <- selectList [] [ Asc FactionId ]
-    _ <- mapM (handleFaction newTime) factions
-    return (newTime)
+    mapM_ (handleFaction newTime) factions
+    return newTime
 
 -- | process single faction, handling all of it's needs, orders and such
 handleFaction :: (BaseBackend backend ~ SqlBackend,

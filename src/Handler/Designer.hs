@@ -19,7 +19,7 @@ import MenuHelpers (starDate)
 import Common (apiRequireFaction)
 
 getDesignerR :: Handler Html
-getDesignerR = do
+getDesignerR = 
     defaultLayout $ do
         setTitle "Deep Sky - Ship designer"
         addScript $ StaticR js_shipdesigner_js
@@ -45,7 +45,7 @@ getApiChassisR = do
     let chassis = map (\c -> ChassisDto (entityKey c) (chassisName (entityVal c)) (chassisTonnage (entityVal c)) 
                              $ map (\r -> ComponentLevel (CLevel $ requiredComponentLevel $ entityVal r) 
                                                          $ requiredComponentComponentType $ entityVal r)
-                             $ filter (\r -> (requiredComponentChassisId (entityVal r)) == entityKey c) loadedRequirements) 
+                             $ filter (\r -> requiredComponentChassisId (entityVal r) == entityKey c) loadedRequirements) 
                       loadedChassis
     return $ toJSON chassis
 
@@ -55,7 +55,7 @@ getApiDesignR = do
     loadedDesigns <- runDB $ selectList [ DesignOwnerId ==. fId ] []
     loadedComponents <- runDB $ selectList [ PlannedComponentDesignId <-. map entityKey loadedDesigns ] []
     let designs = map (\d -> designToDesignDto (entityKey d, entityVal d)
-                    $ filter (\c -> (plannedComponentDesignId (entityVal c)) == (entityKey d)) loadedComponents) 
+                    $ filter (\c -> plannedComponentDesignId (entityVal c) == entityKey d) loadedComponents) 
                     loadedDesigns
     return $ toJSON designs
 
@@ -63,22 +63,20 @@ postApiDesignR :: Handler Value
 postApiDesignR = do    
     (_, _, fId) <- apiRequireFaction
     msg <- requireJsonBody 
-    case (validateSaveDesign msg) of
-        False -> sendResponseStatus status400 ("Validation failed" :: Text)
-        True -> do 
-            date <- runDB $ starDate
+    if validateSaveDesign msg then
+        (do date <- runDB starDate
             savedDesign <- runDB $ saveDesign date msg fId            
-            return $ toJSON savedDesign
+            return $ toJSON savedDesign)
+        else sendResponseStatus status400 ("Validation failed" :: Text)
 
 putApiDesignIdR :: Key Design -> Handler Value
 putApiDesignIdR dId = do    
     (_, _, fId) <- apiRequireFaction
     msg <- requireJsonBody 
-    case (validateSaveDesign msg) of
-        False -> sendResponseStatus status400 ("Validation failed" :: Text)
-        True -> do 
-            savedDesign <- runDB $ updateDesign dId msg fId
-            return $ toJSON savedDesign
+    if validateSaveDesign msg then
+        (do savedDesign <- runDB $ updateDesign dId msg fId
+            return $ toJSON savedDesign)
+        else sendResponseStatus status400 ("Validation failed" :: Text)
 
 deleteApiDesignIdR :: Key Design -> Handler Value
 deleteApiDesignIdR dId = do
@@ -94,7 +92,7 @@ saveDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     Time -> DesignDto -> Key Faction -> ReaderT backend m DesignDto
 saveDesign date design fId = do
     newId <- insert $ Design (designDtoName design) fId (designDtoChassisId design)
-    _ <- mapM insert $ map (componentDtoToPlannedComponent newId) (designDtoComponents design)
+    _ <- mapM (insert . componentDtoToPlannedComponent newId) (designDtoComponents design)
     newDesign <- get newId
     newComponents <- selectList [ PlannedComponentDesignId ==. newId ] []
     let x = designToDesignDto (newId, fromJust newDesign) newComponents
@@ -107,7 +105,7 @@ updateDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
 updateDesign dId design fId = do
     _ <- replace dId $ Design (designDtoName design) fId (designDtoChassisId design)
     _ <- deleteWhere [ PlannedComponentDesignId ==. dId ]
-    _ <- mapM insert $ map (componentDtoToPlannedComponent dId) (designDtoComponents design)
+    _ <- mapM (insert . componentDtoToPlannedComponent dId) (designDtoComponents design)
     newDesign <- get dId
     newComponents <- selectList [ PlannedComponentDesignId ==. dId ] []
     let x = designToDesignDto (dId, fromJust newDesign) newComponents

@@ -51,8 +51,8 @@ data UserNewsIcon =
     deriving (Show, Read, Eq)
 
 parseNews :: News -> Maybe NewsArticle
-parseNews entry =
-    (decode . toLazyByteString . encodeUtf8Builder . newsContent) entry
+parseNews =
+    decode . toLazyByteString . encodeUtf8Builder . newsContent
 
 parseNewsEntity :: Entity News -> (Key News, Maybe NewsArticle)
 parseNewsEntity entity =
@@ -81,7 +81,7 @@ makeUserWrittenNews msg icon date user =
     in
         News (toStrict $ encodeToLazyText content) (fromJust $ userFactionId user) (timeCurrentTime date) False
 
-makePlanetFoundNews :: (Entity Planet) -> StarSystem -> Time -> (Key Faction) -> News
+makePlanetFoundNews :: Entity Planet -> StarSystem -> Time -> Key Faction -> News
 makePlanetFoundNews planetEnt system date fId =
     let
         planet = entityVal planetEnt
@@ -90,7 +90,7 @@ makePlanetFoundNews planetEnt system date fId =
     in
         News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
 
-makeStarFoundNews :: Star -> (Entity StarSystem) -> Time -> (Key Faction) -> News
+makeStarFoundNews :: Star -> Entity StarSystem -> Time -> Key Faction -> News
 makeStarFoundNews star systemEnt date fId =
     let
         system = entityVal systemEnt
@@ -99,7 +99,7 @@ makeStarFoundNews star systemEnt date fId =
     in
         News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
 
-makeDesignCreatedNews :: (Entity Design) -> Time -> (Key Faction) -> News
+makeDesignCreatedNews :: Entity Design -> Time -> Key Faction -> News
 makeDesignCreatedNews design date fId =
     let
         dId = entityKey design

@@ -1,9 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ExplicitForAll #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE InstanceSigs #-}
@@ -22,9 +19,9 @@ handleFactionFood :: (BaseBackend backend ~ SqlBackend,
     Entity Faction -> ReaderT backend m ()
 handleFactionFood faction = do
     planets <- selectList [ PlanetOwnerId ==. Just (entityKey faction)] []
-    lReqBio <- mapM getFoodRequirement $ map entityKey planets
+    lReqBio <- mapM (getFoodRequirement . entityKey) planets
     let reqBio = foldl' (+) 0 lReqBio
-    lProdBio <- mapM getFoodProduction $ map entityKey planets
+    lProdBio <- mapM (getFoodProduction . entityKey) planets
     let prodBio = foldl' (+) 0 lProdBio
     let deltaBio = prodBio - reqBio
     _ <- update (entityKey faction) [ FactionBiologicals +=. deltaBio ]
@@ -59,6 +56,6 @@ foodProduction :: [Building] -> Int
 foodProduction buildings =
     foldl' (+) 0 productions 
         where productions = map prod buildings
-              prod x = case (buildingType x) of
+              prod x = case buildingType x of
                             Farm -> 5
                             _    -> 0

@@ -15,12 +15,12 @@ getBasesR :: Handler Html
 getBasesR = do
     (_, _, factionId) <- requireFaction
 
-    loadedPlanets <- runDB $ selectList [ PlanetOwnerId ==. (Just factionId)] [ Asc PlanetName ]
+    loadedPlanets <- runDB $ selectList [ PlanetOwnerId ==. Just factionId] [ Asc PlanetName ]
     let planetIds = map entityKey loadedPlanets
     loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId <-. planetIds ] [ Asc PlanetReportPlanetId
                                                                                      , Asc PlanetReportDate ]
 
-    let planetReports = filter (\x -> (Just factionId) == cprOwnerId x) $ collateReports $ map entityVal loadedPlanetReports
+    let planetReports = filter (\x -> Just factionId == cprOwnerId x) $ collateReports $ map entityVal loadedPlanetReports
     baseReports <- mapM addBaseDetails planetReports
  
     defaultLayout $ do
@@ -34,6 +34,6 @@ addBaseDetails :: CollatedPlanetReport -> Handler CollatedBaseReport
 addBaseDetails planetReport = do
     system <- runDB $ get (cprSystemId planetReport)
     let systemName = case system of
-                        Just starSystem -> (starSystemName starSystem)
+                        Just starSystem -> starSystemName starSystem
                         Nothing -> ""
     return $ CollatedBaseReport planetReport systemName

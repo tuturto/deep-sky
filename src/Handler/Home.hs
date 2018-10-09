@@ -21,7 +21,7 @@ data FileForm = FileForm
 -- functions. You can spread them across multiple files if you are so
 -- inclined, or create a single monolithic file.
 getHomeR :: Handler Html
-getHomeR = do
+getHomeR = 
     defaultLayout $ do
         setTitle "Deep sky"
         $(widgetFile "homepage")

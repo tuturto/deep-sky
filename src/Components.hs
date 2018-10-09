@@ -33,14 +33,14 @@ data ComponentLevel = ComponentLevel
     , compLeType :: ComponentType }
     deriving (Show, Read, Eq)
 
-data CLevel = CLevel { unCLevel :: Int }
+newtype CLevel = CLevel { unCLevel :: Int }
     deriving (Show, Read, Eq)
 
 scaleLevel :: CLevel -> Int -> CLevel
 scaleLevel (CLevel lvl) scale =
     CLevel $ lvl * scale
 
-data Weight = Weight { unWeight :: Int }
+newtype Weight = Weight { unWeight :: Int }
     deriving (Show, Read, Eq)
 
 data ComponentType = BridgeComponent

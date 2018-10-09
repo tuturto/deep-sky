@@ -1,6 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE FlexibleInstances     #-}
@@ -34,7 +33,7 @@ data ConstructionDto = BuildingConstructionDto
   deriving (Show, Read, Eq)
 
 instance ToJSON ConstructionDto where
-  toJSON bc@(BuildingConstructionDto {}) =
+  toJSON bc@BuildingConstructionDto {} =
     object [ "id" .= bcdtoId bc
            , "name" .= bcdtoName bc
            , "index" .= bcdtoIndex bc
@@ -44,7 +43,7 @@ instance ToJSON ConstructionDto where
            , "costLeft" .= bcdtoCostLeft bc
            ]
 
-  toJSON sc@(ShipConstructionDto {}) =
+  toJSON sc@ShipConstructionDto {} =
     object [ "id" .= scdtoId sc
            , "name" .= scdtoName sc
            , "shipType" .= scdtoShipType sc
@@ -81,16 +80,16 @@ buildingConstructionToDto bce =
                             , bcdtoLevel = buildingConstructionLevel bc
                             , bcdtoType = buildingConstructionType bc
                             , bcdtoPlanet = buildingConstructionPlanetId bc
-                            , bcdtoCostLeft = (TotalCost mech bio chem)
+                            , bcdtoCostLeft = TotalCost mech bio chem
                             }
   where
     bc = entityVal bce
     key = entityKey bce
     template = building (buildingConstructionType bc) $ BLevel (buildingConstructionLevel bc)
     cost = buildingInfoCost template
-    mech = Cost $ (unCost $ ccdMechanicalCost cost) - buildingConstructionProgressMechanicals bc
-    bio = Cost $ (unCost $ ccdBiologicalCost cost) - buildingConstructionProgressBiologicals bc
-    chem = Cost $ (unCost $ ccdChemicalCost cost) - buildingConstructionProgressChemicals bc
+    mech = Cost $ unCost (ccdMechanicalCost cost) - buildingConstructionProgressMechanicals bc
+    bio = Cost $ unCost (ccdBiologicalCost cost) - buildingConstructionProgressBiologicals bc
+    chem = Cost $ unCost (ccdChemicalCost cost) - buildingConstructionProgressChemicals bc
 
 
 shipConstructionToDto :: Entity ShipConstruction -> ConstructionDto

@@ -36,7 +36,7 @@ data CollatedStarSystemReport = CollatedStarSystemReport
 instance Semigroup CollatedStarSystemReport where
     (<>) a b = CollatedStarSystemReport
                 { cssrSystemId = cssrSystemId a
-                , cssrName = (cssrName a) <|> (cssrName b)
+                , cssrName = cssrName a <|> cssrName b
                 , cssrLocation = cssrLocation a
                 , cssrDate = max (cssrDate a) (cssrDate b)
                 }
@@ -45,7 +45,7 @@ instance Monoid CollatedStarSystemReport where
     mempty = CollatedStarSystemReport 
                 { cssrSystemId = toSqlKey 0
                 , cssrName = Nothing
-                , cssrLocation = (Coordinates 0 0)
+                , cssrLocation = Coordinates 0 0
                 , cssrDate = 0
                 }
 
@@ -60,7 +60,7 @@ instance ReportTransform StarSystemReport CollatedStarSystemReport where
 
 instance Grouped StarSystemReport where
     sameGroup a b = 
-        (starSystemReportStarSystemId a) == (starSystemReportStarSystemId b)
+        starSystemReportStarSystemId a == starSystemReportStarSystemId b
 
 
 data CollatedStarReport = CollatedStarReport {
@@ -75,9 +75,9 @@ data CollatedStarReport = CollatedStarReport {
 instance Semigroup CollatedStarReport where
     (<>) a b = CollatedStarReport (csrStarId a)
                                   (csrSystemId a)
-                                  ((csrName a) <|> (csrName b))
-                                  ((csrSpectralType a) <|> (csrSpectralType b))
-                                  ((csrLuminosityClass a) <|> (csrLuminosityClass b))
+                                  (csrName a <|> csrName b)
+                                  (csrSpectralType a <|> csrSpectralType b)
+                                  (csrLuminosityClass a <|> csrLuminosityClass b)
                                   (max (csrDate a) (csrDate b))
 
 instance Monoid CollatedStarReport where
@@ -94,7 +94,7 @@ instance ReportTransform StarReport CollatedStarReport where
 
 instance Grouped StarReport where
     sameGroup a b = 
-        (starReportStarId a) == (starReportStarId b)
+        starReportStarId a == starReportStarId b
 
 data CollatedPlanetReport = CollatedPlanetReport 
     { cprPlanetId :: Key Planet
@@ -109,10 +109,10 @@ data CollatedPlanetReport = CollatedPlanetReport
 instance Semigroup CollatedPlanetReport where
     (<>) a b = CollatedPlanetReport (cprPlanetId a)
                                     (cprSystemId a)
-                                    ((cprOwnerId a) <|> (cprOwnerId b))
-                                    ((cprName a) <|> (cprName b))
-                                    ((cprPosition a) <|> (cprPosition b))
-                                    ((cprGravity a) <|> (cprGravity b))
+                                    (cprOwnerId a <|> cprOwnerId b)
+                                    (cprName a <|> cprName b)
+                                    (cprPosition a <|> cprPosition b)
+                                    (cprGravity a <|> cprGravity b)
                                     (max (cprDate a) (cprDate b))
 
 instance Monoid CollatedPlanetReport where
@@ -130,7 +130,7 @@ instance ReportTransform PlanetReport CollatedPlanetReport where
 
 instance Grouped PlanetReport where
     sameGroup a b = 
-        (planetReportPlanetId a) == (planetReportPlanetId b)
+        planetReportPlanetId a == planetReportPlanetId b
 
 data CollatedPopulationReport = CollatedPopulationReport
     { cpopPlanetId   :: Key Planet
@@ -142,9 +142,9 @@ data CollatedPopulationReport = CollatedPopulationReport
 
 instance Semigroup CollatedPopulationReport where
     (<>) a b = CollatedPopulationReport (cpopPlanetId a)
-                                        ((cpopRaceId a) <|> (cpopRaceId b))
-                                        ((cpopRace a) <|> (cpopRace b))
-                                        ((cpopPopulation a) <|> (cpopPopulation b))
+                                        (cpopRaceId a <|> cpopRaceId b)
+                                        (cpopRace a <|> cpopRace b)
+                                        (cpopPopulation a <|> cpopPopulation b)
                                         (max (cpopDate a) (cpopDate b))
 
 instance Monoid CollatedPopulationReport where
@@ -160,8 +160,8 @@ instance ReportTransform (PlanetPopulationReport, Maybe Race) CollatedPopulation
 
 instance Grouped (PlanetPopulationReport, Maybe Race) where
     sameGroup (a, _) (b, _) = 
-        (planetPopulationReportPlanetId a) == (planetPopulationReportPlanetId b) &&
-            (planetPopulationReportRaceId a) == (planetPopulationReportRaceId b)
+        planetPopulationReportPlanetId a == planetPopulationReportPlanetId b &&
+            planetPopulationReportRaceId a == planetPopulationReportRaceId b
 
 data CollatedStarLaneReport = CollatedStarLaneReport 
     { cslStarLaneId      :: Key StarLane
@@ -177,8 +177,8 @@ instance Semigroup CollatedStarLaneReport where
                 { cslStarLaneId = cslStarLaneId a
                 , cslSystemId1 = cslSystemId1 a
                 , cslSystemId2 = cslSystemId2 a
-                , cslStarSystemName1 = (cslStarSystemName1 a) <|> (cslStarSystemName1 b)
-                , cslStarSystemName2 = (cslStarSystemName2 a) <|> (cslStarSystemName2 b)
+                , cslStarSystemName1 = cslStarSystemName1 a <|> cslStarSystemName1 b
+                , cslStarSystemName2 = cslStarSystemName2 a <|> cslStarSystemName2 b
                 , cslDate = max (cslDate a) (cslDate b)
                 }
 
@@ -204,8 +204,8 @@ instance ReportTransform StarLaneReport CollatedStarLaneReport where
 
 instance Grouped StarLaneReport where
     sameGroup a b =
-        (starLaneReportStarSystem1 a) == (starLaneReportStarSystem1 b) &&
-        (starLaneReportStarSystem2 a) == (starLaneReportStarSystem2 b)
+        starLaneReportStarSystem1 a == starLaneReportStarSystem1 b &&
+        starLaneReportStarSystem2 a == starLaneReportStarSystem2 b
 
 data CollatedBaseReport = CollatedBaseReport {
       cbsPlanetReport   :: CollatedPlanetReport
@@ -254,13 +254,13 @@ instance ReportTransform BuildingReport CollatedBuildingReport where
 
 instance Grouped BuildingReport where
     sameGroup a b =
-        (buildingReportBuildingId a) == (buildingReportBuildingId b)
+        buildingReportBuildingId a == buildingReportBuildingId b
 
 spectralInfo :: Maybe SpectralType -> Maybe LuminosityClass -> Text
 spectralInfo Nothing Nothing     = ""
 spectralInfo (Just st) Nothing   = pack $ show st
 spectralInfo Nothing (Just lc)   = pack $ show lc
-spectralInfo (Just st) (Just lc) = pack $ show st ++ (show lc)
+spectralInfo (Just st) (Just lc) = pack $ show st ++ show lc
 
 -- | Combine list of reports and form a single collated report
 --   Resulting report will have facts from the possibly partially empty reports
@@ -272,7 +272,7 @@ collateReport reports = mconcat (map fromReport reports)
 --   Each reported entity is given their own report
 collateReports :: (Grouped b, Monoid a, ReportTransform b a) => [b] -> [a]
 collateReports [] = []
-collateReports s@(x:_) = (collateReport itemsOfKind) : (collateReports restOfItems)
+collateReports s@(x:_) = collateReport itemsOfKind : collateReports restOfItems
     where split = span (sameGroup x) s
           itemsOfKind = fst split
           restOfItems = snd split
@@ -299,7 +299,7 @@ createPlanetReports :: (BaseBackend backend ~ SqlBackend,
     Key StarSystem -> Key Faction -> ReaderT backend m [CollatedPlanetReport]
 createPlanetReports systemId factionId = do
     planets <- selectList [ PlanetStarSystemId ==. systemId ] []
-    loadedPlanetReports <-  selectList [ PlanetReportPlanetId <-. (map entityKey planets) 
+    loadedPlanetReports <-  selectList [ PlanetReportPlanetId <-. map entityKey planets
                                        , PlanetReportFactionId ==. factionId ] [ Asc PlanetReportPlanetId
                                                                                , Asc PlanetReportDate ]
     return $ collateReports $ map entityVal loadedPlanetReports
@@ -316,7 +316,7 @@ createStarLaneReports systemId factionId = do
 
 rearrangeStarLanes :: Key StarSystem -> [CollatedStarLaneReport] -> [CollatedStarLaneReport]
 rearrangeStarLanes systemId = map arrangeStarLane
-    where arrangeStarLane starLane = if systemId == (cslSystemId1 starLane)
+    where arrangeStarLane starLane = if systemId == cslSystemId1 starLane
                                         then starLane
                                         else CollatedStarLaneReport (toSqlKey 0)
                                                                     (cslSystemId2 starLane)

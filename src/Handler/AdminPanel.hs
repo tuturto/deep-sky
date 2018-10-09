@@ -10,14 +10,14 @@ import MenuHelpers
 import Simulation.Main (processTurn)
 
 getAdminPanelR :: Handler Html
-getAdminPanelR = do
+getAdminPanelR = 
     defaultLayout $ do
         setTitle "Deep Sky - Admin"
         $(widgetFile "admin/adminpanel")
 
 getAdminAdvanceTimeR :: Handler Html
 getAdminAdvanceTimeR = do
-    (newTime) <- runDB processTurn
+    newTime <- runDB processTurn
 
     defaultLayout $ do
         setTitle "Deep Sky - Admin"

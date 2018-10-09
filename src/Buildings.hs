@@ -1,10 +1,7 @@
-{-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 
 module Buildings where
@@ -24,7 +21,7 @@ data BuildingInfo = BuildingInfo
     }
     deriving (Show, Read, Eq)
 
-data BLevel = BLevel { unBLevel :: Int }
+newtype BLevel = BLevel { unBLevel :: Int }
     deriving (Show, Read, Eq)
 
 -- Instances

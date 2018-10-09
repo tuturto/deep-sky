@@ -1,6 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 
@@ -17,9 +16,9 @@ import System.Random
 --   If item is within bounds, return Just it, otherwise Nothing
 maybeGet :: Int -> [a] -> Maybe a
 maybeGet i col
-    | i < 0               = Nothing
-    | i >= (P.length col) = Nothing
-    | otherwise           = Just (col P.!! i)
+    | i < 0             = Nothing
+    | i >= P.length col = Nothing
+    | otherwise         = Just (col P.!! i)
 
 -- | Get head of a list, if list is empty, return Nothing
 safeHead :: [a] -> Maybe a
@@ -38,7 +37,7 @@ chooseOne item1 item2 = do
 requireFaction :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User, Key Faction)
 requireFaction = do
     (authId, user) <- requireAuthPair   
-    fId <- case (userFactionId user) of
+    fId <- case userFactionId user of
                         Just x -> return x
                         Nothing -> sendResponseStatus status500 ("Not a member of a faction" :: Text)
     return (authId, user, fId)
@@ -48,17 +47,16 @@ requireFaction = do
 apiRequireAuthPair :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), AuthEntity App)
 apiRequireAuthPair = do
     authData <- maybeAuthPair
-    res <- case authData of
-                    Just x -> return x
-                    Nothing -> sendStatusJSON status401 $ toJSON $ ErrorJson "Not logged in"
-    return res 
+    case authData of
+            Just x -> return x
+            Nothing -> sendStatusJSON status401 $ toJSON $ ErrorJson "Not logged in"    
 
 -- | Check that user has logged in and is member of a faction
 --   In case user is not member of a faction, http 500 with json body will be returned
 apiRequireFaction :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User, Key Faction)
 apiRequireFaction = do
     (authId, user) <- apiRequireAuthPair
-    fId <- case (userFactionId user) of
+    fId <- case userFactionId user of
                         Just x -> return x
                         Nothing -> sendStatusJSON status500 $ toJSON $ ErrorJson "Not a member of a faction"
     return (authId, user, fId)
@@ -91,8 +89,8 @@ data ErrorJson = ErrorJson { unerror :: Text }
     | ErrorsJson { unerrors :: [Text] }
 
 instance ToJSON ErrorJson where
-    toJSON (ErrorJson { unerror = err }) =
+    toJSON ErrorJson { unerror = err } =
         object [ "errors" .= [err] ]
 
-    toJSON (ErrorsJson { unerrors = errs }) =
+    toJSON ErrorsJson { unerrors = errs } =
         object [ "errors" .= errs ]

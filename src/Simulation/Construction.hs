@@ -1,9 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE ExplicitForAll             #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE InstanceSigs               #-}
@@ -35,8 +32,7 @@ handleFactionConstruction date factionE = do
     let totalCost = mconcat $ map (queueCostReq . toPlainObjects) queues
     let availableResources = getScore $ Just faction
     let consSpeed = overallConstructionSpeed totalCost availableResources
-    _ <- mapM (doPlanetConstruction (entityKey factionE) date consSpeed) $ map planetAndFirstConstruction queues
-    return ()
+    mapM_ (doPlanetConstruction (entityKey factionE) date consSpeed) $ map planetAndFirstConstruction queues
 
 -- | Select construction from queue with the smallest construction index
 planetAndFirstConstruction :: (Maybe (Entity Planet), [Entity BuildingConstruction]) -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction))
@@ -54,7 +50,7 @@ doPlanetConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                         MonadIO m, BaseBackend backend ~ SqlBackend) =>
                         Key Faction -> Time -> OverallConstructionSpeed -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction)) 
                             -> ReaderT backend m ()
-doPlanetConstruction fId date speed ((Just planetE), (Just bConsE)) = do
+doPlanetConstruction fId date speed (Just planetE, Just bConsE) = do
     let bCons = entityVal bConsE
     let realSpeed = applyOverallSpeed speed $ planetConstructionSpeed $ entityVal planetE
     let modelBuilding = building (buildingConstructionType bCons) (BLevel $ buildingConstructionLevel bCons)
@@ -62,7 +58,7 @@ doPlanetConstruction fId date speed ((Just planetE), (Just bConsE)) = do
          then finishConstruction fId date bConsE
          else workOnConstruction realSpeed bConsE
     return ()
-doPlanetConstruction _ _ _ _ = do
+doPlanetConstruction _ _ _ _ = 
     return ()
 
 -- | Will construction finish based on speed, progress so far and required construction
@@ -108,9 +104,9 @@ workOnConstruction speed bConsE = do
     let bCons = entityVal bConsE
     let bConsId = entityKey bConsE
     -- TODO: make sure not overconstruct
-    _ <- update bConsId [ BuildingConstructionProgressBiologicals +=. (unCost $ constructionSpeedBiologicalCost speed)
-                        , BuildingConstructionProgressMechanicals +=. (unCost $ constructionSpeedMechanicalCost speed)
-                        , BuildingConstructionProgressChemicals +=. (unCost $ constructionSpeedChemicalCost speed) ]
+    _ <- update bConsId [ BuildingConstructionProgressBiologicals +=. unCost (constructionSpeedBiologicalCost speed)
+                        , BuildingConstructionProgressMechanicals +=. unCost (constructionSpeedMechanicalCost speed)
+                        , BuildingConstructionProgressChemicals +=. unCost (constructionSpeedChemicalCost speed) ]
     return ()
 
 applyOverallSpeed :: OverallConstructionSpeed -> ConstructionSpeed -> ConstructionSpeed
@@ -126,14 +122,14 @@ toPlainObjects (planet, constructions) =
 -- | Total requirement of cost for a construction queue for a turn
 --   Take into account speed the planet can construct buildings
 queueCostReq :: (Maybe Planet, [BuildingConstruction]) -> TotalCost
-queueCostReq ((Just planet), (construction:_)) = 
+queueCostReq (Just planet, construction:_) = 
     TotalCost (min (constructionSpeedMechanicalCost planetSpeed) (ccdMechanicalCost constLeft)) 
               (min (constructionSpeedBiologicalCost planetSpeed) (ccdBiologicalCost constLeft))
               (min (constructionSpeedChemicalCost planetSpeed) (ccdChemicalCost constLeft))
     where
         modelBuilding = building (buildingConstructionType construction) 
                                  (BLevel $ buildingConstructionLevel construction)
-        planetSpeed = planetConstructionSpeed $ planet
+        planetSpeed = planetConstructionSpeed planet
         constLeft = subTotalCost (buildingInfoCost modelBuilding)
                                  (cProgress construction)
 queueCostReq (_, _) = mempty
@@ -163,7 +159,7 @@ speedPerResource :: Cost -> Cost -> ConstructionSpeedCoeff
 speedPerResource cost res =
     if res >= cost
     then NormalConstructionSpeed
-    else LimitedConstructionSpeed $ (fromIntegral $ unCost res) / (fromIntegral $ unCost cost)
+    else LimitedConstructionSpeed $ fromIntegral (unCost res) / fromIntegral (unCost cost)
 
 data ConstructionSpeedCoeff = NormalConstructionSpeed
     | LimitedConstructionSpeed Double
