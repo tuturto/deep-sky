@@ -101,9 +101,9 @@ data ComponentSlot = InnerSlot
 derivePersistField "ComponentSlot"
 
 data TotalCost = TotalCost
-    { ccdMechanicalCost :: Cost Mechanical
-    , ccdBiologicalCost :: Cost Biological
-    , ccdChemicalCost :: Cost Chemical
+    { ccdMechanicalCost :: RawResource Mechanical
+    , ccdBiologicalCost :: RawResource Biological
+    , ccdChemicalCost :: RawResource Chemical
     }
     deriving (Show, Read, Eq)
 
@@ -124,39 +124,39 @@ instance Semigroup TotalCost where
 
 instance Monoid TotalCost where
     mempty = TotalCost 
-        { ccdMechanicalCost = Cost 0
-        , ccdBiologicalCost = Cost 0
-        , ccdChemicalCost = Cost 0
+        { ccdMechanicalCost = RawResource 0
+        , ccdBiologicalCost = RawResource 0
+        , ccdChemicalCost = RawResource 0
         }
 
-data Cost a = Cost { unCost :: Int }
+data RawResource a = RawResource { unRawResource :: Int }
     deriving (Show, Read, Eq)
 
 data Biological = Biological
 data Mechanical = Mechanical
 data Chemical = Chemical
 
-instance Semigroup (Cost t) where
+instance Semigroup (RawResource t) where
     (<>) a b = a + b
 
-instance Monoid (Cost t) where
-    mempty = Cost 0
+instance Monoid (RawResource t) where
+    mempty = RawResource 0
 
-instance Ord (Cost t) where
-    (<=) (Cost a) (Cost b) = a <= b
+instance Ord (RawResource t) where
+    (<=) (RawResource a) (RawResource b) = a <= b
 
-instance Num (Cost t) where
-    (+) (Cost a) (Cost b) = Cost $ a + b
-    (-) (Cost a) (Cost b) = Cost $ a - b
-    (*) (Cost a) (Cost b) = Cost $ a * b
-    abs (Cost a) = Cost $ abs a
-    signum (Cost a) = Cost $ signum a
-    fromInteger a = Cost $ fromInteger a
+instance Num (RawResource t) where
+    (+) (RawResource a) (RawResource b) = RawResource $ a + b
+    (-) (RawResource a) (RawResource b) = RawResource $ a - b
+    (*) (RawResource a) (RawResource b) = RawResource $ a * b
+    abs (RawResource a) = RawResource $ abs a
+    signum (RawResource a) = RawResource $ signum a
+    fromInteger a = RawResource $ fromInteger a
 
 data TotalResources = TotalResources
-    { totalResourcesMechanical :: Cost Mechanical
-    , totalResourcesBiological :: Cost Biological
-    , totalResourcesChemical :: Cost Chemical
+    { totalResourcesMechanical :: RawResource Mechanical
+    , totalResourcesBiological :: RawResource Biological
+    , totalResourcesChemical :: RawResource Chemical
     }
     deriving (Show, Read, Eq)
 
@@ -169,30 +169,30 @@ instance Semigroup TotalResources where
 
 instance Monoid TotalResources where
     mempty = TotalResources 
-        { totalResourcesMechanical = Cost 0
-        , totalResourcesBiological = Cost 0
-        , totalResourcesChemical = Cost 0
+        { totalResourcesMechanical = RawResource 0
+        , totalResourcesBiological = RawResource 0
+        , totalResourcesChemical = RawResource 0
         }
 
 instance ToJSON TotalCost where
     toJSON (TotalCost mech bio chem) =
-        object [ "mechanical" .= unCost mech
-               , "biological" .= unCost bio
-               , "chemical" .= unCost chem 
+        object [ "mechanical" .= unRawResource mech
+               , "biological" .= unRawResource bio
+               , "chemical" .= unRawResource chem 
                ]
 
 instance FromJSON TotalCost where
-    parseJSON = withObject "cost" $ \o -> do
+    parseJSON = withObject "resource" $ \o -> do
         mechanical <- o .: "mechanical"
         biological <- o .: "biological"
         chemical <- o .: "chemical"
-        return $ TotalCost (Cost mechanical) (Cost biological) (Cost chemical)
+        return $ TotalCost (RawResource mechanical) (RawResource biological) (RawResource chemical)
 
 instance ToJSON TotalResources where
     toJSON (TotalResources mech bio chem) =
-        object [ "mechanical" .= unCost mech
-               , "biological" .= unCost bio
-               , "chemical" .= unCost chem 
+        object [ "mechanical" .= unRawResource mech
+               , "biological" .= unRawResource bio
+               , "chemical" .= unRawResource chem 
                ]
 
 instance FromJSON TotalResources where
@@ -200,7 +200,7 @@ instance FromJSON TotalResources where
         mechanical <- o .: "mechanical"
         biological <- o .: "biological"
         chemical <- o .: "chemical"
-        return $ TotalResources (Cost mechanical) (Cost biological) (Cost chemical)
+        return $ TotalResources (RawResource mechanical) (RawResource biological) (RawResource chemical)
 
 $(deriveJSON defaultOptions ''Role)
 $(deriveJSON defaultOptions ''Coordinates)

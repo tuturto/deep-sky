@@ -70,7 +70,7 @@ getMaybeEntity _ =
 
 -- TODO: better name and place
 getScore :: Maybe Faction -> TotalResources
-getScore (Just faction) = TotalResources (Cost $ factionBiologicals faction) (Cost $ factionMechanicals faction) (Cost $ factionChemicals faction)
+getScore (Just faction) = TotalResources (RawResource $ factionBiologicals faction) (RawResource $ factionMechanicals faction) (RawResource $ factionChemicals faction)
 getScore _ = mempty 
 
 usersRoles :: (BaseBackend backend ~ SqlBackend, MonadIO m,

@@ -9,7 +9,7 @@ module Dto.Construction
   , constructionIndex )
   where
 
-import CustomTypes (buildingTypeName, ShipType(..), BuildingType(..), TotalCost(..), Cost(..))
+import CustomTypes (buildingTypeName, ShipType(..), BuildingType(..), TotalCost(..), RawResource(..))
 import Common (DtoTransform(..))
 import Buildings (building, BLevel(..), buildingInfoCost)
 import Data.Aeson (object, (.=))
@@ -87,9 +87,9 @@ buildingConstructionToDto bce =
     key = entityKey bce
     template = building (buildingConstructionType bc) $ BLevel (buildingConstructionLevel bc)
     cost = buildingInfoCost template
-    mech = Cost $ unCost (ccdMechanicalCost cost) - buildingConstructionProgressMechanicals bc
-    bio = Cost $ unCost (ccdBiologicalCost cost) - buildingConstructionProgressBiologicals bc
-    chem = Cost $ unCost (ccdChemicalCost cost) - buildingConstructionProgressChemicals bc
+    mech = RawResource $ unRawResource (ccdMechanicalCost cost) - buildingConstructionProgressMechanicals bc
+    bio = RawResource $ unRawResource (ccdBiologicalCost cost) - buildingConstructionProgressBiologicals bc
+    chem = RawResource $ unRawResource (ccdChemicalCost cost) - buildingConstructionProgressChemicals bc
 
 
 shipConstructionToDto :: Entity ShipConstruction -> ConstructionDto

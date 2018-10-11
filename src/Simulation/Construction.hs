@@ -11,7 +11,7 @@ module Simulation.Construction ( handleFactionConstruction, queueCostReq, planet
 
 import Import
 import qualified Queries (planetConstructionQueue)
-import CustomTypes (TotalCost(..), Cost(..), TotalResources(..), subTotalCost)
+import CustomTypes (TotalCost(..), RawResource(..), TotalResources(..), subTotalCost, Biological, Mechanical, Chemical)
 import Common (safeHead)
 import Construction (ConstructionSpeed(..), Constructable(..))
 import MenuHelpers (getScore)
@@ -65,15 +65,15 @@ doPlanetConstruction _ _ _ _ =
 limitConstructionSpeed :: ConstructionSpeed -> BuildingConstruction -> TotalCost -> ConstructionSpeed
 limitConstructionSpeed cSpeed bConst cost =
     let
-        bioSpeed =  if (Cost $ buildingConstructionProgressBiologicals bConst) + constructionSpeedBiologicalCost cSpeed > ccdBiologicalCost cost
-                    then ccdBiologicalCost cost - (Cost $ buildingConstructionProgressBiologicals bConst)
-                    else (Cost $ buildingConstructionProgressBiologicals bConst) + constructionSpeedBiologicalCost cSpeed
-        mechSpeed = if (Cost $ buildingConstructionProgressMechanicals bConst) + constructionSpeedMechanicalCost cSpeed > ccdMechanicalCost cost
-                    then ccdMechanicalCost cost - (Cost $ buildingConstructionProgressMechanicals bConst)
-                    else (Cost $ buildingConstructionProgressMechanicals bConst) + constructionSpeedMechanicalCost cSpeed
-        chemSpeed = if (Cost $ buildingConstructionProgressChemicals bConst) + constructionSpeedChemicalCost cSpeed > ccdChemicalCost cost
-                    then ccdChemicalCost cost - (Cost $ buildingConstructionProgressChemicals bConst)
-                    else (Cost $ buildingConstructionProgressChemicals bConst) + constructionSpeedChemicalCost cSpeed
+        bioSpeed =  if (RawResource $ buildingConstructionProgressBiologicals bConst) + constructionSpeedBiologicalCost cSpeed > ccdBiologicalCost cost
+                    then ccdBiologicalCost cost - (RawResource $ buildingConstructionProgressBiologicals bConst)
+                    else (RawResource $ buildingConstructionProgressBiologicals bConst) + constructionSpeedBiologicalCost cSpeed
+        mechSpeed = if (RawResource $ buildingConstructionProgressMechanicals bConst) + constructionSpeedMechanicalCost cSpeed > ccdMechanicalCost cost
+                    then ccdMechanicalCost cost - (RawResource $ buildingConstructionProgressMechanicals bConst)
+                    else (RawResource $ buildingConstructionProgressMechanicals bConst) + constructionSpeedMechanicalCost cSpeed
+        chemSpeed = if (RawResource $ buildingConstructionProgressChemicals bConst) + constructionSpeedChemicalCost cSpeed > ccdChemicalCost cost
+                    then ccdChemicalCost cost - (RawResource $ buildingConstructionProgressChemicals bConst)
+                    else (RawResource $ buildingConstructionProgressChemicals bConst) + constructionSpeedChemicalCost cSpeed
     in
         ConstructionSpeed { 
               constructionSpeedMechanicalCost = mechSpeed
@@ -122,9 +122,9 @@ workOnConstruction :: (PersistQueryWrite backend,
                       ConstructionSpeed -> Entity BuildingConstruction -> ReaderT backend m ()
 workOnConstruction speed bConsE = do
     let bConsId = entityKey bConsE
-    _ <- update bConsId [ BuildingConstructionProgressBiologicals +=. unCost (constructionSpeedBiologicalCost speed)
-                        , BuildingConstructionProgressMechanicals +=. unCost (constructionSpeedMechanicalCost speed)
-                        , BuildingConstructionProgressChemicals +=. unCost (constructionSpeedChemicalCost speed) ]
+    _ <- update bConsId [ BuildingConstructionProgressBiologicals +=. unRawResource (constructionSpeedBiologicalCost speed)
+                        , BuildingConstructionProgressMechanicals +=. unRawResource (constructionSpeedMechanicalCost speed)
+                        , BuildingConstructionProgressChemicals +=. unRawResource (constructionSpeedChemicalCost speed) ]
     return ()
 
 applyOverallSpeed :: OverallConstructionSpeed -> ConstructionSpeed -> ConstructionSpeed
@@ -155,7 +155,7 @@ queueCostReq (_, _) = mempty
 -- | Speed that a planet can build constructions
 planetConstructionSpeed :: Planet -> ConstructionSpeed
 planetConstructionSpeed _ =
-    ConstructionSpeed (Cost 50) (Cost 50) (Cost 50)
+    ConstructionSpeed (RawResource 50) (RawResource 50) (RawResource 50)
 
 -- | Overall speed coefficient with given total cost and total resources
 --   Used to scale all construction of a faction, so they don't end up using
@@ -173,17 +173,17 @@ overallConstructionSpeed cost res =
         chemSpeed = speedPerResource (ccdChemicalCost cost) (totalResourcesChemical res)
 
 -- | Speed that consumes at most available amount of resources or finishes the construction
-speedPerResource :: Cost t -> Cost t -> ConstructionSpeedCoeff
+speedPerResource :: RawResource t -> RawResource t -> ConstructionSpeedCoeff t
 speedPerResource cost res =
     if res >= cost
     then NormalConstructionSpeed
-    else LimitedConstructionSpeed $ fromIntegral (unCost res) / fromIntegral (unCost cost)
+    else LimitedConstructionSpeed $ fromIntegral (unRawResource res) / fromIntegral (unRawResource cost)
 
-data ConstructionSpeedCoeff = NormalConstructionSpeed
+data ConstructionSpeedCoeff t = NormalConstructionSpeed
     | LimitedConstructionSpeed Double
     deriving (Show, Read, Eq)
 
-instance Ord ConstructionSpeedCoeff where
+instance Ord (ConstructionSpeedCoeff t) where
     (<=) (LimitedConstructionSpeed a) NormalConstructionSpeed =
         a <= 1.0
     (<=) (LimitedConstructionSpeed a) (LimitedConstructionSpeed b) =
@@ -193,8 +193,8 @@ instance Ord ConstructionSpeedCoeff where
         a >= 1.0
 
 data OverallConstructionSpeed = OverallConstructionSpeed
-    { overallSpeedBiological :: ConstructionSpeedCoeff
-    , overallSpeedMechanical :: ConstructionSpeedCoeff
-    , overallSpeedChemical :: ConstructionSpeedCoeff
+    { overallSpeedBiological :: ConstructionSpeedCoeff Biological
+    , overallSpeedMechanical :: ConstructionSpeedCoeff Mechanical
+    , overallSpeedChemical :: ConstructionSpeedCoeff Chemical
     }
     deriving (Show, Read, Eq)
