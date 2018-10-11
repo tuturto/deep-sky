@@ -15,7 +15,6 @@ import CustomTypes (TotalCost(..), Cost(..), TotalResources(..), subTotalCost)
 import Common (safeHead)
 import Construction (ConstructionSpeed(..), Constructable(..))
 import MenuHelpers (getScore)
-import qualified Prelude as P (minimum)
 import Buildings (BuildingInfo(..), BLevel(..), building)
 
 
@@ -28,11 +27,11 @@ handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
 handleFactionConstruction date factionE = do
     let faction = entityVal factionE
     planets <- selectList [ PlanetOwnerId ==. Just (entityKey factionE)] []
-    queues <- mapM Queries.planetConstructionQueue $ map entityKey planets
+    queues <- mapM (Queries.planetConstructionQueue . entityKey) planets
     let totalCost = mconcat $ map (queueCostReq . toPlainObjects) queues
     let availableResources = getScore $ Just faction
     let consSpeed = overallConstructionSpeed totalCost availableResources
-    mapM_ (doPlanetConstruction (entityKey factionE) date consSpeed) $ map planetAndFirstConstruction queues
+    mapM_ (doPlanetConstruction (entityKey factionE) date consSpeed . planetAndFirstConstruction) queues
 
 -- | Select construction from queue with the smallest construction index
 planetAndFirstConstruction :: (Maybe (Entity Planet), [Entity BuildingConstruction]) -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction))
@@ -54,12 +53,29 @@ doPlanetConstruction fId date speed (Just planetE, Just bConsE) = do
     let bCons = entityVal bConsE
     let realSpeed = applyOverallSpeed speed $ planetConstructionSpeed $ entityVal planetE
     let modelBuilding = building (buildingConstructionType bCons) (BLevel $ buildingConstructionLevel bCons)
+    let cToDo = limitConstructionSpeed realSpeed bCons (buildingInfoCost modelBuilding)
     _ <- if constructionWillFinish realSpeed (cProgress bCons) (buildingInfoCost modelBuilding)
          then finishConstruction fId date bConsE
-         else workOnConstruction realSpeed bConsE
+         else workOnConstruction cToDo bConsE
     return ()
 doPlanetConstruction _ _ _ _ = 
     return ()
+
+-- | Limit construction speed to amount that there's work left to do
+limitConstructionSpeed :: ConstructionSpeed -> BuildingConstruction -> TotalCost -> ConstructionSpeed
+limitConstructionSpeed cSpeed bConst cost =
+    let
+        bioSpeed =  if (Cost $ buildingConstructionProgressBiologicals bConst) + constructionSpeedBiologicalCost cSpeed > ccdBiologicalCost cost
+                    then ccdBiologicalCost cost - (Cost $ buildingConstructionProgressBiologicals bConst)
+                    else (Cost $ buildingConstructionProgressBiologicals bConst) + constructionSpeedBiologicalCost cSpeed
+        mechSpeed = if (Cost $ buildingConstructionProgressMechanicals bConst) + constructionSpeedMechanicalCost cSpeed > ccdMechanicalCost cost
+                    then ccdMechanicalCost cost - (Cost $ buildingConstructionProgressMechanicals bConst)
+                    else (Cost $ buildingConstructionProgressMechanicals bConst) + constructionSpeedMechanicalCost cSpeed
+        chemSpeed = if (Cost $ buildingConstructionProgressChemicals bConst) + constructionSpeedChemicalCost cSpeed > ccdChemicalCost cost
+                    then ccdChemicalCost cost - (Cost $ buildingConstructionProgressChemicals bConst)
+                    else (Cost $ buildingConstructionProgressChemicals bConst) + constructionSpeedChemicalCost cSpeed
+    in
+        ConstructionSpeed bioSpeed mechSpeed chemSpeed
 
 -- | Will construction finish based on speed, progress so far and required construction
 constructionWillFinish :: ConstructionSpeed -> TotalCost -> TotalCost -> Bool
@@ -101,7 +117,6 @@ workOnConstruction :: (PersistQueryWrite backend,
                       BaseBackend backend ~ SqlBackend, MonadIO m) => 
                       ConstructionSpeed -> Entity BuildingConstruction -> ReaderT backend m ()
 workOnConstruction speed bConsE = do
-    let bCons = entityVal bConsE
     let bConsId = entityKey bConsE
     -- TODO: make sure not overconstruct
     _ <- update bConsId [ BuildingConstructionProgressBiologicals +=. unCost (constructionSpeedBiologicalCost speed)
