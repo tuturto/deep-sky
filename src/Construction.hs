@@ -1,25 +1,26 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
 
-module Construction (ConstructionSpeed(..), Constructable(..))
+module Construction (Constructable(..), constructionLeft)
     where
 
 import Import
-import CustomTypes (TotalCost(..), RawResource(..), Mechanical(..), Biological(..), Chemical(..))
+import CustomTypes (RawResources(..), RawResource(..), ConstructionDone, ResourceCost, ConstructionLeft)
 
 class Constructable a where
     cIndex :: a -> Int
-    cProgress :: a -> TotalCost
-
-data ConstructionSpeed = ConstructionSpeed
-    { constructionSpeedMechanicalCost :: RawResource Mechanical
-    , constructionSpeedBiologicalCost :: RawResource Biological
-    , constructionSpeedChemicalCost :: RawResource Chemical
-    }
-    deriving (Show, Read, Eq)
+    cProgress :: a -> RawResources ConstructionDone
 
 instance Constructable BuildingConstruction where
     cIndex = buildingConstructionIndex
     cProgress a =
-        TotalCost (RawResource $ buildingConstructionProgressMechanicals a)
-                  (RawResource $ buildingConstructionProgressBiologicals a)
-                  (RawResource $ buildingConstructionProgressChemicals a)
+        RawResources (RawResource $ buildingConstructionProgressMechanicals a)
+                     (RawResource $ buildingConstructionProgressBiologicals a)
+                     (RawResource $ buildingConstructionProgressChemicals a)
+
+constructionLeft :: RawResources ResourceCost -> RawResources ConstructionDone -> RawResources ConstructionLeft
+constructionLeft (RawResources mechCost bioCost chemCost) (RawResources mechDone bioDone chemDone) =
+    RawResources mechLeft bioLeft chemLeft
+    where
+        mechLeft = RawResource $ (unRawResource mechCost) - (unRawResource mechDone)
+        bioLeft = RawResource $ (unRawResource bioCost) - (unRawResource bioDone)
+        chemLeft = RawResource $ (unRawResource chemCost) - (unRawResource chemDone)

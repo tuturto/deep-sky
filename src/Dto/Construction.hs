@@ -9,7 +9,7 @@ module Dto.Construction
   , constructionIndex )
   where
 
-import CustomTypes (buildingTypeName, ShipType(..), BuildingType(..), TotalCost(..), RawResource(..))
+import CustomTypes (buildingTypeName, ShipType(..), BuildingType(..), RawResources(..), RawResource(..), ConstructionLeft)
 import Common (DtoTransform(..))
 import Buildings (building, BLevel(..), buildingInfoCost)
 import Data.Aeson (object, (.=))
@@ -22,7 +22,7 @@ data ConstructionDto = BuildingConstructionDto
     , bcdtoLevel :: Int
     , bcdtoType :: BuildingType
     , bcdtoPlanet :: Key Planet
-    , bcdtoCostLeft :: TotalCost
+    , bcdtoCostLeft :: RawResources ConstructionLeft
     }
   | ShipConstructionDto
     { scdtoId :: Key ShipConstruction
@@ -80,7 +80,7 @@ buildingConstructionToDto bce =
                             , bcdtoLevel = buildingConstructionLevel bc
                             , bcdtoType = buildingConstructionType bc
                             , bcdtoPlanet = buildingConstructionPlanetId bc
-                            , bcdtoCostLeft = TotalCost mech bio chem
+                            , bcdtoCostLeft = RawResources mech bio chem
                             }
   where
     bc = entityVal bce

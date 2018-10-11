@@ -100,30 +100,36 @@ data ComponentSlot = InnerSlot
     deriving (Show, Read, Eq)
 derivePersistField "ComponentSlot"
 
-data TotalCost = TotalCost
+data RawResources a = RawResources
     { ccdMechanicalCost :: RawResource Mechanical
     , ccdBiologicalCost :: RawResource Biological
     , ccdChemicalCost :: RawResource Chemical
     }
     deriving (Show, Read, Eq)
 
--- | Subtract one totalcost from another
-subTotalCost :: TotalCost -> TotalCost -> TotalCost
-subTotalCost a b =
-    TotalCost { ccdMechanicalCost = ccdMechanicalCost a - ccdMechanicalCost b
-              , ccdBiologicalCost = ccdBiologicalCost a - ccdBiologicalCost b
-              , ccdChemicalCost = ccdChemicalCost a - ccdChemicalCost b
-              }
+data ResourceCost = ResourceCost
+data ConstructionSpeed = ConstructionSpeed
+data ConstructionLeft = ConstructionLeft
+data ConstructionDone = ConstructionDone
+data ResourcesAvailable = ResourcesAvailable
 
-instance Semigroup TotalCost where
-    (<>) a b = TotalCost 
+-- | Subtract one totalcost from another
+subTotalCost :: RawResources t -> RawResources t -> RawResources t
+subTotalCost a b =
+    RawResources { ccdMechanicalCost = ccdMechanicalCost a - ccdMechanicalCost b
+                 , ccdBiologicalCost = ccdBiologicalCost a - ccdBiologicalCost b
+                 , ccdChemicalCost = ccdChemicalCost a - ccdChemicalCost b
+                 }
+
+instance Semigroup (RawResources t) where
+    (<>) a b = RawResources 
         { ccdMechanicalCost = ccdMechanicalCost a <> ccdMechanicalCost b
         , ccdBiologicalCost = ccdBiologicalCost a <> ccdBiologicalCost b
         , ccdChemicalCost = ccdChemicalCost a <> ccdChemicalCost b
         }
 
-instance Monoid TotalCost where
-    mempty = TotalCost 
+instance Monoid (RawResources t) where
+    mempty = RawResources 
         { ccdMechanicalCost = RawResource 0
         , ccdBiologicalCost = RawResource 0
         , ccdChemicalCost = RawResource 0
@@ -174,19 +180,19 @@ instance Monoid TotalResources where
         , totalResourcesChemical = RawResource 0
         }
 
-instance ToJSON TotalCost where
-    toJSON (TotalCost mech bio chem) =
+instance ToJSON (RawResources t) where
+    toJSON (RawResources mech bio chem) =
         object [ "mechanical" .= unRawResource mech
                , "biological" .= unRawResource bio
                , "chemical" .= unRawResource chem 
                ]
 
-instance FromJSON TotalCost where
+instance FromJSON (RawResources t) where
     parseJSON = withObject "resource" $ \o -> do
         mechanical <- o .: "mechanical"
         biological <- o .: "biological"
         chemical <- o .: "chemical"
-        return $ TotalCost (RawResource mechanical) (RawResource biological) (RawResource chemical)
+        return $ RawResources (RawResource mechanical) (RawResource biological) (RawResource chemical)
 
 instance ToJSON TotalResources where
     toJSON (TotalResources mech bio chem) =

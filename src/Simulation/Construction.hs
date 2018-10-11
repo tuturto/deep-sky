@@ -11,9 +11,10 @@ module Simulation.Construction ( handleFactionConstruction, queueCostReq, planet
 
 import Import
 import qualified Queries (planetConstructionQueue)
-import CustomTypes (TotalCost(..), RawResource(..), TotalResources(..), subTotalCost, Biological, Mechanical, Chemical)
+import CustomTypes ( RawResources(..), RawResource(..), TotalResources(..), subTotalCost, Biological, Mechanical, Chemical
+                   , ResourceCost, ResourcesAvailable, ConstructionSpeed, ConstructionDone )
 import Common (safeHead)
-import Construction (ConstructionSpeed(..), Constructable(..))
+import Construction (Constructable(..), constructionLeft)
 import MenuHelpers (getScore)
 import Buildings (BuildingInfo(..), BLevel(..), building)
 
@@ -62,31 +63,31 @@ doPlanetConstruction _ _ _ _ =
     return ()
 
 -- | Limit construction speed to amount that there's work left to do
-limitConstructionSpeed :: ConstructionSpeed -> BuildingConstruction -> TotalCost -> ConstructionSpeed
+limitConstructionSpeed :: RawResources ConstructionSpeed -> BuildingConstruction -> RawResources ResourceCost -> RawResources ConstructionSpeed
 limitConstructionSpeed cSpeed bConst cost =
     let
-        bioSpeed =  if (RawResource $ buildingConstructionProgressBiologicals bConst) + constructionSpeedBiologicalCost cSpeed > ccdBiologicalCost cost
+        bioSpeed =  if (RawResource $ buildingConstructionProgressBiologicals bConst) + ccdBiologicalCost cSpeed > ccdBiologicalCost cost
                     then ccdBiologicalCost cost - (RawResource $ buildingConstructionProgressBiologicals bConst)
-                    else (RawResource $ buildingConstructionProgressBiologicals bConst) + constructionSpeedBiologicalCost cSpeed
-        mechSpeed = if (RawResource $ buildingConstructionProgressMechanicals bConst) + constructionSpeedMechanicalCost cSpeed > ccdMechanicalCost cost
+                    else (RawResource $ buildingConstructionProgressBiologicals bConst) + ccdBiologicalCost cSpeed
+        mechSpeed = if (RawResource $ buildingConstructionProgressMechanicals bConst) + ccdMechanicalCost cSpeed > ccdMechanicalCost cost
                     then ccdMechanicalCost cost - (RawResource $ buildingConstructionProgressMechanicals bConst)
-                    else (RawResource $ buildingConstructionProgressMechanicals bConst) + constructionSpeedMechanicalCost cSpeed
-        chemSpeed = if (RawResource $ buildingConstructionProgressChemicals bConst) + constructionSpeedChemicalCost cSpeed > ccdChemicalCost cost
+                    else (RawResource $ buildingConstructionProgressMechanicals bConst) + ccdMechanicalCost cSpeed
+        chemSpeed = if (RawResource $ buildingConstructionProgressChemicals bConst) + ccdChemicalCost cSpeed > ccdChemicalCost cost
                     then ccdChemicalCost cost - (RawResource $ buildingConstructionProgressChemicals bConst)
-                    else (RawResource $ buildingConstructionProgressChemicals bConst) + constructionSpeedChemicalCost cSpeed
+                    else (RawResource $ buildingConstructionProgressChemicals bConst) + ccdChemicalCost cSpeed
     in
-        ConstructionSpeed { 
-              constructionSpeedMechanicalCost = mechSpeed
-            , constructionSpeedBiologicalCost = bioSpeed
-            , constructionSpeedChemicalCost = chemSpeed
+        RawResources { 
+              ccdMechanicalCost = mechSpeed
+            , ccdBiologicalCost = bioSpeed
+            , ccdChemicalCost = chemSpeed
             }
 
 -- | Will construction finish based on speed, progress so far and required construction
-constructionWillFinish :: ConstructionSpeed -> TotalCost -> TotalCost -> Bool
+constructionWillFinish :: RawResources ConstructionSpeed -> RawResources ConstructionDone -> RawResources ResourceCost -> Bool
 constructionWillFinish speed progress total = 
-    constructionSpeedMechanicalCost speed >= ccdMechanicalCost total - ccdMechanicalCost progress 
-    && constructionSpeedBiologicalCost speed >= ccdBiologicalCost total - ccdBiologicalCost progress
-    && constructionSpeedChemicalCost speed >= ccdChemicalCost total - ccdChemicalCost progress
+    ccdMechanicalCost speed >= ccdMechanicalCost total - ccdMechanicalCost progress 
+    && ccdBiologicalCost speed >= ccdBiologicalCost total - ccdBiologicalCost progress
+    && ccdChemicalCost speed >= ccdChemicalCost total - ccdChemicalCost progress
 
 finishConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                        MonadIO m, BaseBackend backend ~ SqlBackend) =>
@@ -119,15 +120,15 @@ finishConstruction fId date bConsE = do
 
 workOnConstruction :: (PersistQueryWrite backend, 
                       BaseBackend backend ~ SqlBackend, MonadIO m) => 
-                      ConstructionSpeed -> Entity BuildingConstruction -> ReaderT backend m ()
+                      RawResources ConstructionSpeed -> Entity BuildingConstruction -> ReaderT backend m ()
 workOnConstruction speed bConsE = do
     let bConsId = entityKey bConsE
-    _ <- update bConsId [ BuildingConstructionProgressBiologicals +=. unRawResource (constructionSpeedBiologicalCost speed)
-                        , BuildingConstructionProgressMechanicals +=. unRawResource (constructionSpeedMechanicalCost speed)
-                        , BuildingConstructionProgressChemicals +=. unRawResource (constructionSpeedChemicalCost speed) ]
+    _ <- update bConsId [ BuildingConstructionProgressBiologicals +=. unRawResource (ccdBiologicalCost speed)
+                        , BuildingConstructionProgressMechanicals +=. unRawResource (ccdMechanicalCost speed)
+                        , BuildingConstructionProgressChemicals +=. unRawResource (ccdChemicalCost speed) ]
     return ()
 
-applyOverallSpeed :: OverallConstructionSpeed -> ConstructionSpeed -> ConstructionSpeed
+applyOverallSpeed :: OverallConstructionSpeed -> RawResources ConstructionSpeed -> RawResources ConstructionSpeed
 applyOverallSpeed coeffSpeed speed =
     -- TODO: implement
     speed
@@ -139,28 +140,29 @@ toPlainObjects (planet, constructions) =
 
 -- | Total requirement of cost for a construction queue for a turn
 --   Take into account speed the planet can construct buildings
-queueCostReq :: (Maybe Planet, [BuildingConstruction]) -> TotalCost
+queueCostReq :: (Maybe Planet, [BuildingConstruction]) -> RawResources ResourceCost
 queueCostReq (Just planet, construction:_) = 
-    TotalCost (min (constructionSpeedMechanicalCost planetSpeed) (ccdMechanicalCost constLeft)) 
-              (min (constructionSpeedBiologicalCost planetSpeed) (ccdBiologicalCost constLeft))
-              (min (constructionSpeedChemicalCost planetSpeed) (ccdChemicalCost constLeft))
+    RawResources (min (ccdMechanicalCost planetSpeed) (ccdMechanicalCost constLeft)) 
+                 (min (ccdBiologicalCost planetSpeed) (ccdBiologicalCost constLeft))
+                 (min (ccdChemicalCost planetSpeed) (ccdChemicalCost constLeft))
     where
         modelBuilding = building (buildingConstructionType construction) 
                                  (BLevel $ buildingConstructionLevel construction)
         planetSpeed = planetConstructionSpeed planet
-        constLeft = subTotalCost (buildingInfoCost modelBuilding)
-                                 (cProgress construction)
+        constLeft = constructionLeft (buildingInfoCost modelBuilding)
+                                     (cProgress construction)
 queueCostReq (_, _) = mempty
 
 -- | Speed that a planet can build constructions
-planetConstructionSpeed :: Planet -> ConstructionSpeed
+planetConstructionSpeed :: Planet -> RawResources ConstructionSpeed
 planetConstructionSpeed _ =
-    ConstructionSpeed (RawResource 50) (RawResource 50) (RawResource 50)
+    RawResources (RawResource 50) (RawResource 50) (RawResource 50)
 
 -- | Overall speed coefficient with given total cost and total resources
 --   Used to scale all construction of a faction, so they don't end up using
 --   more resources than they have
-overallConstructionSpeed :: TotalCost -> TotalResources -> OverallConstructionSpeed
+-- TODO: fix total resources to raw resources
+overallConstructionSpeed :: RawResources ResourceCost -> TotalResources -> OverallConstructionSpeed
 overallConstructionSpeed cost res =
     OverallConstructionSpeed
         { overallSpeedBiological = bioSpeed

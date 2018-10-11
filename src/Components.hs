@@ -11,7 +11,7 @@ module Components where
 
 import Data.Aeson (object, (.=), ToJSON(..))
 import Data.Aeson.TH 
-import CustomTypes (TotalCost(..), RawResource(..), ComponentSlot(..))
+import CustomTypes (RawResources(..), RawResource(..), ComponentSlot(..), ResourceCost)
 import Database.Persist.TH
 import ClassyPrelude.Yesod   as Import
 
@@ -25,7 +25,7 @@ data Component = Component
     , dCompWeight :: Weight 
     , dCompSlot :: ComponentSlot
     , dCompType :: [ ComponentLevel ] 
-    , dCompCost :: TotalCost }
+    , dCompCost :: RawResources ResourceCost }
     deriving (Show, Read, Eq)
 
 data ComponentLevel = ComponentLevel 
@@ -78,21 +78,21 @@ component :: ComponentId -> CLevel -> Component
 component CidLongRangeSensors level = 
     Component CidLongRangeSensors level "Long range sensors" "Various scanners and sensors for long range observation" (Weight 5) SensorSlot 
         [ ComponentLevel level SensorComponent ] $ 
-        TotalCost (RawResource 1) (RawResource 1) (RawResource 1)
+        RawResources (RawResource 1) (RawResource 1) (RawResource 1)
 component CidArmour level =
     Component CidArmour level "Armour" "Heave protective plating against kinetic damage" (Weight 20) ArmourSlot 
-        [] $ TotalCost (RawResource 20) (RawResource 0) (RawResource 0)
+        [] $ RawResources (RawResource 20) (RawResource 0) (RawResource 0)
 component CidBridge level =
     Component CidBridge level "Bridge" "Nerve center of a ship, containing controls and instruments needed for steering the ship" (Weight 10) InnerSlot 
         [ ComponentLevel level BridgeComponent 
-        , ComponentLevel (scaleLevel level 5) SupplyComponent ] $ TotalCost (RawResource 10) (RawResource 5) (RawResource 10)
+        , ComponentLevel (scaleLevel level 5) SupplyComponent ] $ RawResources (RawResource 10) (RawResource 5) (RawResource 10)
 component CidEngine level =
     Component CidEngine level "Engine" "Two stage ion propulsion system" (Weight 2) EngineSlot 
         [ ComponentLevel level EngineComponent 
-        , ComponentLevel (scaleLevel level 5) SupplyComponent ] $ TotalCost (RawResource 15) (RawResource 0) (RawResource 10)
+        , ComponentLevel (scaleLevel level 5) SupplyComponent ] $ RawResources (RawResource 15) (RawResource 0) (RawResource 10)
 component CidSupplyPod level =
     Component CidSupplyPod level "Supply pod" "Storage system for supplies needed by the crew and the ship" (Weight 10) InnerSlot
-        [ ComponentLevel (scaleLevel level 10) SupplyComponent ] $ TotalCost (RawResource 5) (RawResource 50) (RawResource 5)
+        [ ComponentLevel (scaleLevel level 10) SupplyComponent ] $ RawResources (RawResource 5) (RawResource 50) (RawResource 5)
 
 derivePersistField "ComponentType"
 derivePersistField "ComponentId"
