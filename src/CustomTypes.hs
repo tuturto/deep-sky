@@ -129,7 +129,7 @@ instance Monoid TotalCost where
         , ccdChemicalCost = RawResource 0
         }
 
-data RawResource a = RawResource { unRawResource :: Int }
+newtype RawResource a = RawResource { unRawResource :: Int }
     deriving (Show, Read, Eq)
 
 data Biological = Biological
