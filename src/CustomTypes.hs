@@ -101,9 +101,9 @@ data ComponentSlot = InnerSlot
 derivePersistField "ComponentSlot"
 
 data TotalCost = TotalCost
-    { ccdMechanicalCost :: Cost
-    , ccdBiologicalCost :: Cost
-    , ccdChemicalCost :: Cost
+    { ccdMechanicalCost :: Cost Mechanical
+    , ccdBiologicalCost :: Cost Biological
+    , ccdChemicalCost :: Cost Chemical
     }
     deriving (Show, Read, Eq)
 
@@ -129,19 +129,23 @@ instance Monoid TotalCost where
         , ccdChemicalCost = Cost 0
         }
 
-newtype Cost = Cost { unCost :: Int }
+data Cost a = Cost { unCost :: Int }
     deriving (Show, Read, Eq)
 
-instance Semigroup Cost where
+data Biological = Biological
+data Mechanical = Mechanical
+data Chemical = Chemical
+
+instance Semigroup (Cost t) where
     (<>) a b = a + b
 
-instance Monoid Cost where
+instance Monoid (Cost t) where
     mempty = Cost 0
 
-instance Ord Cost where
+instance Ord (Cost t) where
     (<=) (Cost a) (Cost b) = a <= b
 
-instance Num Cost where
+instance Num (Cost t) where
     (+) (Cost a) (Cost b) = Cost $ a + b
     (-) (Cost a) (Cost b) = Cost $ a - b
     (*) (Cost a) (Cost b) = Cost $ a * b
@@ -150,9 +154,9 @@ instance Num Cost where
     fromInteger a = Cost $ fromInteger a
 
 data TotalResources = TotalResources
-    { totalResourcesMechanical :: Cost
-    , totalResourcesBiological :: Cost
-    , totalResourcesChemical :: Cost
+    { totalResourcesMechanical :: Cost Mechanical
+    , totalResourcesBiological :: Cost Biological
+    , totalResourcesChemical :: Cost Chemical
     }
     deriving (Show, Read, Eq)
 

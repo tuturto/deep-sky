@@ -75,7 +75,11 @@ limitConstructionSpeed cSpeed bConst cost =
                     then ccdChemicalCost cost - (Cost $ buildingConstructionProgressChemicals bConst)
                     else (Cost $ buildingConstructionProgressChemicals bConst) + constructionSpeedChemicalCost cSpeed
     in
-        ConstructionSpeed bioSpeed mechSpeed chemSpeed
+        ConstructionSpeed { 
+              constructionSpeedMechanicalCost = mechSpeed
+            , constructionSpeedBiologicalCost = bioSpeed
+            , constructionSpeedChemicalCost = chemSpeed
+            }
 
 -- | Will construction finish based on speed, progress so far and required construction
 constructionWillFinish :: ConstructionSpeed -> TotalCost -> TotalCost -> Bool
@@ -118,7 +122,6 @@ workOnConstruction :: (PersistQueryWrite backend,
                       ConstructionSpeed -> Entity BuildingConstruction -> ReaderT backend m ()
 workOnConstruction speed bConsE = do
     let bConsId = entityKey bConsE
-    -- TODO: make sure not overconstruct
     _ <- update bConsId [ BuildingConstructionProgressBiologicals +=. unCost (constructionSpeedBiologicalCost speed)
                         , BuildingConstructionProgressMechanicals +=. unCost (constructionSpeedMechanicalCost speed)
                         , BuildingConstructionProgressChemicals +=. unCost (constructionSpeedChemicalCost speed) ]
@@ -170,7 +173,7 @@ overallConstructionSpeed cost res =
         chemSpeed = speedPerResource (ccdChemicalCost cost) (totalResourcesChemical res)
 
 -- | Speed that consumes at most available amount of resources or finishes the construction
-speedPerResource :: Cost -> Cost -> ConstructionSpeedCoeff
+speedPerResource :: Cost t -> Cost t -> ConstructionSpeedCoeff
 speedPerResource cost res =
     if res >= cost
     then NormalConstructionSpeed
