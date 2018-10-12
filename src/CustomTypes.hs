@@ -104,8 +104,7 @@ data RawResources a = RawResources
     { ccdMechanicalCost :: RawResource Mechanical
     , ccdBiologicalCost :: RawResource Biological
     , ccdChemicalCost :: RawResource Chemical
-    }
-    deriving (Show, Read, Eq)
+    } deriving (Show, Read, Eq)
 
 data ResourceCost = ResourceCost
 data ConstructionSpeed = ConstructionSpeed
