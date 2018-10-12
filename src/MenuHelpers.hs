@@ -47,7 +47,7 @@ planetNameById planetId = do
 
 statusBarScore :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistStoreRead backend) =>
-    Maybe (a, User) -> ReaderT backend m TotalResources
+    Maybe (a, User) -> ReaderT backend m (RawResources ResourcesAvailable)
 statusBarScore (Just (_, user)) = do
     faction <- getMaybeEntity $ userFactionId user
     return $ getScore faction
@@ -69,8 +69,8 @@ getMaybeEntity _ =
     return Nothing
 
 -- TODO: better name and place
-getScore :: Maybe Faction -> TotalResources
-getScore (Just faction) = TotalResources (RawResource $ factionBiologicals faction) (RawResource $ factionMechanicals faction) (RawResource $ factionChemicals faction)
+getScore :: Maybe Faction -> RawResources ResourcesAvailable
+getScore (Just faction) = RawResources (RawResource $ factionBiologicals faction) (RawResource $ factionMechanicals faction) (RawResource $ factionChemicals faction)
 getScore _ = mempty 
 
 usersRoles :: (BaseBackend backend ~ SqlBackend, MonadIO m,

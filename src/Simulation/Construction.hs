@@ -11,8 +11,8 @@ module Simulation.Construction ( handleFactionConstruction, queueCostReq, planet
 
 import Import
 import qualified Queries (planetConstructionQueue)
-import CustomTypes ( RawResources(..), RawResource(..), TotalResources(..), Biological, Mechanical, Chemical
-                   , ResourceCost, ConstructionSpeed, ConstructionDone )
+import CustomTypes ( RawResources(..), RawResource(..), Biological, Mechanical, Chemical
+                   , ResourceCost, ConstructionSpeed, ConstructionDone, ResourcesAvailable )
 import Common (safeHead)
 import Construction (Constructable(..), constructionLeft)
 import MenuHelpers (getScore)
@@ -162,7 +162,7 @@ planetConstructionSpeed _ =
 --   Used to scale all construction of a faction, so they don't end up using
 --   more resources than they have
 -- TODO: fix total resources to raw resources
-overallConstructionSpeed :: RawResources ResourceCost -> TotalResources -> OverallConstructionSpeed
+overallConstructionSpeed :: RawResources ResourceCost -> RawResources ResourcesAvailable -> OverallConstructionSpeed
 overallConstructionSpeed cost res =
     OverallConstructionSpeed
         { overallSpeedBiological = bioSpeed
@@ -170,9 +170,9 @@ overallConstructionSpeed cost res =
         , overallSpeedChemical = chemSpeed
         }
     where
-        bioSpeed = speedPerResource (ccdBiologicalCost cost) (totalResourcesBiological res)
-        mechSpeed = speedPerResource (ccdMechanicalCost cost) (totalResourcesMechanical res)
-        chemSpeed = speedPerResource (ccdChemicalCost cost) (totalResourcesChemical res)
+        bioSpeed = speedPerResource (ccdBiologicalCost cost) (ccdBiologicalCost res)
+        mechSpeed = speedPerResource (ccdMechanicalCost cost) (ccdMechanicalCost res)
+        chemSpeed = speedPerResource (ccdChemicalCost cost) (ccdChemicalCost res)
 
 -- | Speed that consumes at most available amount of resources or finishes the construction
 speedPerResource :: RawResource t -> RawResource t -> ConstructionSpeedCoeff t

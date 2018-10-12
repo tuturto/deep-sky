@@ -159,27 +159,6 @@ instance Num (RawResource t) where
     signum (RawResource a) = RawResource $ signum a
     fromInteger a = RawResource $ fromInteger a
 
-data TotalResources = TotalResources
-    { totalResourcesMechanical :: RawResource Mechanical
-    , totalResourcesBiological :: RawResource Biological
-    , totalResourcesChemical :: RawResource Chemical
-    }
-    deriving (Show, Read, Eq)
-
-instance Semigroup TotalResources where
-    (<>) a b = TotalResources 
-        { totalResourcesMechanical = totalResourcesMechanical a <> totalResourcesMechanical b
-        , totalResourcesBiological = totalResourcesBiological a <> totalResourcesBiological b
-        , totalResourcesChemical = totalResourcesChemical a <> totalResourcesChemical b
-        }
-
-instance Monoid TotalResources where
-    mempty = TotalResources 
-        { totalResourcesMechanical = RawResource 0
-        , totalResourcesBiological = RawResource 0
-        , totalResourcesChemical = RawResource 0
-        }
-
 instance ToJSON (RawResources t) where
     toJSON (RawResources mech bio chem) =
         object [ "mechanical" .= unRawResource mech
@@ -193,20 +172,6 @@ instance FromJSON (RawResources t) where
         biological <- o .: "biological"
         chemical <- o .: "chemical"
         return $ RawResources (RawResource mechanical) (RawResource biological) (RawResource chemical)
-
-instance ToJSON TotalResources where
-    toJSON (TotalResources mech bio chem) =
-        object [ "mechanical" .= unRawResource mech
-               , "biological" .= unRawResource bio
-               , "chemical" .= unRawResource chem 
-               ]
-
-instance FromJSON TotalResources where
-    parseJSON = withObject "resources" $ \o -> do
-        mechanical <- o .: "mechanical"
-        biological <- o .: "biological"
-        chemical <- o .: "chemical"
-        return $ TotalResources (RawResource mechanical) (RawResource biological) (RawResource chemical)
 
 $(deriveJSON defaultOptions ''Role)
 $(deriveJSON defaultOptions ''Coordinates)
