@@ -11,8 +11,8 @@ module Simulation.Construction ( handleFactionConstruction, queueCostReq, planet
 
 import Import
 import qualified Queries (planetConstructionQueue)
-import CustomTypes ( RawResources(..), RawResource(..), TotalResources(..), subTotalCost, Biological, Mechanical, Chemical
-                   , ResourceCost, ResourcesAvailable, ConstructionSpeed, ConstructionDone )
+import CustomTypes ( RawResources(..), RawResource(..), TotalResources(..), Biological, Mechanical, Chemical
+                   , ResourceCost, ConstructionSpeed, ConstructionDone )
 import Common (safeHead)
 import Construction (Constructable(..), constructionLeft)
 import MenuHelpers (getScore)
