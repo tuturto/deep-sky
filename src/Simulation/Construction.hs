@@ -69,15 +69,19 @@ doPlanetConstruction _ _ _ _ =
 speedLimitedByWorkLeft :: RawResources ConstructionSpeed -> BuildingConstruction -> RawResources ResourceCost -> RawResources ConstructionSpeed
 speedLimitedByWorkLeft cSpeed bConst cost =
     let
-        bioSpeed =  if (RawResource $ buildingConstructionProgressBiologicals bConst) + ccdBiologicalCost cSpeed > ccdBiologicalCost cost
-                    then ccdBiologicalCost cost - (RawResource $ buildingConstructionProgressBiologicals bConst)
-                    else (RawResource $ buildingConstructionProgressBiologicals bConst) + ccdBiologicalCost cSpeed
-        mechSpeed = if (RawResource $ buildingConstructionProgressMechanicals bConst) + ccdMechanicalCost cSpeed > ccdMechanicalCost cost
-                    then ccdMechanicalCost cost - (RawResource $ buildingConstructionProgressMechanicals bConst)
-                    else (RawResource $ buildingConstructionProgressMechanicals bConst) + ccdMechanicalCost cSpeed
-        chemSpeed = if (RawResource $ buildingConstructionProgressChemicals bConst) + ccdChemicalCost cSpeed > ccdChemicalCost cost
-                    then ccdChemicalCost cost - (RawResource $ buildingConstructionProgressChemicals bConst)
-                    else (RawResource $ buildingConstructionProgressChemicals bConst) + ccdChemicalCost cSpeed
+        limitPerResource progress speed total =
+            if RawResource progress + speed > total
+                then total - RawResource progress
+                else speed
+        bioSpeed = limitPerResource (buildingConstructionProgressBiologicals bConst)
+                                    (ccdBiologicalCost cSpeed)
+                                    (ccdBiologicalCost cost)
+        mechSpeed = limitPerResource (buildingConstructionProgressMechanicals bConst)
+                                     (ccdMechanicalCost cSpeed)
+                                     (ccdMechanicalCost cost)
+        chemSpeed = limitPerResource (buildingConstructionProgressChemicals bConst)
+                                     (ccdChemicalCost cSpeed)
+                                     (ccdChemicalCost cost)
     in
         RawResources { 
               ccdMechanicalCost = mechSpeed
