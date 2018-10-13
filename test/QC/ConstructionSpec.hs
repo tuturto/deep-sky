@@ -8,7 +8,8 @@ import Test.Hspec
 import QC.Generators.Import
 import Model
 import CustomTypes ( RawResources(..), RawResource(..) )
-import Simulation.Construction ( speedLimitedByWorkLeft )
+import Simulation.Construction ( speedLimitedByWorkLeft, overallConstructionSpeed )
+import Construction ( ConstructionSpeedCoeff(..), OverallConstructionSpeed(..) )
 
 spec :: Spec
 spec = do
@@ -31,3 +32,21 @@ spec = do
                         ccdMechanicalCost speed + (RawResource . buildingConstructionProgressMechanicals) bConst <= ccdMechanicalCost cTotal
                         && ccdBiologicalCost speed + (RawResource . buildingConstructionProgressBiologicals) bConst <= ccdBiologicalCost cTotal
                         && ccdChemicalCost speed + (RawResource . buildingConstructionProgressChemicals) bConst <= ccdChemicalCost cTotal
+
+            it "overall speed is full when there is enough resources" $ do
+                forAll resourceCostAndEnoughAvailableResources $ \(cost, available) ->
+                    let
+                        speed = overallConstructionSpeed cost available
+                    in
+                        overallSpeedBiological speed == NormalConstructionSpeed
+                        && overallSpeedMechanical speed == NormalConstructionSpeed
+                        && overallSpeedChemical speed == NormalConstructionSpeed
+
+            it "overall speed is less than full when there is not enough resources" $ do
+                forAll resourceCostAndLimitedResources $ \(cost, available) ->
+                    let
+                        speed = overallConstructionSpeed cost available
+                    in
+                        overallSpeedBiological speed < NormalConstructionSpeed
+                        && overallSpeedMechanical speed < NormalConstructionSpeed
+                        && overallSpeedChemical speed < NormalConstructionSpeed

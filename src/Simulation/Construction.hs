@@ -6,7 +6,8 @@
 {-# LANGUAGE InstanceSigs               #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
-module Simulation.Construction ( handleFactionConstruction, queueCostReq, planetConstructionSpeed, speedLimitedByWorkLeft )
+module Simulation.Construction ( handleFactionConstruction, queueCostReq, planetConstructionSpeed, speedLimitedByWorkLeft
+                               , overallConstructionSpeed )
     where
 
 import Import

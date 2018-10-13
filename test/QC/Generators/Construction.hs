@@ -7,17 +7,36 @@ import Test.QuickCheck.Gen
 import Test.QuickCheck.Instances()
 import QC.Generators.Database ( randomPlanetKey )
 
-import CustomTypes ( RawResources(..), RawResource(..), ResourceCost, ConstructionSpeed, BuildingType(..) )
+import CustomTypes ( RawResources(..), RawResource(..), ResourceCost, ConstructionSpeed, BuildingType(..)
+                   , ResourcesAvailable )
 import Buildings ( building, BuildingInfo(..), BLevel(..) )
 import Model
 
-rawResources :: Gen (RawResources t)
-rawResources = do
-    aBio <- arbitrary `suchThat` \x -> x >= 0
-    aMech <- arbitrary `suchThat` \x -> x >= 0
-    aChem <- arbitrary `suchThat` \x -> x >= 0
-    return $ RawResources (RawResource aBio) (RawResource aMech) (RawResource aChem)
+instance Arbitrary (RawResource t) where
+    arbitrary = do
+        aValue <- arbitrary `suchThat` \x -> x >= 0
+        return $ RawResource aValue
 
+instance Arbitrary (RawResources t) where
+    arbitrary = do
+        aBio <- arbitrary
+        aMech <- arbitrary
+        aChem <- arbitrary
+        return $ RawResources { ccdMechanicalCost = aMech
+                              , ccdBiologicalCost = aBio
+                              , ccdChemicalCost = aChem
+                              }
+
+rawResourcesThatAre :: (Int -> Int -> Bool) -> RawResources a -> Gen (RawResources b)
+rawResourcesThatAre check base = do
+    aBio <- arbitrary `suchThat` \x -> x `check` (unRawResource . ccdBiologicalCost) base
+    aMech <- arbitrary `suchThat` \x -> x `check` (unRawResource . ccdMechanicalCost) base
+    aChem <- arbitrary `suchThat` \x -> x `check` (unRawResource . ccdChemicalCost) base
+    return $ RawResources { ccdMechanicalCost = RawResource aMech
+                          , ccdBiologicalCost = RawResource aBio
+                          , ccdChemicalCost = RawResource aChem
+                          }
+                          
 instance Arbitrary BuildingType where
     arbitrary = oneof [ return SensorStation
                       , return ResearchComplex
@@ -25,7 +44,8 @@ instance Arbitrary BuildingType where
                       , return ParticleAccelerator
                       , return NeutronDetector
                       , return BlackMatterScanner
-                      , return GravityWaveSensor ]
+                      , return GravityWaveSensor
+                      ]
 
 unstartedConstruction :: Gen BuildingConstruction
 unstartedConstruction = do
@@ -45,14 +65,26 @@ randomConstruction = do
 
 unstartedConstructionsWithSomeSpeed :: Gen (RawResources ConstructionSpeed, BuildingConstruction, RawResources ResourceCost)
 unstartedConstructionsWithSomeSpeed = do
-    aConstructionSpeed <- rawResources
+    aConstructionSpeed <- arbitrary
     aBuildingConstruction <- unstartedConstruction
-    aTotalCost <- rawResources
+    aTotalCost <- arbitrary
     return (aConstructionSpeed, aBuildingConstruction, aTotalCost)
 
 unfinishedConstructionsWithSomeSpeed :: Gen (RawResources ConstructionSpeed, BuildingConstruction, RawResources ResourceCost)
 unfinishedConstructionsWithSomeSpeed = do
-    aConstructionSpeed <- rawResources
+    aConstructionSpeed <- arbitrary
     aBuildingConstruction <- randomConstruction
-    aTotalCost <- rawResources
+    aTotalCost <- arbitrary
     return (aConstructionSpeed, aBuildingConstruction, aTotalCost)
+
+resourceCostAndEnoughAvailableResources :: Gen (RawResources ResourceCost, RawResources ResourcesAvailable)
+resourceCostAndEnoughAvailableResources = do
+    aCost <- arbitrary
+    aAvailable <- rawResourcesThatAre (>) aCost
+    return (aCost, aAvailable)
+
+resourceCostAndLimitedResources :: Gen (RawResources ResourceCost, RawResources ResourcesAvailable)
+resourceCostAndLimitedResources = do
+    aCost <- arbitrary
+    aAvailable <- rawResourcesThatAre (<) aCost
+    return (aCost, aAvailable)
