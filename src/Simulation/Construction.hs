@@ -54,9 +54,9 @@ doPlanetConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                             -> ReaderT backend m ()
 doPlanetConstruction fId date speed (Just planetE, Just bConsE) = do
     let bCons = entityVal bConsE
-    let realSpeed = applyOverallSpeed speed $ planetConstructionSpeed $ entityVal planetE
+    let realSpeed = speedLimitedByOverallSpeed speed $ planetConstructionSpeed $ entityVal planetE
     let modelBuilding = building (buildingConstructionType bCons) (BLevel $ buildingConstructionLevel bCons)
-    let cToDo = limitConstructionSpeed realSpeed bCons (buildingInfoCost modelBuilding)
+    let cToDo = speedLimitedByWorkLeft realSpeed bCons (buildingInfoCost modelBuilding)
     _ <- if constructionWillFinish realSpeed (cProgress bCons) (buildingInfoCost modelBuilding)
          then finishConstruction fId date bConsE
          else workOnConstruction cToDo bConsE
@@ -65,8 +65,8 @@ doPlanetConstruction _ _ _ _ =
     return ()
 
 -- | Limit construction speed to amount that there's work left to do
-limitConstructionSpeed :: RawResources ConstructionSpeed -> BuildingConstruction -> RawResources ResourceCost -> RawResources ConstructionSpeed
-limitConstructionSpeed cSpeed bConst cost =
+speedLimitedByWorkLeft :: RawResources ConstructionSpeed -> BuildingConstruction -> RawResources ResourceCost -> RawResources ConstructionSpeed
+speedLimitedByWorkLeft cSpeed bConst cost =
     let
         bioSpeed =  if (RawResource $ buildingConstructionProgressBiologicals bConst) + ccdBiologicalCost cSpeed > ccdBiologicalCost cost
                     then ccdBiologicalCost cost - (RawResource $ buildingConstructionProgressBiologicals bConst)
@@ -136,8 +136,8 @@ workOnConstruction speed bConsE = do
                         , BuildingConstructionProgressChemicals +=. unRawResource (ccdChemicalCost speed) ]
     return ()
 
-applyOverallSpeed :: OverallConstructionSpeed -> RawResources ConstructionSpeed -> RawResources ConstructionSpeed
-applyOverallSpeed coeffSpeed speed =
+speedLimitedByOverallSpeed :: OverallConstructionSpeed -> RawResources ConstructionSpeed -> RawResources ConstructionSpeed
+speedLimitedByOverallSpeed coeffSpeed speed =
     -- TODO: implement
     speed
 
