@@ -1,10 +1,13 @@
 module QC.Generators.Import 
-    (module QC.Generators.Database,
-     module QC.Generators.Planets,
-     module QC.Generators.StarSystems,
-     module QC.Generators.Reports) where
-    
+    ( module QC.Generators.Construction
+    , module QC.Generators.Database
+    , module QC.Generators.Planets
+    , module QC.Generators.Reports
+    , module QC.Generators.StarSystems
+    ) where
+
+import QC.Generators.Construction
 import QC.Generators.Database
 import QC.Generators.Planets
-import QC.Generators.StarSystems
 import QC.Generators.Reports
+import QC.Generators.StarSystems

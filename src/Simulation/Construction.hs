@@ -6,15 +6,16 @@
 {-# LANGUAGE InstanceSigs               #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
-module Simulation.Construction ( handleFactionConstruction, queueCostReq, planetConstructionSpeed )
+module Simulation.Construction ( handleFactionConstruction, queueCostReq, planetConstructionSpeed, speedLimitedByWorkLeft )
     where
 
 import Import
 import qualified Queries (planetConstructionQueue)
-import CustomTypes ( RawResources(..), RawResource(..), Biological, Mechanical, Chemical
-                   , ResourceCost, ConstructionSpeed, ConstructionDone, ResourcesAvailable )
+import CustomTypes ( RawResources(..), RawResource(..), ResourceCost, ConstructionSpeed
+                   , ConstructionDone, ResourcesAvailable )
 import Common (safeHead)
-import Construction (Constructable(..), constructionLeft)
+import Construction ( Constructable(..), constructionLeft, ConstructionSpeedCoeff(..)
+                    , OverallConstructionSpeed(..) )
 import MenuHelpers (getScore)
 import Buildings (BuildingInfo(..), BLevel(..), building)
 import News (buildingConstructionFinishedNews)
@@ -188,22 +189,4 @@ speedPerResource cost res =
     then NormalConstructionSpeed
     else LimitedConstructionSpeed $ fromIntegral (unRawResource res) / fromIntegral (unRawResource cost)
 
-data ConstructionSpeedCoeff t = NormalConstructionSpeed
-    | LimitedConstructionSpeed Double
-    deriving (Show, Read, Eq)
 
-instance Ord (ConstructionSpeedCoeff t) where
-    (<=) (LimitedConstructionSpeed a) NormalConstructionSpeed =
-        a <= 1.0
-    (<=) (LimitedConstructionSpeed a) (LimitedConstructionSpeed b) =
-        a <= b
-    (<=) NormalConstructionSpeed NormalConstructionSpeed = True
-    (<=) NormalConstructionSpeed (LimitedConstructionSpeed a) =
-        a >= 1.0
-
-data OverallConstructionSpeed = OverallConstructionSpeed
-    { overallSpeedBiological :: ConstructionSpeedCoeff Biological
-    , overallSpeedMechanical :: ConstructionSpeedCoeff Mechanical
-    , overallSpeedChemical :: ConstructionSpeedCoeff Chemical
-    }
-    deriving (Show, Read, Eq)

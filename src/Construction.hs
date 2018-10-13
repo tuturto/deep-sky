@@ -1,10 +1,12 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
 
-module Construction (Constructable(..), constructionLeft)
+module Construction ( Constructable(..), constructionLeft
+                    , ConstructionSpeedCoeff(..), OverallConstructionSpeed(..) )
     where
 
 import Import
-import CustomTypes (RawResources(..), RawResource(..), ConstructionDone, ResourceCost, ConstructionLeft)
+import CustomTypes ( RawResources(..), RawResource(..), ConstructionDone, ResourceCost, ConstructionLeft
+                   , Biological, Mechanical, Chemical )
 
 class Constructable a where
     cIndex :: a -> Int
@@ -24,3 +26,23 @@ constructionLeft (RawResources mechCost bioCost chemCost) (RawResources mechDone
         mechLeft = RawResource $ unRawResource mechCost - unRawResource mechDone
         bioLeft = RawResource $ unRawResource bioCost - unRawResource bioDone
         chemLeft = RawResource $ unRawResource chemCost - unRawResource chemDone
+
+data ConstructionSpeedCoeff t = NormalConstructionSpeed
+    | LimitedConstructionSpeed Double
+    deriving (Show, Read, Eq)
+
+instance Ord (ConstructionSpeedCoeff t) where
+    (<=) (LimitedConstructionSpeed a) NormalConstructionSpeed =
+        a <= 1.0
+    (<=) (LimitedConstructionSpeed a) (LimitedConstructionSpeed b) =
+        a <= b
+    (<=) NormalConstructionSpeed NormalConstructionSpeed = True
+    (<=) NormalConstructionSpeed (LimitedConstructionSpeed a) =
+        a >= 1.0
+
+data OverallConstructionSpeed = OverallConstructionSpeed
+    { overallSpeedBiological :: ConstructionSpeedCoeff Biological
+    , overallSpeedMechanical :: ConstructionSpeedCoeff Mechanical
+    , overallSpeedChemical :: ConstructionSpeedCoeff Chemical
+    }
+    deriving (Show, Read, Eq)
