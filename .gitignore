@@ -28,3 +28,4 @@ elm/planet/elm-stuff/
 static/js/shipdesigner.js
 static/js/planet.js
 static/images/*
+.hlint.yaml

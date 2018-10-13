@@ -1,0 +1,7 @@
+Construction of #{cName} has finished on planet
+<a href=@{PlanetR systemId planetId}>
+    #{pName} 
+in 
+<a href=@{StarSystemR systemId}>
+    #{sName} 
+system.

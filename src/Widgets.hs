@@ -64,6 +64,14 @@ newsContentWidget UserWrittenNews
 newsContentWidget DesignCreatedNews { designCreatedNewsName = name } = 
     $(widgetFile "widgets/news/blueprintW")
  
+newsContentWidget ConstructionFinishedNews 
+    { constructionFinishedNewsPlanetId = Just planetId
+    , constructionFinishedNewsPlanetName = Just pName 
+    , constructionFinishedNewsSystemId = systemId
+    , constructionFinishedNewsSystemName = sName
+    , constructionFinishedConstructionName = cName } =
+        $(widgetFile "widgets/news/buildingConstructionFinishedW") 
+
 newsImage :: NewsArticle -> Route App
 newsImage StarFoundNews {} = StaticR images_news_sun_png
 newsImage PlanetFoundNews {} = StaticR images_news_planet_png
@@ -76,5 +84,4 @@ newsImage UserWrittenNews { userWrittenNewsIcon = icon } =
             StaticR images_news_jubileum_png
         CatUserNews ->
             StaticR images_news_cat_png
-
-
+newsImage ConstructionFinishedNews {} = StaticR images_news_crane_png

@@ -21,6 +21,6 @@ constructionLeft :: RawResources ResourceCost -> RawResources ConstructionDone -
 constructionLeft (RawResources mechCost bioCost chemCost) (RawResources mechDone bioDone chemDone) =
     RawResources mechLeft bioLeft chemLeft
     where
-        mechLeft = RawResource $ (unRawResource mechCost) - (unRawResource mechDone)
-        bioLeft = RawResource $ (unRawResource bioCost) - (unRawResource bioDone)
-        chemLeft = RawResource $ (unRawResource chemCost) - (unRawResource chemDone)
+        mechLeft = RawResource $ unRawResource mechCost - unRawResource mechDone
+        bioLeft = RawResource $ unRawResource bioCost - unRawResource bioDone
+        chemLeft = RawResource $ unRawResource chemCost - unRawResource chemDone

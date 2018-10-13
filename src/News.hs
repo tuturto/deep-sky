@@ -6,7 +6,7 @@
 
 module News ( NewsArticle(..), parseNews, parseNewsEntity, parseNewsEntities
             , makeUserWrittenNews, makePlanetFoundNews, makeStarFoundNews
-            , makeDesignCreatedNews
+            , makeDesignCreatedNews, buildingConstructionFinishedNews
             , UserNewsIcon(..) )
     where
 
@@ -17,6 +17,7 @@ import Data.Text.Encoding (encodeUtf8Builder)
 import Data.ByteString.Builder(toLazyByteString)
 import Data.Maybe (isJust, fromJust)
 import Data.Aeson.Text (encodeToLazyText)
+import Buildings ( building, BLevel(..), BuildingInfo(..) )
 
 data NewsArticle = 
     StarFoundNews
@@ -42,6 +43,16 @@ data NewsArticle =
         { designCreatedNewsDesignId :: Key Design
         , designCreatedNewsName :: Text
         , designCreatedDate :: Int
+        }
+    | ConstructionFinishedNews
+        { constructionFinishedNewsPlanetName :: Maybe Text
+        , constructionFinishedNewsPlanetId :: Maybe (Key Planet)
+        , constructionFinishedNewsSystemName :: Text
+        , constructionFinishedNewsSystemId :: Key StarSystem
+        , constructionFinishedConstructionName :: Text
+        , constructionFinishedBuildingId :: Maybe (Key Building)
+        , constructionFinishedShipId :: Maybe (Key Ship)
+        , constructionFinishedDate :: Int
         }
 
 data UserNewsIcon =
@@ -105,5 +116,23 @@ makeDesignCreatedNews design date fId =
         dId = entityKey design
         name = designName $ entityVal design
         content = DesignCreatedNews dId name (timeCurrentTime date)
+    in
+        News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
+
+-- | Construct news entry for a finished building construction
+buildingConstructionFinishedNews :: Entity Planet -> Entity StarSystem -> Entity Building -> Time -> Key Faction -> News
+buildingConstructionFinishedNews planetE starSystemE buildingE date fId =
+    let
+        modelBuilding = building (buildingType $ entityVal buildingE) (BLevel $ buildingLevel $ entityVal buildingE)
+        content = ConstructionFinishedNews
+                    { constructionFinishedNewsPlanetName = (Just . planetName . entityVal) planetE
+                    , constructionFinishedNewsPlanetId = Just $ entityKey planetE
+                    , constructionFinishedNewsSystemName = (starSystemName . entityVal) starSystemE
+                    , constructionFinishedNewsSystemId = entityKey starSystemE
+                    , constructionFinishedConstructionName = buildingInfoName modelBuilding
+                    , constructionFinishedBuildingId = Just $ entityKey buildingE
+                    , constructionFinishedShipId = Nothing
+                    , constructionFinishedDate = timeCurrentTime date
+                    }
     in
         News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False

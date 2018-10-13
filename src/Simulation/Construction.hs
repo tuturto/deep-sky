@@ -17,6 +17,8 @@ import Common (safeHead)
 import Construction (Constructable(..), constructionLeft)
 import MenuHelpers (getScore)
 import Buildings (BuildingInfo(..), BLevel(..), building)
+import News (buildingConstructionFinishedNews)
+import Data.Maybe (fromJust)
 
 
 handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
@@ -115,7 +117,13 @@ finishConstruction fId date bConsE = do
                                 , buildingReportDate = timeCurrentTime date
                                 }
     _ <- insert report
-    -- TODO: news entry
+    -- TODO: rather messy piece, clean up this
+    planet <- get planetId
+    let starSystemId = fmap planetStarSystemId planet :: Maybe (Key StarSystem)
+    starSystem <- mapM get starSystemId
+    let news = buildingConstructionFinishedNews (Entity planetId $ fromJust planet) (Entity (fromJust starSystemId) (fromJust $ fromJust starSystem) )
+                                                (Entity bId newBuilding) date fId
+    _ <- insert news
     return ()
 
 workOnConstruction :: (PersistQueryWrite backend, 
@@ -161,7 +169,6 @@ planetConstructionSpeed _ =
 -- | Overall speed coefficient with given total cost and total resources
 --   Used to scale all construction of a faction, so they don't end up using
 --   more resources than they have
--- TODO: fix total resources to raw resources
 overallConstructionSpeed :: RawResources ResourceCost -> RawResources ResourcesAvailable -> OverallConstructionSpeed
 overallConstructionSpeed cost res =
     OverallConstructionSpeed
