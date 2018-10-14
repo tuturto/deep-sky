@@ -41,9 +41,9 @@ handleFactionConstruction date factionE = do
     let availableResources = getScore $ Just faction
     let consSpeed = overallConstructionSpeed totalCost availableResources
     _ <- updateWhere [ FactionId ==. entityKey factionE ] 
-                     [ FactionBiologicals -=. (unRawResource $ resourceScaledBySpeed (ccdBiologicalCost totalCost) (overallSpeedBiological consSpeed))
-                     , FactionMechanicals -=. (unRawResource $ resourceScaledBySpeed (ccdMechanicalCost totalCost) (overallSpeedMechanical consSpeed))
-                     , FactionChemicals -=. (unRawResource $ resourceScaledBySpeed (ccdChemicalCost totalCost) (overallSpeedChemical consSpeed))
+                     [ FactionBiologicals -=. unRawResource (resourceScaledBySpeed (ccdBiologicalCost totalCost) (overallSpeedBiological consSpeed))
+                     , FactionMechanicals -=. unRawResource (resourceScaledBySpeed (ccdMechanicalCost totalCost) (overallSpeedMechanical consSpeed))
+                     , FactionChemicals -=. unRawResource (resourceScaledBySpeed (ccdChemicalCost totalCost) (overallSpeedChemical consSpeed))
                      ]
     mapM_ (doPlanetConstruction (entityKey factionE) date consSpeed . planetAndFirstConstruction) queues
 
@@ -75,6 +75,9 @@ doPlanetConstruction fId date speed (Just planetE, Just bConsE) = do
 doPlanetConstruction _ _ _ _ = 
     return ()
 
+-- | Finish construction by removing it from construction queue, updating indecies and
+--   placing the newly constructed building on planet. Respective reports and news entries
+---  are created for the faction.
 finishConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                        MonadIO m, BaseBackend backend ~ SqlBackend) =>
                        Key Faction -> Time -> Entity BuildingConstruction -> ReaderT backend m ()
@@ -110,6 +113,7 @@ finishConstruction fId date bConsE = do
     _ <- insert news
     return ()
 
+-- | Update construction in queue by increasing its progress fields by given speed
 workOnConstruction :: (PersistQueryWrite backend, 
                       BaseBackend backend ~ SqlBackend, MonadIO m) => 
                       RawResources ConstructionSpeed -> Entity BuildingConstruction -> ReaderT backend m ()

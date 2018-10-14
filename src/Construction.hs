@@ -3,7 +3,7 @@
 module Construction ( Constructable(..), constructionLeft
                     , ConstructionSpeedCoeff(..), OverallConstructionSpeed(..)
                     , speedLimitedByOverallSpeed, resourceScaledBySpeed, constructionWillFinish 
-                    , speedLimitedByWorkLeft)
+                    , speedLimitedByWorkLeft )
     where
 
 import Import
@@ -66,7 +66,7 @@ resourceScaledBySpeed :: RawResource t -> ConstructionSpeedCoeff t -> RawResourc
 resourceScaledBySpeed res NormalConstructionSpeed =
     res
 resourceScaledBySpeed res (LimitedConstructionSpeed speed) =
-    RawResource $ floor $ (fromIntegral $ unRawResource res) * speed
+    RawResource $ floor $ fromIntegral (unRawResource res) * speed
 
 
 -- | Limit construction speed to amount that there's work left to do
