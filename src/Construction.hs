@@ -18,9 +18,10 @@ class Constructable a where
 instance Constructable BuildingConstruction where
     cIndex = buildingConstructionIndex
     cProgress a =
-        RawResources (RawResource $ buildingConstructionProgressMechanicals a)
-                     (RawResource $ buildingConstructionProgressBiologicals a)
-                     (RawResource $ buildingConstructionProgressChemicals a)
+        RawResources { ccdMechanicalCost = RawResource $ buildingConstructionProgressMechanicals a
+                     , ccdBiologicalCost = RawResource $ buildingConstructionProgressBiologicals a
+                     , ccdChemicalCost = RawResource $ buildingConstructionProgressChemicals a
+                     }
 
 -- | How much construction is there left based on total cost and construction done
 constructionLeft :: RawResources ResourceCost -> RawResources ConstructionDone -> RawResources ConstructionLeft
