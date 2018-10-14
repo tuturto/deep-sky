@@ -6,23 +6,27 @@
 {-# LANGUAGE InstanceSigs               #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
-module Simulation.Construction ( handleFactionConstruction, queueCostReq, planetConstructionSpeed, speedLimitedByWorkLeft
+module Simulation.Construction ( handleFactionConstruction, queueCostReq, planetConstructionSpeed
                                , overallConstructionSpeed )
     where
 
 import Import
 import qualified Queries (planetConstructionQueue)
 import CustomTypes ( RawResources(..), RawResource(..), ResourceCost, ConstructionSpeed
-                   , ConstructionDone, ResourcesAvailable )
+                   , ResourcesAvailable )
 import Common (safeHead)
 import Construction ( Constructable(..), constructionLeft, ConstructionSpeedCoeff(..)
-                    , OverallConstructionSpeed(..), speedLimitedByOverallSpeed, resourceScaledBySpeed )
+                    , OverallConstructionSpeed(..), speedLimitedByOverallSpeed, resourceScaledBySpeed
+                    , constructionWillFinish, speedLimitedByWorkLeft )
 import MenuHelpers (getScore)
 import Buildings (BuildingInfo(..), BLevel(..), building)
 import News (buildingConstructionFinishedNews)
 import Data.Maybe (fromJust)
 
-
+-- | Process through all construction queues of a faction and update them
+--   New buildings will be constructed when applicable, resources are spent
+--   and overall resource consumption is taken into account when selecting the speed
+--   of the construction
 handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
                               BackendCompatible SqlBackend backend,
                               PersistQueryWrite backend,
@@ -70,37 +74,6 @@ doPlanetConstruction fId date speed (Just planetE, Just bConsE) = do
     return ()
 doPlanetConstruction _ _ _ _ = 
     return ()
-
--- | Limit construction speed to amount that there's work left to do
-speedLimitedByWorkLeft :: RawResources ConstructionSpeed -> BuildingConstruction -> RawResources ResourceCost -> RawResources ConstructionSpeed
-speedLimitedByWorkLeft cSpeed bConst cost =
-    let
-        limitPerResource progress speed total =
-            if RawResource progress + speed > total
-                then total - RawResource progress
-                else speed
-        bioSpeed = limitPerResource (buildingConstructionProgressBiologicals bConst)
-                                    (ccdBiologicalCost cSpeed)
-                                    (ccdBiologicalCost cost)
-        mechSpeed = limitPerResource (buildingConstructionProgressMechanicals bConst)
-                                     (ccdMechanicalCost cSpeed)
-                                     (ccdMechanicalCost cost)
-        chemSpeed = limitPerResource (buildingConstructionProgressChemicals bConst)
-                                     (ccdChemicalCost cSpeed)
-                                     (ccdChemicalCost cost)
-    in
-        RawResources { 
-              ccdMechanicalCost = mechSpeed
-            , ccdBiologicalCost = bioSpeed
-            , ccdChemicalCost = chemSpeed
-            }
-
--- | Will construction finish based on speed, progress so far and required construction
-constructionWillFinish :: RawResources ConstructionSpeed -> RawResources ConstructionDone -> RawResources ResourceCost -> Bool
-constructionWillFinish speed progress total = 
-    ccdMechanicalCost speed >= ccdMechanicalCost total - ccdMechanicalCost progress 
-    && ccdBiologicalCost speed >= ccdBiologicalCost total - ccdBiologicalCost progress
-    && ccdChemicalCost speed >= ccdChemicalCost total - ccdChemicalCost progress
 
 finishConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                        MonadIO m, BaseBackend backend ~ SqlBackend) =>

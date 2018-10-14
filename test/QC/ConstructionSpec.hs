@@ -8,8 +8,8 @@ import Test.Hspec
 import QC.Generators.Import
 import Model
 import CustomTypes ( RawResources(..), RawResource(..) )
-import Simulation.Construction ( speedLimitedByWorkLeft, overallConstructionSpeed )
-import Construction ( ConstructionSpeedCoeff(..), OverallConstructionSpeed(..) )
+import Simulation.Construction ( overallConstructionSpeed )
+import Construction ( ConstructionSpeedCoeff(..), OverallConstructionSpeed(..), speedLimitedByWorkLeft )
 
 spec :: Spec
 spec = do
