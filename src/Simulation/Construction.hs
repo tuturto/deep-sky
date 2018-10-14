@@ -16,7 +16,7 @@ import CustomTypes ( RawResources(..), RawResource(..), ResourceCost, Constructi
                    , ConstructionDone, ResourcesAvailable )
 import Common (safeHead)
 import Construction ( Constructable(..), constructionLeft, ConstructionSpeedCoeff(..)
-                    , OverallConstructionSpeed(..) )
+                    , OverallConstructionSpeed(..), speedLimitedByOverallSpeed, resourceScaledBySpeed )
 import MenuHelpers (getScore)
 import Buildings (BuildingInfo(..), BLevel(..), building)
 import News (buildingConstructionFinishedNews)
@@ -36,6 +36,11 @@ handleFactionConstruction date factionE = do
     let totalCost = mconcat $ map (queueCostReq . toPlainObjects) queues
     let availableResources = getScore $ Just faction
     let consSpeed = overallConstructionSpeed totalCost availableResources
+    _ <- updateWhere [ FactionId ==. entityKey factionE ] 
+                     [ FactionBiologicals -=. (unRawResource $ resourceScaledBySpeed (ccdBiologicalCost totalCost) (overallSpeedBiological consSpeed))
+                     , FactionMechanicals -=. (unRawResource $ resourceScaledBySpeed (ccdMechanicalCost totalCost) (overallSpeedMechanical consSpeed))
+                     , FactionChemicals -=. (unRawResource $ resourceScaledBySpeed (ccdChemicalCost totalCost) (overallSpeedChemical consSpeed))
+                     ]
     mapM_ (doPlanetConstruction (entityKey factionE) date consSpeed . planetAndFirstConstruction) queues
 
 -- | Select construction from queue with the smallest construction index
@@ -53,7 +58,7 @@ planetAndFirstConstruction (planet, []) =
 doPlanetConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                         MonadIO m, BaseBackend backend ~ SqlBackend) =>
                         Key Faction -> Time -> OverallConstructionSpeed -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction)) 
-                            -> ReaderT backend m ()
+                        -> ReaderT backend m ()
 doPlanetConstruction fId date speed (Just planetE, Just bConsE) = do
     let bCons = entityVal bConsE
     let realSpeed = speedLimitedByOverallSpeed speed $ planetConstructionSpeed $ entityVal planetE
@@ -142,11 +147,6 @@ workOnConstruction speed bConsE = do
                         , BuildingConstructionProgressChemicals +=. unRawResource (ccdChemicalCost speed) ]
     return ()
 
-speedLimitedByOverallSpeed :: OverallConstructionSpeed -> RawResources ConstructionSpeed -> RawResources ConstructionSpeed
-speedLimitedByOverallSpeed coeffSpeed speed =
-    -- TODO: implement
-    speed
-
 -- | Turn entities into plain objects
 toPlainObjects :: (Maybe (Entity Planet), [Entity BuildingConstruction]) -> (Maybe Planet, [BuildingConstruction])
 toPlainObjects (planet, constructions) =
@@ -193,5 +193,3 @@ speedPerResource cost res =
     if res >= cost
     then NormalConstructionSpeed
     else LimitedConstructionSpeed $ fromIntegral (unRawResource res) / fromIntegral (unRawResource cost)
-
-
