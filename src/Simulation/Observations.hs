@@ -18,7 +18,7 @@ import CustomTypes
 import Report ( createPlanetReports, createStarLaneReports, createStarReports
               , CollatedPlanetReport(..), CollatedStarLaneReport(..), CollatedStarReport(..))
 import Common
-import News (makePlanetFoundNews, makeStarFoundNews)
+import News (planetFoundNews, starFoundNews)
 import Data.Maybe (fromJust)
 
 -- | Generate reports for all kinds of things faction can currently observe
@@ -121,7 +121,7 @@ observeTarget date faction (Just (OCStar starEntity _ observationType)) _ = do
     system <- get (starStarSystemId star)
     let news = case observationType of
                 NewObservation ->
-                    Just $ makeStarFoundNews star (Entity (starStarSystemId star) (fromJust system)) date (entityKey faction)
+                    Just $ starFoundNews star (Entity (starStarSystemId star) (fromJust system)) date (entityKey faction)
                 UpdatedObservation ->
                     Nothing
     _ <- mapM insert news
@@ -137,7 +137,7 @@ observeTarget date faction (Just (OCPlanet planetEntity _ observationType)) _ = 
     system <- get (planetStarSystemId planet)
     let news = case observationType of
                 NewObservation ->
-                    Just $ makePlanetFoundNews planetEntity (fromJust system) date (entityKey faction)
+                    Just $ planetFoundNews planetEntity (fromJust system) date (entityKey faction)
                 UpdatedObservation ->
                     Nothing
     _ <- mapM insert news

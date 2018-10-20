@@ -9,7 +9,7 @@ module Handler.Messages ( getMessageListR, postNewMessageR, getMessageDeleteR )
 
 import Import
 import Widgets (newsArticleWidget)
-import News (parseNewsEntities, UserNewsIcon(..), makeUserWrittenNews)
+import News (parseNewsEntities, UserNewsIcon(..), userWrittenNews)
 import Yesod.Form.Bootstrap3
 import MenuHelpers (starDate)
 import Common (requireFaction)
@@ -47,7 +47,7 @@ postNewMessageR = do
                 FormSuccess x -> return x
                 _ -> redirect FactionR
     date <- runDB starDate
-    _ <- runDB $ insert $ makeUserWrittenNews (nfContent res) (nfIcon res) date user
+    _ <- runDB $ insert $ userWrittenNews (nfContent res) (nfIcon res) date user
     redirect $ MessageListR 1
 
 getMessageDeleteR :: Key News -> Handler Html

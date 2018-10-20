@@ -14,7 +14,7 @@ import Data.Maybe (fromJust)
 import Dto.Ship
 import Import
 import Components
-import News (makeDesignCreatedNews)
+import News (designCreatedNews)
 import MenuHelpers (starDate)
 import Common (apiRequireFaction)
 
@@ -96,7 +96,7 @@ saveDesign date design fId = do
     newDesign <- get newId
     newComponents <- selectList [ PlannedComponentDesignId ==. newId ] []
     let x = designToDesignDto (newId, fromJust newDesign) newComponents
-    _ <- insert $ makeDesignCreatedNews (Entity newId $ fromJust newDesign) date fId
+    _ <- insert $ designCreatedNews (Entity newId $ fromJust newDesign) date fId
     return x
 
 updateDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
