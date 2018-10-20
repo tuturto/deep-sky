@@ -19,6 +19,7 @@ import Data.ByteString.Builder(toLazyByteString)
 import Data.Maybe (isJust, fromJust)
 import Data.Aeson.Text (encodeToLazyText)
 import Buildings ( building, BLevel(..), BuildingInfo(..) )
+import Yesod.Form.Bootstrap3
 
 data NewsArticle = 
     StarFoundNews
@@ -55,6 +56,44 @@ data NewsArticle =
         , constructionFinishedShipId :: Maybe (Key Ship)
         , constructionFinishedDate :: Int
         }
+    | KragiiWormsNews
+        { kragiiWormsNewsPlanetName :: Maybe Text
+        , kragiiWormsNewsPlanetId :: Maybe (Key Planet)
+        , kragiiWormsDate :: Int
+        }
+    | CropsNews
+        { cropsNewsPlanetName :: Maybe Text
+        , cropsDate :: Int
+        }
+
+data NewsForm = KragiiWormsNewsForm KragiiWormsNewsOption
+    | CropsNewsForm CropsNewsOption
+    deriving (Show, Read, Eq)
+
+data KragiiWormsNewsOption = AvoidKragiiWorms
+    | AttackKragiiWorms
+    deriving (Show, Read, Eq)
+
+data CropsNewsOption = HarvestCrops
+    | WaitCropsToGrow
+    deriving (Show, Read, Eq)
+
+newsAForm :: NewsArticle -> Maybe (AForm Handler NewsForm)
+newsAForm KragiiWormsNews {} = Just $ KragiiWormsNewsForm
+    <$> areq (radioFieldList entries) "Choice: " Nothing
+    where
+        entries :: [(Text, KragiiWormsNewsOption)]
+        entries = [ ("Avoid kragii worms", AvoidKragiiWorms)
+                  , ("Attack kragii worms", AttackKragiiWorms)
+                  ]
+newsAForm CropsNews {} = Just $ CropsNewsForm
+    <$> areq (radioFieldList entries) "Choice: " Nothing
+    where
+        entries :: [(Text, CropsNewsOption)]
+        entries = [ ("Harvest crops", HarvestCrops)
+                  , ("Wait crops to grow more", WaitCropsToGrow)
+                  ]
+newsAForm _ = Nothing
 
 data UserNewsIcon =
     GenericUserNews
