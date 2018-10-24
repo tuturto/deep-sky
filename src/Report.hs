@@ -4,6 +4,7 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FunctionalDependencies     #-}
 
 module Report ( createPlanetReports, createStarReports, createStarLaneReports, createSystemReport
               , collateReports, collateReport, spectralInfo
@@ -19,7 +20,7 @@ import Data.Aeson.TH
 import Data.Monoid ()
 
 -- | Class to transform a report stored in db to respective collated report
-class ReportTransform a b where
+class ReportTransform a b | a -> b where
     fromReport :: a -> b
 
 -- | Class to indicate if two reports are about same entity
@@ -96,6 +97,20 @@ instance Grouped StarReport where
     sameGroup a b = 
         starReportStarId a == starReportStarId b
 
+instance ToJSON CollatedStarReport where
+  toJSON (CollatedStarReport { csrStarId = rId
+                             , csrSystemId = rSId
+                             , csrName = rName
+                             , csrSpectralType = rSpectral 
+                             , csrLuminosityClass = rLuminosity
+                             , csrDate = rDate }) = 
+    object [ "id" .= rId
+           , "systemid" .= rSId
+           , "name" .= rName
+           , "spectraltype" .= rSpectral
+           , "luminosityclass" .= rLuminosity
+           , "date" .= rDate ] 
+
 data CollatedPlanetReport = CollatedPlanetReport 
     { cprPlanetId :: Key Planet
     , cprSystemId :: Key StarSystem
@@ -132,6 +147,22 @@ instance Grouped PlanetReport where
     sameGroup a b = 
         planetReportPlanetId a == planetReportPlanetId b
 
+instance ToJSON CollatedPlanetReport where
+  toJSON (CollatedPlanetReport { cprPlanetId = rId
+                               , cprSystemId = rSId
+                               , cprOwnerId = rOId
+                               , cprName = rName
+                               , cprPosition = rPosition 
+                               , cprGravity = rGravity
+                               , cprDate = rDate }) = 
+    object [ "id" .= rId
+           , "systemid" .= rSId
+           , "name" .= rName
+           , "position" .= rPosition
+           , "gravity" .= rGravity
+           , "ownerid" .= rOId
+           , "date" .= rDate ] 
+
 data CollatedPopulationReport = CollatedPopulationReport
     { cpopPlanetId   :: Key Planet
     , cpopRaceId     :: Maybe (Key Race)
@@ -139,6 +170,19 @@ data CollatedPopulationReport = CollatedPopulationReport
     , cpopPopulation :: Maybe Int
     , cpopDate       :: Int
     } deriving Show
+
+instance ToJSON CollatedPopulationReport where
+    toJSON (CollatedPopulationReport { cpopPlanetId = pId
+                                     , cpopRaceId = rRaceId
+                                     , cpopRace = rRace
+                                     , cpopPopulation = rPop
+                                     , cpopDate = rDate }) = 
+        object [ "planetid" .= pId
+               , "raceid" .= rRaceId
+               , "race" .= rRace
+               , "inhabitants" .= rPop
+               , "date" .= rDate ] 
+
 
 instance Semigroup CollatedPopulationReport where
     (<>) a b = CollatedPopulationReport (cpopPlanetId a)
@@ -256,6 +300,21 @@ instance Grouped BuildingReport where
     sameGroup a b =
         buildingReportBuildingId a == buildingReportBuildingId b
 
+instance ToJSON CollatedBuildingReport where
+  toJSON (CollatedBuildingReport { cbrBuildingId = bId
+                                 , cbrPlanetId = pId
+                                 , cbrType = rType
+                                 , cbrLevel = rLevel
+                                 , cbrDamage = rDamage
+                                 , cbrDate = rDate
+                                 }) = 
+    object [ "id" .= bId
+           , "planetid" .= pId
+           , "type" .= rType
+           , "level" .= rLevel
+           , "damage" .= rDamage
+           , "date" .= rDate ] 
+
 spectralInfo :: Maybe SpectralType -> Maybe LuminosityClass -> Text
 spectralInfo Nothing Nothing     = ""
 spectralInfo (Just st) Nothing   = pack $ show st
@@ -325,8 +384,13 @@ rearrangeStarLanes systemId = map arrangeStarLane
                                                                     (cslStarSystemName1 starLane)
                                                                     (cslDate starLane)
 
-$(deriveJSON defaultOptions {fieldLabelModifier = drop 4} ''CollatedStarSystemReport)
-$(deriveJSON defaultOptions {fieldLabelModifier = drop 3} ''CollatedPlanetReport)
-$(deriveJSON defaultOptions {fieldLabelModifier = drop 3} ''CollatedBaseReport)
-$(deriveJSON defaultOptions {fieldLabelModifier = drop 3} ''CollatedBuildingReport)
-$(deriveJSON defaultOptions {fieldLabelModifier = drop 4} ''CollatedPopulationReport)
+instance ToJSON CollatedStarSystemReport where
+  toJSON (CollatedStarSystemReport { cssrSystemId = rId
+                                   , cssrName = rName
+                                   , cssrLocation = rLocation
+                                   , cssrDate = rDate }) = 
+    object [ "id" .= rId
+           , "name" .= rName
+           , "location" .= rLocation
+           , "date" .= rDate ] 
+

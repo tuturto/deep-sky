@@ -8,6 +8,8 @@ module Handler.Common where
 
 import Data.FileEmbed (embedFile)
 import Import
+import MenuHelpers ( starDate, getScore )
+import Common ( apiRequireFaction )
 
 -- These handlers embed files in the executable at compile time to avoid a
 -- runtime dependency, and for efficiency.
@@ -20,3 +22,17 @@ getFaviconR = do cacheSeconds $ 60 * 60 * 24 * 30 -- cache for a month
 getRobotsR :: Handler TypedContent
 getRobotsR = return $ TypedContent typePlain
                     $ toContent $(embedFile "config/robots.txt")
+
+-- | API for loading current star date
+getApiStarDateR :: Handler Value
+getApiStarDateR = do
+    currentDate <- runDB starDate
+    return $ toJSON currentDate
+
+-- | API for loading currently available resources
+getApiResourcesR :: Handler Value
+getApiResourcesR = do
+    (_, _, fId) <- apiRequireFaction
+    faction <- runDB $ get fId
+    let score = getScore faction
+    return $ toJSON score

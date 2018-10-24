@@ -11,7 +11,8 @@ module Components where
 
 import Data.Aeson (object, (.=), ToJSON(..))
 import Data.Aeson.TH 
-import CustomTypes (RawResources(..), RawResource(..), ComponentSlot(..), ResourceCost)
+import CustomTypes (ComponentSlot(..))
+import Resources (RawResources(..), RawResource(..), ResourceCost)
 import Database.Persist.TH
 import ClassyPrelude.Yesod   as Import
 

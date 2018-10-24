@@ -2,6 +2,15 @@
     font-weight: bold;
 }
 
+.info-panel-header {
+    font-weight: bold;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    margin-left: 0px;
+    margin-right: 0px;
+    background:#9292f7;
+}
+
 .title-left {
     font-weight: bold;
     border-top-right-radius: 10px;
@@ -66,6 +75,10 @@
 .news-icon {
     padding-right: 0px;
     margin-right: 0px;
+}
+
+.small-space-left {
+    padding-left: 5px;
 }
 
 .space-left {

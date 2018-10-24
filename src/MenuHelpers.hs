@@ -14,6 +14,7 @@ import Import.NoFoundation
 import Database.Persist.Sql (toSqlKey)
 import CustomTypes
 import Text.Printf (printf)
+import Resources (RawResources(..), ResourcesAvailable(..), RawResource(..))
 
 starDate :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistQueryRead backend) =>

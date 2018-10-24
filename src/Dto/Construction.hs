@@ -9,7 +9,8 @@ module Dto.Construction
   , constructionIndex )
   where
 
-import CustomTypes (buildingTypeName, ShipType(..), BuildingType(..), RawResources(..), RawResource(..), ConstructionLeft)
+import CustomTypes (buildingTypeName, ShipType(..), BuildingType(..))
+import Resources (RawResources(..), RawResource(..), ConstructionLeft)
 import Common (DtoTransform(..))
 import Buildings (building, BLevel(..), buildingInfoCost)
 import Data.Aeson (object, (.=))

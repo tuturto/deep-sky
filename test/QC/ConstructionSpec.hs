@@ -7,7 +7,7 @@ import Test.Hspec
 
 import QC.Generators.Import
 import Model
-import CustomTypes ( RawResources(..), RawResource(..) )
+import Resources ( RawResources(..), RawResource(..) )
 import Simulation.Construction ( overallConstructionSpeed )
 import Construction ( ConstructionSpeedCoeff(..), OverallConstructionSpeed(..), speedLimitedByWorkLeft )
 

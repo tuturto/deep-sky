@@ -7,8 +7,9 @@ import Test.QuickCheck.Gen
 import Test.QuickCheck.Instances()
 import QC.Generators.Database ( randomPlanetKey )
 
-import CustomTypes ( RawResources(..), RawResource(..), ResourceCost, ConstructionSpeed, BuildingType(..)
-                   , ResourcesAvailable )
+import CustomTypes ( BuildingType(..) )
+import Resources ( RawResources(..), RawResource(..), ResourceCost, ConstructionSpeed
+                 , ResourcesAvailable )
 import Buildings ( building, BuildingInfo(..), BLevel(..) )
 import Model
 

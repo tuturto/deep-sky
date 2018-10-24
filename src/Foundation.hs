@@ -16,7 +16,7 @@ import Text.Hamlet          (hamletFile)
 import Text.Jasmine         (minifym)
 import Control.Monad.Logger (LogSource)
 import MenuHelpers
-import CustomTypes (RawResources(..), RawResource(..))
+import Resources (RawResources(..), RawResource(..))
 
 -- Used only when in "auth-dummy-login" setting is enabled.
 import Yesod.Auth.Dummy
@@ -220,14 +220,17 @@ instance Yesod App where
     isAuthorized (StaticR _) _       = return Authorized
 
     -- Routes requiring authentication
+    isAuthorized ApiStarDateR _       = isAuthenticated
+    isAuthorized ApiResourcesR _      = isAuthenticated
     isAuthorized ProfileR _           = isAuthenticated
     isAuthorized FactionR _           = isAuthenticated
+    isAuthorized NewHomeR _           = isAuthenticated
     -- Routes requiring faction membership
     isAuthorized StarSystemsR _       = isInFaction
     isAuthorized (StarSystemR _) _    = isInFaction
-    isAuthorized PlanetR {} _       = isInFaction
+    isAuthorized PlanetR {} _         = isInFaction
     isAuthorized BasesR _             = isInFaction
-    isAuthorized BaseR {} _         = isInFaction
+    isAuthorized BaseR {} _           = isInFaction
     isAuthorized ResearchR _          = isInFaction
     isAuthorized FleetR _             = isInFaction
     isAuthorized DesignerR _          = isInFaction
@@ -248,12 +251,14 @@ instance Yesod App where
 
     -- API routes
     isAuthorized ApiStarSystemsR _                  = return Authorized
+    isAuthorized ApiStarsR _                        = return Authorized
     isAuthorized ApiComponentsR _                   = return Authorized
     isAuthorized ApiChassisR _                      = return Authorized
     isAuthorized ApiDesignR _                       = return Authorized
     isAuthorized (ApiDesignIdR _) _                 = return Authorized
     isAuthorized ApiBuildingsR _                    = return Authorized
-    isAuthorized (ApiPlanetR _) _                   = return Authorized
+    isAuthorized ApiAllPlanetsR _                   = return Authorized
+    isAuthorized (ApiPlanetR _) _                   = return Authorized    
     isAuthorized (ApiPlanetBuildingsR _) _          = return Authorized
     isAuthorized (ApiPlanetPopulationR _) _         = return Authorized
     isAuthorized (ApiPlanetConstQueueR _) _         = return Authorized

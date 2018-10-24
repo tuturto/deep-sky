@@ -7,7 +7,8 @@
 module Buildings where
 
 import Data.Aeson (object, (.=), ToJSON(..))
-import CustomTypes (RawResources(..), BuildingType(..), RawResource(..), ResourceCost)
+import CustomTypes (BuildingType(..))
+import Resources (RawResources(..), RawResource(..), ResourceCost)
 import ClassyPrelude.Yesod   as Import
 
 -- Types

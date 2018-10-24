@@ -7,8 +7,8 @@ module Construction ( Constructable(..), constructionLeft
     where
 
 import Import
-import CustomTypes ( RawResources(..), RawResource(..), ConstructionDone, ResourceCost, ConstructionLeft
-                   , Biological, Mechanical, Chemical, ConstructionSpeed )
+import Resources ( RawResources(..), RawResource(..), ConstructionDone, ResourceCost, ConstructionLeft
+                 , Biological, Mechanical, Chemical, ConstructionSpeed )
 
 -- | Object that can be placed in construction queue
 class Constructable a where

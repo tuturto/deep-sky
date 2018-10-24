@@ -25,3 +25,11 @@ getHomeR =
     defaultLayout $ do
         setTitle "Deep sky"
         $(widgetFile "homepage")
+
+getNewHomeR :: Handler Html
+getNewHomeR =
+    defaultLayout $ do
+        setTitle "Deep Sky - New Home"
+        addScript $ StaticR js_client_js
+        addStylesheet $ StaticR css_site_css
+        $(widgetFile "newhome")
