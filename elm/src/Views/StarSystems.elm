@@ -31,11 +31,8 @@ page model =
                 |> andThen (\x -> Just <| List.map systemRow x)
                 |> withDefault []
     in
-    div [ class "container" ]
-        [ div [ class "row" ] <|
-            header
-                :: data
-        ]
+    div []
+        (header :: data)
 
 
 init : Model -> Cmd Msg
