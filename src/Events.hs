@@ -5,11 +5,11 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-module Events ( SpecialEvent(..) )
+module Events ( SpecialEvent(..), KragiiWormsEvent(..) )
     where
 
 import Import
-import Data.Aeson.TH 
+import Data.Aeson.TH
 
 data UserOption a = UserOption a Text
     deriving (Show, Read, Eq)
@@ -17,7 +17,7 @@ data UserOption a = UserOption a Text
 data UserChoice = NoUserChoice
     | UserChoice Int
     deriving (Show, Read, Eq)
-    
+
 class SpecialEvent a b | a -> b where
     eventDescription :: a -> WidgetFor App ()
     eventOptions :: a -> [UserOption b]
@@ -42,7 +42,7 @@ instance SpecialEvent KragiiWormsEvent KragiiWormsChoice where
         { kragiiWormsPlanetId = planetId
         , kragiiWormsPlanetName = pName
         , kragiiWormsSystemId = systemId
-        , kragiiWormsSystemName = sName } = 
+        , kragiiWormsSystemName = sName } =
             $(widgetFile "widgets/news/planetFoundW")
 
     eventOptions _ = [ UserOption EvadeWorms "Avoid the worms"
@@ -50,10 +50,10 @@ instance SpecialEvent KragiiWormsEvent KragiiWormsChoice where
                      , UserOption TameWorms "Try and tame them"
                      ]
 
-    resolveChoice KragiiWormsEvent {} choice = 
+    resolveChoice KragiiWormsEvent {} _ =
         ()
 
-    resolveNoChoice KragiiWormsEvent {} = 
+    resolveNoChoice KragiiWormsEvent {} =
         ()
 
 

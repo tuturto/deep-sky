@@ -11,6 +11,7 @@ module Api.Common exposing
     , resourcesEncoder
     , starDateCmd
     , starDateDecoder
+    , starDateEncoder
     )
 
 {-| Basic building blocs for accessing server API
@@ -132,6 +133,13 @@ starDateDecoder : Decode.Decoder StarDate
 starDateDecoder =
     succeed StarDate
         |> andMap int
+
+
+{-| Encode StarDate
+-}
+starDateEncoder : StarDate -> Encode.Value
+starDateEncoder (StarDate x) =
+    Encode.int x
 
 
 bioResourceDecoder : Decode.Decoder BioResource

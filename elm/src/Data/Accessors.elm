@@ -1,14 +1,21 @@
 module Data.Accessors exposing
-    ( availableBuildingsA
+    ( activeUserIconA
+    , availableBuildingsA
     , buildingSearchTextA
     , buildingsA
     , buildingsStatusA
     , constructionStatusA
     , constructionsA
+    , currentPageA
     , errorsA
+    , iconsA
     , indexA
     , landedShipsStatusA
+    , messagesRA
+    , newsA
+    , newsPanelStatusA
     , orbitingShipsStatusA
+    , pageSizeA
     , planetDetailsStatusA
     , planetRA
     , planetsA
@@ -21,9 +28,74 @@ module Data.Accessors exposing
     , starSystemsRA
     , starsA
     , systemDetailsStatusA
+    , userEntryA
+    , userEntryStatusA
     )
 
 import Accessors exposing (Relation, makeOneToOne)
+
+
+activeUserIconA : Relation field sub wrap -> Relation { rec | activeUserIcon : field } sub wrap
+activeUserIconA =
+    makeOneToOne
+        .activeUserIcon
+        (\change rec -> { rec | activeUserIcon = change rec.activeUserIcon })
+
+
+iconsA : Relation field sub wrap -> Relation { rec | icons : field } sub wrap
+iconsA =
+    makeOneToOne
+        .icons
+        (\change rec -> { rec | icons = change rec.icons })
+
+
+pageSizeA : Relation field sub wrap -> Relation { rec | pageSize : field } sub wrap
+pageSizeA =
+    makeOneToOne
+        .pageSize
+        (\change rec -> { rec | pageSize = change rec.pageSize })
+
+
+userEntryA : Relation field sub wrap -> Relation { rec | userEntry : field } sub wrap
+userEntryA =
+    makeOneToOne
+        .userEntry
+        (\change rec -> { rec | userEntry = change rec.userEntry })
+
+
+userEntryStatusA : Relation field sub wrap -> Relation { rec | userEntryStatus : field } sub wrap
+userEntryStatusA =
+    makeOneToOne
+        .userEntryStatus
+        (\change rec -> { rec | userEntryStatus = change rec.userEntryStatus })
+
+
+newsPanelStatusA : Relation field sub wrap -> Relation { rec | newsPanelStatus : field } sub wrap
+newsPanelStatusA =
+    makeOneToOne
+        .newsPanelStatus
+        (\change rec -> { rec | newsPanelStatus = change rec.newsPanelStatus })
+
+
+currentPageA : Relation field sub wrap -> Relation { rec | currentPage : field } sub wrap
+currentPageA =
+    makeOneToOne
+        .currentPage
+        (\change rec -> { rec | currentPage = change rec.currentPage })
+
+
+messagesRA : Relation field sub wrap -> Relation { rec | messagesR : field } sub wrap
+messagesRA =
+    makeOneToOne
+        .messagesR
+        (\change rec -> { rec | messagesR = change rec.messagesR })
+
+
+newsA : Relation field sub wrap -> Relation { rec | news : field } sub wrap
+newsA =
+    makeOneToOne
+        .news
+        (\change rec -> { rec | news = change rec.news })
 
 
 buildingSearchTextA : Relation field sub wrap -> Relation { rec | buildingSearchText : field } sub wrap

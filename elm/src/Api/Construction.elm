@@ -1,5 +1,6 @@
 module Api.Construction exposing
     ( availableBuildingsCmd
+    , constructionIdDecoder
     , constructionsCmd
     , deleteConstructionCmd
     , getAvailableBuildingsCmd

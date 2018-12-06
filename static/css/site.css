@@ -1,4 +1,4 @@
-.design-panel-title {    
+.design-panel-title {
     font-weight: bold;
 }
 
@@ -84,4 +84,57 @@
 .space-left {
     padding-left: 10px;
     margin-left: 10px;
+}
+
+.news-icon {
+    width: 100px;
+    height: 100px;
+}
+
+.news-title {
+    padding: 8px 15px;
+    margin-bottom: 10px;
+    list-style: none;
+    background-color: #ecf0f1;
+    border-radius: 4px;
+  }
+
+  .news-title > li {
+    display: inline-block;
+  }
+
+  .news-title > li + li:before {
+    content: "-\00a0";
+    padding: 0 5px;
+    color: #cccccc;
+  }
+
+.news-title-button {
+    padding: 8px 15px;
+    margin-bottom: 10px;
+}
+
+.user-news-input {
+    width: 100%;
+    resize: none;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.news-icon-thumbnail {
+    width: 50px;
+    height: 50px;
+    margin-top: 5px;
+    margin-left: 5px;
+    padding-top: 5px;
+    padding: 5px;
+}
+
+.news-icon-thumbnail-active {
+    width: 50px;
+    height: 50px;
+    background:#9292f7;
+    margin-top: 5px;
+    margin-left: 5px;
+    padding: 5px;
 }

@@ -90,7 +90,8 @@ import Url exposing (Url)
 import ViewModels.Planet exposing (PlanetRMsg(..), PlanetViewModel)
 import Views.Helpers
     exposing
-        ( biologicalsToText
+        ( PanelSizing(..)
+        , biologicalsToText
         , chemicalsToText
         , href
         , infoPanel
@@ -104,7 +105,7 @@ import Views.Helpers
 -}
 page : StarSystemId -> PlanetId -> Model -> Html Msg
 page systemId planetId model =
-    div [] <| twinPanels (leftPanel systemId planetId) (rightPanel systemId planetId) model
+    div [] <| twinPanels EqualPanels (leftPanel systemId planetId) (rightPanel systemId planetId) model
 
 
 {-| Left side panel of the page
@@ -125,23 +126,35 @@ leftPanel systemId planetId model =
             get constructionsA model
                 |> andThen (Dict.get (unPlanetId planetId))
     in
-    infoPanel "Details"
+    infoPanel
+        { title = "Details"
+        , currentStatus = model.planetR.planetDetailsStatus
+        , openingMessage = PlanetMessage <| PlanetDetailsStatusChanged InfoPanelOpen
+        , closingMessage = PlanetMessage <| PlanetDetailsStatusChanged InfoPanelClosed
+        , refreshMessage = Nothing
+        }
+        Nothing
         (planetDetails planet)
-        model.planetR.planetDetailsStatus
-        (PlanetMessage <| PlanetDetailsStatusChanged InfoPanelOpen)
-        (PlanetMessage <| PlanetDetailsStatusChanged InfoPanelClosed)
         model
-        ++ infoPanel "Population"
+        ++ infoPanel
+            { title = "Population"
+            , currentStatus = model.planetR.populationStatus
+            , openingMessage = PlanetMessage <| PopulationStatusChanged InfoPanelOpen
+            , closingMessage = PlanetMessage <| PopulationStatusChanged InfoPanelClosed
+            , refreshMessage = Nothing
+            }
+            Nothing
             (populationDetails population)
-            model.planetR.populationStatus
-            (PlanetMessage <| PopulationStatusChanged InfoPanelOpen)
-            (PlanetMessage <| PopulationStatusChanged InfoPanelClosed)
             model
-        ++ infoPanel "Construction queue"
+        ++ infoPanel
+            { title = "Construction queue"
+            , currentStatus = model.planetR.constructionStatus
+            , openingMessage = PlanetMessage <| ConstructionStatusChanged InfoPanelOpen
+            , closingMessage = PlanetMessage <| ConstructionStatusChanged InfoPanelClosed
+            , refreshMessage = Nothing
+            }
+            Nothing
             (constructionQueue constructions)
-            model.planetR.constructionStatus
-            (PlanetMessage <| ConstructionStatusChanged InfoPanelOpen)
-            (PlanetMessage <| ConstructionStatusChanged InfoPanelClosed)
             model
 
 
@@ -154,23 +167,35 @@ rightPanel systemId planetId model =
             get buildingsA model
                 |> andThen (Dict.get (unPlanetId planetId))
     in
-    infoPanel "Buildings"
+    infoPanel
+        { title = "Buildings"
+        , currentStatus = model.planetR.buildingsStatus
+        , openingMessage = PlanetMessage <| BuildingsStatusChanged InfoPanelOpen
+        , closingMessage = PlanetMessage <| BuildingsStatusChanged InfoPanelClosed
+        , refreshMessage = Nothing
+        }
+        Nothing
         (buildingsList buildings)
-        model.planetR.buildingsStatus
-        (PlanetMessage <| BuildingsStatusChanged InfoPanelOpen)
-        (PlanetMessage <| BuildingsStatusChanged InfoPanelClosed)
         model
-        ++ infoPanel "Landed ships"
+        ++ infoPanel
+            { title = "Landed ships"
+            , currentStatus = model.planetR.landedShipsStatus
+            , openingMessage = PlanetMessage <| LandedShipsStatusChanged InfoPanelOpen
+            , closingMessage = PlanetMessage <| LandedShipsStatusChanged InfoPanelClosed
+            , refreshMessage = Nothing
+            }
+            Nothing
             (landedShips Nothing)
-            model.planetR.landedShipsStatus
-            (PlanetMessage <| LandedShipsStatusChanged InfoPanelOpen)
-            (PlanetMessage <| LandedShipsStatusChanged InfoPanelClosed)
             model
-        ++ infoPanel "Orbiting ships"
+        ++ infoPanel
+            { title = "Orbiting ships"
+            , currentStatus = model.planetR.orbitingShipsStatus
+            , openingMessage = PlanetMessage <| OrbitingShipsStatusChanged InfoPanelOpen
+            , closingMessage = PlanetMessage <| OrbitingShipsStatusChanged InfoPanelClosed
+            , refreshMessage = Nothing
+            }
+            Nothing
             (landedShips Nothing)
-            model.planetR.orbitingShipsStatus
-            (PlanetMessage <| OrbitingShipsStatusChanged InfoPanelOpen)
-            (PlanetMessage <| OrbitingShipsStatusChanged InfoPanelClosed)
             model
 
 

@@ -6,7 +6,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 
-module Handler.Construction 
+module Handler.Construction
     ( getConstructionR, getApiBuildingsR, getApiPlanetConstQueueR, getApiBuildingConstructionIdR
     , putApiBuildingConstructionIdR, deleteApiBuildingConstructionIdR, postApiBuildingConstructionR
     )
@@ -20,12 +20,15 @@ import CustomTypes (BuildingType(..))
 import Data.Aeson (ToJSON(..))
 import Dto.Construction ( buildingConstructionToDto, shipConstructionToDto, ConstructionDto(..)
                         , constructionIndex )
+import Construction ( MaybeBuildingConstruction(..) )
+
 
 getConstructionR :: Handler Html
-getConstructionR = 
+getConstructionR =
     defaultLayout $ do
         setTitle "Deep Sky - Construction"
         $(widgetFile "construction")
+
 
 -- | Retrieve list of buildings available for given faction as JSON
 --   In case multiple levels of a building are available, all are reported
@@ -42,12 +45,14 @@ getApiBuildingsR = do
                       ]
     return json
 
+
 -- | Retrieve construction queue of a given planet as JSON
 getApiPlanetConstQueueR :: Key Planet -> Handler Value
 getApiPlanetConstQueueR planetId = do
     _ <- apiRequireFaction
     constructions <- runDB $ loadPlanetConstructionQueue planetId
     return $ toJSON constructions
+
 
 -- | Retrieve details of given building construction
 getApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
@@ -58,6 +63,7 @@ getApiBuildingConstructionIdR cId = do
                         Just x -> return x
                         Nothing -> apiNotFound
     return $ toJSON construction
+
 
 -- | Create a new building construction
 --   In case this method is called to insert ship nothing will be inserted
@@ -70,6 +76,7 @@ postApiBuildingConstructionR = do
     newConstructions <- runDB $ loadPlanetConstructionQueue $ bcdtoPlanet msg
     return $ toJSON newConstructions
 
+
 -- | Update existing building construction
 --   In case this method is called to update ship construction http 400 error will be returned
 putApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
@@ -78,7 +85,7 @@ putApiBuildingConstructionIdR cId = do
     msg <- requireJsonBody
     (newIndex, oldIndex, pId) <- validatePut msg cId
     let direction = if newIndex < oldIndex
-                    then 1 
+                    then 1
                     else -1
     let upperBound = max oldIndex newIndex
     let lowerBound = min oldIndex newIndex
@@ -99,6 +106,7 @@ putApiBuildingConstructionIdR cId = do
                         loadPlanetConstructionQueue $ bcdtoPlanet msg
 
     return $ toJSON newConstructions
+
 
 -- | Delete building construction
 deleteApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
@@ -134,7 +142,8 @@ validatePut msg cId = do
          else return []
     let pId = buildingConstructionPlanetId construction
     return (newIndex, oldIndex, pId)
-    
+
+
 -- | transform building construction dto into building construction and save is into database
 createBuildingConstruction :: (PersistQueryRead backend, MonadIO m,
                                PersistStoreWrite backend, BaseBackend backend ~ SqlBackend) =>
@@ -144,7 +153,8 @@ createBuildingConstruction cDto = do
     let nextIndex = if P.length currentConstructions == 0
                         then 0
                         else P.maximum (map constructionIndex currentConstructions) + 1
-    mapM (\x -> insert x { buildingConstructionIndex = nextIndex }) $ fromDto cDto
+    mapM (\x -> insert x { buildingConstructionIndex = nextIndex }) $ unMaybeBuildingConstruction (fromDto cDto)
+
 
 -- | load construction queue of a given planet
 loadPlanetConstructionQueue :: (PersistQueryRead backend,
@@ -157,6 +167,7 @@ loadPlanetConstructionQueue planetId = do
     let ships = map shipConstructionToDto loadedShips
     let constructions = buildings ++ ships
     return constructions
+
 
 -- | Remove building construction from database and update indexes of other buildings in the queue
 removeBuildingConstruction :: (MonadIO m, PersistEntity record, PersistQueryWrite backend,
@@ -173,9 +184,10 @@ removeBuildingConstruction bId (Just buildingInfo) = do
                      , ShipConstructionIndex >. bIndex ] [ ShipConstructionIndex -=. 1 ]
     loadPlanetConstructionQueue $ buildingConstructionPlanetId buildingInfo
 
-removeBuildingConstruction _ Nothing = 
+
+removeBuildingConstruction _ Nothing =
     return []
- 
+
 -- TODO:
 -- and ships
 -- and general clean up of code

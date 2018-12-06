@@ -4,14 +4,13 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE FlexibleInstances     #-}
 
-module Dto.Construction 
+module Dto.Construction
   ( ConstructionDto(..), buildingConstructionToDto, shipConstructionToDto
   , constructionIndex )
   where
 
 import CustomTypes (buildingTypeName, ShipType(..), BuildingType(..))
 import Resources (RawResources(..), RawResource(..), ConstructionLeft)
-import Common (DtoTransform(..))
 import Buildings (building, BLevel(..), buildingInfoCost)
 import Data.Aeson (object, (.=))
 import Import
@@ -99,21 +98,3 @@ shipConstructionToDto sce =
   where
     sc = entityVal sce
     key = entityKey sce
-
-instance DtoTransform ConstructionDto (Maybe BuildingConstruction) where
-    fromDto dto = 
-        case dto of
-            BuildingConstructionDto { bcdtoIndex = bIndex
-                                    , bcdtoLevel = bLevel
-                                    , bcdtoType = bType
-                                    , bcdtoPlanet = bPlanetId
-                                    } ->
-                Just $ BuildingConstruction { buildingConstructionPlanetId = bPlanetId
-                                            , buildingConstructionIndex = bIndex
-                                            , buildingConstructionProgressBiologicals = 0
-                                            , buildingConstructionProgressMechanicals = 0
-                                            , buildingConstructionProgressChemicals = 0
-                                            , buildingConstructionType = bType
-                                            , buildingConstructionLevel = bLevel
-                                            }
-            ShipConstructionDto {} -> Nothing

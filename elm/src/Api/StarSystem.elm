@@ -1,5 +1,6 @@
 module Api.StarSystem exposing
-    ( buildingLevelDecoder
+    ( buildingIdDecoder
+    , buildingLevelDecoder
     , buildingLevelEncoder
     , buildingTypeDecoder
     , buildingTypeEncoder
@@ -22,7 +23,7 @@ module Api.StarSystem exposing
     )
 
 import Api.Common exposing (get, locationDecoder, starDateDecoder)
-import Api.Endpoints exposing (Endpoint(..), endpointToString)
+import Api.Endpoints exposing (Endpoint(..))
 import Api.User exposing (factionIdDecoder)
 import Data.Common
     exposing
@@ -152,10 +153,10 @@ starDecoder : Decode.Decoder Star
 starDecoder =
     succeed Star
         |> andMap (field "id" starIdDecoder)
-        |> andMap (field "systemid" starSystemIdDecoder)
+        |> andMap (field "systemId" starSystemIdDecoder)
         |> andMap (field "name" string)
-        |> andMap (field "spectraltype" (maybe spectralTypeDecoder))
-        |> andMap (field "luminosityclass" (maybe luminosityClassDecoder))
+        |> andMap (field "spectralType" (maybe spectralTypeDecoder))
+        |> andMap (field "luminosityClass" (maybe luminosityClassDecoder))
         |> andMap (field "date" starDateDecoder)
 
 
@@ -273,18 +274,18 @@ planetDecoder : Decode.Decoder Planet
 planetDecoder =
     succeed Planet
         |> andMap (field "id" planetIdDecoder)
-        |> andMap (field "systemid" starSystemIdDecoder)
+        |> andMap (field "systemId" starSystemIdDecoder)
         |> andMap (field "name" string)
         |> andMap (field "position" (maybe planetPositionDecoder))
         |> andMap (field "gravity" (maybe gravityDecoder))
-        |> andMap (field "ownerid" (maybe factionIdDecoder))
+        |> andMap (field "ownerId" (maybe factionIdDecoder))
         |> andMap (field "date" starDateDecoder)
 
 
 populationDecoder : Decode.Decoder Population
 populationDecoder =
     succeed Population
-        |> andMap (field "planetid" planetIdDecoder)
+        |> andMap (field "planetId" planetIdDecoder)
         |> andMap (field "race" raceDecoder)
         |> andMap (field "inhabitants" inhabitantsDecoder)
         |> andMap (field "date" starDateDecoder)
@@ -306,7 +307,7 @@ buildingDecoder : Decode.Decoder Building
 buildingDecoder =
     succeed Building
         |> andMap (field "id" buildingIdDecoder)
-        |> andMap (field "planetid" planetIdDecoder)
+        |> andMap (field "planetId" planetIdDecoder)
         |> andMap (field "type" buildingTypeDecoder)
         |> andMap (field "level" buildingLevelDecoder)
         |> andMap (field "damage" buildingDamageDecoder)

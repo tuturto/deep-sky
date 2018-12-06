@@ -3,33 +3,51 @@ module Data.Common exposing
     , BuildingId(..)
     , ChemResource(..)
     , ConstructionId(..)
+    , DesignId(..)
     , FactionId(..)
     , InfoPanelStatus(..)
     , Location(..)
     , MechResource(..)
+    , MessageId(..)
     , PlanetId(..)
     , Resources
     , Route(..)
+    , ShipId(..)
     , StarDate(..)
     , StarId(..)
     , StarSystemId(..)
+    , UserId(..)
+    , constructionIdToString
     , locationToString
+    , maxPage
+    , messageIdToString
     , planetIdToString
     , routeToString
+    , triple
     , unBio
     , unBuildingId
     , unChem
     , unConstructionId
+    , unDesignId
     , unFactionId
     , unMech
+    , unMessageId
     , unPlanetId
+    , unShipId
+    , unStarDate
     , unStarId
     , unStarSystemId
+    , unUserId
     )
 
 
 type StarDate
     = StarDate Int
+
+
+unStarDate : StarDate -> Int
+unStarDate (StarDate x) =
+    x
 
 
 type BioResource
@@ -125,6 +143,11 @@ unConstructionId (ConstructionId cId) =
     cId
 
 
+constructionIdToString : ConstructionId -> String
+constructionIdToString (ConstructionId cId) =
+    String.fromInt cId
+
+
 unStarSystemId : StarSystemId -> Int
 unStarSystemId (StarSystemId sId) =
     sId
@@ -196,3 +219,71 @@ routeToString route =
 type InfoPanelStatus
     = InfoPanelOpen
     | InfoPanelClosed
+
+
+type UserId
+    = UserId Int
+
+
+unUserId : UserId -> Int
+unUserId (UserId x) =
+    x
+
+
+type DesignId
+    = DesignId Int
+
+
+unDesignId : DesignId -> Int
+unDesignId (DesignId x) =
+    x
+
+
+type ShipId
+    = ShipId Int
+
+
+unShipId : ShipId -> Int
+unShipId (ShipId x) =
+    x
+
+
+type MessageId
+    = MessageId Int
+
+
+unMessageId : MessageId -> Int
+unMessageId (MessageId x) =
+    x
+
+
+messageIdToString : MessageId -> String
+messageIdToString (MessageId x) =
+    String.fromInt x
+
+
+triple : a -> b -> c -> ( a, b, c )
+triple a b c =
+    ( a, b, c )
+
+
+{-| Given a list and page size, determine number of last page
+First page number is considered to be 0
+-}
+maxPage : Int -> List a -> Int
+maxPage pageSize coll =
+    let
+        listLength =
+            List.length coll
+
+        pageCount =
+            listLength // pageSize
+
+        lastPageCorrection =
+            if remainderBy pageSize listLength == 0 && pageCount > 0 then
+                -1
+
+            else
+                0
+    in
+    pageCount + lastPageCorrection

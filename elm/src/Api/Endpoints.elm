@@ -2,9 +2,11 @@ module Api.Endpoints exposing (Endpoint(..), endpointToString)
 
 import Data.Common
     exposing
-        ( PlanetId
+        ( MessageId
+        , PlanetId
+        , constructionIdToString
+        , messageIdToString
         , planetIdToString
-        , unConstructionId
         )
 import Data.Construction exposing (Construction(..))
 
@@ -21,6 +23,9 @@ type Endpoint
     | ApiConstruction Construction
     | ApiBuildingConstruction
     | ApiAvailableBuildings
+    | ApiMessageList
+    | ApiSingleMessage MessageId
+    | ApiIcon
 
 
 endpointToString : Endpoint -> String
@@ -53,13 +58,22 @@ endpointToString endpoint =
         ApiConstruction construction ->
             case construction of
                 BuildingConstruction data ->
-                    "/api/construction/building/" ++ (String.fromInt <| unConstructionId data.id)
+                    "/api/construction/building/" ++ constructionIdToString data.id
 
                 ShipConstruction data ->
-                    "/api/construction/ship/" ++ (String.fromInt <| unConstructionId data.id)
+                    "/api/construction/ship/" ++ constructionIdToString data.id
 
         ApiBuildingConstruction ->
             "/api/construction/building"
 
         ApiAvailableBuildings ->
             "/api/construction/buildings"
+
+        ApiMessageList ->
+            "/api/message"
+
+        ApiSingleMessage messageId ->
+            "/api/message/" ++ messageIdToString messageId
+
+        ApiIcon ->
+            "/api/icon"

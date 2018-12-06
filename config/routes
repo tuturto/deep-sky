@@ -29,9 +29,7 @@
 
 /faction                             FactionR            GET POST
 
-/message/#Int                        MessageListR        GET
-/newmessage                          NewMessageR         POST
-/deletemessage/#NewsId               MessageDeleteR      GET
+/message                             MessageR            GET
 
 /api/stardate                                       ApiStarDateR                    GET
 /api/resources                                      ApiResourcesR                   GET
@@ -45,6 +43,10 @@
 /api/construction/building/#BuildingConstructionId  ApiBuildingConstructionIdR      GET PUT DELETE
 -- /api/construction/ship                              ApiShipConstructionR            POST
 -- /api/construction/ship/#ShipConstructionId          ApiShipConstructionIdR          GET PUT DELETE
+
+/api/message                                        ApiMessageR                     GET POST
+/api/message/#NewsId                                ApiMessageIdR                   DELETE
+/api/icon                                           ApiMessageIcons                 GET
 
 /api/construction/buildings                         ApiBuildingsR                   GET
 /api/construction/planet/#PlanetId                  ApiPlanetConstQueueR            GET

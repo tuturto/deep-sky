@@ -13,6 +13,8 @@ import Data.Accessors
         , buildingsA
         , constructionsA
         , errorsA
+        , iconsA
+        , newsA
         , planetsA
         , populationsA
         , starSystemsA
@@ -45,6 +47,7 @@ import List
 import Maybe.Extra exposing (isJust)
 import Navigation exposing (parseLocation)
 import Url exposing (Url)
+import ViewModels.Messages exposing (MessagesRMsg(..))
 import ViewModels.Planet exposing (PlanetRMsg(..))
 import ViewModels.StarSystem exposing (StarSystemRMsg(..))
 import Views.Admin
@@ -97,8 +100,11 @@ init flags url key =
             , buildings = Nothing
             , constructions = Nothing
             , availableBuildings = Nothing
+            , news = Nothing
+            , icons = Nothing
             , starSystemsR = ViewModels.StarSystem.init
             , planetR = ViewModels.Planet.init
+            , messagesR = ViewModels.Messages.init
             , errors = []
             }
     in
@@ -142,6 +148,9 @@ update msg model =
 
         PlanetMessage message ->
             Views.Planet.update message model
+
+        NewsMessage message ->
+            Views.Messages.update message model
 
 
 {-| Handle messages related to API calls
@@ -250,6 +259,28 @@ handleApiMsg msg model =
         AvailableBuildingsReceived (Err err) ->
             ( set availableBuildingsA Nothing model
                 |> over errorsA (\errors -> error err "Failed to load available buildings" :: errors)
+            , Cmd.none
+            )
+
+        NewsReceived (Ok news) ->
+            ( set newsA (Just news) model
+            , Cmd.none
+            )
+
+        NewsReceived (Err err) ->
+            ( set newsA Nothing model
+                |> over errorsA (\errors -> error err "Failed to load recent news" :: errors)
+            , Cmd.none
+            )
+
+        IconsReceived (Ok icons) ->
+            ( set iconsA (Just icons) model
+            , Cmd.none
+            )
+
+        IconsReceived (Err err) ->
+            ( set iconsA Nothing model
+                |> over errorsA (\errors -> error err "Failed to load user icons" :: errors)
             , Cmd.none
             )
 

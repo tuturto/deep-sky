@@ -159,7 +159,7 @@ instance Yesod App where
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Messages"
-                    , menuItemRoute = MessageListR 1
+                    , menuItemRoute = MessageR
                     , menuItemAccessCallback = isJust mfaction
                     }
                 , NavbarRight $ MenuItem
@@ -225,6 +225,7 @@ instance Yesod App where
     isAuthorized ProfileR _           = isAuthenticated
     isAuthorized FactionR _           = isAuthenticated
     isAuthorized NewHomeR _           = isAuthenticated
+    isAuthorized MessageR _           = isAuthenticated
     -- Routes requiring faction membership
     isAuthorized StarSystemsR _       = isInFaction
     isAuthorized (StarSystemR _) _    = isInFaction
@@ -235,19 +236,16 @@ instance Yesod App where
     isAuthorized FleetR _             = isInFaction
     isAuthorized DesignerR _          = isInFaction
     isAuthorized ConstructionR _      = isInFaction
-    isAuthorized (MessageListR _) _   = isInFaction
-    isAuthorized NewMessageR _        = isInFaction
-    isAuthorized (MessageDeleteR _) _ = isInFaction
 
     -- Special authorization
     isAuthorized AdminPanelR _     = do
         muid <- maybeAuthId
         authorizeAdmin muid
-        
+
     isAuthorized AdminAdvanceTimeR _     = do
         muid <- maybeAuthId
         authorizeAdmin muid
-        
+
 
     -- API routes
     isAuthorized ApiStarSystemsR _                  = return Authorized
@@ -258,12 +256,15 @@ instance Yesod App where
     isAuthorized (ApiDesignIdR _) _                 = return Authorized
     isAuthorized ApiBuildingsR _                    = return Authorized
     isAuthorized ApiAllPlanetsR _                   = return Authorized
-    isAuthorized (ApiPlanetR _) _                   = return Authorized    
+    isAuthorized (ApiPlanetR _) _                   = return Authorized
     isAuthorized (ApiPlanetBuildingsR _) _          = return Authorized
     isAuthorized (ApiPlanetPopulationR _) _         = return Authorized
     isAuthorized (ApiPlanetConstQueueR _) _         = return Authorized
     isAuthorized ApiBuildingConstructionR _         = return Authorized
     isAuthorized (ApiBuildingConstructionIdR _) _   = return Authorized
+    isAuthorized ApiMessageR _                      = return Authorized
+    isAuthorized (ApiMessageIdR _) _                = return Authorized
+    isAuthorized ApiMessageIcons _                  = return Authorized
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of
@@ -338,7 +339,6 @@ instance YesodBreadcrumbs App where
         return (name, Just BasesR)
     breadcrumb AdminPanelR = return ("Admin", Just HomeR)
     breadcrumb AdminAdvanceTimeR = return ("Time management", Just AdminPanelR)
-    breadcrumb (MessageListR _) = return ("Messages", Just HomeR)
     breadcrumb _ = return ("home", Nothing)
 
 -- How to run database actions.

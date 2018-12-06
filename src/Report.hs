@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
@@ -16,7 +15,6 @@ module Report ( createPlanetReports, createStarReports, createStarLaneReports, c
 import Import
 import CustomTypes
 import Database.Persist.Sql (toSqlKey)
-import Data.Aeson.TH
 import Data.Monoid ()
 
 -- | Class to transform a report stored in db to respective collated report
@@ -27,7 +25,7 @@ class ReportTransform a b | a -> b where
 class Grouped a where
     sameGroup :: a -> a -> Bool
 
-data CollatedStarSystemReport = CollatedStarSystemReport 
+data CollatedStarSystemReport = CollatedStarSystemReport
     { cssrSystemId :: Key StarSystem
     , cssrName     :: Maybe Text
     , cssrLocation :: Coordinates
@@ -43,7 +41,7 @@ instance Semigroup CollatedStarSystemReport where
                 }
 
 instance Monoid CollatedStarSystemReport where
-    mempty = CollatedStarSystemReport 
+    mempty = CollatedStarSystemReport
                 { cssrSystemId = toSqlKey 0
                 , cssrName = Nothing
                 , cssrLocation = Coordinates 0 0
@@ -52,7 +50,7 @@ instance Monoid CollatedStarSystemReport where
 
 instance ReportTransform StarSystemReport CollatedStarSystemReport where
     fromReport report =
-        CollatedStarSystemReport 
+        CollatedStarSystemReport
             { cssrSystemId = starSystemReportStarSystemId report
             , cssrName = starSystemReportName report
             , cssrLocation = Coordinates (starSystemReportCoordX report) (starSystemReportCoordY report)
@@ -60,14 +58,14 @@ instance ReportTransform StarSystemReport CollatedStarSystemReport where
             }
 
 instance Grouped StarSystemReport where
-    sameGroup a b = 
+    sameGroup a b =
         starSystemReportStarSystemId a == starSystemReportStarSystemId b
 
 
 data CollatedStarReport = CollatedStarReport {
       csrStarId          :: Key Star
     , csrSystemId        :: Key StarSystem
-    , csrName            :: Maybe Text    
+    , csrName            :: Maybe Text
     , csrSpectralType    :: Maybe SpectralType
     , csrLuminosityClass :: Maybe LuminosityClass
     , csrDate            :: Int
@@ -94,24 +92,24 @@ instance ReportTransform StarReport CollatedStarReport where
                            (starReportDate report)
 
 instance Grouped StarReport where
-    sameGroup a b = 
+    sameGroup a b =
         starReportStarId a == starReportStarId b
 
 instance ToJSON CollatedStarReport where
-  toJSON (CollatedStarReport { csrStarId = rId
-                             , csrSystemId = rSId
-                             , csrName = rName
-                             , csrSpectralType = rSpectral 
-                             , csrLuminosityClass = rLuminosity
-                             , csrDate = rDate }) = 
+  toJSON CollatedStarReport { csrStarId = rId
+                            , csrSystemId = rSId
+                            , csrName = rName
+                            , csrSpectralType = rSpectral
+                            , csrLuminosityClass = rLuminosity
+                            , csrDate = rDate } =
     object [ "id" .= rId
-           , "systemid" .= rSId
+           , "systemId" .= rSId
            , "name" .= rName
-           , "spectraltype" .= rSpectral
-           , "luminosityclass" .= rLuminosity
-           , "date" .= rDate ] 
+           , "spectralType" .= rSpectral
+           , "luminosityClass" .= rLuminosity
+           , "date" .= rDate ]
 
-data CollatedPlanetReport = CollatedPlanetReport 
+data CollatedPlanetReport = CollatedPlanetReport
     { cprPlanetId :: Key Planet
     , cprSystemId :: Key StarSystem
     , cprOwnerId  :: Maybe (Key Faction)
@@ -144,24 +142,24 @@ instance ReportTransform PlanetReport CollatedPlanetReport where
                              (planetReportDate report)
 
 instance Grouped PlanetReport where
-    sameGroup a b = 
+    sameGroup a b =
         planetReportPlanetId a == planetReportPlanetId b
 
 instance ToJSON CollatedPlanetReport where
-  toJSON (CollatedPlanetReport { cprPlanetId = rId
-                               , cprSystemId = rSId
-                               , cprOwnerId = rOId
-                               , cprName = rName
-                               , cprPosition = rPosition 
-                               , cprGravity = rGravity
-                               , cprDate = rDate }) = 
+  toJSON CollatedPlanetReport { cprPlanetId = rId
+                              , cprSystemId = rSId
+                              , cprOwnerId = rOId
+                              , cprName = rName
+                              , cprPosition = rPosition
+                              , cprGravity = rGravity
+                              , cprDate = rDate } =
     object [ "id" .= rId
-           , "systemid" .= rSId
+           , "systemId" .= rSId
            , "name" .= rName
            , "position" .= rPosition
            , "gravity" .= rGravity
-           , "ownerid" .= rOId
-           , "date" .= rDate ] 
+           , "ownerId" .= rOId
+           , "date" .= rDate ]
 
 data CollatedPopulationReport = CollatedPopulationReport
     { cpopPlanetId   :: Key Planet
@@ -172,16 +170,16 @@ data CollatedPopulationReport = CollatedPopulationReport
     } deriving Show
 
 instance ToJSON CollatedPopulationReport where
-    toJSON (CollatedPopulationReport { cpopPlanetId = pId
-                                     , cpopRaceId = rRaceId
-                                     , cpopRace = rRace
-                                     , cpopPopulation = rPop
-                                     , cpopDate = rDate }) = 
-        object [ "planetid" .= pId
-               , "raceid" .= rRaceId
+    toJSON CollatedPopulationReport { cpopPlanetId = pId
+                                    , cpopRaceId = rRaceId
+                                    , cpopRace = rRace
+                                    , cpopPopulation = rPop
+                                    , cpopDate = rDate } =
+        object [ "planetId" .= pId
+               , "raceId" .= rRaceId
                , "race" .= rRace
                , "inhabitants" .= rPop
-               , "date" .= rDate ] 
+               , "date" .= rDate ]
 
 
 instance Semigroup CollatedPopulationReport where
@@ -203,11 +201,11 @@ instance ReportTransform (PlanetPopulationReport, Maybe Race) CollatedPopulation
                                  (planetPopulationReportDate report)
 
 instance Grouped (PlanetPopulationReport, Maybe Race) where
-    sameGroup (a, _) (b, _) = 
+    sameGroup (a, _) (b, _) =
         planetPopulationReportPlanetId a == planetPopulationReportPlanetId b &&
             planetPopulationReportRaceId a == planetPopulationReportRaceId b
 
-data CollatedStarLaneReport = CollatedStarLaneReport 
+data CollatedStarLaneReport = CollatedStarLaneReport
     { cslStarLaneId      :: Key StarLane
     , cslSystemId1       :: Key StarSystem
     , cslSystemId2       :: Key StarSystem
@@ -228,8 +226,8 @@ instance Semigroup CollatedStarLaneReport where
 
 instance Monoid CollatedStarLaneReport where
     mempty = CollatedStarLaneReport
-                { cslStarLaneId = toSqlKey 0 
-                , cslSystemId1 = toSqlKey 0 
+                { cslStarLaneId = toSqlKey 0
+                , cslSystemId1 = toSqlKey 0
                 , cslSystemId2 = toSqlKey 0
                 , cslStarSystemName1 = Nothing
                 , cslStarSystemName2 = Nothing
@@ -277,8 +275,8 @@ instance Semigroup CollatedBuildingReport where
 
 instance Monoid CollatedBuildingReport where
     mempty = CollatedBuildingReport
-                { cbrBuildingId = toSqlKey 0 
-                , cbrPlanetId = toSqlKey 0 
+                { cbrBuildingId = toSqlKey 0
+                , cbrPlanetId = toSqlKey 0
                 , cbrType = Nothing
                 , cbrLevel = Nothing
                 , cbrDamage = Nothing
@@ -286,7 +284,7 @@ instance Monoid CollatedBuildingReport where
                 }
 
 instance ReportTransform BuildingReport CollatedBuildingReport where
-    fromReport report = 
+    fromReport report =
         CollatedBuildingReport
                 { cbrBuildingId = buildingReportBuildingId report
                 , cbrPlanetId = buildingReportPlanetId report
@@ -301,19 +299,19 @@ instance Grouped BuildingReport where
         buildingReportBuildingId a == buildingReportBuildingId b
 
 instance ToJSON CollatedBuildingReport where
-  toJSON (CollatedBuildingReport { cbrBuildingId = bId
-                                 , cbrPlanetId = pId
-                                 , cbrType = rType
-                                 , cbrLevel = rLevel
-                                 , cbrDamage = rDamage
-                                 , cbrDate = rDate
-                                 }) = 
+  toJSON CollatedBuildingReport { cbrBuildingId = bId
+                                , cbrPlanetId = pId
+                                , cbrType = rType
+                                , cbrLevel = rLevel
+                                , cbrDamage = rDamage
+                                , cbrDate = rDate
+                                } =
     object [ "id" .= bId
-           , "planetid" .= pId
+           , "planetId" .= pId
            , "type" .= rType
            , "level" .= rLevel
            , "damage" .= rDamage
-           , "date" .= rDate ] 
+           , "date" .= rDate ]
 
 spectralInfo :: Maybe SpectralType -> Maybe LuminosityClass -> Text
 spectralInfo Nothing Nothing     = ""
@@ -369,7 +367,7 @@ createStarLaneReports :: (BaseBackend backend ~ SqlBackend,
 createStarLaneReports systemId factionId = do
     loadedLaneReports <- selectList ([ StarLaneReportStarSystem1 ==. systemId
                                      , StarLaneReportFactionId ==. factionId ]
-                                 ||. [ StarLaneReportStarSystem2 ==. systemId 
+                                 ||. [ StarLaneReportStarSystem2 ==. systemId
                                      , StarLaneReportFactionId ==. factionId ]) []
     return $ rearrangeStarLanes systemId $ collateReports $ map entityVal loadedLaneReports
 
@@ -385,12 +383,12 @@ rearrangeStarLanes systemId = map arrangeStarLane
                                                                     (cslDate starLane)
 
 instance ToJSON CollatedStarSystemReport where
-  toJSON (CollatedStarSystemReport { cssrSystemId = rId
-                                   , cssrName = rName
-                                   , cssrLocation = rLocation
-                                   , cssrDate = rDate }) = 
+  toJSON CollatedStarSystemReport { cssrSystemId = rId
+                                  , cssrName = rName
+                                  , cssrLocation = rLocation
+                                  , cssrDate = rDate } =
     object [ "id" .= rId
            , "name" .= rName
            , "location" .= rLocation
-           , "date" .= rDate ] 
+           , "date" .= rDate ]
 

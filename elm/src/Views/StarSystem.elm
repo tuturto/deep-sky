@@ -34,12 +34,19 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Maybe exposing (andThen, withDefault)
 import ViewModels.StarSystem exposing (StarSystemRMsg(..))
-import Views.Helpers exposing (href, infoPanel, starDateToString, twinPanels)
+import Views.Helpers
+    exposing
+        ( PanelSizing(..)
+        , href
+        , infoPanel
+        , starDateToString
+        , twinPanels
+        )
 
 
 page : StarSystemId -> Model -> Html Msg
 page systemId model =
-    div [] <| twinPanels (leftPanel systemId) (rightPanel systemId) model
+    div [] <| twinPanels EqualPanels (leftPanel systemId) (rightPanel systemId) model
 
 
 leftPanel : StarSystemId -> Model -> List (Html Msg)
@@ -48,23 +55,35 @@ leftPanel systemId model =
         viewModel =
             model.starSystemsR
     in
-    infoPanel "System details"
+    infoPanel
+        { title = "System details"
+        , currentStatus = viewModel.systemDetailsStatus
+        , openingMessage = StarSystemMessage <| SystemDetailsStatusChanged InfoPanelOpen
+        , closingMessage = StarSystemMessage <| SystemDetailsStatusChanged InfoPanelClosed
+        , refreshMessage = Nothing
+        }
+        Nothing
         (systemDetails systemId)
-        viewModel.systemDetailsStatus
-        (StarSystemMessage <| SystemDetailsStatusChanged InfoPanelOpen)
-        (StarSystemMessage <| SystemDetailsStatusChanged InfoPanelClosed)
         model
-        ++ infoPanel "Stars"
+        ++ infoPanel
+            { title = "Stars"
+            , currentStatus = viewModel.starListStatus
+            , openingMessage = StarSystemMessage <| StarListStatusChanged InfoPanelOpen
+            , closingMessage = StarSystemMessage <| StarListStatusChanged InfoPanelClosed
+            , refreshMessage = Nothing
+            }
+            Nothing
             (starsInfo systemId)
-            viewModel.starListStatus
-            (StarSystemMessage <| StarListStatusChanged InfoPanelOpen)
-            (StarSystemMessage <| StarListStatusChanged InfoPanelClosed)
             model
-        ++ infoPanel "Star lanes"
+        ++ infoPanel
+            { title = "Star lanes"
+            , currentStatus = viewModel.starLanesStatus
+            , openingMessage = StarSystemMessage <| StarLaneListStatusChanged InfoPanelOpen
+            , closingMessage = StarSystemMessage <| StarLaneListStatusChanged InfoPanelClosed
+            , refreshMessage = Nothing
+            }
+            Nothing
             (starLanesInfo systemId)
-            viewModel.starLanesStatus
-            (StarSystemMessage <| StarLaneListStatusChanged InfoPanelOpen)
-            (StarSystemMessage <| StarLaneListStatusChanged InfoPanelClosed)
             model
 
 
@@ -74,11 +93,15 @@ rightPanel systemId model =
         viewModel =
             model.starSystemsR
     in
-    infoPanel "Planets"
+    infoPanel
+        { title = "Planets"
+        , currentStatus = viewModel.planetsStatus
+        , openingMessage = StarSystemMessage <| PlanetListStatusChanged InfoPanelOpen
+        , closingMessage = StarSystemMessage <| PlanetListStatusChanged InfoPanelClosed
+        , refreshMessage = Nothing
+        }
+        Nothing
         (planetsInfo systemId)
-        viewModel.planetsStatus
-        (StarSystemMessage <| PlanetListStatusChanged InfoPanelOpen)
-        (StarSystemMessage <| PlanetListStatusChanged InfoPanelClosed)
         model
 
 
