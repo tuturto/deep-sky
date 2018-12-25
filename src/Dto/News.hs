@@ -14,12 +14,12 @@ import Data.Aeson ( object, (.=), (.!=), (.:?), withObject )
 import Data.Aeson.TH ( deriveJSON, defaultOptions, constructorTagModifier )
 
 
--- | mapper that can be used to retrieve link to news article icon as Text
+-- | mapper that can be used to retrieve link to icon as Text.
 -- This is used for example returning links to these resources as a part of
 -- JSON message. Client can then use the link to retrieve actual image file
 -- and take advantage of caching.
-newtype IconMapper =
-    IconMapper { runIconMapper :: NewsArticleDto -> Text }
+newtype IconMapper a =
+    IconMapper { runIconMapper :: a -> Text }
 
 
 -- | Data transfer object for news that mainly just wraps id and contents together

@@ -12,7 +12,7 @@ module News ( NewsArticle(..)
             , UserNewsIcon(..)
             , StarFoundNews(..), PlanetFoundNews(..), UserWrittenNews(..)
             , DesignCreatedNews(..), ConstructionFinishedNews(..), iconMapper
-            , iconInfo )
+            , iconInfo, userNewsIconMapper )
     where
 
 import Import
@@ -33,8 +33,8 @@ import Dto.News ( NewsDto(..), NewsArticleDto(..), StarFoundNewsDto(..), PlanetF
 -- | Use passed url render function to return link to news article's icon
 -- This function is useful for example when returning JSON data to client
 -- and supplying link to icon that should be displayed for it.
-iconMapper :: (Route App -> Text) -> IconMapper
-iconMapper render =
+iconMapper :: (Route App -> Text) -> IconMapper UserNewsIconDto -> IconMapper NewsArticleDto
+iconMapper render userIconMapper =
     IconMapper $ \article ->
         case article of
             StarFoundDto _ ->
@@ -44,7 +44,7 @@ iconMapper render =
                 render $ StaticR images_news_planet_png
 
             UserWrittenDto details ->
-                userNewsIcon render $ userWrittenNewsDtoIcon details
+                runIconMapper userIconMapper $ userWrittenNewsDtoIcon details
 
             DesignCreatedDto _ ->
                 render $ StaticR images_news_blueprint_png
@@ -54,24 +54,25 @@ iconMapper render =
 
 
 -- | Get url to image corresponding to icon selection in user news
-userNewsIcon :: (Route App -> Text) -> UserNewsIconDto -> Text
-userNewsIcon render icon =
-    case icon of
-        GenericUserNewsDto ->
-            render $ StaticR images_news_question_png
+userNewsIconMapper :: (Route App -> Text) -> IconMapper UserNewsIconDto
+userNewsIconMapper render =
+    IconMapper $ \icon ->
+        case icon of
+            GenericUserNewsDto ->
+                render $ StaticR images_news_question_png
 
-        JubilationUserNewsDto ->
-            render $ StaticR images_news_jubileum_png
+            JubilationUserNewsDto ->
+                render $ StaticR images_news_jubileum_png
 
-        CatUserNewsDto ->
-            render $ StaticR images_news_cat_png
+            CatUserNewsDto ->
+                render $ StaticR images_news_cat_png
 
 
 -- | List of tuples for all user news icon dtos, containing dto and link to
 -- resource that can be used to retrieve image corresponding to dto
-iconInfo :: (Route App -> Text) -> [(UserNewsIconDto, Text)]
-iconInfo render =
-    map (\x -> (x, userNewsIcon render x)) $ enumFrom minBound
+iconInfo :: IconMapper UserNewsIconDto -> [(UserNewsIconDto, Text)]
+iconInfo mapper =
+    map (\x -> (x, runIconMapper mapper x)) $ enumFrom minBound
 
 
 -- | All possible news articles
@@ -229,7 +230,7 @@ instance FromDto ConstructionFinishedNews ConstructionFinishedNewsDto where
                                  }
 
 
-instance ToDto ((Key News, NewsArticle), IconMapper) NewsDto where
+instance ToDto ((Key News, NewsArticle), (IconMapper NewsArticleDto)) NewsDto where
     toDto ((nId, article), icons) =
         let
             content = toDto article

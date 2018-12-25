@@ -12,7 +12,7 @@ import Common ( apiRequireFaction, toDto, fromDto, apiNotFound, apiForbidden )
 import Handler.Home ( getNewHomeR )
 import Import
 import News ( parseNewsEntities, iconMapper, NewsArticle(..), UserWrittenNews(..)
-            , iconInfo )
+            , iconInfo, userNewsIconMapper )
 import Data.Aeson.Text (encodeToLazyText)
 import MenuHelpers (starDate)
 
@@ -61,7 +61,7 @@ postApiMessageR = do
 getApiMessageIcons :: Handler Value
 getApiMessageIcons = do
     render <- getUrlRender
-    return $ toJSON $ iconInfo render
+    return $ (toJSON . iconInfo . userNewsIconMapper) render
 
 
 getMessageR :: Handler Html
@@ -83,6 +83,7 @@ setStarDate sDate (UserWritten details) =
 setStarDate _ article =
     article
 
+
 -- | Update news article to have specific user as article writer
 -- This is specific to only user supplied news. For other news articles, no changes are made
 setUser :: User -> NewsArticle -> NewsArticle
@@ -101,4 +102,5 @@ loadAllMessages fId = do
                                          , NewsDismissed ==. False ] [ Desc NewsDate ]
     let parsedMessages = parseNewsEntities loadedMessages
     render <- getUrlRender
-    return $ toJSON $ map (toDto . (flip (,) (iconMapper render))) parsedMessages
+    let userIcons = userNewsIconMapper render
+    return $ toJSON $ map (toDto . (flip (,) (iconMapper render userIcons))) parsedMessages
