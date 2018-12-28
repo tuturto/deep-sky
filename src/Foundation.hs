@@ -264,7 +264,7 @@ instance Yesod App where
     isAuthorized (ApiBuildingConstructionIdR _) _   = return Authorized
     isAuthorized ApiMessageR _                      = return Authorized
     isAuthorized (ApiMessageIdR _) _                = return Authorized
-    isAuthorized ApiMessageIcons _                  = return Authorized
+    isAuthorized ApiMessageIconsR _                 = return Authorized
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of

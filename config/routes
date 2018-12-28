@@ -46,7 +46,7 @@
 
 /api/message                                        ApiMessageR                     GET POST
 /api/message/#NewsId                                ApiMessageIdR                   DELETE
-/api/icon                                           ApiMessageIcons                 GET
+/api/icon                                           ApiMessageIconsR                GET
 
 /api/construction/buildings                         ApiBuildingsR                   GET
 /api/construction/planet/#PlanetId                  ApiPlanetConstQueueR            GET

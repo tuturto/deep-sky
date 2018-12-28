@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 module Handler.Messages ( getApiMessageR, getMessageR, deleteApiMessageIdR
-                        , postApiMessageR, getApiMessageIcons )
+                        , postApiMessageR, getApiMessageIconsR )
     where
 
 import Common ( apiRequireFaction, toDto, fromDto, apiNotFound, apiForbidden )
@@ -58,8 +58,8 @@ postApiMessageR = do
 -- | Api method for retrieving list of all icons used for user submitted news and
 -- their respective image urls
 -- This resource doesn't require any kind of authentication or authorization
-getApiMessageIcons :: Handler Value
-getApiMessageIcons = do
+getApiMessageIconsR :: Handler Value
+getApiMessageIconsR = do
     render <- getUrlRender
     return $ (toJSON . iconInfo . userNewsIconMapper) render
 
