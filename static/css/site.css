@@ -138,3 +138,9 @@
     margin-left: 5px;
     padding: 5px;
 }
+
+.option-desc {
+    padding-left: 15px;
+    font-size: small;
+    font-style: italic;
+}

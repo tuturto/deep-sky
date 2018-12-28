@@ -6,18 +6,19 @@ User json
     password Text Maybe
     factionId FactionId Maybe
     UniqueUser ident
-    deriving Typeable
+    deriving Typeable Show Read Eq
 
 UserRole json
     userId UserId
     role Role
-    deriving Show Eq
+    deriving Show Read Eq
 
 Email json
     email Text
     userId UserId Maybe
     verkey Text Maybe
     UniqueEmail email
+    deriving Show Read Eq
 
 Faction json
     name Text
@@ -25,20 +26,20 @@ Faction json
     biologicals Int
     mechanicals Int
     chemicals Int
-    deriving Show Eq
+    deriving Show Read Eq
 
 StarSystem json
     name Text
     coordX Int
     coordY Int
-    deriving Show
-    
-Star json 
+    deriving Show Read Eq
+
+Star json
     name Text
     starSystemId StarSystemId
     spectralType SpectralType
     luminosityClass LuminosityClass
-    deriving Show
+    deriving Show Read Eq
 
 Planet json
     name Text
@@ -47,32 +48,33 @@ Planet json
     ownerId FactionId Maybe
     gravity Double
     SystemPosition starSystemId position
-    deriving Show
+    deriving Show Read Eq
 
 Race json
     name Text
-    deriving Show
+    deriving Show Read Eq
 
 PlanetPopulation json
     planetId PlanetId
     raceId RaceId
     population Int
-    deriving Show
+    deriving Show Read Eq
 
 StarLane json
     starSystem1 StarSystemId
     starSystem2 StarSystemId
-    deriving Show
+    deriving Show Read Eq
 
 Building json
     planetId PlanetId
     type BuildingType
     level Int
     damage Double
-    deriving Show
+    deriving Show Read Eq
 
 Time json
     currentTime Int
+    deriving Show Read Eq
 
 Ship json
     name Text
@@ -81,13 +83,13 @@ Ship json
     planetId PlanetId Maybe
     landed Bool
     ownerId FactionId
-    deriving Show
+    deriving Show Read Eq
 
 Design json
     name Text
     ownerId FactionId
     chassisId ChassisId
-    deriving Show
+    deriving Show Read Eq
 
 PlannedComponent json
     designId DesignId
@@ -99,7 +101,7 @@ PlannedComponent json
 Chassis json
     name Text
     tonnage Int
-    deriving Show Read Eq 
+    deriving Show Read Eq
 
 RequiredComponent json
     chassisId ChassisId
@@ -136,47 +138,48 @@ News json
     factionId FactionId
     date Int
     dismissed Bool
+    specialEvent SpecialEventStatus
     deriving Show Read Eq
 
 StarSystemReport json
-    starSystemId StarSystemId 
+    starSystemId StarSystemId
     name Text Maybe
-    coordX Double 
+    coordX Double
     coordY Double
     factionId FactionId
-    date Int 
-    deriving Show
+    date Int
+    deriving Show Read Eq
 
 StarReport json
-    starId StarId 
+    starId StarId
     starSystemId StarSystemId
     name Text Maybe
     spectralType SpectralType Maybe
     luminosityClass LuminosityClass Maybe
     factionId FactionId
-    date Int 
-    deriving Show    
+    date Int
+    deriving Show Read Eq
 
 PlanetReport json
-    planetId PlanetId 
+    planetId PlanetId
     ownerId  FactionId Maybe
     starSystemId StarSystemId
     name Text Maybe
     position Int Maybe
     gravity Double Maybe
     factionId FactionId
-    date Int 
-    deriving Show
+    date Int
+    deriving Show Read Eq
 
 StarLaneReport json
     starLaneId StarLaneId
-    starSystem1 StarSystemId 
-    starSystem2 StarSystemId 
+    starSystem1 StarSystemId
+    starSystem2 StarSystemId
     starSystemName1 Text Maybe
     starSystemName2 Text Maybe
     factionId FactionId
     date Int
-    deriving Show
+    deriving Show Read Eq
 
 BuildingReport json
     buildingId BuildingId
@@ -186,7 +189,7 @@ BuildingReport json
     damage Double Maybe
     factionId FactionId
     date Int
-    deriving Show
+    deriving Show Read Eq
 
 PlanetPopulationReport json
     planetId PlanetId
@@ -194,4 +197,4 @@ PlanetPopulationReport json
     population Int Maybe
     factionId FactionId
     date Int
-    deriving Show
+    deriving Show Read Eq

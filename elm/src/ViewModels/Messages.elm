@@ -21,6 +21,7 @@ type alias MessagesViewModel =
 type MessagesRMsg
     = UserMessageTextChanged String
     | UserMessageSent UserIcon String
+    | SpecialEventChoiceMade NewsArticle
     | UserIconSelected UserIcon
     | NewsPanelStatusChanged InfoPanelStatus
     | NewsPanelRefresh

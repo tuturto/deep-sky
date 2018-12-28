@@ -20,7 +20,7 @@ import Construction ( Constructable(..), constructionLeft, ConstructionSpeedCoef
                     , constructionWillFinish, speedLimitedByWorkLeft )
 import MenuHelpers (getScore)
 import Buildings (BuildingInfo(..), BLevel(..), building)
-import News (buildingConstructionFinishedNews)
+import News.Import (buildingConstructionFinishedNews)
 import Data.Maybe (fromJust)
 
 -- | Process through all construction queues of a faction and update them
@@ -40,16 +40,17 @@ handleFactionConstruction date factionE = do
     let totalCost = mconcat $ map (queueCostReq . toPlainObjects) queues
     let availableResources = getScore $ Just faction
     let consSpeed = overallConstructionSpeed totalCost availableResources
-    _ <- updateWhere [ FactionId ==. entityKey factionE ] 
+    _ <- updateWhere [ FactionId ==. entityKey factionE ]
                      [ FactionBiologicals -=. unRawResource (resourceScaledBySpeed (ccdBiologicalCost totalCost) (overallSpeedBiological consSpeed))
                      , FactionMechanicals -=. unRawResource (resourceScaledBySpeed (ccdMechanicalCost totalCost) (overallSpeedMechanical consSpeed))
                      , FactionChemicals -=. unRawResource (resourceScaledBySpeed (ccdChemicalCost totalCost) (overallSpeedChemical consSpeed))
                      ]
     mapM_ (doPlanetConstruction (entityKey factionE) date consSpeed . planetAndFirstConstruction) queues
 
+
 -- | Select construction from queue with the smallest construction index
 planetAndFirstConstruction :: (Maybe (Entity Planet), [Entity BuildingConstruction]) -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction))
-planetAndFirstConstruction (planet, queue@(_:_)) =   
+planetAndFirstConstruction (planet, queue@(_:_)) =
     (planet, safeHead sortedQ)
     where
         sortedQ = sortBy sorter queue
@@ -58,10 +59,11 @@ planetAndFirstConstruction (planet, queue@(_:_)) =
 planetAndFirstConstruction (planet, []) =
     (planet, Nothing)
 
+
 -- | Perform construction on a planet at given speed
 doPlanetConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                         MonadIO m, BaseBackend backend ~ SqlBackend) =>
-                        Key Faction -> Time -> OverallConstructionSpeed -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction)) 
+                        Key Faction -> Time -> OverallConstructionSpeed -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction))
                         -> ReaderT backend m ()
 doPlanetConstruction fId date speed (Just planetE, Just bConsE) = do
     let bCons = entityVal bConsE
@@ -72,8 +74,9 @@ doPlanetConstruction fId date speed (Just planetE, Just bConsE) = do
          then finishConstruction fId date bConsE
          else workOnConstruction cToDo bConsE
     return ()
-doPlanetConstruction _ _ _ _ = 
+doPlanetConstruction _ _ _ _ =
     return ()
+
 
 -- | Finish construction by removing it from construction queue, updating indecies and
 --   placing the newly constructed building on planet. Respective reports and news entries
@@ -113,9 +116,10 @@ finishConstruction fId date bConsE = do
     _ <- insert news
     return ()
 
+
 -- | Update construction in queue by increasing its progress fields by given speed
-workOnConstruction :: (PersistQueryWrite backend, 
-                      BaseBackend backend ~ SqlBackend, MonadIO m) => 
+workOnConstruction :: (PersistQueryWrite backend,
+                      BaseBackend backend ~ SqlBackend, MonadIO m) =>
                       RawResources ConstructionSpeed -> Entity BuildingConstruction -> ReaderT backend m ()
 workOnConstruction speed bConsE = do
     let bConsId = entityKey bConsE
@@ -124,30 +128,34 @@ workOnConstruction speed bConsE = do
                         , BuildingConstructionProgressChemicals +=. unRawResource (ccdChemicalCost speed) ]
     return ()
 
+
 -- | Turn entities into plain objects
 toPlainObjects :: (Maybe (Entity Planet), [Entity BuildingConstruction]) -> (Maybe Planet, [BuildingConstruction])
 toPlainObjects (planet, constructions) =
     (entityVal <$> planet, map entityVal constructions)
 
+
 -- | Total requirement of cost for a construction queue for a turn
 --   Take into account speed the planet can construct buildings
 queueCostReq :: (Maybe Planet, [BuildingConstruction]) -> RawResources ResourceCost
-queueCostReq (Just planet, construction:_) = 
-    RawResources (min (ccdMechanicalCost planetSpeed) (ccdMechanicalCost constLeft)) 
+queueCostReq (Just planet, construction:_) =
+    RawResources (min (ccdMechanicalCost planetSpeed) (ccdMechanicalCost constLeft))
                  (min (ccdBiologicalCost planetSpeed) (ccdBiologicalCost constLeft))
                  (min (ccdChemicalCost planetSpeed) (ccdChemicalCost constLeft))
     where
-        modelBuilding = building (buildingConstructionType construction) 
+        modelBuilding = building (buildingConstructionType construction)
                                  (BLevel $ buildingConstructionLevel construction)
         planetSpeed = planetConstructionSpeed planet
         constLeft = constructionLeft (buildingInfoCost modelBuilding)
                                      (cProgress construction)
 queueCostReq (_, _) = mempty
 
+
 -- | Speed that a planet can build constructions
 planetConstructionSpeed :: Planet -> RawResources ConstructionSpeed
 planetConstructionSpeed _ =
     RawResources (RawResource 50) (RawResource 50) (RawResource 50)
+
 
 -- | Overall speed coefficient with given total cost and total resources
 --   Used to scale all construction of a faction, so they don't end up using
@@ -163,6 +171,7 @@ overallConstructionSpeed cost res =
         bioSpeed = speedPerResource (ccdBiologicalCost cost) (ccdBiologicalCost res)
         mechSpeed = speedPerResource (ccdMechanicalCost cost) (ccdMechanicalCost res)
         chemSpeed = speedPerResource (ccdChemicalCost cost) (ccdChemicalCost res)
+
 
 -- | Speed that consumes at most available amount of resources or finishes the construction
 speedPerResource :: RawResource t -> RawResource t -> ConstructionSpeedCoeff t

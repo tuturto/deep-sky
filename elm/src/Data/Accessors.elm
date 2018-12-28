@@ -4,6 +4,7 @@ module Data.Accessors exposing
     , buildingSearchTextA
     , buildingsA
     , buildingsStatusA
+    , choiceA
     , constructionStatusA
     , constructionsA
     , currentPageA
@@ -33,6 +34,13 @@ module Data.Accessors exposing
     )
 
 import Accessors exposing (Relation, makeOneToOne)
+
+
+choiceA : Relation field sub wrap -> Relation { rec | choice : field } sub wrap
+choiceA =
+    makeOneToOne
+        .choice
+        (\change rec -> { rec | choice = change rec.choice })
 
 
 activeUserIconA : Relation field sub wrap -> Relation { rec | activeUserIcon : field } sub wrap

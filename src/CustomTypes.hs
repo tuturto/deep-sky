@@ -2,6 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
+
+-- | Catch all module for things that don't yet belong to anywhere else
 module CustomTypes where
 
 import Data.Aeson.TH
@@ -10,20 +12,33 @@ import Text.Blaze.Html5 (ToMarkup, toMarkup)
 import Data.Text
 import ClassyPrelude.Yesod   as Import
 import Data.Monoid ()
+import System.Random
+
+
+-- | Some news are special events that offer users to make choice how to handle given situation
+-- This data type is used to differentiate between different kinds of news
+data SpecialEventStatus =
+    UnhandledSpecialEvent
+    | HandledSpecialEvent
+    | NoSpecialEvent
+    deriving (Show, Read, Eq)
+derivePersistField "SpecialEventStatus"
+
 
 data SpectralType = O | B | A | F | G | K | M | L | T
     deriving (Show, Read, Eq)
 derivePersistField "SpectralType"
 
+
 data LuminosityClass = Iap | Ia | Iab | Ib | II | III | IV | V | VI | VII
     deriving (Show, Read, Eq)
 derivePersistField "LuminosityClass"
 
+
+
 data Coordinates = Coordinates Double Double
     deriving (Show, Eq)
 
-instance ToMarkup Coordinates where
-    toMarkup (Coordinates x y) = toMarkup $ "(" ++ show x ++ ", " ++ show y ++ ")"
 
 data BuildingType = SensorStation
     | ResearchComplex
@@ -34,6 +49,7 @@ data BuildingType = SensorStation
     | GravityWaveSensor
     deriving (Show, Read, Eq)
 derivePersistField "BuildingType"
+
 
 buildingTypeName :: BuildingType -> Text
 buildingTypeName bt =
@@ -46,8 +62,9 @@ buildingTypeName bt =
         BlackMatterScanner -> "Black Matter Scanner"
         GravityWaveSensor -> "Gravity Wave Sensor"
 
+
 instance ToMarkup BuildingType where
-    toMarkup building = 
+    toMarkup building =
         case building of
             SensorStation       -> toMarkup ("Sensor station" :: Text)
             ResearchComplex     -> toMarkup ("Research complex" :: Text)
@@ -56,7 +73,8 @@ instance ToMarkup BuildingType where
             NeutronDetector     -> toMarkup ("Neutron detector" :: Text)
             BlackMatterScanner  -> toMarkup ("Black matter scanner" :: Text)
             GravityWaveSensor   -> toMarkup ("Gravity wave sensor" :: Text)
- 
+
+
 data ShipType = Satellite
     | Fighter
     | Destroyer
@@ -67,6 +85,7 @@ data ShipType = Satellite
     | Station
     deriving (Show, Read, Eq)
 derivePersistField "ShipType"
+
 
 instance ToMarkup ShipType where
     toMarkup shipType =
@@ -80,14 +99,17 @@ instance ToMarkup ShipType where
             MobileBase  -> toMarkup ("Mobile base" :: Text)
             Station     -> toMarkup ("Station" :: Text)
 
+
 data Role = RoleUser
           | RoleAdministrator
     deriving (Show, Read, Eq)
 derivePersistField "Role"
 
+
 instance ToMarkup Role where
     toMarkup RoleUser = toMarkup ("User" :: Text)
     toMarkup RoleAdministrator = toMarkup ("Administrator" :: Text)
+
 
 -- TODO: move into components?
 data ComponentSlot = InnerSlot
@@ -99,6 +121,27 @@ data ComponentSlot = InnerSlot
     deriving (Show, Read, Eq)
 derivePersistField "ComponentSlot"
 
+
+newtype PercentileChance =
+    PercentileChance { unPercentileChance :: Int }
+    deriving (Show, Read, Eq)
+
+
+data RollResult =
+    Success
+    | Failure
+    deriving (Show, Read, Eq)
+
+
+roll :: PercentileChance -> IO RollResult
+roll odds = do
+    result <- randomRIO (0, 100 :: Int)
+    return $ if result <= unPercentileChance odds
+        then Success
+        else Failure
+
+
+$(deriveJSON defaultOptions ''SpecialEventStatus)
 $(deriveJSON defaultOptions ''Role)
 $(deriveJSON defaultOptions ''Coordinates)
 $(deriveJSON defaultOptions ''SpectralType)

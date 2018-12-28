@@ -11,8 +11,8 @@ module Handler.StarSystems ( getApiStarSystemsR, getStarSystemsR, getStarSystemR
 import Import
 import Report ( collateReports, collateReport )
 
-import Common (requireFaction, apiRequireFaction)
-import Queries (loadPlanetPopulationReports)
+import Common ( requireFaction, apiRequireFaction )
+import Queries ( planetPopulationReports )
 import Handler.Home (getNewHomeR)
 
 
@@ -81,10 +81,11 @@ getApiPlanetBuildingsR planetId = do
     let buildingReports = collateReports $ map entityVal loadedBuildingReports
     return $ toJSON buildingReports
 
+
 -- | api method to retrieve population of a planet
 getApiPlanetPopulationR :: Key Planet -> Handler Value
 getApiPlanetPopulationR planetId = do
     (_, _, fId) <- apiRequireFaction
-    loadedPopReports <- runDB $ loadPlanetPopulationReports planetId fId
+    loadedPopReports <- runDB $ planetPopulationReports planetId fId
     let populationReports = collateReports $ map (\(a, b) -> (entityVal a, fmap entityVal b)) loadedPopReports
     return $ toJSON populationReports

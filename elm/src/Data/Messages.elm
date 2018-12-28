@@ -1,19 +1,25 @@
 module Data.Messages exposing
     ( BuildingFinishedNews
     , DesignCreatedNews
+    , KragiiResolution
+    , KragiiSpecialEvent
     , NewsArticle
     , NewsContent(..)
     , PlanetFoundNews
     , ShipFinishedNews
+    , SpecialEventChoice(..)
+    , SpecialEventOption
     , StarFoundNews
     , UserIcon(..)
     , UserWrittenNews
+    , unSpecialEventChoice
     )
 
 import Data.Common
     exposing
         ( BuildingId
         , DesignId
+        , FactionId
         , MessageId
         , PlanetId
         , ShipId
@@ -29,6 +35,8 @@ type alias NewsArticle =
     , starDate : StarDate
     , icon : String
     , content : NewsContent
+    , options : List SpecialEventOption
+    , choice : Maybe SpecialEventChoice
     }
 
 
@@ -39,6 +47,8 @@ type NewsContent
     | DesignCreated DesignCreatedNews
     | BuildingFinished BuildingFinishedNews
     | ShipFinished ShipFinishedNews
+    | KragiiEvent KragiiSpecialEvent
+    | KragiiResolved KragiiResolution
 
 
 type alias StarFoundNews =
@@ -87,6 +97,39 @@ type alias ShipFinishedNews =
     , name : String
     , shipId : ShipId
     }
+
+
+type alias KragiiSpecialEvent =
+    { planetName : String
+    , planetId : PlanetId
+    , systemName : String
+    , systemId : StarSystemId
+    }
+
+
+type alias KragiiResolution =
+    { planetName : String
+    , planetId : PlanetId
+    , systemName : String
+    , systemId : StarSystemId
+    , report : String
+    }
+
+
+type alias SpecialEventOption =
+    { title : String
+    , explanation : List String
+    , choice : SpecialEventChoice
+    }
+
+
+type SpecialEventChoice
+    = SpecialEventChoice String
+
+
+unSpecialEventChoice : SpecialEventChoice -> String
+unSpecialEventChoice (SpecialEventChoice x) =
+    x
 
 
 type UserIcon

@@ -13,20 +13,31 @@ import Resources ( RawResources(..), RawResource(..), ResourceCost, Construction
 import Buildings ( building, BuildingInfo(..), BLevel(..) )
 import Model
 
-instance Arbitrary (RawResource t) where
+
+newtype ArbRawResource t =
+    ArbRawResource { unArbRawResource :: RawResource t }
+
+
+instance Arbitrary (ArbRawResource t) where
     arbitrary = do
         aValue <- arbitrary `suchThat` \x -> x >= 0
-        return $ RawResource aValue
+        return $ ArbRawResource $ RawResource aValue
 
-instance Arbitrary (RawResources t) where
+
+newtype ArbRawResources t =
+    ArbRawResources { unArbRawResources :: RawResources t }
+
+
+instance Arbitrary (ArbRawResources t) where
     arbitrary = do
         aBio <- arbitrary
         aMech <- arbitrary
         aChem <- arbitrary
-        return $ RawResources { ccdMechanicalCost = aMech
-                              , ccdBiologicalCost = aBio
-                              , ccdChemicalCost = aChem
-                              }
+        return $ ArbRawResources $ RawResources { ccdMechanicalCost = unArbRawResource aMech
+                                                , ccdBiologicalCost = unArbRawResource aBio
+                                                , ccdChemicalCost = unArbRawResource aChem
+                                                }
+
 
 rawResourcesThatAre :: (Int -> Int -> Bool) -> RawResources a -> Gen (RawResources b)
 rawResourcesThatAre check base = do
@@ -37,55 +48,72 @@ rawResourcesThatAre check base = do
                           , ccdBiologicalCost = RawResource aBio
                           , ccdChemicalCost = RawResource aChem
                           }
-                          
-instance Arbitrary BuildingType where
-    arbitrary = oneof [ return SensorStation
-                      , return ResearchComplex
-                      , return Farm
-                      , return ParticleAccelerator
-                      , return NeutronDetector
-                      , return BlackMatterScanner
-                      , return GravityWaveSensor
+
+
+newtype ArbBuildingType =
+    ArbBuildingType { unArbBuildingType :: BuildingType }
+
+
+instance Arbitrary ArbBuildingType where
+    arbitrary = oneof [ return $ ArbBuildingType SensorStation
+                      , return $ ArbBuildingType ResearchComplex
+                      , return $ ArbBuildingType Farm
+                      , return $ ArbBuildingType ParticleAccelerator
+                      , return $ ArbBuildingType NeutronDetector
+                      , return $ ArbBuildingType BlackMatterScanner
+                      , return $ ArbBuildingType GravityWaveSensor
                       ]
+
 
 unstartedConstruction :: Gen BuildingConstruction
 unstartedConstruction = do
     aPlanetId <- randomPlanetKey
-    aBuildingType <- arbitrary
+    arbBuildingType <- arbitrary
+    let aBuildingType = unArbBuildingType arbBuildingType
     return $ BuildingConstruction aPlanetId 0 0 0 0 aBuildingType 1
+
 
 randomConstruction :: Gen BuildingConstruction
 randomConstruction = do
     aPlanetId <- randomPlanetKey
-    aBuildingType <- arbitrary
+    arbBuildingType <- arbitrary
+    let aBuildingType = unArbBuildingType arbBuildingType
     let modelBuilding = building aBuildingType $ BLevel 1
     bioProgress <- arbitrary `suchThat` \x -> x >= 0 && x <= (unRawResource . ccdBiologicalCost . buildingInfoCost) modelBuilding
     mechProgress <- arbitrary `suchThat` \x -> x >= 0 && x <= (unRawResource . ccdMechanicalCost . buildingInfoCost) modelBuilding
     chemProgress <- arbitrary `suchThat` \x -> x >= 0 && x <= (unRawResource . ccdChemicalCost . buildingInfoCost) modelBuilding
     return $ BuildingConstruction aPlanetId 0 bioProgress mechProgress chemProgress aBuildingType 1
 
+
 unstartedConstructionsWithSomeSpeed :: Gen (RawResources ConstructionSpeed, BuildingConstruction, RawResources ResourceCost)
 unstartedConstructionsWithSomeSpeed = do
     aConstructionSpeed <- arbitrary
     aBuildingConstruction <- unstartedConstruction
     aTotalCost <- arbitrary
-    return (aConstructionSpeed, aBuildingConstruction, aTotalCost)
+    return (unArbRawResources aConstructionSpeed, aBuildingConstruction, unArbRawResources aTotalCost)
+
 
 unfinishedConstructionsWithSomeSpeed :: Gen (RawResources ConstructionSpeed, BuildingConstruction, RawResources ResourceCost)
 unfinishedConstructionsWithSomeSpeed = do
-    aConstructionSpeed <- arbitrary
+    arbConstructionSpeed <- arbitrary
+    let aConstructionSpeed = unArbRawResources arbConstructionSpeed
     aBuildingConstruction <- randomConstruction
-    aTotalCost <- arbitrary
+    arbTotalCost <- arbitrary
+    let aTotalCost = unArbRawResources arbTotalCost
     return (aConstructionSpeed, aBuildingConstruction, aTotalCost)
+
 
 resourceCostAndEnoughAvailableResources :: Gen (RawResources ResourceCost, RawResources ResourcesAvailable)
 resourceCostAndEnoughAvailableResources = do
-    aCost <- arbitrary
+    arbCost <- arbitrary
+    let aCost = unArbRawResources arbCost
     aAvailable <- rawResourcesThatAre (>) aCost
     return (aCost, aAvailable)
 
+
 resourceCostAndLimitedResources :: Gen (RawResources ResourceCost, RawResources ResourcesAvailable)
 resourceCostAndLimitedResources = do
-    aCost <- arbitrary
+    arbCost <- arbitrary
+    let aCost = unArbRawResources arbCost
     aAvailable <- rawResourcesThatAre (<) aCost
     return (aCost, aAvailable)

@@ -20,7 +20,7 @@ starDate :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistQueryRead backend) =>
     ReaderT backend m Time
 starDate = do
-    systemTime <- get (toSqlKey 1) 
+    systemTime <- get (toSqlKey 1)
     let res = case systemTime of
                 (Just x) -> x
                 Nothing  -> Time 0
@@ -52,27 +52,27 @@ statusBarScore :: (BaseBackend backend ~ SqlBackend, MonadIO m,
 statusBarScore (Just (_, user)) = do
     faction <- getMaybeEntity $ userFactionId user
     return $ getScore faction
-statusBarScore _ = 
+statusBarScore _ =
     return mempty
 
 maybeFaction :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistStoreRead backend) =>
     User -> ReaderT backend m (Maybe Faction)
-maybeFaction user = 
+maybeFaction user =
     getMaybeEntity $ userFactionId user
-    
+
 
 getMaybeEntity :: (PersistEntityBackend record ~ BaseBackend backend,
     PersistEntity record, PersistStoreRead backend, MonadIO m) =>
     Maybe (Key record) -> ReaderT backend m (Maybe record)
 getMaybeEntity (Just factionId) = get factionId
-getMaybeEntity _ = 
+getMaybeEntity _ =
     return Nothing
 
 -- TODO: better name and place
 getScore :: Maybe Faction -> RawResources ResourcesAvailable
-getScore (Just faction) = RawResources (RawResource $ factionBiologicals faction) (RawResource $ factionMechanicals faction) (RawResource $ factionChemicals faction)
-getScore _ = mempty 
+getScore (Just faction) = RawResources (RawResource $ factionMechanicals faction) (RawResource $ factionBiologicals faction) (RawResource $ factionChemicals faction)
+getScore _ = mempty
 
 usersRoles :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistQueryRead backend) =>
@@ -98,7 +98,7 @@ authorizeAdmin (Just userId) = do
     let res = if checkAdmin then Authorized
                 else Unauthorized "This part is only for administrators"
     return res
-authorizeAdmin _ = 
+authorizeAdmin _ =
     return $ Unauthorized "This part is only for administrators"
 
 toDisplayDate :: Int -> String

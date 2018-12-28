@@ -18,6 +18,7 @@ module Api.StarSystem exposing
     , planetsCmd
     , starDecoder
     , starSystemIdDecoder
+    , starSystemIdEncoder
     , starSystemsCmd
     , starsCmd
     )
@@ -138,6 +139,11 @@ starSystemIdDecoder : Decode.Decoder StarSystemId
 starSystemIdDecoder =
     succeed StarSystemId
         |> andMap int
+
+
+starSystemIdEncoder : StarSystemId -> Encode.Value
+starSystemIdEncoder (StarSystemId x) =
+    Encode.int x
 
 
 starSystemDecoder : Decode.Decoder StarSystem

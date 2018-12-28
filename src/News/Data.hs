@@ -1,78 +1,28 @@
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies          #-}
-{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE NoImplicitPrelude      #-}
+{-# LANGUAGE OverloadedStrings      #-}
+{-# LANGUAGE TemplateHaskell        #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
-module News ( NewsArticle(..)
-            , parseNews, parseNewsEntity, parseNewsEntities
-            , userWrittenNews, planetFoundNews, starFoundNews
-            , designCreatedNews, buildingConstructionFinishedNews
-            , UserNewsIcon(..)
-            , StarFoundNews(..), PlanetFoundNews(..), UserWrittenNews(..)
-            , DesignCreatedNews(..), ConstructionFinishedNews(..), iconMapper
-            , iconInfo, userNewsIconMapper )
+module News.Data ( NewsArticle(..), UserNewsIcon(..), StarFoundNews(..)
+                 , PlanetFoundNews(..), UserWrittenNews(..), DesignCreatedNews(..)
+                 , ConstructionFinishedNews(..), SpecialNews(..), mkNews, mkSpecialNews
+                 )
     where
 
 import Import
 import Data.Aeson.TH
-import Data.Aeson (decode)
-import Data.Text.Encoding (encodeUtf8Builder)
-import Data.ByteString.Builder(toLazyByteString)
-import Data.Maybe (isJust, fromJust)
-import Data.Aeson.Text (encodeToLazyText)
-import Buildings ( building, BLevel(..), BuildingInfo(..) )
-import Events ( KragiiWormsEvent(..) )
+import Data.Aeson.Text ( encodeToLazyText )
 import Common ( ToDto(..), FromDto(..) )
+import CustomTypes ( SpecialEventStatus(..) )
 import Dto.News ( NewsDto(..), NewsArticleDto(..), StarFoundNewsDto(..), PlanetFoundNewsDto(..)
                 , UserWrittenNewsDto(..), DesignCreatedNewsDto(..), ConstructionFinishedNewsDto(..)
-                , IconMapper(..), UserNewsIconDto(..) )
-
-
--- | Use passed url render function to return link to news article's icon
--- This function is useful for example when returning JSON data to client
--- and supplying link to icon that should be displayed for it.
-iconMapper :: (Route App -> Text) -> IconMapper UserNewsIconDto -> IconMapper NewsArticleDto
-iconMapper render userIconMapper =
-    IconMapper $ \article ->
-        case article of
-            StarFoundDto _ ->
-                render $ StaticR images_news_sun_png
-
-            PlanetFoundDto _->
-                render $ StaticR images_news_planet_png
-
-            UserWrittenDto details ->
-                runIconMapper userIconMapper $ userWrittenNewsDtoIcon details
-
-            DesignCreatedDto _ ->
-                render $ StaticR images_news_blueprint_png
-
-            ConstructionFinishedDto _ ->
-                render $ StaticR images_news_crane_png
-
-
--- | Get url to image corresponding to icon selection in user news
-userNewsIconMapper :: (Route App -> Text) -> IconMapper UserNewsIconDto
-userNewsIconMapper render =
-    IconMapper $ \icon ->
-        case icon of
-            GenericUserNewsDto ->
-                render $ StaticR images_news_question_png
-
-            JubilationUserNewsDto ->
-                render $ StaticR images_news_jubileum_png
-
-            CatUserNewsDto ->
-                render $ StaticR images_news_cat_png
-
-
--- | List of tuples for all user news icon dtos, containing dto and link to
--- resource that can be used to retrieve image corresponding to dto
-iconInfo :: IconMapper UserNewsIconDto -> [(UserNewsIconDto, Text)]
-iconInfo mapper =
-    map (\x -> (x, runIconMapper mapper x)) $ enumFrom minBound
+                , IconMapper(..), UserNewsIconDto(..), SpecialNewsDto(..), KragiiWormsEventDto(..)
+                )
+import Events.Import ( UserOption(..) )
+import Events.Kragii ( KragiiWormsEvent(..), KragiiWormsChoice(..), KragiiNews(..) )
 
 
 -- | All possible news articles
@@ -82,6 +32,8 @@ data NewsArticle =
     | UserWritten UserWrittenNews
     | DesignCreated DesignCreatedNews
     | ConstructionFinished ConstructionFinishedNews
+    | KragiiResolution KragiiNews
+    | Special SpecialNews
 
 
 -- | News announcing discovery of a new star
@@ -259,6 +211,12 @@ instance FromDto NewsArticle NewsArticleDto where
             ConstructionFinishedDto content ->
                 ConstructionFinished $ fromDto content
 
+            KragiiDto content ->
+                KragiiResolution $ fromDto content
+
+            SpecialDto content ->
+                Special $ fromDto content
+
 
 instance ToDto NewsArticle NewsArticleDto where
     toDto news =
@@ -268,11 +226,39 @@ instance ToDto NewsArticle NewsArticleDto where
             (UserWritten x) -> UserWrittenDto $ toDto x
             (DesignCreated x) -> DesignCreatedDto $ toDto x
             (ConstructionFinished x) -> ConstructionFinishedDto $ toDto x
+            (KragiiResolution x) -> KragiiDto $ toDto x
+            (Special x) -> SpecialDto $ toDto x
 
 
 -- | Special news that require player interaction
-data SpecialNews = KragiiWorms KragiiWormsEvent
+data SpecialNews = KragiiWorms KragiiWormsEvent [UserOption KragiiWormsChoice] (Maybe KragiiWormsChoice)
     deriving (Show, Read, Eq)
+
+
+instance ToDto SpecialNews SpecialNewsDto where
+    toDto (KragiiWorms event options choice) =
+        KragiiEventDto $ KragiiWormsEventDto
+            { kragiiWormsDtoPlanetId = kragiiWormsPlanetId event
+            , kragiiWormsDtoPlanetName = kragiiWormsPlanetName event
+            , kragiiWormsDtoSystemId = kragiiWormsSystemId event
+            , kragiiWormsDtoSystemName = kragiiWormsSystemName event
+            , kragiiWormsDtoOptions = fmap toDto options
+            , kragiiWormsDtoChoice = fmap toDto choice
+            , kragiiWormsDtoDate = kragiiWormsDate event
+            }
+
+
+instance FromDto SpecialNews SpecialNewsDto where
+    fromDto (KragiiEventDto dto) =
+        KragiiWorms ( KragiiWormsEvent
+                        { kragiiWormsPlanetId = kragiiWormsDtoPlanetId dto
+                        , kragiiWormsPlanetName = kragiiWormsDtoPlanetName dto
+                        , kragiiWormsSystemId = kragiiWormsDtoSystemId dto
+                        , kragiiWormsSystemName = kragiiWormsDtoSystemName dto
+                        , kragiiWormsDate = kragiiWormsDtoDate dto
+                        } )
+                    []
+                    (fmap fromDto $ kragiiWormsDtoChoice dto)
 
 
 -- | Icon for user created news
@@ -309,93 +295,26 @@ instance FromDto UserNewsIcon UserNewsIconDto where
                 CatUserNews
 
 
--- | Parse database entry of news and construct a possible news article
-parseNews :: News -> Maybe NewsArticle
-parseNews =
-    decode . toLazyByteString . encodeUtf8Builder . newsContent
+-- | Helper function for creating News that aren't special events and haven't been dismissed
+mkNews :: Key Faction -> Time -> NewsArticle -> News
+mkNews fId date content =
+    News { newsContent = toStrict $ encodeToLazyText content
+         , newsFactionId = fId
+         , newsDate = timeCurrentTime date
+         , newsDismissed = False
+         , newsSpecialEvent = NoSpecialEvent
+         }
 
 
--- | Given a news entity, parse that into a tuple of key and possible news article
-parseNewsEntity :: Entity News -> (Key News, Maybe NewsArticle)
-parseNewsEntity entity =
-    let
-        nId = entityKey entity
-        news = entityVal entity
-    in
-        (nId, parseNews news)
-
-
--- | Given a list of news entities, parse them into a list of tuples of key and possible news article
--- Entries that failed to parse are removed from the end result
-parseNewsEntities :: [Entity News] -> [(Key News, NewsArticle)]
-parseNewsEntities entities =
-    let
-        parsed = map parseNewsEntity entities
-        removeFailed (_ , article) = isJust article
-        simplify (key, article) = (key, fromJust article)
-    in
-        map simplify $ filter removeFailed parsed
-
-
--- | Construct news entry for user submitted news
-userWrittenNews :: Text -> UserNewsIcon -> Time -> User -> News
-userWrittenNews msg icon date user =
-    let
-        content = UserWritten $ UserWrittenNews msg icon (timeCurrentTime date) (userIdent user)
-    in
-        News (toStrict $ encodeToLazyText content) (fromJust $ userFactionId user) (timeCurrentTime date) False
-
-
--- | Construct news entry for discovery of new planet
-planetFoundNews :: Entity Planet -> StarSystem -> Time -> Key Faction -> News
-planetFoundNews planetEnt system date fId =
-    let
-        planet = entityVal planetEnt
-        planetKey = entityKey planetEnt
-        content = PlanetFound $ PlanetFoundNews (planetName planet) (starSystemName system) (planetStarSystemId planet) planetKey (timeCurrentTime date)
-    in
-        News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
-
-
--- | Construct news entry for discovery of new star
-starFoundNews :: Star -> Entity StarSystem -> Time -> Key Faction -> News
-starFoundNews star systemEnt date fId =
-    let
-        system = entityVal systemEnt
-        systemId = entityKey systemEnt
-        content = StarFound $ StarFoundNews (starName star) (starSystemName system) systemId (timeCurrentTime date)
-    in
-        News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
-
-
--- | Construct news entry for creation of new space ship desgin
-designCreatedNews :: Entity Design -> Time -> Key Faction -> News
-designCreatedNews design date fId =
-    let
-        dId = entityKey design
-        name = designName $ entityVal design
-        content = DesignCreated $ DesignCreatedNews dId name (timeCurrentTime date)
-    in
-        News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
-
-
--- | Construct news entry for a finished building construction
-buildingConstructionFinishedNews :: Entity Planet -> Entity StarSystem -> Entity Building -> Time -> Key Faction -> News
-buildingConstructionFinishedNews planetE starSystemE buildingE date fId =
-    let
-        modelBuilding = building (buildingType $ entityVal buildingE) (BLevel $ buildingLevel $ entityVal buildingE)
-        content = ConstructionFinished $ ConstructionFinishedNews
-                    { constructionFinishedNewsPlanetName = (Just . planetName . entityVal) planetE
-                    , constructionFinishedNewsPlanetId = Just $ entityKey planetE
-                    , constructionFinishedNewsSystemName = (starSystemName . entityVal) starSystemE
-                    , constructionFinishedNewsSystemId = entityKey starSystemE
-                    , constructionFinishedConstructionName = buildingInfoName modelBuilding
-                    , constructionFinishedBuildingId = Just $ entityKey buildingE
-                    , constructionFinishedShipId = Nothing
-                    , constructionFinishedDate = timeCurrentTime date
-                    }
-    in
-        News (toStrict $ encodeToLazyText content) fId (timeCurrentTime date) False
+-- | Helper function for creating News that are special events and haven't been handled
+mkSpecialNews :: Time -> Key Faction -> SpecialNews -> News
+mkSpecialNews date fId content =
+    News { newsContent = toStrict $ encodeToLazyText $ Special content
+         , newsFactionId = fId
+         , newsDate = timeCurrentTime date
+         , newsDismissed = False
+         , newsSpecialEvent = UnhandledSpecialEvent
+         }
 
 
 $(deriveJSON defaultOptions ''StarFoundNews)

@@ -8,10 +8,12 @@ import Api.Messages
         , getIcons
         , getNews
         , postNews
+        , putNews
         )
 import Data.Accessors
     exposing
         ( activeUserIconA
+        , choiceA
         , currentPageA
         , iconsA
         , messagesRA
@@ -28,7 +30,15 @@ import Data.Common
         , maxPage
         , unStarDate
         )
-import Data.Messages exposing (NewsArticle, NewsContent(..), UserIcon(..))
+import Data.Messages
+    exposing
+        ( NewsArticle
+        , NewsContent(..)
+        , SpecialEventChoice
+        , SpecialEventOption
+        , UserIcon(..)
+        , unSpecialEventChoice
+        )
 import Data.Model exposing (Model, Msg(..))
 import Data.User exposing (Role(..), unUserName)
 import Html
@@ -41,6 +51,7 @@ import Html
         , i
         , img
         , li
+        , span
         , text
         , textarea
         , ul
@@ -133,15 +144,8 @@ descendingStarDate a b =
 -}
 newsEntry : NewsArticle -> Html Msg
 newsEntry article =
-    div [ class "row news-article" ]
-        [ div [ class "col-lg-2" ]
-            [ img
-                [ class "news-icon"
-                , src <| article.icon
-                ]
-                []
-            ]
-        , div [ class "col-lg-10" ]
+    let
+        titleRow =
             [ div [ class "row" ]
                 [ div [ class "col-lg-11" ]
                     [ ul [ class "news-title" ]
@@ -152,11 +156,72 @@ newsEntry article =
                 , div [ class "col-lg-1" ]
                     [ i [ class "fas fa-trash-alt news-title-button", onClick (NewsMessage <| NewsEntryDismissed article) ] [] ]
                 ]
-            , div [ class "row" ]
+            ]
+
+        bodyRow =
+            [ div [ class "row" ]
                 [ div [ class "col-lg-12 news-body" ]
                     (newsBody article)
                 ]
             ]
+
+        optionsRows =
+            List.map (optionSelection article) <| article.options
+    in
+    div [ class "row news-article" ]
+        [ div [ class "col-lg-2" ]
+            [ img
+                [ class "news-icon"
+                , src <| article.icon
+                ]
+                []
+            ]
+        , div [ class "col-lg-10" ] <|
+            titleRow
+                ++ bodyRow
+                ++ optionsRows
+        ]
+
+
+optionSelection : NewsArticle -> SpecialEventOption -> Html Msg
+optionSelection article option =
+    let
+        currentlySelected =
+            case article.choice of
+                Just x ->
+                    unSpecialEventChoice x == unSpecialEventChoice option.choice
+
+                Nothing ->
+                    False
+
+        titleBlock =
+            if currentlySelected then
+                [ text option.title
+                , i [ class "fas fa-check-circle" ] []
+                ]
+
+            else
+                [ span [ onClick (NewsMessage <| SpecialEventChoiceMade (set choiceA (Just option.choice) article)) ]
+                    [ text option.title ]
+                ]
+    in
+    div [ class "row" ]
+        [ div [ class "col-lg-12" ]
+            ([ div [ class "row" ]
+                [ div [ class "col-lg-12" ]
+                    titleBlock
+                ]
+             ]
+                ++ List.map optionDescription option.explanation
+            )
+        ]
+
+
+optionDescription : String -> Html Msg
+optionDescription desc =
+    div [ class "row option-desc" ]
+        [ div [ class "col-lg-12" ]
+            [ text desc ]
         ]
 
 
@@ -183,6 +248,12 @@ newsTitle article =
         ShipFinished _ ->
             text "Construction finished"
 
+        KragiiEvent _ ->
+            text "Kragii sighting"
+
+        KragiiResolved _ ->
+            text "Kragii situation develops"
+
 
 {-| Create body of news article
 -}
@@ -190,7 +261,7 @@ newsBody : NewsArticle -> List (Html Msg)
 newsBody article =
     case article.content of
         PlanetFound details ->
-            [ text "a new planet has been discovered in "
+            [ text "A new planet has been discovered in "
             , a [ href (StarSystemR details.systemId) ] [ text details.systemName ]
             , text " and has been named to "
             , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
@@ -198,7 +269,7 @@ newsBody article =
             ]
 
         StarFound details ->
-            [ text "a new star has been discovered in "
+            [ text "A new star has been discovered in "
             , a [ href (StarSystemR details.systemId) ] [ text details.systemName ]
             , text "."
             ]
@@ -207,7 +278,7 @@ newsBody article =
             [ text details.message ]
 
         DesignCreated details ->
-            [ text "a new design called "
+            [ text "A new design called "
             , text details.name
             , text " has been submitted and approved."
             ]
@@ -221,6 +292,20 @@ newsBody article =
 
         ShipFinished _ ->
             []
+
+        KragiiEvent details ->
+            [ text "Large amount of kragii worms has been sighted on "
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , text ". As the situation develops, decision what to do about them needs to be made."
+            ]
+
+        KragiiResolved details ->
+            [ text "Report from "
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , text ": \""
+            , text details.report
+            , text "\""
+            ]
 
 
 {-| Render right side of the page
@@ -337,6 +422,11 @@ update msg model =
         UserMessageSent icon message ->
             ( model
             , postNews message icon
+            )
+
+        SpecialEventChoiceMade article ->
+            ( model
+            , putNews article
             )
 
         NewsEntryDismissed article ->

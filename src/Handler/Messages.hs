@@ -5,16 +5,18 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 module Handler.Messages ( getApiMessageR, getMessageR, deleteApiMessageIdR
-                        , postApiMessageR, getApiMessageIconsR )
+                        , postApiMessageR, getApiMessageIconsR, putApiMessageIdR )
     where
 
-import Common ( apiRequireFaction, toDto, fromDto, apiNotFound, apiForbidden )
-import Handler.Home ( getNewHomeR )
 import Import
-import News ( parseNewsEntities, iconMapper, NewsArticle(..), UserWrittenNews(..)
-            , iconInfo, userNewsIconMapper )
 import Data.Aeson.Text (encodeToLazyText)
-import MenuHelpers (starDate)
+
+import Common ( apiRequireFaction, toDto, fromDto, apiNotFound, apiForbidden )
+import CustomTypes ( SpecialEventStatus(..) )
+import Handler.Home ( getNewHomeR )
+import MenuHelpers ( starDate )
+import News.Data ( NewsArticle(..), UserWrittenNews(..) )
+import News.Import ( parseNewsEntities, iconMapper, iconInfo, userNewsIconMapper )
 
 
 -- | Api method to retrieve all pending messages
@@ -37,6 +39,24 @@ deleteApiMessageIdR mId = do
     loadAllMessages fId
 
 
+-- | Api method for updated specific message. Used to make user choice for interactive
+-- event
+putApiMessageIdR :: Key News -> Handler Value
+putApiMessageIdR mId = do
+    (_, _, fId) <- apiRequireFaction
+    msg <- requireJsonBody
+    let article = fromDto msg
+    _ <- if isSpecialEvent article
+            then do
+                loadedMessages <- runDB $ selectList [ NewsId ==. mId
+                                                     , NewsFactionId ==. fId ] [ Asc NewsDate ]
+                if length loadedMessages == 0
+                    then apiNotFound
+                    else runDB $ update mId [ NewsContent =. (toStrict $ encodeToLazyText article) ]
+            else apiForbidden "unsupported article type"
+    loadAllMessages fId
+
+
 -- | Api method to add new user submitted news article
 -- Trying to submit any other type of news article will return
 postApiMessageR :: Handler Value
@@ -50,6 +70,7 @@ postApiMessageR = do
                                      , newsFactionId = fId
                                      , newsDate = timeCurrentTime currentDate
                                      , newsDismissed = False
+                                     , newsSpecialEvent = NoSpecialEvent
                                      }
             else apiForbidden "unsupported article type"
     loadAllMessages fId
@@ -68,10 +89,16 @@ getMessageR :: Handler Html
 getMessageR = getNewHomeR
 
 
--- | Return true if article is user written
+-- | True if article is user written
 isUserSupplied :: NewsArticle -> Bool
 isUserSupplied (UserWritten _) = True
 isUserSupplied _ = False
+
+
+-- | True if article is special event
+isSpecialEvent :: NewsArticle -> Bool
+isSpecialEvent (Special _) = True
+isSpecialEvent _ = False
 
 
 -- | Update news article to have specific star date

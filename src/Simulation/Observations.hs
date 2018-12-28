@@ -18,7 +18,7 @@ import CustomTypes
 import Report ( createPlanetReports, createStarLaneReports, createStarReports
               , CollatedPlanetReport(..), CollatedStarLaneReport(..), CollatedStarReport(..))
 import Common
-import News (planetFoundNews, starFoundNews)
+import News.Import (planetFoundNews, starFoundNews)
 import Data.Maybe (fromJust)
 
 

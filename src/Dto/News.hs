@@ -7,11 +7,13 @@
 
 module Dto.News ( NewsDto(..), NewsArticleDto(..), StarFoundNewsDto(..), PlanetFoundNewsDto(..)
                 , UserWrittenNewsDto(..), DesignCreatedNewsDto(..)
-                , ConstructionFinishedNewsDto(..), IconMapper(..), UserNewsIconDto(..) ) where
+                , ConstructionFinishedNewsDto(..), IconMapper(..), UserNewsIconDto(..), SpecialNewsDto(..)
+                , KragiiWormsEventDto(..), UserOptionDto(..), KragiiWormsChoiceDto(..), KragiiNewsDto(..)
+                ) where
 
 import Import
 import Data.Aeson ( object, (.=), (.!=), (.:?), withObject )
-import Data.Aeson.TH ( deriveJSON, defaultOptions, constructorTagModifier )
+import Data.Aeson.TH ( deriveJSON, defaultOptions, constructorTagModifier, fieldLabelModifier )
 
 
 -- | mapper that can be used to retrieve link to icon as Text.
@@ -38,6 +40,55 @@ data NewsArticleDto =
     | UserWrittenDto UserWrittenNewsDto
     | DesignCreatedDto DesignCreatedNewsDto
     | ConstructionFinishedDto ConstructionFinishedNewsDto
+    | KragiiDto KragiiNewsDto
+    | SpecialDto SpecialNewsDto
+    deriving (Show, Read, Eq)
+
+
+-- | data transfer object for all kinds of special news
+data SpecialNewsDto =
+    KragiiEventDto KragiiWormsEventDto
+    deriving (Show, Read, Eq)
+
+
+-- | Data transfer object for kragii attack special event
+data KragiiWormsEventDto = KragiiWormsEventDto
+    { kragiiWormsDtoPlanetId :: Key Planet
+    , kragiiWormsDtoPlanetName :: Text
+    , kragiiWormsDtoSystemId :: Key StarSystem
+    , kragiiWormsDtoSystemName :: Text
+    , kragiiWormsDtoOptions :: [UserOptionDto KragiiWormsChoiceDto]
+    , kragiiWormsDtoChoice :: Maybe KragiiWormsChoiceDto
+    , kragiiWormsDtoDate :: Int
+    }
+    deriving (Show, Read, Eq)
+
+
+-- | data transfer object for user choice regarding kragii attack
+data KragiiWormsChoiceDto = EvadeWormsDto
+    | AttackWormsDto
+    | TameWormsDto
+    deriving (Show, Read, Eq)
+
+
+-- | data transfer option for general user choice regarding special event
+data UserOptionDto a =
+    UserOptionDto { userOptionDtoTitle :: Text
+                  , userOptionDtoExplanation :: [Text]
+                  , userOptionDtoChoice :: a
+                  }
+    deriving (Show, Read, Eq)
+
+
+-- | data transfer object for news that tell resolution of kragii attack
+data KragiiNewsDto = KragiiNewsDto
+    { kragiiNewsDtoPlanetId :: Key Planet
+    , kragiiNewsDtoPlanetName :: Text
+    , kragiiNewsDtoSystemId :: Key StarSystem
+    , kragiiNewsDtoSystemName :: Text
+    , kragiiNewsDtoResolution :: Text
+    , kragiiNewsDtoDate :: Int
+    }
     deriving (Show, Read, Eq)
 
 
@@ -143,6 +194,12 @@ jsonTag news =
                 Nothing ->
                     "ShipFinished"
 
+        SpecialDto (KragiiEventDto _) ->
+            "KragiiEvent"
+
+        KragiiDto _ ->
+            "KragiiResolution"
+
 
 instance ToJSON NewsArticleDto where
     toJSON news =
@@ -152,6 +209,8 @@ instance ToJSON NewsArticleDto where
             UserWrittenDto dto -> toJSON dto
             DesignCreatedDto dto -> toJSON dto
             ConstructionFinishedDto dto -> toJSON dto
+            KragiiDto dto -> toJSON dto
+            SpecialDto (KragiiEventDto dto) -> toJSON dto
 
 
 instance FromJSON NewsArticleDto where
@@ -178,7 +237,17 @@ instance FromJSON NewsArticleDto where
                        || tag == ("ShipFinished" :: String))
                 contents <- o .: "contents"
                 return $ ConstructionFinishedDto contents
+            , do
+                guard (tag == ("KragiiEvent" :: String))
+                contents <- o .: "contents"
+                return $ SpecialDto (KragiiEventDto contents)
              ]
+
+
+instance ToJSON SpecialNewsDto where
+    toJSON dto =
+        case dto of
+            KragiiEventDto x -> toJSON x
 
 
 -- | map planet found news into JSON
@@ -329,5 +398,15 @@ newsStarDate article =
         ConstructionFinishedDto details ->
             constructionFinishedNewsDtoDate details
 
+        KragiiDto details ->
+            kragiiNewsDtoDate details
+
+        SpecialDto (KragiiEventDto details) ->
+            kragiiWormsDtoDate details
+
 
 $(deriveJSON defaultOptions { constructorTagModifier = \x -> take (length x - 3) x } ''UserNewsIconDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = \x -> drop 14 x } ''KragiiWormsEventDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = \x -> drop 13 x } ''UserOptionDto)
+$(deriveJSON defaultOptions { constructorTagModifier = \x -> take (length x - 3) x } ''KragiiWormsChoiceDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = \x -> drop 13 x } ''KragiiNewsDto)

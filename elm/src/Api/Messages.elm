@@ -1,4 +1,10 @@
-module Api.Messages exposing (deleteNews, getIcons, getNews, postNews)
+module Api.Messages exposing
+    ( deleteNews
+    , getIcons
+    , getNews
+    , postNews
+    , putNews
+    )
 
 import Accessors
 import Api.Common
@@ -6,6 +12,7 @@ import Api.Common
         ( delete
         , get
         , post
+        , put
         , starDateDecoder
         , starDateEncoder
         )
@@ -14,22 +21,34 @@ import Api.StarSystem
     exposing
         ( buildingIdDecoder
         , planetIdDecoder
+        , planetIdEncoder
         , starSystemIdDecoder
+        , starSystemIdEncoder
         )
-import Api.User exposing (userNameDecoder)
+import Api.User
+    exposing
+        ( factionIdDecoder
+        , factionIdEncoder
+        , userNameDecoder
+        )
 import Data.Accessors exposing (iconsA)
 import Data.Common exposing (MessageId(..), StarDate(..), triple)
 import Data.Messages
     exposing
         ( BuildingFinishedNews
         , DesignCreatedNews
+        , KragiiResolution
+        , KragiiSpecialEvent
         , NewsArticle
         , NewsContent(..)
         , PlanetFoundNews
         , ShipFinishedNews
+        , SpecialEventChoice(..)
+        , SpecialEventOption
         , StarFoundNews
         , UserIcon(..)
         , UserWrittenNews
+        , unSpecialEventChoice
         )
 import Data.Model exposing (ApiMsg(..), Model, Msg(..))
 import Data.User exposing (UserName(..), unUserName)
@@ -51,7 +70,9 @@ import Json.Decode as Decode
 import Json.Decode.Extra
     exposing
         ( andMap
+        , optionalField
         , when
+        , withDefault
         )
 import Json.Encode as Encode
 import Tuple exposing (pair)
@@ -72,10 +93,6 @@ deleteNews mId =
     Http.send (ApiMsgCompleted << NewsReceived) (delete (ApiSingleMessage mId) (list newsDecoder))
 
 
-
--- post : Endpoint -> Encode.Value -> Decode.Decoder a -> Http.Request a
-
-
 {-| Submit user written news entry
 -}
 postNews : String -> UserIcon -> Cmd Msg
@@ -93,35 +110,92 @@ postNews message icon =
             , starDate = StarDate 0 -- Filled in by server
             , icon = "" -- Filled in by server
             , content = content
+            , options = [] -- Filled in by server
+            , choice = Nothing -- Not used in user written entries
             }
     in
     Http.send (ApiMsgCompleted << NewsReceived) (post ApiMessageList (newsEncoder news) (list newsDecoder))
+
+
+{-| Update news article. Used for making choice for special events
+-}
+putNews : NewsArticle -> Cmd Msg
+putNews article =
+    Http.send (ApiMsgCompleted << NewsReceived) (put (ApiSingleMessage article.messageId) (newsEncoder article) (list newsDecoder))
 
 
 newsEncoder : NewsArticle -> Encode.Value
 newsEncoder article =
     Encode.object
         [ ( "id", messageIdEncoder article.messageId )
-        , ( "contents", newsContentEncoder article.starDate article.content )
-        , ( "tag", Encode.string "UserWritten" )
+        , ( "contents", newsContentEncoder article )
+        , ( "tag", Encode.string <| newsTag article )
         , ( "icon", Encode.string article.icon )
         , ( "starDate", starDateEncoder article.starDate )
         ]
 
 
-newsContentEncoder : StarDate -> NewsContent -> Encode.Value
-newsContentEncoder sDate content =
-    case content of
+{-| Tag of NewsArticle, used to identify NewsArticle type in JSON
+-}
+newsTag : NewsArticle -> String
+newsTag article =
+    case article.content of
+        StarFound _ ->
+            "StarFound"
+
+        PlanetFound _ ->
+            "PlanetFound"
+
+        UserWritten _ ->
+            "UserWritten"
+
+        DesignCreated _ ->
+            "DesignCreated"
+
+        BuildingFinished _ ->
+            "BuildingFinished"
+
+        ShipFinished _ ->
+            "ShipFinished"
+
+        KragiiEvent _ ->
+            "KragiiEvent"
+
+        KragiiResolved _ ->
+            "KragiiResolution"
+
+
+newsContentEncoder : NewsArticle -> Encode.Value
+newsContentEncoder newsArticle =
+    case newsArticle.content of
         UserWritten article ->
             Encode.object
                 [ ( "content", Encode.string article.message )
-                , ( "starDate", starDateEncoder sDate )
+                , ( "starDate", starDateEncoder newsArticle.starDate )
                 , ( "userName", Encode.string (unUserName article.author) )
                 , ( "icon", userIconEncoder article.icon )
                 ]
 
+        KragiiEvent article ->
+            Encode.object
+                [ ( "PlanetId", planetIdEncoder article.planetId )
+                , ( "SystemId", starSystemIdEncoder article.systemId )
+                , ( "PlanetName", Encode.string article.planetName )
+                , ( "SystemName", Encode.string article.systemName )
+                , ( "Date", starDateEncoder newsArticle.starDate )
+                , ( "Options", Encode.list Encode.string [] ) -- not used by server
+                , ( "Choice"
+                  , case newsArticle.choice of
+                        Just x ->
+                            specialEventChoiceEncoder x
+
+                        Nothing ->
+                            Encode.null
+                  )
+                ]
+
         _ ->
-            Debug.todo "implement later"
+            Debug.todo "not implemented"
 
 
 {-| Retrieve user news icons and links to corresponding images
@@ -153,12 +227,14 @@ newsDecoder =
             newsContentDecoder
                 |> andThen (result header)
 
-        result ( icon, mId, sDate ) content =
+        result header content =
             succeed
-                { messageId = mId
-                , starDate = sDate
-                , icon = icon
+                { messageId = header.id
+                , starDate = header.starDate
+                , icon = header.icon
                 , content = content
+                , options = header.options
+                , choice = header.choice
                 }
     in
     newsHeader
@@ -176,6 +252,8 @@ newsContentDecoder =
         , when newsType (is "BuildingFinished") (field "contents" buildingFinishedNewsArticle)
         , when newsType (is "DesignCreated") (field "contents" designCreatedNewsArticle)
         , when newsType (is "ShipFinished") (field "contents" shipFinishedNewsArticle)
+        , when newsType (is "KragiiEvent") (field "contents" kragiiEventNewsArticle)
+        , when newsType (is "KragiiResolution") (field "contents" kragiiResolutionNewsArticle)
         ]
 
 
@@ -234,12 +312,23 @@ userWrittenNewsArticle =
 
 {-| Decode common message header containing link to icon and message id
 -}
-newsHeader : Decode.Decoder ( String, MessageId, StarDate )
+newsHeader : Decode.Decoder NewsHeader
 newsHeader =
-    succeed triple
+    succeed NewsHeader
         |> andMap (field "icon" string)
         |> andMap (field "id" messageId)
         |> andMap (field "starDate" starDateDecoder)
+        |> andMap (field "contents" (field "Options" (list specialEventOptionDecoder)) |> withDefault [])
+        |> andMap (field "contents" (field "Choice" (maybe specialEventChoiceDecoder)) |> withDefault Nothing)
+
+
+type alias NewsHeader =
+    { icon : String
+    , id : MessageId
+    , starDate : StarDate
+    , options : List SpecialEventOption
+    , choice : Maybe SpecialEventChoice
+    }
 
 
 {-| Decoder for message id
@@ -279,6 +368,39 @@ buildingFinishedNewsArticle =
                 |> andMap (field "buildingId" buildingIdDecoder)
     in
     succeed BuildingFinished
+        |> andMap decoder
+
+
+kragiiEventNewsArticle : Decode.Decoder NewsContent
+kragiiEventNewsArticle =
+    let
+        decoder =
+            succeed KragiiSpecialEvent
+                |> andMap (field "PlanetName" string)
+                |> andMap (field "PlanetId" planetIdDecoder)
+                |> andMap (field "SystemName" string)
+                |> andMap (field "SystemId" starSystemIdDecoder)
+
+        -- |> andMap (field "Options" (list specialEventOptionDecoder))
+    in
+    succeed KragiiEvent
+        |> andMap decoder
+
+
+{-| Decoder for news detailing how kragii attack was handled
+-}
+kragiiResolutionNewsArticle : Decode.Decoder NewsContent
+kragiiResolutionNewsArticle =
+    let
+        decoder =
+            succeed KragiiResolution
+                |> andMap (field "PlanetName" string)
+                |> andMap (field "PlanetId" planetIdDecoder)
+                |> andMap (field "SystemName" string)
+                |> andMap (field "SystemId" starSystemIdDecoder)
+                |> andMap (field "Resolution" string)
+    in
+    succeed KragiiResolved
         |> andMap decoder
 
 
@@ -330,3 +452,22 @@ userIconEncoder icon =
 
         CatUserNewsIcon ->
             Encode.string "CatUserNews"
+
+
+specialEventOptionDecoder : Decode.Decoder SpecialEventOption
+specialEventOptionDecoder =
+    succeed SpecialEventOption
+        |> andMap (field "Title" string)
+        |> andMap (field "Explanation" (list string))
+        |> andMap (field "Choice" specialEventChoiceDecoder)
+
+
+specialEventChoiceDecoder : Decode.Decoder SpecialEventChoice
+specialEventChoiceDecoder =
+    succeed SpecialEventChoice
+        |> andMap string
+
+
+specialEventChoiceEncoder : SpecialEventChoice -> Encode.Value
+specialEventChoiceEncoder choice =
+    Encode.string (unSpecialEventChoice choice)

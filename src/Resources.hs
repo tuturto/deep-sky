@@ -28,14 +28,14 @@ subTotalCost a b =
                  }
 
 instance Semigroup (RawResources t) where
-    (<>) a b = RawResources 
+    (<>) a b = RawResources
         { ccdMechanicalCost = ccdMechanicalCost a <> ccdMechanicalCost b
         , ccdBiologicalCost = ccdBiologicalCost a <> ccdBiologicalCost b
         , ccdChemicalCost = ccdChemicalCost a <> ccdChemicalCost b
         }
 
 instance Monoid (RawResources t) where
-    mempty = RawResources 
+    mempty = RawResources
         { ccdMechanicalCost = RawResource 0
         , ccdBiologicalCost = RawResource 0
         , ccdChemicalCost = RawResource 0
@@ -69,7 +69,7 @@ instance ToJSON (RawResources t) where
     toJSON (RawResources mech bio chem) =
         object [ "mechanical" .= unRawResource mech
                , "biological" .= unRawResource bio
-               , "chemical" .= unRawResource chem 
+               , "chemical" .= unRawResource chem
                ]
 
 instance FromJSON (RawResources t) where
