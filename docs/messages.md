@@ -1,4 +1,4 @@
 News and Messages
 =================
 
-[[img/messages.png]]
+![Messages page][img/messages.png]

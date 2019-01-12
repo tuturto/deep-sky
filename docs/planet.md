@@ -1,4 +1,4 @@
 Planet
 ======
 
-[[img/planet.png]]
+![Planet page][img/planet.png]

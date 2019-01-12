@@ -1,4 +1,4 @@
 Star System
 ===========
 
-[[img/starsystem.png]]
+![Star system page][img/starsystem.png]
