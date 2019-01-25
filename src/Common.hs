@@ -6,11 +6,12 @@
 
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
               , FromDto(..), ToDto(..), apiNotFound, apiInvalidArgs, apiInternalError, apiOk
-              , safeHead, apiForbidden )
+              , safeHead, apiForbidden, mkUniq )
     where
 
 import Import
 import qualified Prelude as P ( (!!), length )
+import Data.Set
 import System.Random
 
 
@@ -119,3 +120,7 @@ instance ToJSON ErrorJson where
 
     toJSON ErrorsJson { unerrors = errs } =
         object [ "errors" .= errs ]
+
+
+mkUniq :: Ord a => [a] -> [a]
+mkUniq = Data.Set.toList . Data.Set.fromList

@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 
 module Queries ( planetPopulationReports, shipsAtPlanet, ShipLandingStatus(..), planetConstructionQueue
-               , populatedFarmingPlanets )
+               , kragiiTargetPlanets, farmingChangeTargetPlanets )
     where
 
 import Import
@@ -12,7 +12,7 @@ import qualified Prelude as P
 import qualified Database.Esqueleto as E
 import Data.List ( nub )
 import Common ( safeHead )
-import CustomTypes ( BuildingType(..) )
+import CustomTypes ( BuildingType(..), PlanetaryStatus(..) )
 
 
 -- | Load population reports of a planet and respective races
@@ -64,17 +64,20 @@ planetConstructionQueue pId = do
     return (planet, map snd res)
 
 
--- | Load planets with at least given population or farm count
-populatedFarmingPlanets :: (MonadIO m, BackendCompatible SqlBackend backend
+-- | Load planets that are kragii attack candidates
+kragiiTargetPlanets :: (MonadIO m, BackendCompatible SqlBackend backend
                            , PersistQueryRead backend, PersistUniqueRead backend) =>
                            Int -> Int -> Key Faction -> ReaderT backend m [Entity Planet]
-populatedFarmingPlanets pop farms fId = do
+kragiiTargetPlanets pop farms fId = do
     planets <- E.select $
-        E.from $ \(planet `E.LeftOuterJoin` population `E.LeftOuterJoin` building) -> do
+        E.from $ \(planet `E.LeftOuterJoin` population `E.LeftOuterJoin` building `E.LeftOuterJoin` status) -> do
+            E.on (status E.?. PlanetStatusPlanetId E.==. E.just (planet E.^. PlanetId)
+                  E.&&. status E.?. PlanetStatusStatus E.==. E.val (Just KragiiAttack))
             E.on (building E.?. BuildingPlanetId E.==. E.just (planet E.^. PlanetId))
             E.on (population E.?. PlanetPopulationPlanetId E.==. E.just (planet E.^. PlanetId))
             E.where_ (planet E.^. PlanetOwnerId E.==. E.val (Just fId)
-                      E.&&. building E.?. BuildingType E.==. E.val (Just Farm))
+                      E.&&. building E.?. BuildingType E.==. E.val (Just Farm)
+                      E.&&. E.isNothing (status E.?. PlanetStatusStatus))
             E.orderBy [ E.asc (planet E.^. PlanetId) ]
             return (planet, population, building)
     let grouped = groupBy (\(a, _, _) (b, _, _) -> entityKey a == entityKey b) planets
@@ -82,6 +85,33 @@ populatedFarmingPlanets pop farms fId = do
     let filtered = filter (\(_, p, f) ->
                                 p >= pop
                                 || f >= farms) counted
+    let mapped = fmap (\(ent, _, _) -> ent) filtered
+    return mapped
+
+
+-- | Load planets that are farming production change candidates
+farmingChangeTargetPlanets :: (MonadIO m, BackendCompatible SqlBackend backend
+    , PersistQueryRead backend, PersistUniqueRead backend) =>
+    Key Faction -> ReaderT backend m [Entity Planet]
+farmingChangeTargetPlanets fId = do
+    planets <- E.select $
+        E.from $ \(planet `E.LeftOuterJoin` population `E.LeftOuterJoin` building `E.LeftOuterJoin` status) -> do
+            E.on (status E.?. PlanetStatusPlanetId E.==. E.just (planet E.^. PlanetId)
+                  E.&&. status E.?. PlanetStatusStatus `E.in_` E.valList [ Just GoodHarvest
+                                                                         , Just PoorHarvest
+                                                                         ])
+            E.on (building E.?. BuildingPlanetId E.==. E.just (planet E.^. PlanetId))
+            E.on (population E.?. PlanetPopulationPlanetId E.==. E.just (planet E.^. PlanetId))
+            E.where_ (planet E.^. PlanetOwnerId E.==. E.val (Just fId)
+                      E.&&. building E.?. BuildingType E.==. E.val (Just Farm)
+                      E.&&. E.isNothing (status E.?. PlanetStatusStatus))
+            E.orderBy [ E.asc (planet E.^. PlanetId) ]
+            return (planet, population, building)
+    let grouped = groupBy (\(a, _, _) (b, _, _) -> entityKey a == entityKey b) planets
+    let counted = catMaybes $ fmap farmAndPopCount grouped
+    let filtered = filter (\(_, p, f) ->
+                                p >= 1
+                                || f >= 1) counted
     let mapped = fmap (\(ent, _, _) -> ent) filtered
     return mapped
 

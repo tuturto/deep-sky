@@ -13,13 +13,15 @@ import Import
 import System.Random
 import Common ( maybeGet )
 import CustomTypes ( SpecialEventStatus(..), PercentileChance(..), RollResult(..)
-                   , roll )
+                   , PlanetaryStatus(..), roll )
 import Events.Import ( resolveEvent, EventRemoval(..) )
 import Events.News ( report, kragiiWormsEvent )
 import News.Data ( SpecialNews(..), NewsArticle(..) )
-import News.Import ( parseNewsEntities )
-import Queries ( populatedFarmingPlanets )
+import News.Import ( parseNewsEntities, productionBoostStartedNews, productionSlowdownStartedNews )
+import Queries ( kragiiTargetPlanets, farmingChangeTargetPlanets )
+import Resources ( ResourceType(..) )
 
+import qualified Prelude as P
 
 -- | Handle all special events for given faction
 -- After processing an event, it is marked as handled and dismissed
@@ -65,21 +67,103 @@ handleSpecialEvent fId date (nId, (KragiiWorms event _ choice)) = do
 addSpecialEvents :: ( PersistQueryRead backend, MonadIO m, PersistStoreWrite backend
                     , BackendCompatible SqlBackend backend
                     , PersistUniqueRead backend, BaseBackend backend ~ SqlBackend) =>
-                    Time -> Key Faction -> ReaderT backend m (Maybe (Key News))
-addSpecialEvents date fId = do
-    -- TODO: don't trigger on planets with kragii problems
-    res <- liftIO $ roll $ PercentileChance 5
+                    Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))
+addSpecialEvents date faction = do
+    -- TODO: dynamic length
+    n <- liftIO $ randomRIO (0, 2)
+    let (odds, eventCreator) = eventCreators P.!! n
+    runEvent eventCreator odds date faction
+
+
+eventCreators :: (PersistStoreWrite backend, PersistUniqueRead backend,
+    PersistQueryRead backend, BackendCompatible SqlBackend backend,
+    MonadIO m, BaseBackend backend ~ SqlBackend) =>
+    [ (PercentileChance, Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))) ]
+eventCreators =
+    [ (PercentileChance 2, kragiiAttack)
+    , (PercentileChance 5, biologicalsBoost)
+    , (PercentileChance 5, biologicalsSlowdown)
+    ]
+
+
+runEvent :: (PersistStoreWrite backend, PersistUniqueRead backend,
+    PersistQueryRead backend, BackendCompatible SqlBackend backend,
+    MonadIO m, BaseBackend backend ~ SqlBackend) =>
+    (Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))) ->
+    PercentileChance -> Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))
+runEvent fn odds date faction = do
+    res <- liftIO $ roll odds
     case res of
-        Success -> do
-            planets <- populatedFarmingPlanets 10 5 fId
-            if length planets == 0
-                then return Nothing
-                else do
-                    n <- liftIO $ randomRIO (0, length planets - 1)
-                    let planet = maybeGet n planets
-                    starSystem <- mapM (getEntity . planetStarSystemId . entityVal) planet
-                    let event = join $ kragiiWormsEvent <$> planet <*> join starSystem <*> Just date
-                    mapM insert event
+        Success ->
+            fn date faction
 
         Failure -> do
             return Nothing
+
+
+kragiiAttack :: (PersistStoreWrite backend, PersistUniqueRead backend,
+    PersistQueryRead backend, BackendCompatible SqlBackend backend,
+    MonadIO m, BaseBackend backend ~ SqlBackend) =>
+    Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))
+kragiiAttack date faction = do
+    planets <- kragiiTargetPlanets 10 5 $ entityKey faction
+    if length planets == 0
+        then return Nothing
+        else do
+            n <- liftIO $ randomRIO (0, length planets - 1)
+            let planet = maybeGet n planets
+            let statusRec = PlanetStatus <$> fmap entityKey planet
+                                         <*> Just KragiiAttack
+                                         <*> Just Nothing
+            _ <- mapM insert statusRec
+            starSystem <- mapM (getEntity . planetStarSystemId . entityVal) planet
+            let event = join $ kragiiWormsEvent <$> planet <*> join starSystem <*> Just date
+            mapM insert event
+
+
+biologicalsBoost :: (PersistStoreWrite backend, PersistUniqueRead backend,
+    PersistQueryRead backend, BackendCompatible SqlBackend backend,
+    MonadIO m, BaseBackend backend ~ SqlBackend) =>
+    Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))
+biologicalsBoost date faction = do
+    planets <- farmingChangeTargetPlanets $ entityKey faction
+    if length planets == 0
+        then return Nothing
+        else do
+            n <- liftIO $ randomRIO (0, length planets - 1)
+            let planet = maybeGet n planets
+            let statusRec = PlanetStatus <$> fmap entityKey planet
+                                         <*> Just GoodHarvest
+                                         <*> Just (Just (timeCurrentTime date + 6))
+            _ <- mapM insert statusRec
+            starSystem <- mapM (getEntity . planetStarSystemId . entityVal) planet
+            let event = productionBoostStartedNews <$> planet
+                            <*> join starSystem
+                            <*> Just BiologicalResource
+                            <*> Just date
+                            <*> Just (entityKey faction)
+            mapM insert event
+
+
+biologicalsSlowdown :: (PersistStoreWrite backend, PersistUniqueRead backend,
+    PersistQueryRead backend, BackendCompatible SqlBackend backend,
+    MonadIO m, BaseBackend backend ~ SqlBackend) =>
+    Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))
+biologicalsSlowdown date faction = do
+    planets <- farmingChangeTargetPlanets $ entityKey faction
+    if length planets == 0
+        then return Nothing
+        else do
+            n <- liftIO $ randomRIO (0, length planets - 1)
+            let planet = maybeGet n planets
+            let statusRec = PlanetStatus <$> fmap entityKey planet
+                                         <*> Just PoorHarvest
+                                         <*> Just (Just (timeCurrentTime date + 6))
+            _ <- mapM insert statusRec
+            starSystem <- mapM (getEntity . planetStarSystemId . entityVal) planet
+            let event = productionSlowdownStartedNews <$> planet
+                            <*> join starSystem
+                            <*> Just BiologicalResource
+                            <*> Just date
+                            <*> Just (entityKey faction)
+            mapM insert event

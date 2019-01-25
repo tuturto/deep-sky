@@ -26,6 +26,7 @@ import Data.Accessors
 import Data.Common
     exposing
         ( InfoPanelStatus(..)
+        , ResourceType(..)
         , Route(..)
         , maxPage
         , unStarDate
@@ -248,6 +249,18 @@ newsTitle article =
         ShipFinished _ ->
             text "Construction finished"
 
+        ProductionBoostStarted _ ->
+            text "Production is booming"
+
+        ProductionSlowdownStarted _ ->
+            text "Production in downturn"
+
+        ProductionBoostEnded _ ->
+            text "Production returns normal"
+
+        ProductionSlowdownEnded _ ->
+            text "Production returns normal"
+
         KragiiEvent _ ->
             text "Kragii sighting"
 
@@ -292,6 +305,86 @@ newsBody article =
 
         ShipFinished _ ->
             []
+
+        ProductionBoostStarted details ->
+            let
+                productionType =
+                    case details.resourceType of
+                        BiologicalResource ->
+                            "biologicals"
+
+                        MechanicalResource ->
+                            "mechanicals"
+
+                        ChemicalResource ->
+                            "chemicals"
+            in
+            [ text "Production of "
+            , text productionType
+            , text " on "
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , text " is booming and record results are expected."
+            ]
+
+        ProductionSlowdownStarted details ->
+            let
+                productionType =
+                    case details.resourceType of
+                        BiologicalResource ->
+                            "biologicals"
+
+                        MechanicalResource ->
+                            "mechanicals"
+
+                        ChemicalResource ->
+                            "chemicals"
+            in
+            [ text "Production of "
+            , text productionType
+            , text " on "
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , text " is slowing down."
+            ]
+
+        ProductionBoostEnded details ->
+            let
+                productionType =
+                    case details.resourceType of
+                        BiologicalResource ->
+                            "biologicals"
+
+                        MechanicalResource ->
+                            "mechanicals"
+
+                        ChemicalResource ->
+                            "chemicals"
+            in
+            [ text "Recent boom in production of "
+            , text productionType
+            , text " on "
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , text " has come to end and production levels are returning to normal."
+            ]
+
+        ProductionSlowdownEnded details ->
+            let
+                productionType =
+                    case details.resourceType of
+                        BiologicalResource ->
+                            "biologicals"
+
+                        MechanicalResource ->
+                            "mechanicals"
+
+                        ChemicalResource ->
+                            "chemicals"
+            in
+            [ text "Recent downturn in production of "
+            , text productionType
+            , text " on "
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , text " has come to end and production levels are returning to normal."
+            ]
 
         KragiiEvent details ->
             [ text "Large amount of kragii worms has been sighted on "

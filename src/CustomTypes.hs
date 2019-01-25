@@ -141,6 +141,39 @@ roll odds = do
         else Failure
 
 
+-- | Status codes for various events that might affect a planet
+data PlanetaryStatus =
+    GoodHarvest
+    | PoorHarvest
+    | GoodMechanicals
+    | PoorMechanicals
+    | GoodChemicals
+    | PoorChemicals
+    | KragiiAttack
+    deriving (Show, Read, Eq, Enum, Bounded, Ord)
+derivePersistField "PlanetaryStatus"
+
+
+data Bonus = Bonus Int Double
+    deriving (Show, Read, Eq)
+
+
+instance Semigroup Bonus where
+    (<>) (Bonus a0 p0) (Bonus a1 p1) =
+        Bonus (a0 + a1) (p0 * p1)
+
+
+instance Monoid Bonus where
+    mempty = Bonus 0 1
+
+
+-- | Thing that can be modified by a bonus
+class Boostable a where
+
+    -- | Apply bonus to a, scaling it accordingly
+    applyBonus :: Bonus -> a -> a
+
+
 $(deriveJSON defaultOptions ''SpecialEventStatus)
 $(deriveJSON defaultOptions ''Role)
 $(deriveJSON defaultOptions ''Coordinates)
@@ -149,3 +182,4 @@ $(deriveJSON defaultOptions ''LuminosityClass)
 $(deriveJSON defaultOptions ''BuildingType)
 $(deriveJSON defaultOptions ''ComponentSlot)
 $(deriveJSON defaultOptions ''ShipType)
+$(deriveJSON defaultOptions ''PlanetaryStatus)

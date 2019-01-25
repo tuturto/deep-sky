@@ -260,6 +260,7 @@ instance Yesod App where
     isAuthorized (ApiPlanetBuildingsR _) _          = return Authorized
     isAuthorized (ApiPlanetPopulationR _) _         = return Authorized
     isAuthorized (ApiPlanetConstQueueR _) _         = return Authorized
+    isAuthorized (ApiPlanetStatusR _) _             = return Authorized
     isAuthorized ApiBuildingConstructionR _         = return Authorized
     isAuthorized (ApiBuildingConstructionIdR _) _   = return Authorized
     isAuthorized ApiMessageR _                      = return Authorized

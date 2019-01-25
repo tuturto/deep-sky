@@ -10,6 +10,7 @@ module Data.Accessors exposing
     , currentPageA
     , errorsA
     , iconsA
+    , idA
     , indexA
     , landedShipsStatusA
     , messagesRA
@@ -18,7 +19,10 @@ module Data.Accessors exposing
     , orbitingShipsStatusA
     , pageSizeA
     , planetDetailsStatusA
+    , planetIdA
     , planetRA
+    , planetStatusA
+    , planetStatusesStatusA
     , planetsA
     , planetsStatusA
     , populationStatusA
@@ -34,6 +38,34 @@ module Data.Accessors exposing
     )
 
 import Accessors exposing (Relation, makeOneToOne)
+
+
+planetStatusesStatusA : Relation field sub wrap -> Relation { rec | planetStatusesStatus : field } sub wrap
+planetStatusesStatusA =
+    makeOneToOne
+        .planetStatusesStatus
+        (\change rec -> { rec | planetStatusesStatus = change rec.planetStatusesStatus })
+
+
+planetIdA : Relation field sub wrap -> Relation { rec | planetId : field } sub wrap
+planetIdA =
+    makeOneToOne
+        .planetId
+        (\change rec -> { rec | planetId = change rec.planetId })
+
+
+idA : Relation field sub wrap -> Relation { rec | id : field } sub wrap
+idA =
+    makeOneToOne
+        .id
+        (\change rec -> { rec | id = change rec.id })
+
+
+planetStatusA : Relation field sub wrap -> Relation { rec | planetStatus : field } sub wrap
+planetStatusA =
+    makeOneToOne
+        .planetStatus
+        (\change rec -> { rec | planetStatus = change rec.planetStatus })
 
 
 choiceA : Relation field sub wrap -> Relation { rec | choice : field } sub wrap

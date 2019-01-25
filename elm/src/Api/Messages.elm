@@ -13,6 +13,8 @@ import Api.Common
         , get
         , post
         , put
+        , resourceTypeDecoder
+        , resourceTypeEncoder
         , starDateDecoder
         , starDateEncoder
         )
@@ -42,6 +44,7 @@ import Data.Messages
         , NewsArticle
         , NewsContent(..)
         , PlanetFoundNews
+        , ProductionChangeNews
         , ShipFinishedNews
         , SpecialEventChoice(..)
         , SpecialEventOption
@@ -158,6 +161,18 @@ newsTag article =
         ShipFinished _ ->
             "ShipFinished"
 
+        ProductionBoostStarted _ ->
+            "ProductionBoostStarted"
+
+        ProductionSlowdownStarted _ ->
+            "ProductionSlowdownStarted"
+
+        ProductionBoostEnded _ ->
+            "ProductionBoostEnded"
+
+        ProductionSlowdownEnded _ ->
+            "ProductionSlowdownEnded"
+
         KragiiEvent _ ->
             "KragiiEvent"
 
@@ -254,6 +269,10 @@ newsContentDecoder =
         , when newsType (is "ShipFinished") (field "contents" shipFinishedNewsArticle)
         , when newsType (is "KragiiEvent") (field "contents" kragiiEventNewsArticle)
         , when newsType (is "KragiiResolution") (field "contents" kragiiResolutionNewsArticle)
+        , when newsType (is "ProductionBoostStarted") (field "contents" productionBoostStarted)
+        , when newsType (is "ProductionSlowdownStarted") (field "contents" productionSlowdownStarted)
+        , when newsType (is "ProductionBoostEnded") (field "contents" productionBoostEnded)
+        , when newsType (is "ProductionSlowdownEnded") (field "contents" productionSlowdownEnded)
         ]
 
 
@@ -471,3 +490,37 @@ specialEventChoiceDecoder =
 specialEventChoiceEncoder : SpecialEventChoice -> Encode.Value
 specialEventChoiceEncoder choice =
     Encode.string (unSpecialEventChoice choice)
+
+
+productionChangeDecoder : Decode.Decoder ProductionChangeNews
+productionChangeDecoder =
+    succeed ProductionChangeNews
+        |> andMap (field "PlanetName" string)
+        |> andMap (field "PlanetId" planetIdDecoder)
+        |> andMap (field "SystemName" string)
+        |> andMap (field "SystemId" starSystemIdDecoder)
+        |> andMap (field "Type" resourceTypeDecoder)
+
+
+productionBoostStarted : Decode.Decoder NewsContent
+productionBoostStarted =
+    succeed ProductionBoostStarted
+        |> andMap productionChangeDecoder
+
+
+productionSlowdownStarted : Decode.Decoder NewsContent
+productionSlowdownStarted =
+    succeed ProductionSlowdownStarted
+        |> andMap productionChangeDecoder
+
+
+productionBoostEnded : Decode.Decoder NewsContent
+productionBoostEnded =
+    succeed ProductionBoostEnded
+        |> andMap productionChangeDecoder
+
+
+productionSlowdownEnded : Decode.Decoder NewsContent
+productionSlowdownEnded =
+    succeed ProductionSlowdownEnded
+        |> andMap productionChangeDecoder

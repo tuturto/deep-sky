@@ -17,7 +17,7 @@ import Control.Monad.Trans.Writer ( WriterT, runWriterT, tell )
 import Data.Aeson.TH
 
 import Common ( ToDto(..), FromDto(..) )
-import CustomTypes ( PercentileChance(..), RollResult(..), roll )
+import CustomTypes ( PercentileChance(..), RollResult(..), PlanetaryStatus(..), roll )
 import Dto.News ( KragiiWormsChoiceDto(..), UserOptionDto(..), KragiiNewsDto(..) )
 import Events.Import ( SpecialEvent(..), EventRemoval(..), UserOption(..) )
 import Resources ( RawResource(..), Biological(..) )
@@ -114,7 +114,7 @@ chooseToAvoid (_, event) = do
     faction <- getFaction event
     (cost, bioLeft) <- calculateNewBio (RawResource 50) (entityVal faction)
     _ <- destroyCrops faction cost bioLeft
-    removeNews $ PercentileChance 25
+    removeNews event $ PercentileChance 25
 
 
 -- | Attacking and driving kragii worms away from the fields is unpleasant and
@@ -128,7 +128,7 @@ chooseToAttack (_, event) = do
     (cost, bioLeft) <- calculateNewBio (RawResource 20) (entityVal faction)
     -- TODO: injured farmers
     _ <- destroyCrops faction cost bioLeft
-    removeNews $ PercentileChance 75
+    removeNews event $ PercentileChance 75
 
 
 -- | Kragii worms can't be tamed in the usual sense. However, it is possible to
@@ -142,7 +142,7 @@ chooseToTame (_, event) = do
     faction <- getFaction event
     (cost, bioLeft) <- calculateNewBio (RawResource 50) (entityVal faction)
     _ <- destroyCrops faction cost bioLeft
-    removeNews $ PercentileChance 25
+    removeNews event $ PercentileChance 25
 
 
 -- | If left unchecked, kragii worms will eat crops from fields
@@ -156,7 +156,7 @@ noChoice (_, event) = do
     faction <- getFaction event
     (cost, bioLeft) <- calculateNewBio (RawResource 100) (entityVal faction)
     _ <- destroyCrops faction cost bioLeft
-    removeNews $ PercentileChance 10
+    removeNews event $ PercentileChance 10
 
 
 -- | retrieve current owner (faction) of planet where kragii attack is in progress
@@ -193,12 +193,16 @@ destroyCrops faction cost bioLeft = MaybeT $ do
 
 
 -- | Roll a die and see if kragii worms are removed from play
-removeNews :: ( PersistStoreWrite backend, MonadIO m, BaseBackend backend ~ SqlBackend ) =>
-              PercentileChance -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) EventRemoval
-removeNews odds = MaybeT $ do
+removeNews :: ( PersistStoreWrite backend, PersistQueryWrite backend, MonadIO m
+              , BaseBackend backend ~ SqlBackend ) =>
+              KragiiWormsEvent -> PercentileChance -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) EventRemoval
+removeNews event odds = MaybeT $ do
     res <- liftIO $ roll odds
     case res of
         Success -> do
+            _ <- lift $ deleteWhere [ PlanetStatusPlanetId ==. kragiiWormsPlanetId event
+                                    , PlanetStatusStatus ==. KragiiAttack
+                                    ]
             _ <- tell [ WormsRemoved ]
             return $ Just RemoveOriginalEvent
         Failure -> do

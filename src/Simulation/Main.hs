@@ -14,6 +14,7 @@ import Simulation.Construction ( handleFactionConstruction )
 import Simulation.Events ( handleFactionEvents, addSpecialEvents )
 import Simulation.Food ( handleFactionFood )
 import Simulation.Observations ( handleFactionObservations )
+import Simulation.Status ( removeExpiredStatuses )
 import Simulation.Time
 
 
@@ -25,21 +26,15 @@ processTurn :: (BaseBackend backend ~ SqlBackend,
     ReaderT backend m Time
 processTurn = do
     newTime <- advanceTime
+    _ <- removeExpiredStatuses newTime
     factions <- selectList [] [ Asc FactionId ]
-    mapM_ (handleFaction newTime) factions
+    _ <- mapM (handleFactionEvents newTime) factions
+    mapM_ handleFactionFood factions
+    mapM_ (handleFactionConstruction newTime) factions
+    _ <- mapM (addSpecialEvents newTime) factions
+    -- Doing observations should always be done last to ensure players have
+    -- recent reports of property they have full control, ie. planets.
+    -- Otherwise it's possible that they'll receive reports that are one
+    -- turn out of sync.
+    mapM_ (handleFactionObservations newTime) factions
     return newTime
-
-
--- | process single faction, handling all of it's needs, orders and such
-handleFaction :: (BaseBackend backend ~ SqlBackend,
-    BackendCompatible SqlBackend backend, PersistUniqueRead backend,
-    PersistQueryWrite backend, PersistStoreWrite backend,
-    MonadIO m, PersistQueryRead backend) =>
-    Time -> Entity Faction -> ReaderT backend m ()
-handleFaction date faction = do
-    _ <- handleFactionEvents date faction
-    _ <- handleFactionFood faction
-    _ <- handleFactionObservations date faction
-    _ <- handleFactionConstruction date faction
-    _ <- addSpecialEvents date $ entityKey faction
-    return ()

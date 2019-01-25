@@ -26,6 +26,7 @@ type Endpoint
     | ApiMessageList
     | ApiSingleMessage MessageId
     | ApiIcon
+    | ApiPlanetStatus PlanetId
 
 
 endpointToString : Endpoint -> String
@@ -77,3 +78,6 @@ endpointToString endpoint =
 
         ApiIcon ->
             "/api/icon"
+
+        ApiPlanetStatus planetId ->
+            "/api/planet/" ++ planetIdToString planetId ++ "/status"

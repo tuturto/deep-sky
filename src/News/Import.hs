@@ -3,7 +3,8 @@
 module News.Import ( parseNewsEntities, userWrittenNews
                    , planetFoundNews, starFoundNews, designCreatedNews
                    , buildingConstructionFinishedNews, iconMapper, userNewsIconMapper
-                   , iconInfo )
+                   , productionChangeEndedIconMapper, iconInfo, productionBoostStartedNews
+                   , productionSlowdownStartedNews )
     where
 
 import Import
@@ -12,14 +13,16 @@ import Data.ByteString.Builder( toLazyByteString )
 import Data.Maybe ( isJust, fromJust )
 import Data.Text.Encoding ( encodeUtf8Builder )
 import Buildings ( building, BLevel(..), BuildingInfo(..) )
-import Dto.News ( NewsArticleDto(..), UserWrittenNewsDto(..), IconMapper(..), UserNewsIconDto(..)
-                , SpecialNewsDto(..)
+import Dto.Icons ( IconMapper(..) )
+import Dto.News ( NewsArticleDto(..), UserWrittenNewsDto(..), UserNewsIconDto(..)
+                , SpecialNewsDto(..), ProductionChangedNewsDto(..)
                 )
 import Events.Import ( eventOptions )
 import News.Data ( NewsArticle(..), ConstructionFinishedNews(..), DesignCreatedNews(..)
                  , PlanetFoundNews(..), StarFoundNews(..), UserWrittenNews(..)
-                 , UserNewsIcon(..), SpecialNews(..), mkNews
+                 , UserNewsIcon(..), SpecialNews(..), ProductionChangedNews(..), mkNews
                  )
+import Resources ( ResourceType(..) )
 
 
 -- | Parse database entry of news and construct a possible news article
@@ -66,8 +69,10 @@ availableOptions x =
 -- | Use passed url render function to return link to news article's icon
 -- This function is useful for example when returning JSON data to client
 -- and supplying link to icon that should be displayed for it.
-iconMapper :: (Route App -> Text) -> IconMapper UserNewsIconDto -> IconMapper NewsArticleDto
-iconMapper render userIconMapper =
+iconMapper :: (Route App -> Text) -> IconMapper UserNewsIconDto
+    -> IconMapper ProductionChangedNewsDto
+    -> IconMapper NewsArticleDto
+iconMapper render userIconMapper changeIconMapper =
     IconMapper $ \article ->
         case article of
             StarFoundDto _ ->
@@ -84,6 +89,34 @@ iconMapper render userIconMapper =
 
             ConstructionFinishedDto _ ->
                 render $ StaticR images_news_crane_png
+
+            ProductionBoostStartedDto details ->
+                case productionChangedNewsDtoType details of
+                    BiologicalResource ->
+                        render $ StaticR images_statuses_wheat_up_png
+
+                    MechanicalResource ->
+                        render $ StaticR images_statuses_cog_up_png
+
+                    ChemicalResource ->
+                        render $ StaticR images_statuses_droplets_up_png
+
+            ProductionSlowdownStartedDto details ->
+                case productionChangedNewsDtoType details of
+                    BiologicalResource ->
+                        render $ StaticR images_statuses_wheat_down_png
+
+                    MechanicalResource ->
+                        render $ StaticR images_statuses_cog_down_png
+
+                    ChemicalResource ->
+                        render $ StaticR images_statuses_droplets_down_png
+
+            ProductionBoostEndedDto details ->
+                runIconMapper changeIconMapper details
+
+            ProductionSlowdownEndedDto details ->
+                runIconMapper changeIconMapper details
 
             SpecialDto (KragiiEventDto _) ->
                 render $ StaticR images_news_hydra_png
@@ -105,6 +138,20 @@ userNewsIconMapper render =
 
             CatUserNewsDto ->
                 render $ StaticR images_news_cat_png
+
+
+productionChangeEndedIconMapper :: (Route App -> Text) -> IconMapper ProductionChangedNewsDto
+productionChangeEndedIconMapper render =
+    IconMapper $ \dto ->
+        case productionChangedNewsDtoType dto of
+            BiologicalResource ->
+                render $ StaticR images_statuses_wheat_right_png
+
+            MechanicalResource ->
+                render $ StaticR images_statuses_cog_right_png
+
+            ChemicalResource ->
+                render $ StaticR images_statuses_droplets_right_png
 
 
 -- | List of tuples for all user news icon dtos, containing dto and link to
@@ -173,3 +220,31 @@ buildingConstructionFinishedNews planetE starSystemE buildingE date fId =
                     }
     in
         mkNews fId date content
+
+
+productionBoostStartedNews :: Entity Planet -> Entity StarSystem -> ResourceType -> Time -> Key Faction -> News
+productionBoostStartedNews planet system rType date fId =
+    let
+        content = ProductionBoostStarted $ productionChanged planet system rType date
+    in
+        mkNews fId date content
+
+
+productionSlowdownStartedNews :: Entity Planet -> Entity StarSystem -> ResourceType -> Time -> Key Faction -> News
+productionSlowdownStartedNews planet system rType date fId =
+    let
+        content = ProductionSlowdownStarted $ productionChanged planet system rType date
+    in
+        mkNews fId date content
+
+
+productionChanged :: Entity Planet -> Entity StarSystem -> ResourceType -> Time -> ProductionChangedNews
+productionChanged planet system rType date =
+    ProductionChangedNews
+        { productionChangedNewsPlanetId = entityKey planet
+        , productionChangedNewsPlanetName = (planetName . entityVal) planet
+        , productionChangedNewsSystemId = entityKey system
+        , productionChangedNewsSystemName = (starSystemName . entityVal) system
+        , productionChangedNewsType = rType
+        , productionChangedNewsDate = timeCurrentTime date
+        }

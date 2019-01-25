@@ -13,13 +13,14 @@ module Simulation.Observations ( handleFactionObservations, ObservationCandidate
     where
 
 import Import
+import Data.Maybe ( fromJust )
 import System.Random
+
+import Common
 import CustomTypes
+import News.Import ( planetFoundNews, starFoundNews )
 import Report ( createPlanetReports, createStarLaneReports, createStarReports
               , CollatedPlanetReport(..), CollatedStarLaneReport(..), CollatedStarReport(..))
-import Common
-import News.Import (planetFoundNews, starFoundNews)
-import Data.Maybe (fromJust)
 
 
 -- | Generate reports for all kinds of things faction can currently observe
@@ -66,6 +67,13 @@ doPlanetObservation date faction planet = do
                                                   (Just $ buildingDamage (entityVal b))
                                                   (entityKey faction) (timeCurrentTime date)) buildings
     _ <- mapM insert bObservations
+    statuses <- selectList [ PlanetStatusPlanetId ==. entityKey planet ] []
+    let statusReport = PlanetStatusReport { planetStatusReportPlanetId = entityKey planet
+                                          , planetStatusReportStatus = mkUniq $ map (planetStatusStatus . entityVal) statuses
+                                          , planetStatusReportFactionId = entityKey faction
+                                          , planetStatusReportDate = timeCurrentTime date
+                                          }
+    _ <- insert statusReport
     return ()
 
 
@@ -105,9 +113,9 @@ observeRandomTarget date faction candidates building = do
 
 
 -- | Observe given target
-observeTarget :: (BaseBackend backend ~ SqlBackend,
-    PersistStoreWrite backend, PersistQueryRead backend, MonadIO m) =>
-    Time -> Entity Faction -> Maybe ObservationCandidate -> Entity Building -> ReaderT backend m ()
+observeTarget :: ( BaseBackend backend ~ SqlBackend
+                 , PersistStoreWrite backend, PersistQueryRead backend, MonadIO m ) =>
+                 Time -> Entity Faction -> Maybe ObservationCandidate -> Entity Building -> ReaderT backend m ()
 
 observeTarget _ _ Nothing _ =
     return ()

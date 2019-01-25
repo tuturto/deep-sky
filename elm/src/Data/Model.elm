@@ -10,7 +10,7 @@ import Browser.Navigation exposing (Key)
 import Data.Common exposing (InfoPanelStatus, Resources, StarDate)
 import Data.Construction exposing (Building, BuildingInfo, Construction)
 import Data.Messages exposing (NewsArticle, UserIcon)
-import Data.StarSystem exposing (Planet, Population, Star, StarSystem)
+import Data.StarSystem exposing (Planet, PlanetStatus, Population, Star, StarSystem)
 import Dict exposing (Dict)
 import Http
 import Url exposing (Url)
@@ -26,6 +26,7 @@ type alias Model =
     , resources : Maybe Resources
     , starSystems : Maybe (Dict Int StarSystem)
     , planets : Maybe (Dict Int (List Planet))
+    , planetStatus : Maybe PlanetStatus
     , stars : Maybe (Dict Int (List Star))
     , populations : Maybe (Dict Int (List Population))
     , buildings : Maybe (Dict Int (List Building))
@@ -62,6 +63,7 @@ type ApiMsg
     | AvailableBuildingsReceived (Result Http.Error (List BuildingInfo))
     | NewsReceived (Result Http.Error (List NewsArticle))
     | IconsReceived (Result Http.Error (List ( UserIcon, String )))
+    | PlanetStatusReceived (Result Http.Error PlanetStatus)
 
 
 type ErrorMessage

@@ -15,6 +15,7 @@ module Api.StarSystem exposing
     , planetIdDecoder
     , planetIdEncoder
     , planetPositionDecoder
+    , planetStatus
     , planetsCmd
     , starDecoder
     , starSystemIdDecoder
@@ -23,9 +24,12 @@ module Api.StarSystem exposing
     , starsCmd
     )
 
+import Accessors
+import Accessors.Library
 import Api.Common exposing (get, locationDecoder, starDateDecoder)
 import Api.Endpoints exposing (Endpoint(..))
 import Api.User exposing (factionIdDecoder)
+import Data.Accessors exposing (planetIdA, planetStatusA)
 import Data.Common
     exposing
         ( BuildingId(..)
@@ -33,6 +37,7 @@ import Data.Common
         , PlanetId(..)
         , StarId(..)
         , StarSystemId(..)
+        , unPlanetId
         )
 import Data.Construction
     exposing
@@ -49,6 +54,8 @@ import Data.StarSystem
         , LuminosityClass(..)
         , Planet
         , PlanetPosition(..)
+        , PlanetStatus
+        , PlanetStatusInfo
         , Population
         , Race(..)
         , SpectralType(..)
@@ -70,6 +77,7 @@ import Json.Decode as Decode
         )
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
+import Maybe
 import Maybe.Extra exposing (isNothing)
 
 
@@ -133,6 +141,23 @@ getBuildingsCmd model planetId =
 buildingsCmd : PlanetId -> Cmd Msg
 buildingsCmd planetId =
     Http.send (ApiMsgCompleted << BuildingsReceived) (get (ApiBuilding planetId) (list buildingDecoder))
+
+
+planetStatus : Model -> PlanetId -> Cmd Msg
+planetStatus model planetId =
+    let
+        currentId =
+            Accessors.get (planetStatusA << Accessors.Library.try << planetIdA) model
+
+        same =
+            Maybe.map (\current -> unPlanetId current == unPlanetId planetId) currentId
+    in
+    case same of
+        Just True ->
+            Cmd.none
+
+        _ ->
+            Http.send (ApiMsgCompleted << PlanetStatusReceived) (get (ApiPlanetStatus planetId) planetStatusDecoder)
 
 
 starSystemIdDecoder : Decode.Decoder StarSystemId
@@ -400,3 +425,18 @@ buildingDamageDecoder : Decode.Decoder BuildingDamage
 buildingDamageDecoder =
     succeed BuildingDamage
         |> andMap float
+
+
+planetStatusDecoder : Decode.Decoder PlanetStatus
+planetStatusDecoder =
+    succeed PlanetStatus
+        |> andMap (field "PlanetId" planetIdDecoder)
+        |> andMap (field "Status" (list planetStatusInfoDecoder))
+        |> andMap (field "Date" starDateDecoder)
+
+
+planetStatusInfoDecoder : Decode.Decoder PlanetStatusInfo
+planetStatusInfoDecoder =
+    succeed PlanetStatusInfo
+        |> andMap (field "Description" string)
+        |> andMap (field "Icon" string)

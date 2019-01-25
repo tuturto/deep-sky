@@ -8,7 +8,8 @@
 
 module News.Data ( NewsArticle(..), UserNewsIcon(..), StarFoundNews(..)
                  , PlanetFoundNews(..), UserWrittenNews(..), DesignCreatedNews(..)
-                 , ConstructionFinishedNews(..), SpecialNews(..), mkNews, mkSpecialNews
+                 , ConstructionFinishedNews(..), SpecialNews(..), ProductionChangedNews(..)
+                 , mkNews, mkSpecialNews
                  )
     where
 
@@ -17,12 +18,15 @@ import Data.Aeson.TH
 import Data.Aeson.Text ( encodeToLazyText )
 import Common ( ToDto(..), FromDto(..) )
 import CustomTypes ( SpecialEventStatus(..) )
+import Dto.Icons ( IconMapper(..) )
 import Dto.News ( NewsDto(..), NewsArticleDto(..), StarFoundNewsDto(..), PlanetFoundNewsDto(..)
                 , UserWrittenNewsDto(..), DesignCreatedNewsDto(..), ConstructionFinishedNewsDto(..)
-                , IconMapper(..), UserNewsIconDto(..), SpecialNewsDto(..), KragiiWormsEventDto(..)
+                , UserNewsIconDto(..), SpecialNewsDto(..), KragiiWormsEventDto(..)
+                , ProductionChangedNewsDto(..)
                 )
 import Events.Import ( UserOption(..) )
 import Events.Kragii ( KragiiWormsEvent(..), KragiiWormsChoice(..), KragiiNews(..) )
+import Resources ( ResourceType )
 
 
 -- | All possible news articles
@@ -32,6 +36,10 @@ data NewsArticle =
     | UserWritten UserWrittenNews
     | DesignCreated DesignCreatedNews
     | ConstructionFinished ConstructionFinishedNews
+    | ProductionBoostStarted ProductionChangedNews
+    | ProductionSlowdownStarted ProductionChangedNews
+    | ProductionBoostEnded ProductionChangedNews
+    | ProductionSlowdownEnded ProductionChangedNews
     | KragiiResolution KragiiNews
     | Special SpecialNews
 
@@ -182,6 +190,38 @@ instance FromDto ConstructionFinishedNews ConstructionFinishedNewsDto where
                                  }
 
 
+data ProductionChangedNews = ProductionChangedNews
+    { productionChangedNewsPlanetId :: Key Planet
+    , productionChangedNewsPlanetName :: Text
+    , productionChangedNewsSystemId :: Key StarSystem
+    , productionChangedNewsSystemName :: Text
+    , productionChangedNewsType :: ResourceType
+    , productionChangedNewsDate :: Int
+    }
+
+
+instance ToDto ProductionChangedNews ProductionChangedNewsDto where
+    toDto news = ProductionChangedNewsDto
+        { productionChangedNewsDtoPlanetId = productionChangedNewsPlanetId news
+        , productionChangedNewsDtoPlanetName = productionChangedNewsPlanetName news
+        , productionChangedNewsDtoSystemId = productionChangedNewsSystemId news
+        , productionChangedNewsDtoSystemName = productionChangedNewsSystemName news
+        , productionChangedNewsDtoType = productionChangedNewsType news
+        , productionChangedNewsDtoDate = productionChangedNewsDate news
+        }
+
+
+instance FromDto ProductionChangedNews ProductionChangedNewsDto where
+    fromDto dto = ProductionChangedNews
+        { productionChangedNewsPlanetId = productionChangedNewsDtoPlanetId dto
+        , productionChangedNewsPlanetName = productionChangedNewsDtoPlanetName dto
+        , productionChangedNewsSystemId = productionChangedNewsDtoSystemId dto
+        , productionChangedNewsSystemName = productionChangedNewsDtoSystemName dto
+        , productionChangedNewsType = productionChangedNewsDtoType dto
+        , productionChangedNewsDate = productionChangedNewsDtoDate dto
+        }
+
+
 instance ToDto ((Key News, NewsArticle), (IconMapper NewsArticleDto)) NewsDto where
     toDto ((nId, article), icons) =
         let
@@ -211,6 +251,18 @@ instance FromDto NewsArticle NewsArticleDto where
             ConstructionFinishedDto content ->
                 ConstructionFinished $ fromDto content
 
+            ProductionBoostStartedDto content ->
+                ProductionBoostStarted $ fromDto content
+
+            ProductionSlowdownStartedDto content ->
+                ProductionSlowdownStarted $ fromDto content
+
+            ProductionBoostEndedDto content ->
+                ProductionBoostEnded $ fromDto content
+
+            ProductionSlowdownEndedDto content ->
+                ProductionSlowdownEnded $ fromDto content
+
             KragiiDto content ->
                 KragiiResolution $ fromDto content
 
@@ -226,6 +278,10 @@ instance ToDto NewsArticle NewsArticleDto where
             (UserWritten x) -> UserWrittenDto $ toDto x
             (DesignCreated x) -> DesignCreatedDto $ toDto x
             (ConstructionFinished x) -> ConstructionFinishedDto $ toDto x
+            (ProductionBoostStarted x) -> ProductionBoostStartedDto $ toDto x
+            (ProductionSlowdownStarted x) -> ProductionSlowdownStartedDto $ toDto x
+            (ProductionBoostEnded x) -> ProductionBoostEndedDto $ toDto x
+            (ProductionSlowdownEnded x) -> ProductionSlowdownEndedDto $ toDto x
             (KragiiResolution x) -> KragiiDto $ toDto x
             (Special x) -> SpecialDto $ toDto x
 
@@ -325,3 +381,4 @@ $(deriveJSON defaultOptions ''ConstructionFinishedNews)
 $(deriveJSON defaultOptions ''UserNewsIcon)
 $(deriveJSON defaultOptions ''SpecialNews)
 $(deriveJSON defaultOptions ''NewsArticle)
+$(deriveJSON defaultOptions ''ProductionChangedNews)

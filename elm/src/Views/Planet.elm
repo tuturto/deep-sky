@@ -21,6 +21,7 @@ import Api.StarSystem
         , getPlanetsCmd
         , getPopulationsCmd
         , getStarSystemsCmd
+        , planetStatus
         )
 import Data.Accessors
     exposing
@@ -35,6 +36,7 @@ import Data.Accessors
         , orbitingShipsStatusA
         , planetDetailsStatusA
         , planetRA
+        , planetStatusesStatusA
         , planetsA
         , populationStatusA
         , populationsA
@@ -73,6 +75,8 @@ import Data.Model exposing (Model, Msg(..))
 import Data.StarSystem
     exposing
         ( Planet
+        , PlanetStatus
+        , PlanetStatusInfo
         , Population
         , gravityToString
         , unInhabitants
@@ -136,6 +140,16 @@ leftPanel systemId planetId model =
         Nothing
         (planetDetails planet)
         model
+        ++ infoPanel
+            { title = "Planet status"
+            , currentStatus = model.planetR.planetStatusesStatus
+            , openingMessage = PlanetMessage <| PlanetStatusesStatusChanged InfoPanelOpen
+            , closingMessage = PlanetMessage <| PlanetStatusesStatusChanged InfoPanelClosed
+            , refreshMessage = Nothing
+            }
+            Nothing
+            (statusList model.planetStatus)
+            model
         ++ infoPanel
             { title = "Population"
             , currentStatus = model.planetR.populationStatus
@@ -397,6 +411,29 @@ planetDetails planet model =
     ]
 
 
+statusList : Maybe PlanetStatus -> Model -> List (Html Msg)
+statusList status model =
+    case status of
+        Nothing ->
+            []
+
+        Just x ->
+            [ div [ class "row" ]
+                [ div [ class "col-lg-12" ] <|
+                    List.map planetStatusIcon x.status
+                ]
+            ]
+
+
+planetStatusIcon : PlanetStatusInfo -> Html Msg
+planetStatusIcon status =
+    div [ class "hover-section" ]
+        [ img [ class "planet-status-icon", src status.icon ] []
+        , span [ class "hover-text" ]
+            [ text status.description ]
+        ]
+
+
 {-| List of populations currently inhabiting the planet
 -}
 populationDetails : Maybe (List Population) -> Model -> List (Html Msg)
@@ -463,6 +500,7 @@ init sId pId model =
         , getConstructionsCmd model pId
         , getStarSystemsCmd model
         , getAvailableBuildingsCmd model
+        , planetStatus model pId
         ]
 
 
@@ -531,6 +569,9 @@ update msg model =
                     ( model
                     , Cmd.none
                     )
+
+        PlanetStatusesStatusChanged status ->
+            ( set (planetRA << planetStatusesStatusA) status model, Cmd.none )
 
 
 {-| Maps building info to construction

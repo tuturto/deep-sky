@@ -22,6 +22,7 @@ type PlanetRMsg
     | LandedShipsStatusChanged InfoPanelStatus
     | OrbitingShipsStatusChanged InfoPanelStatus
     | ConstructionStatusChanged InfoPanelStatus
+    | PlanetStatusesStatusChanged InfoPanelStatus
     | MoveConstruction Construction ConstructionIndex
     | DeleteConstructionFromQueue Construction
     | BuildingSearch String
@@ -41,6 +42,7 @@ type alias PlanetViewModel =
     , orbitingShipsStatus : InfoPanelStatus
     , constructionStatus : InfoPanelStatus
     , buildingSearchText : String
+    , planetStatusesStatus : InfoPanelStatus
     }
 
 
@@ -55,4 +57,5 @@ init =
     , orbitingShipsStatus = InfoPanelOpen
     , constructionStatus = InfoPanelOpen
     , buildingSearchText = ""
+    , planetStatusesStatus = InfoPanelOpen
     }

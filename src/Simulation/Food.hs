@@ -7,11 +7,12 @@
 {-# LANGUAGE FlexibleContexts      #-}
 
 module Simulation.Food ( handleFactionFood, getFoodRequirement, getFoodProduction, foodRequirement
-                       , foodProduction )
+                       , foodProduction, foodBaseProduction, foodProductionBonus )
     where
 
 import Import
-import CustomTypes
+import CustomTypes ( BuildingType(..), Bonus(..), PlanetaryStatus(..), applyBonus )
+import Resources ( Biological(..), RawResource(..) )
 
 
 -- | handle production and consumption of food for given faction
@@ -21,46 +22,63 @@ handleFactionFood :: (BaseBackend backend ~ SqlBackend,
 handleFactionFood faction = do
     planets <- selectList [ PlanetOwnerId ==. Just (entityKey faction)] []
     lReqBio <- mapM (getFoodRequirement . entityKey) planets
-    let reqBio = foldl' (+) 0 lReqBio
+    let reqBio = sum lReqBio
     lProdBio <- mapM (getFoodProduction . entityKey) planets
-    let prodBio = foldl' (+) 0 lProdBio
+    let prodBio = sum lProdBio
     let deltaBio = prodBio - reqBio
-    _ <- update (entityKey faction) [ FactionBiologicals +=. deltaBio ]
+    _ <- update (entityKey faction) [ FactionBiologicals +=. unRawResource deltaBio ]
     return ()
 
 
 -- | calculate amount of food a given planet requires
 getFoodRequirement :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistQueryRead backend) =>
-    Key Planet -> ReaderT backend m Int
+    Key Planet -> ReaderT backend m (RawResource Biological)
 getFoodRequirement pid = do
     pop <- selectList [ PlanetPopulationPlanetId ==. pid ] []
-    let res = foodRequirement $ map entityVal pop
+    let res = foodRequirement $ fmap entityVal pop
     return res
 
 
 -- | calculate amount of food a given planet produces
 getFoodProduction :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistQueryRead backend) =>
-    Key Planet -> ReaderT backend m Int
+    Key Planet -> ReaderT backend m (RawResource Biological)
 getFoodProduction pid = do
     buildings <- selectList [ BuildingPlanetId ==. pid ] []
-    let res = foodProduction $ map entityVal buildings
-    return res
+    statuses <- selectList [ PlanetStatusPlanetId ==. pid ] []
+    return $ foodProduction (fmap entityVal buildings) (fmap (planetStatusStatus . entityVal) statuses)
 
 
 -- | calculate amount of food given population requires
-foodRequirement :: [PlanetPopulation] -> Int
+foodRequirement :: [PlanetPopulation] -> RawResource Biological
 foodRequirement population =
-    totalPopulation * 2
-        where totalPopulation = foldr (\a b -> planetPopulationPopulation a + b) 0 population
+    RawResource $ totalPopulation * 2
+        where totalPopulation = sum $ fmap planetPopulationPopulation population
 
 
--- | calculate amount of food produced by group of buildings
-foodProduction :: [Building] -> Int
-foodProduction buildings =
-    foldl' (+) 0 productions
-        where productions = map prod buildings
-              prod x = case buildingType x of
-                            Farm -> 5
-                            _    -> 0
+-- | total food production of given set of buildings with planetary statuses taken into account
+foodProduction :: [Building] -> [PlanetaryStatus] -> RawResource Biological
+foodProduction buildings statuses =
+    applyBonus bonus production
+        where
+            production = sum $ fmap foodBaseProduction buildings
+            bonus = mconcat $ fmap foodProductionBonus statuses
+
+
+-- | calculate amount of food produced by a building
+foodBaseProduction :: Building -> RawResource Biological
+foodBaseProduction building =
+    case buildingType building of
+        Farm ->
+            RawResource 5
+
+        _    ->
+            RawResource 0
+
+
+-- | Bonus food production caused by planetary status
+foodProductionBonus :: PlanetaryStatus -> Bonus
+foodProductionBonus GoodHarvest = Bonus 0 1.2
+foodProductionBonus PoorHarvest = Bonus 0 0.9
+foodProductionBonus _ = Bonus 0 1

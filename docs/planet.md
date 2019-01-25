@@ -12,6 +12,13 @@ Details
 Details section shown general planetary details including location of the
 planet in star system and gravity.
 
+Planet status
+-------------
+
+Where there is a special condition on the planet, it is shown in planet status
+section as a small icon. Brief description of the status can be read on a
+pop up that is shown when mouse cursor is on top of a status icon.
+
 Population
 ----------
 

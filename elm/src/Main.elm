@@ -15,6 +15,7 @@ import Data.Accessors
         , errorsA
         , iconsA
         , newsA
+        , planetStatusA
         , planetsA
         , populationsA
         , starSystemsA
@@ -96,6 +97,7 @@ init flags url key =
             , starSystems = Nothing
             , stars = Nothing
             , planets = Nothing
+            , planetStatus = Nothing
             , populations = Nothing
             , buildings = Nothing
             , constructions = Nothing
@@ -281,6 +283,17 @@ handleApiMsg msg model =
         IconsReceived (Err err) ->
             ( set iconsA Nothing model
                 |> over errorsA (\errors -> error err "Failed to load user icons" :: errors)
+            , Cmd.none
+            )
+
+        PlanetStatusReceived (Ok status) ->
+            ( set planetStatusA (Just status) model
+            , Cmd.none
+            )
+
+        PlanetStatusReceived (Err err) ->
+            ( set planetStatusA Nothing model
+                |> over errorsA (\errors -> error err "Failed to planet status" :: errors)
             , Cmd.none
             )
 

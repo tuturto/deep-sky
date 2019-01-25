@@ -10,6 +10,7 @@ module Data.Common exposing
     , MechResource(..)
     , MessageId(..)
     , PlanetId(..)
+    , ResourceType(..)
     , Resources
     , Route(..)
     , ShipId(..)
@@ -287,3 +288,9 @@ maxPage pageSize coll =
                 0
     in
     pageCount + lastPageCorrection
+
+
+type ResourceType
+    = BiologicalResource
+    | MechanicalResource
+    | ChemicalResource

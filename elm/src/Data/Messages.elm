@@ -6,6 +6,7 @@ module Data.Messages exposing
     , NewsArticle
     , NewsContent(..)
     , PlanetFoundNews
+    , ProductionChangeNews
     , ShipFinishedNews
     , SpecialEventChoice(..)
     , SpecialEventOption
@@ -22,6 +23,7 @@ import Data.Common
         , FactionId
         , MessageId
         , PlanetId
+        , ResourceType
         , ShipId
         , StarDate
         , StarSystemId
@@ -47,6 +49,10 @@ type NewsContent
     | DesignCreated DesignCreatedNews
     | BuildingFinished BuildingFinishedNews
     | ShipFinished ShipFinishedNews
+    | ProductionBoostStarted ProductionChangeNews
+    | ProductionSlowdownStarted ProductionChangeNews
+    | ProductionBoostEnded ProductionChangeNews
+    | ProductionSlowdownEnded ProductionChangeNews
     | KragiiEvent KragiiSpecialEvent
     | KragiiResolved KragiiResolution
 
@@ -96,6 +102,15 @@ type alias ShipFinishedNews =
     , systemId : StarSystemId
     , name : String
     , shipId : ShipId
+    }
+
+
+type alias ProductionChangeNews =
+    { planetName : String
+    , planetId : PlanetId
+    , systemName : String
+    , systemId : StarSystemId
+    , resourceType : ResourceType
     }
 
 

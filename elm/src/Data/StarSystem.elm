@@ -4,6 +4,8 @@ module Data.StarSystem exposing
     , LuminosityClass(..)
     , Planet
     , PlanetPosition(..)
+    , PlanetStatus
+    , PlanetStatusInfo
     , Population
     , Race(..)
     , SpectralType(..)
@@ -201,3 +203,16 @@ unRace (Race x) =
 unInhabitants : Inhabitants -> Int
 unInhabitants (Inhabitants x) =
     x
+
+
+type alias PlanetStatus =
+    { planetId : PlanetId
+    , status : List PlanetStatusInfo
+    , date : StarDate
+    }
+
+
+type alias PlanetStatusInfo =
+    { description : String
+    , icon : String
+    }

@@ -6,6 +6,8 @@ module Api.Common exposing
     , locationDecoder
     , post
     , put
+    , resourceTypeDecoder
+    , resourceTypeEncoder
     , resourcesCmd
     , resourcesDecoder
     , resourcesEncoder
@@ -24,12 +26,24 @@ import Data.Common
         , ChemResource(..)
         , Location(..)
         , MechResource(..)
+        , ResourceType(..)
         , Resources
         , StarDate(..)
         )
 import Data.Model exposing (ApiMsg(..), Model, Msg(..))
 import Http
-import Json.Decode as Decode exposing (field, float, index, int, map2, succeed)
+import Json.Decode as Decode
+    exposing
+        ( andThen
+        , fail
+        , field
+        , float
+        , index
+        , int
+        , map2
+        , string
+        , succeed
+        )
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
 import Maybe.Extra exposing (isNothing)
@@ -195,3 +209,38 @@ resourcesEncoder item =
 locationDecoder : Decode.Decoder Location
 locationDecoder =
     map2 Location (index 0 float) (index 1 float)
+
+
+resourceTypeDecoder : Decode.Decoder ResourceType
+resourceTypeDecoder =
+    string |> andThen stringToResourceType
+
+
+stringToResourceType : String -> Decode.Decoder ResourceType
+stringToResourceType s =
+    case s of
+        "BiologicalResource" ->
+            succeed BiologicalResource
+
+        "MechanicalResource" ->
+            succeed MechanicalResource
+
+        "ChemicalResource" ->
+            succeed ChemicalResource
+
+        _ ->
+            fail "unknown type"
+
+
+resourceTypeEncoder : ResourceType -> Encode.Value
+resourceTypeEncoder item =
+    Encode.string <|
+        case item of
+            BiologicalResource ->
+                "BiologicalResource"
+
+            MechanicalResource ->
+                "MechanicalResource"
+
+            ChemicalResource ->
+                "ChemicalResource"

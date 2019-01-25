@@ -54,6 +54,7 @@
 /api/planet/#PlanetId                               ApiPlanetR                      GET
 /api/planet/#PlanetId/buildings                     ApiPlanetBuildingsR             GET
 /api/planet/#PlanetId/population                    ApiPlanetPopulationR            GET
+/api/planet/#PlanetId/status                        ApiPlanetStatusR                GET
 
 /admin                               AdminPanelR          GET
 /admin/time                          AdminAdvanceTimeR    GET

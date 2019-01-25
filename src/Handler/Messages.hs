@@ -16,7 +16,8 @@ import CustomTypes ( SpecialEventStatus(..) )
 import Handler.Home ( getNewHomeR )
 import MenuHelpers ( starDate )
 import News.Data ( NewsArticle(..), UserWrittenNews(..) )
-import News.Import ( parseNewsEntities, iconMapper, iconInfo, userNewsIconMapper )
+import News.Import ( parseNewsEntities, iconMapper, iconInfo, userNewsIconMapper
+                   , productionChangeEndedIconMapper )
 
 
 -- | Api method to retrieve all pending messages
@@ -130,4 +131,6 @@ loadAllMessages fId = do
     let parsedMessages = parseNewsEntities loadedMessages
     render <- getUrlRender
     let userIcons = userNewsIconMapper render
-    return $ toJSON $ map (toDto . (flip (,) (iconMapper render userIcons))) parsedMessages
+    let changeIcons = productionChangeEndedIconMapper render
+    let icons = iconMapper render userIcons changeIcons
+    return $ toJSON $ map (toDto . (flip (,) icons)) parsedMessages

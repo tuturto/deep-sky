@@ -60,6 +60,12 @@ PlanetPopulation json
     population Int
     deriving Show Read Eq
 
+PlanetStatus json
+    planetId PlanetId
+    status PlanetaryStatus
+    expiration Int Maybe
+    deriving Show Read Eq
+
 StarLane json
     starSystem1 StarSystemId
     starSystem2 StarSystemId
@@ -195,6 +201,13 @@ PlanetPopulationReport json
     planetId PlanetId
     raceId RaceId Maybe
     population Int Maybe
+    factionId FactionId
+    date Int
+    deriving Show Read Eq
+
+PlanetStatusReport json
+    planetId PlanetId
+    status [PlanetaryStatus]
     factionId FactionId
     date Int
     deriving Show Read Eq

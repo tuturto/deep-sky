@@ -5,11 +5,11 @@
 
 module Handler.StarSystems ( getApiStarSystemsR, getStarSystemsR, getStarSystemR, getPlanetR
                            , getApiPlanetR, getApiPlanetBuildingsR, getApiPlanetPopulationR
-                           , getApiStarsR, getApiAllPlanetsR )
+                           , getApiStarsR, getApiAllPlanetsR, getApiPlanetStatusR )
     where
 
 import Import
-import Report ( collateReports, collateReport )
+import Report ( collateReports, collateReport, planetStatusIconMapper )
 
 import Common ( requireFaction, apiRequireFaction )
 import Queries ( planetPopulationReports )
@@ -89,3 +89,15 @@ getApiPlanetPopulationR planetId = do
     loadedPopReports <- runDB $ planetPopulationReports planetId fId
     let populationReports = collateReports $ map (\(a, b) -> (entityVal a, fmap entityVal b)) loadedPopReports
     return $ toJSON populationReports
+
+
+getApiPlanetStatusR :: Key Planet -> Handler Value
+getApiPlanetStatusR planetId = do
+    (_, _, fId) <- apiRequireFaction
+    statuses <- runDB $ selectList [ PlanetStatusReportPlanetId ==. planetId
+                                   , PlanetStatusReportFactionId ==. fId ]
+                                   [ Desc PlanetStatusReportDate ]
+    render <- getUrlRender
+    let icons = planetStatusIconMapper render
+    let report = collateReport $ map (\x -> (entityVal x, icons)) statuses
+    return $ toJSON report

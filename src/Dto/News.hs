@@ -7,21 +7,15 @@
 
 module Dto.News ( NewsDto(..), NewsArticleDto(..), StarFoundNewsDto(..), PlanetFoundNewsDto(..)
                 , UserWrittenNewsDto(..), DesignCreatedNewsDto(..)
-                , ConstructionFinishedNewsDto(..), IconMapper(..), UserNewsIconDto(..), SpecialNewsDto(..)
+                , ConstructionFinishedNewsDto(..), UserNewsIconDto(..), SpecialNewsDto(..)
                 , KragiiWormsEventDto(..), UserOptionDto(..), KragiiWormsChoiceDto(..), KragiiNewsDto(..)
+                , ProductionChangedNewsDto(..)
                 ) where
 
 import Import
 import Data.Aeson ( object, (.=), (.!=), (.:?), withObject )
 import Data.Aeson.TH ( deriveJSON, defaultOptions, constructorTagModifier, fieldLabelModifier )
-
-
--- | mapper that can be used to retrieve link to icon as Text.
--- This is used for example returning links to these resources as a part of
--- JSON message. Client can then use the link to retrieve actual image file
--- and take advantage of caching.
-newtype IconMapper a =
-    IconMapper { runIconMapper :: a -> Text }
+import Resources ( ResourceType(..) )
 
 
 -- | Data transfer object for news that mainly just wraps id and contents together
@@ -40,6 +34,10 @@ data NewsArticleDto =
     | UserWrittenDto UserWrittenNewsDto
     | DesignCreatedDto DesignCreatedNewsDto
     | ConstructionFinishedDto ConstructionFinishedNewsDto
+    | ProductionBoostStartedDto ProductionChangedNewsDto
+    | ProductionSlowdownStartedDto ProductionChangedNewsDto
+    | ProductionBoostEndedDto ProductionChangedNewsDto
+    | ProductionSlowdownEndedDto ProductionChangedNewsDto
     | KragiiDto KragiiNewsDto
     | SpecialDto SpecialNewsDto
     deriving (Show, Read, Eq)
@@ -194,6 +192,18 @@ jsonTag news =
                 Nothing ->
                     "ShipFinished"
 
+        ProductionBoostStartedDto _ ->
+            "ProductionBoostStarted"
+
+        ProductionSlowdownStartedDto _ ->
+            "ProductionSlowdownStarted"
+
+        ProductionBoostEndedDto _ ->
+            "ProductionBoostEnded"
+
+        ProductionSlowdownEndedDto _ ->
+            "ProductionSlowdownEnded"
+
         SpecialDto (KragiiEventDto _) ->
             "KragiiEvent"
 
@@ -209,6 +219,10 @@ instance ToJSON NewsArticleDto where
             UserWrittenDto dto -> toJSON dto
             DesignCreatedDto dto -> toJSON dto
             ConstructionFinishedDto dto -> toJSON dto
+            ProductionBoostStartedDto dto -> toJSON dto
+            ProductionSlowdownStartedDto dto -> toJSON dto
+            ProductionBoostEndedDto dto -> toJSON dto
+            ProductionSlowdownEndedDto dto -> toJSON dto
             KragiiDto dto -> toJSON dto
             SpecialDto (KragiiEventDto dto) -> toJSON dto
 
@@ -237,6 +251,22 @@ instance FromJSON NewsArticleDto where
                        || tag == ("ShipFinished" :: String))
                 contents <- o .: "contents"
                 return $ ConstructionFinishedDto contents
+            , do
+                guard (tag == ("ProductionBoostStarted" :: String))
+                contents <- o .: "contents"
+                return $ ProductionBoostStartedDto contents
+            , do
+                guard (tag == ("ProductionSlowdownStarted" :: String))
+                contents <- o .: "contents"
+                return $ ProductionSlowdownStartedDto contents
+            , do
+                guard (tag == ("ProductionBoostEnded" :: String))
+                contents <- o .: "contents"
+                return $ ProductionBoostEndedDto contents
+            , do
+                guard (tag == ("ProductionSlowdownEnded" :: String))
+                contents <- o .: "contents"
+                return $ ProductionSlowdownEndedDto contents
             , do
                 guard (tag == ("KragiiEvent" :: String))
                 contents <- o .: "contents"
@@ -378,6 +408,17 @@ instance FromJSON ConstructionFinishedNewsDto where
     parseJSON _ = mzero
 
 
+data ProductionChangedNewsDto = ProductionChangedNewsDto
+    { productionChangedNewsDtoPlanetId :: Key Planet
+    , productionChangedNewsDtoPlanetName :: Text
+    , productionChangedNewsDtoSystemId :: Key StarSystem
+    , productionChangedNewsDtoSystemName :: Text
+    , productionChangedNewsDtoType :: ResourceType
+    , productionChangedNewsDtoDate :: Int
+    }
+    deriving (Show, Read, Eq)
+
+
 {-| Star date of the event that is being reported in this news article
 -}
 newsStarDate :: NewsArticleDto -> Int
@@ -398,6 +439,18 @@ newsStarDate article =
         ConstructionFinishedDto details ->
             constructionFinishedNewsDtoDate details
 
+        ProductionBoostStartedDto details ->
+            productionChangedNewsDtoDate details
+
+        ProductionSlowdownStartedDto details ->
+            productionChangedNewsDtoDate details
+
+        ProductionBoostEndedDto details ->
+            productionChangedNewsDtoDate details
+
+        ProductionSlowdownEndedDto details ->
+            productionChangedNewsDtoDate details
+
         KragiiDto details ->
             kragiiNewsDtoDate details
 
@@ -410,3 +463,4 @@ $(deriveJSON defaultOptions { fieldLabelModifier = \x -> drop 14 x } ''KragiiWor
 $(deriveJSON defaultOptions { fieldLabelModifier = \x -> drop 13 x } ''UserOptionDto)
 $(deriveJSON defaultOptions { constructorTagModifier = \x -> take (length x - 3) x } ''KragiiWormsChoiceDto)
 $(deriveJSON defaultOptions { fieldLabelModifier = \x -> drop 13 x } ''KragiiNewsDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = \x -> drop 24 x } ''ProductionChangedNewsDto)
