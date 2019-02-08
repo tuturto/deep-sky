@@ -10,6 +10,7 @@ module Simulation.Events ( handleFactionEvents, addSpecialEvents )
     where
 
 import Import
+import qualified Prelude as P
 import System.Random
 import Common ( maybeGet )
 import CustomTypes ( SpecialEventStatus(..), PercentileChance(..), RollResult(..)
@@ -21,7 +22,6 @@ import News.Import ( parseNewsEntities, productionBoostStartedNews, productionSl
 import Queries ( kragiiTargetPlanets, farmingChangeTargetPlanets )
 import Resources ( ResourceType(..) )
 
-import qualified Prelude as P
 
 -- | Handle all special events for given faction
 -- After processing an event, it is marked as handled and dismissed
@@ -49,8 +49,8 @@ extractSpecialNews _ = Nothing
 
 -- | Handle special event, mark it processed and dismissed, create news article about results
 handleSpecialEvent :: (PersistQueryWrite backend, MonadIO m
-                      , BaseBackend backend ~ SqlBackend) =>
-                      Key Faction -> Time -> (Key News, SpecialNews) -> ReaderT backend m (Key News)
+    , BaseBackend backend ~ SqlBackend) =>
+    Key Faction -> Time -> (Key News, SpecialNews) -> ReaderT backend m (Key News)
 handleSpecialEvent fId date (nId, (KragiiWorms event _ choice)) = do
     (removal, results) <- resolveEvent (nId, event) choice
     -- events that signal that they should be removed or that fail to signal anything are marked processed
@@ -65,14 +65,14 @@ handleSpecialEvent fId date (nId, (KragiiWorms event _ choice)) = do
 
 -- | Handle adding zero or more special events for a given faction
 addSpecialEvents :: ( PersistQueryRead backend, MonadIO m, PersistStoreWrite backend
-                    , BackendCompatible SqlBackend backend
-                    , PersistUniqueRead backend, BaseBackend backend ~ SqlBackend) =>
-                    Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))
+    , BackendCompatible SqlBackend backend
+    , PersistUniqueRead backend, BaseBackend backend ~ SqlBackend) =>
+    Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))
 addSpecialEvents date faction = do
     -- TODO: dynamic length
     n <- liftIO $ randomRIO (0, 2)
     let (odds, eventCreator) = eventCreators P.!! n
-    runEvent eventCreator odds date faction
+    runEvent odds date faction eventCreator
 
 
 eventCreators :: (PersistStoreWrite backend, PersistUniqueRead backend,
@@ -89,9 +89,10 @@ eventCreators =
 runEvent :: (PersistStoreWrite backend, PersistUniqueRead backend,
     PersistQueryRead backend, BackendCompatible SqlBackend backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
+    PercentileChance -> Time -> Entity Faction ->
     (Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))) ->
-    PercentileChance -> Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))
-runEvent fn odds date faction = do
+    ReaderT backend m (Maybe (Key News))
+runEvent odds date faction fn = do
     res <- liftIO $ roll odds
     case res of
         Success ->

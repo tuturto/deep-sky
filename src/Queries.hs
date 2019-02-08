@@ -90,6 +90,7 @@ kragiiTargetPlanets pop farms fId = do
 
 
 -- | Load planets that are farming production change candidates
+-- these planets have population of at least 1 and 1 or more farms
 farmingChangeTargetPlanets :: (MonadIO m, BackendCompatible SqlBackend backend
     , PersistQueryRead backend, PersistUniqueRead backend) =>
     Key Faction -> ReaderT backend m [Entity Planet]
@@ -111,7 +112,7 @@ farmingChangeTargetPlanets fId = do
     let counted = catMaybes $ fmap farmAndPopCount grouped
     let filtered = filter (\(_, p, f) ->
                                 p >= 1
-                                || f >= 1) counted
+                                && f >= 1) counted
     let mapped = fmap (\(ent, _, _) -> ent) filtered
     return mapped
 
