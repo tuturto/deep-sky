@@ -11,6 +11,7 @@ import Api.Common
     exposing
         ( delete
         , get
+        , is
         , post
         , put
         , resourceTypeDecoder
@@ -45,6 +46,7 @@ import Data.Messages
         , NewsContent(..)
         , PlanetFoundNews
         , ProductionChangeNews
+        , ResearchCompletedNews
         , ShipFinishedNews
         , SpecialEventChoice(..)
         , SpecialEventOption
@@ -93,7 +95,7 @@ getNews =
 -}
 deleteNews : MessageId -> Cmd Msg
 deleteNews mId =
-    Http.send (ApiMsgCompleted << NewsReceived) (delete (ApiSingleMessage mId) (list newsDecoder))
+    Http.send (ApiMsgCompleted << NewsReceived) (delete (ApiSingleMessage mId) Nothing (list newsDecoder))
 
 
 {-| Submit user written news entry
@@ -173,6 +175,9 @@ newsTag article =
         ProductionSlowdownEnded _ ->
             "ProductionSlowdownEnded"
 
+        ResearchCompleted _ ->
+            "ResearchCompleted"
+
         KragiiEvent _ ->
             "KragiiEvent"
 
@@ -226,13 +231,6 @@ getIcons model =
             Http.send (ApiMsgCompleted << IconsReceived) (get ApiIcon (list iconDefinitionDecoder))
 
 
-{-| Helper function to write fluent looking decoders
--}
-is : String -> String -> Bool
-is a b =
-    a == b
-
-
 {-| Decoder for news article
 -}
 newsDecoder : Decode.Decoder NewsArticle
@@ -273,6 +271,7 @@ newsContentDecoder =
         , when newsType (is "ProductionSlowdownStarted") (field "contents" productionSlowdownStarted)
         , when newsType (is "ProductionBoostEnded") (field "contents" productionBoostEnded)
         , when newsType (is "ProductionSlowdownEnded") (field "contents" productionSlowdownEnded)
+        , when newsType (is "ResearchCompleted") (field "contents" researchCompleted)
         ]
 
 
@@ -524,3 +523,14 @@ productionSlowdownEnded : Decode.Decoder NewsContent
 productionSlowdownEnded =
     succeed ProductionSlowdownEnded
         |> andMap productionChangeDecoder
+
+
+researchCompleted : Decode.Decoder NewsContent
+researchCompleted =
+    let
+        decoder =
+            succeed ResearchCompletedNews
+                |> andMap (field "Name" string)
+    in
+    succeed ResearchCompleted
+        |> andMap decoder

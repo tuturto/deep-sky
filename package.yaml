@@ -53,6 +53,7 @@ dependencies:
 - resourcet
 - esqueleto
 - transformers
+- scientific >=0.3.6.2 && <0.3.7.0
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.

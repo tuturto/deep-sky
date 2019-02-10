@@ -1,6 +1,7 @@
 module Data.Accessors exposing
     ( activeUserIconA
     , availableBuildingsA
+    , availableResearchA
     , buildingSearchTextA
     , buildingsA
     , buildingsStatusA
@@ -8,7 +9,10 @@ module Data.Accessors exposing
     , constructionStatusA
     , constructionsA
     , currentPageA
+    , currentResearchA
+    , currentResearchStatusA
     , errorsA
+    , focusedTopCategoryA
     , iconsA
     , idA
     , indexA
@@ -27,6 +31,8 @@ module Data.Accessors exposing
     , planetsStatusA
     , populationStatusA
     , populationsA
+    , researchFieldStatusA
+    , researchRA
     , starLanesStatusA
     , starListStatusA
     , starSystemsA
@@ -38,6 +44,48 @@ module Data.Accessors exposing
     )
 
 import Accessors exposing (Relation, makeOneToOne)
+
+
+focusedTopCategoryA : Relation field sub wrap -> Relation { rec | focusedTopCategory : field } sub wrap
+focusedTopCategoryA =
+    makeOneToOne
+        .focusedTopCategory
+        (\change rec -> { rec | focusedTopCategory = change rec.focusedTopCategory })
+
+
+researchFieldStatusA : Relation field sub wrap -> Relation { rec | researchFieldStatus : field } sub wrap
+researchFieldStatusA =
+    makeOneToOne
+        .researchFieldStatus
+        (\change rec -> { rec | researchFieldStatus = change rec.researchFieldStatus })
+
+
+researchRA : Relation field sub wrap -> Relation { rec | researchR : field } sub wrap
+researchRA =
+    makeOneToOne
+        .researchR
+        (\change rec -> { rec | researchR = change rec.researchR })
+
+
+currentResearchStatusA : Relation field sub wrap -> Relation { rec | currentResearchStatus : field } sub wrap
+currentResearchStatusA =
+    makeOneToOne
+        .currentResearchStatus
+        (\change rec -> { rec | currentResearchStatus = change rec.currentResearchStatus })
+
+
+currentResearchA : Relation field sub wrap -> Relation { rec | currentResearch : field } sub wrap
+currentResearchA =
+    makeOneToOne
+        .currentResearch
+        (\change rec -> { rec | currentResearch = change rec.currentResearch })
+
+
+availableResearchA : Relation field sub wrap -> Relation { rec | availableResearch : field } sub wrap
+availableResearchA =
+    makeOneToOne
+        .availableResearch
+        (\change rec -> { rec | availableResearch = change rec.availableResearch })
 
 
 planetStatusesStatusA : Relation field sub wrap -> Relation { rec | planetStatusesStatus : field } sub wrap

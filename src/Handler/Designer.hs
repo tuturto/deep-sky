@@ -122,7 +122,7 @@ updateDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     Key Design -> DesignDto -> Key Faction -> ReaderT backend m DesignDto
 updateDesign dId design fId = do
     _ <- replace dId $ Design (designDtoName design) fId (designDtoChassisId design)
-    _ <- deleteWhere [ PlannedComponentDesignId ==. dId ]
+    deleteWhere [ PlannedComponentDesignId ==. dId ]
     _ <- mapM (insert . componentDtoToPlannedComponent dId) (designDtoComponents design)
     newDesign <- get dId
     newComponents <- selectList [ PlannedComponentDesignId ==. dId ] []
@@ -135,5 +135,5 @@ deleteDesign :: (MonadIO m, PersistQueryWrite backend,
                  BaseBackend backend ~ SqlBackend) =>
                 Key Design -> ReaderT backend m ()
 deleteDesign dId = do
-    _ <- deleteWhere [ PlannedComponentDesignId ==. dId ]
+    deleteWhere [ PlannedComponentDesignId ==. dId ]
     delete dId

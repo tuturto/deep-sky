@@ -3,6 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Buildings where
 
@@ -23,12 +24,12 @@ data BuildingInfo = BuildingInfo
     deriving (Show, Read, Eq)
 
 newtype BLevel = BLevel { unBLevel :: Int }
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Ord, Num)
 
 -- Instances
 
 instance ToJSON BuildingInfo where
-    toJSON (BuildingInfo bType bName bLevel bCost bDesc) = 
+    toJSON (BuildingInfo bType bName bLevel bCost bDesc) =
         object [ "id" .= bType
                , "level" .= unBLevel bLevel
                , "name" .= bName

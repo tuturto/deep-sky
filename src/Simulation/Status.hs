@@ -1,5 +1,4 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE FlexibleContexts           #-}
@@ -31,12 +30,12 @@ processPlanetStatus :: (MonadIO m, PersistQueryWrite backend,
     Time -> ReaderT backend m [News]
 processPlanetStatus date = do
     loaded <- selectList [ PlanetStatusExpiration <=. Just (timeCurrentTime date)] []
-    _ <- deleteWhere [ PlanetStatusExpiration <=. Just (timeCurrentTime date)]
+    deleteWhere [ PlanetStatusExpiration <=. Just (timeCurrentTime date)]
     let planetIds = fmap (planetStatusPlanetId . entityVal) loaded
     planets <- selectList [ PlanetId <-. planetIds ] []
     let systemIds = fmap (planetStarSystemId . entityVal) planets
     systems <- selectList [ StarSystemId <-. systemIds ] []
-    return $ mapMaybe ((expirationNews planets systems date) . entityVal) loaded
+    return $ mapMaybe (expirationNews planets systems date . entityVal) loaded
 
 
 --TODO: performance with big set of planets and star systems
@@ -90,7 +89,7 @@ boostEnded planets systems date pId resource sType =
                         <*> fmap (starSystemName . entityVal) system
                         <*> Just resource
                         <*> (Just . timeCurrentTime) date
-        fId = join $ fmap (planetOwnerId . entityVal) planet
+        fId = planet >>= (planetOwnerId . entityVal)
         planet = find (\p -> entityKey p == pId) planets
         system = find (\s -> Just (entityKey s) == fmap (planetStarSystemId . entityVal) planet) systems
 

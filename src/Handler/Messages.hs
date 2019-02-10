@@ -1,8 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TupleSections         #-}
 
 module Handler.Messages ( getApiMessageR, getMessageR, deleteApiMessageIdR
                         , postApiMessageR, getApiMessageIconsR, putApiMessageIdR )
@@ -34,7 +34,7 @@ deleteApiMessageIdR mId = do
     (_, _, fId) <- apiRequireFaction
     loadedMessages <- runDB $ selectList [ NewsId ==. mId
                                          , NewsFactionId ==. fId ] [ Asc NewsDate ]
-    _ <- if length loadedMessages == 0
+    _ <- if null loadedMessages
             then apiNotFound
             else runDB $ update mId [ NewsDismissed =. True ]
     loadAllMessages fId
@@ -51,9 +51,9 @@ putApiMessageIdR mId = do
             then do
                 loadedMessages <- runDB $ selectList [ NewsId ==. mId
                                                      , NewsFactionId ==. fId ] [ Asc NewsDate ]
-                if length loadedMessages == 0
+                if null loadedMessages
                     then apiNotFound
-                    else runDB $ update mId [ NewsContent =. (toStrict $ encodeToLazyText article) ]
+                    else runDB $ update mId [ NewsContent =. toStrict (encodeToLazyText article) ]
             else apiForbidden "unsupported article type"
     loadAllMessages fId
 
@@ -81,9 +81,8 @@ postApiMessageR = do
 -- their respective image urls
 -- This resource doesn't require any kind of authentication or authorization
 getApiMessageIconsR :: Handler Value
-getApiMessageIconsR = do
-    render <- getUrlRender
-    return $ (toJSON . iconInfo . userNewsIconMapper) render
+getApiMessageIconsR =
+    toJSON . iconInfo . userNewsIconMapper <$> getUrlRender
 
 
 getMessageR :: Handler Html
@@ -133,4 +132,4 @@ loadAllMessages fId = do
     let userIcons = userNewsIconMapper render
     let changeIcons = productionChangeEndedIconMapper render
     let icons = iconMapper render userIcons changeIcons
-    return $ toJSON $ map (toDto . (flip (,) icons)) parsedMessages
+    return $ toJSON $ map (toDto . (, icons)) parsedMessages

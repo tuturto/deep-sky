@@ -6,12 +6,13 @@
 
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
               , FromDto(..), ToDto(..), apiNotFound, apiInvalidArgs, apiInternalError, apiOk
-              , safeHead, apiForbidden, mkUniq )
+              , safeHead, apiForbidden, mkUniq, choose, getR, apiError, Frequency(..) )
     where
 
 import Import
 import qualified Prelude as P ( (!!), length )
 import Data.Set
+import qualified Data.List as List
 import System.Random
 
 
@@ -76,28 +77,50 @@ apiNotFound =
     sendStatusJSON status404 $ toJSON $ ErrorJson "Resource not found"
 
 
--- | Send 400 error with json body containing list of names of all invalid arguments
+-- | Send 400 (Bad request) error with json body containing list of names of all invalid arguments
+-- The server cannot or will not process the request due to an apparent client error
+-- (e.g., malformed request syntax, size too large, invalid request message framing,
+-- or deceptive request routing).
 apiInvalidArgs :: [Text] -> HandlerFor App a
 apiInvalidArgs params =
     sendStatusJSON status400 $ toJSON $ ErrorsJson params
 
 
--- | Send 403 error with json body containing error message
+-- | Send 403 (Forbidden) error with json body containing error message
+-- The request was valid, but the server is refusing action. The user might not
+-- have the necessary permissions for a resource, or may need an account of some sort.
 apiForbidden :: Text -> HandlerFor App a
 apiForbidden explanation =
     sendStatusJSON status403 $ toJSON $ ErrorJson explanation
 
 
--- | Send 500 error with json body
+-- | Send 500 (Internal server error) error with json body
 apiInternalError :: HandlerFor App a
 apiInternalError =
     sendStatusJSON status500 $ toJSON $ ErrorJson "Internal error occurred"
 
 
--- | Send 200 with json body
+-- | Send 200 (ok) with json body
 apiOk :: (MonadHandler m, ToJSON a) => a -> m a
 apiOk content =
     sendStatusJSON status200 $ toJSON content
+
+
+-- | Return error message as JSON
+-- when unknown status is given, 500 is used instead
+apiError :: (Status, Text) -> HandlerFor App a2
+apiError (status, msg) =
+    case statusCode status of
+        400 ->
+            apiInvalidArgs [msg]
+        404 ->
+            apiNotFound
+        403 ->
+            apiForbidden msg
+        500 ->
+            apiInternalError
+        _ ->
+            apiInternalError
 
 
 -- | Class to transform dto to respective entity
@@ -124,3 +147,39 @@ instance ToJSON ErrorJson where
 
 mkUniq :: Ord a => [a] -> [a]
 mkUniq = Data.Set.toList . Data.Set.fromList
+
+
+-- | Frequency or weight of a
+data Frequency a = Frequency Int a
+    deriving (Show, Read, Eq)
+
+
+ -- | Randomly choose item from weighted list
+ -- In case of empty list, Nothing is returned
+choose :: [Frequency a] -> IO (Maybe a)
+choose [] =
+    return Nothing
+
+choose items =
+    pick items <$> randomRIO (1, total)
+    where
+        total = sum $ fmap (\(Frequency x _) -> x) items
+        pick [] _ = Nothing
+        pick (Frequency x item:xs) n
+            | n <= x = Just item
+            | otherwise = pick xs (n - x)
+
+
+-- | get n unique entries from given list in random order
+-- | if n > length of list, all items of the list will be returned
+getR :: RandomGen g => g -> Int -> [a] -> [a]
+getR _ 0 _ =
+    []
+
+getR _ _ [] =
+    []
+
+getR g n xs =
+    fmap (xs P.!!) ids
+    where
+        ids = List.take (min n $ length xs) $ List.nub $ randomRs (0, length xs - 1) g

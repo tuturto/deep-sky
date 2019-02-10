@@ -9,23 +9,26 @@
 module News.Data ( NewsArticle(..), UserNewsIcon(..), StarFoundNews(..)
                  , PlanetFoundNews(..), UserWrittenNews(..), DesignCreatedNews(..)
                  , ConstructionFinishedNews(..), SpecialNews(..), ProductionChangedNews(..)
-                 , mkNews, mkSpecialNews
+                 , ResearchCompletedNews(..), mkNews, mkSpecialNews
                  )
     where
 
 import Import
 import Data.Aeson.TH
 import Data.Aeson.Text ( encodeToLazyText )
+import qualified Data.Map.Strict as Map
 import Common ( ToDto(..), FromDto(..) )
 import CustomTypes ( SpecialEventStatus(..) )
 import Dto.Icons ( IconMapper(..) )
 import Dto.News ( NewsDto(..), NewsArticleDto(..), StarFoundNewsDto(..), PlanetFoundNewsDto(..)
                 , UserWrittenNewsDto(..), DesignCreatedNewsDto(..), ConstructionFinishedNewsDto(..)
                 , UserNewsIconDto(..), SpecialNewsDto(..), KragiiWormsEventDto(..)
-                , ProductionChangedNewsDto(..)
+                , ProductionChangedNewsDto(..), ResearchCompletedNewsDto(..)
                 )
 import Events.Import ( UserOption(..) )
 import Events.Kragii ( KragiiWormsEvent(..), KragiiWormsChoice(..), KragiiNews(..) )
+import Research.Data ( Technology, Research(..) )
+import Research.Tree ( techMap )
 import Resources ( ResourceType )
 
 
@@ -40,6 +43,7 @@ data NewsArticle =
     | ProductionSlowdownStarted ProductionChangedNews
     | ProductionBoostEnded ProductionChangedNews
     | ProductionSlowdownEnded ProductionChangedNews
+    | ResearchCompleted ResearchCompletedNews
     | KragiiResolution KragiiNews
     | Special SpecialNews
 
@@ -222,7 +226,37 @@ instance FromDto ProductionChangedNews ProductionChangedNewsDto where
         }
 
 
-instance ToDto ((Key News, NewsArticle), (IconMapper NewsArticleDto)) NewsDto where
+data ResearchCompletedNews = ResearchCompletedNews
+    { researchCompletedNewsTechnology :: Technology
+    , researchCompletedNewsData :: Int
+    }
+
+
+instance ToDto ResearchCompletedNews ResearchCompletedNewsDto where
+    toDto news = ResearchCompletedNewsDto
+        { researchCompletedNewsDtoTechnology = tech
+        , researchCompletedNewsDtoName = name
+        , researchCompletedNewsDtoDate = researchCompletedNewsData news
+        }
+        where
+            tech = researchCompletedNewsTechnology news
+            research = Map.lookup tech techMap
+            name = case research of
+                    Just x ->
+                        researchName x
+
+                    Nothing ->
+                        "Classified project"
+
+
+instance FromDto ResearchCompletedNews ResearchCompletedNewsDto where
+    fromDto dto = ResearchCompletedNews
+        { researchCompletedNewsTechnology = researchCompletedNewsDtoTechnology dto
+        , researchCompletedNewsData = researchCompletedNewsDtoDate dto
+        }
+
+
+instance ToDto ((Key News, NewsArticle), IconMapper NewsArticleDto) NewsDto where
     toDto ((nId, article), icons) =
         let
             content = toDto article
@@ -263,6 +297,9 @@ instance FromDto NewsArticle NewsArticleDto where
             ProductionSlowdownEndedDto content ->
                 ProductionSlowdownEnded $ fromDto content
 
+            ResearchCompletedDto content ->
+                ResearchCompleted $ fromDto content
+
             KragiiDto content ->
                 KragiiResolution $ fromDto content
 
@@ -282,6 +319,7 @@ instance ToDto NewsArticle NewsArticleDto where
             (ProductionSlowdownStarted x) -> ProductionSlowdownStartedDto $ toDto x
             (ProductionBoostEnded x) -> ProductionBoostEndedDto $ toDto x
             (ProductionSlowdownEnded x) -> ProductionSlowdownEndedDto $ toDto x
+            (ResearchCompleted x) -> ResearchCompletedDto $ toDto x
             (KragiiResolution x) -> KragiiDto $ toDto x
             (Special x) -> SpecialDto $ toDto x
 
@@ -314,7 +352,7 @@ instance FromDto SpecialNews SpecialNewsDto where
                         , kragiiWormsDate = kragiiWormsDtoDate dto
                         } )
                     []
-                    (fmap fromDto $ kragiiWormsDtoChoice dto)
+                    (fromDto <$> kragiiWormsDtoChoice dto)
 
 
 -- | Icon for user created news
@@ -382,3 +420,4 @@ $(deriveJSON defaultOptions ''UserNewsIcon)
 $(deriveJSON defaultOptions ''SpecialNews)
 $(deriveJSON defaultOptions ''NewsArticle)
 $(deriveJSON defaultOptions ''ProductionChangedNews)
+$(deriveJSON defaultOptions ''ResearchCompletedNews)

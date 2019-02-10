@@ -44,6 +44,9 @@
 -- /api/construction/ship                              ApiShipConstructionR            POST
 -- /api/construction/ship/#ShipConstructionId          ApiShipConstructionIdR          GET PUT DELETE
 
+/api/research/available                             ApiAvailableResearchR           GET
+/api/research/current                               ApiCurrentResearchR             GET POST DELETE
+
 /api/message                                        ApiMessageR                     GET POST
 /api/message/#NewsId                                ApiMessageIdR                   DELETE PUT
 /api/icon                                           ApiMessageIconsR                GET

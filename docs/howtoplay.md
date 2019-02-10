@@ -19,3 +19,5 @@ not.
 Typical orders that players give are construction of new buildings on planets,
 directing research to specific direction and sending diplomatic messages to
 other players.
+
+[Back to index](index)

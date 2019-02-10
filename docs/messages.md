@@ -34,3 +34,5 @@ explained. Event is then resolved at the end of current turn. Sometimes
 one turn is enough to take care of the event, while other times the same event
 might linger for multiple turns. In any case, as long as the choices are
 visible, player can change their decision.
+
+[Back to index](index)

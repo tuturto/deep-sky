@@ -7,6 +7,7 @@ module Data.Messages exposing
     , NewsContent(..)
     , PlanetFoundNews
     , ProductionChangeNews
+    , ResearchCompletedNews
     , ShipFinishedNews
     , SpecialEventChoice(..)
     , SpecialEventOption
@@ -53,6 +54,7 @@ type NewsContent
     | ProductionSlowdownStarted ProductionChangeNews
     | ProductionBoostEnded ProductionChangeNews
     | ProductionSlowdownEnded ProductionChangeNews
+    | ResearchCompleted ResearchCompletedNews
     | KragiiEvent KragiiSpecialEvent
     | KragiiResolved KragiiResolution
 
@@ -111,6 +113,11 @@ type alias ProductionChangeNews =
     , systemName : String
     , systemId : StarSystemId
     , resourceType : ResourceType
+    }
+
+
+type alias ResearchCompletedNews =
+    { name : String
     }
 
 

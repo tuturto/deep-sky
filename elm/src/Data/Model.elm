@@ -10,12 +10,21 @@ import Browser.Navigation exposing (Key)
 import Data.Common exposing (InfoPanelStatus, Resources, StarDate)
 import Data.Construction exposing (Building, BuildingInfo, Construction)
 import Data.Messages exposing (NewsArticle, UserIcon)
-import Data.StarSystem exposing (Planet, PlanetStatus, Population, Star, StarSystem)
+import Data.Research exposing (CurrentResearch, Research)
+import Data.StarSystem
+    exposing
+        ( Planet
+        , PlanetStatus
+        , Population
+        , Star
+        , StarSystem
+        )
 import Dict exposing (Dict)
 import Http
 import Url exposing (Url)
 import ViewModels.Messages exposing (MessagesRMsg, MessagesViewModel)
 import ViewModels.Planet exposing (PlanetRMsg(..), PlanetViewModel)
+import ViewModels.Research exposing (ResearchRMsg(..), ResearchViewModel)
 import ViewModels.StarSystem exposing (StarSystemRMsg, StarSystemViewModel)
 
 
@@ -37,7 +46,10 @@ type alias Model =
     , planetR : PlanetViewModel
     , messagesR : MessagesViewModel
     , icons : Maybe (List ( UserIcon, String ))
+    , availableResearch : Maybe (List Research)
+    , currentResearch : Maybe (List CurrentResearch)
     , errors : List ErrorMessage
+    , researchR : ResearchViewModel
     }
 
 
@@ -49,6 +61,7 @@ type Msg
     | StarSystemMessage StarSystemRMsg
     | PlanetMessage PlanetRMsg
     | NewsMessage MessagesRMsg
+    | ResearchMessage ResearchRMsg
 
 
 type ApiMsg
@@ -64,6 +77,8 @@ type ApiMsg
     | NewsReceived (Result Http.Error (List NewsArticle))
     | IconsReceived (Result Http.Error (List ( UserIcon, String )))
     | PlanetStatusReceived (Result Http.Error PlanetStatus)
+    | AvailableResearchReceived (Result Http.Error (List Research))
+    | CurrentResearchReceived (Result Http.Error (List CurrentResearch))
 
 
 type ErrorMessage

@@ -147,6 +147,25 @@ News json
     specialEvent SpecialEventStatus
     deriving Show Read Eq
 
+CurrentResearch json
+    type Technology
+    progress Int
+    factionId FactionId
+    deriving Show Read Eq
+
+AvailableResearch json
+    type Technology
+    category TopResearchCategory
+    factionId FactionId
+    deriving Show Read Eq
+
+CompletedResearch json
+    type Technology
+    level Int
+    factionId FactionId
+    date Int
+    deriving Show Read Eq
+
 StarSystemReport json
     starSystemId StarSystemId
     name Text Maybe

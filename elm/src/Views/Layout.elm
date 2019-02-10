@@ -198,7 +198,7 @@ segment model route =
         StarSystemR systemId ->
             let
                 starSystemName =
-                    get starSystemsA model
+                    model.starSystems
                         |> andThen (Dict.get (unStarSystemId systemId))
                         |> andThen (\x -> Just x.name)
                         |> withDefault "Unknown star system"
@@ -211,7 +211,7 @@ segment model route =
         PlanetR systemId planetId ->
             let
                 planetName =
-                    get planetsA model
+                    model.planets
                         |> andThen (Dict.get (unStarSystemId systemId))
                         |> withDefault []
                         |> List.filter (\planet -> unPlanetId planet.id == unPlanetId planetId)

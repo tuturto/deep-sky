@@ -14,6 +14,7 @@ import Simulation.Construction ( handleFactionConstruction )
 import Simulation.Events ( handleFactionEvents, addSpecialEvents )
 import Simulation.Food ( handleFactionFood )
 import Simulation.Observations ( handleFactionObservations )
+import Simulation.Research ( handleFactionResearch )
 import Simulation.Status ( removeExpiredStatuses )
 import Simulation.Time
 
@@ -28,10 +29,11 @@ processTurn = do
     newTime <- advanceTime
     _ <- removeExpiredStatuses newTime
     factions <- selectList [] [ Asc FactionId ]
-    _ <- mapM (handleFactionEvents newTime) factions
+    mapM_ (handleFactionEvents newTime) factions
     mapM_ handleFactionFood factions
     mapM_ (handleFactionConstruction newTime) factions
-    _ <- mapM (addSpecialEvents newTime) factions
+    mapM_ (handleFactionResearch newTime) factions
+    mapM_ (addSpecialEvents newTime) factions
     -- Doing observations should always be done last to ensure players have
     -- recent reports of property they have full control, ie. planets.
     -- Otherwise it's possible that they'll receive reports that are one

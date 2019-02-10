@@ -267,6 +267,9 @@ newsTitle article =
         KragiiResolved _ ->
             text "Kragii situation develops"
 
+        ResearchCompleted _ ->
+            text "Research completed"
+
 
 {-| Create body of news article
 -}
@@ -399,6 +402,9 @@ newsBody article =
             , text details.report
             , text "\""
             ]
+
+        ResearchCompleted details ->
+            [ text <| "Research of " ++ details.name ++ " has been completed." ]
 
 
 {-| Render right side of the page

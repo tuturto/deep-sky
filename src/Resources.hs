@@ -1,6 +1,7 @@
-{-# LANGUAGE OverloadedStrings      #-}
-{-# LANGUAGE NoImplicitPrelude      #-}
-{-# LANGUAGE TemplateHaskell        #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Resources ( RawResources(..), ResourceCost(..), ResourceProduction(..), ConstructionSpeed(..)
                  , ConstructionLeft(..), ConstructionDone(..), ResourcesAvailable(..)
@@ -56,7 +57,7 @@ instance Monoid (RawResources t) where
 
 
 newtype RawResource a = RawResource { unRawResource :: Int }
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Ord, Num)
 
 
 data ResourceType =
@@ -77,19 +78,6 @@ instance Semigroup (RawResource t) where
 
 instance Monoid (RawResource t) where
     mempty = RawResource 0
-
-
-instance Ord (RawResource t) where
-    (<=) (RawResource a) (RawResource b) = a <= b
-
-
-instance Num (RawResource t) where
-    (+) (RawResource a) (RawResource b) = RawResource $ a + b
-    (-) (RawResource a) (RawResource b) = RawResource $ a - b
-    (*) (RawResource a) (RawResource b) = RawResource $ a * b
-    abs (RawResource a) = RawResource $ abs a
-    signum (RawResource a) = RawResource $ signum a
-    fromInteger a = RawResource $ fromInteger a
 
 
 instance Boostable (RawResource t) where

@@ -172,3 +172,21 @@
 .hover-section:hover .hover-text {
     visibility: visible;
 }
+
+.current-research {
+    padding: 0.5em;
+    margin: 0.5em;
+    border-width: 0.15em;
+    border-style: solid;
+    border-radius: 0.5em;
+    border-color: #9292f7;
+}
+
+.current-project {
+    padding: 0.5em;
+    margin: 0.5em;
+    border-width: 0.15em;
+    border-style: solid;
+    border-radius: 0.5em;
+    border-color: #9292f7;
+}

@@ -1,10 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE LambdaCase            #-}
 
 module News.Import ( parseNewsEntities, userWrittenNews
                    , planetFoundNews, starFoundNews, designCreatedNews
                    , buildingConstructionFinishedNews, iconMapper, userNewsIconMapper
                    , productionChangeEndedIconMapper, iconInfo, productionBoostStartedNews
-                   , productionSlowdownStartedNews )
+                   , productionSlowdownStartedNews, researchCompleted )
     where
 
 import Import
@@ -20,8 +21,10 @@ import Dto.News ( NewsArticleDto(..), UserWrittenNewsDto(..), UserNewsIconDto(..
 import Events.Import ( eventOptions )
 import News.Data ( NewsArticle(..), ConstructionFinishedNews(..), DesignCreatedNews(..)
                  , PlanetFoundNews(..), StarFoundNews(..), UserWrittenNews(..)
-                 , UserNewsIcon(..), SpecialNews(..), ProductionChangedNews(..), mkNews
+                 , UserNewsIcon(..), SpecialNews(..), ProductionChangedNews(..)
+                 , ResearchCompletedNews(..), mkNews
                  )
+import Research.Data ( Technology )
 import Resources ( ResourceType(..) )
 
 
@@ -55,7 +58,7 @@ parseNewsEntities entities =
                                         _ ->
                                             (key, article)
     in
-        fmap (addOptions . simplify) $ filter removeFailed parsed
+        addOptions . simplify <$> filter removeFailed parsed
 
 
 -- | Evaluation current situation in respect to an special event and add available options
@@ -73,8 +76,7 @@ iconMapper :: (Route App -> Text) -> IconMapper UserNewsIconDto
     -> IconMapper ProductionChangedNewsDto
     -> IconMapper NewsArticleDto
 iconMapper render userIconMapper changeIconMapper =
-    IconMapper $ \article ->
-        case article of
+    IconMapper $ \case
             StarFoundDto _ ->
                 render $ StaticR images_news_sun_png
 
@@ -118,6 +120,9 @@ iconMapper render userIconMapper changeIconMapper =
             ProductionSlowdownEndedDto details ->
                 runIconMapper changeIconMapper details
 
+            ResearchCompletedDto _ ->
+                render $ StaticR images_news_microscope_png
+
             SpecialDto (KragiiEventDto _) ->
                 render $ StaticR images_news_hydra_png
 
@@ -128,8 +133,7 @@ iconMapper render userIconMapper changeIconMapper =
 -- | Get url to image corresponding to icon selection in user news
 userNewsIconMapper :: (Route App -> Text) -> IconMapper UserNewsIconDto
 userNewsIconMapper render =
-    IconMapper $ \icon ->
-        case icon of
+    IconMapper $ \case
             GenericUserNewsDto ->
                 render $ StaticR images_news_question_png
 
@@ -248,3 +252,13 @@ productionChanged planet system rType date =
         , productionChangedNewsType = rType
         , productionChangedNewsDate = timeCurrentTime date
         }
+
+researchCompleted :: Time -> Key Faction -> Technology -> News
+researchCompleted date fId tech =
+    let
+        content = ResearchCompleted $ ResearchCompletedNews
+                    { researchCompletedNewsTechnology = tech
+                    , researchCompletedNewsData = timeCurrentTime date
+                    }
+    in
+        mkNews fId date content

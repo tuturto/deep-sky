@@ -3,6 +3,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE FunctionalDependencies     #-}
+{-# LANGUAGE LambdaCase                 #-}
 
 
 module Events.News ( ResultsReport(..), kragiiWormsEvent )
@@ -34,7 +35,7 @@ kragiiWormsEvent planetEntity systemEntity date =
                         , kragiiWormsDate = timeCurrentTime date
                         }) [] Nothing
     in
-        (mkSpecialNews date) <$> (planetOwnerId planet)
+        mkSpecialNews date <$> planetOwnerId planet
             <*> Just content
 
 
@@ -71,9 +72,9 @@ instance ResultsReport KragiiWormsEvent KragiiWormsChoice KragiiResults where
                         then "Some of the personnel involved in the event were seriously injured."
                         else "There are no known reports of personnel injuries."
 
-            totalDestroyed = mconcat $ map (\x -> case x of
-                                                    CropsDestroyed n -> n
-                                                    _ -> mempty) results
+            totalDestroyed = mconcat $ map (\case
+                                                CropsDestroyed n -> n
+                                                _ -> mempty) results
             destruction = if totalDestroyed > RawResource 0
                             then "In the end, " <> pack (show (unRawResource totalDestroyed)) <> " units of harvest was destroyed."
                             else "Despite of all this, no harvest was destroyed."

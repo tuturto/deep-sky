@@ -5,6 +5,7 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE FunctionalDependencies     #-}
 {-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE LambdaCase                 #-}
 
 module Report ( createPlanetReports, createStarReports, createStarLaneReports, createSystemReport
               , collateReports, collateReport, spectralInfo, createPlanetStatusReport
@@ -248,7 +249,7 @@ instance Semigroup CollatedPlanetStatusReport where
 
 instance Monoid CollatedPlanetStatusReport where
         mempty = CollatedPlanetStatusReport
-                    { collatedPlanetStatusReportPlanetId = (toSqlKey 0)
+                    { collatedPlanetStatusReportPlanetId = toSqlKey 0
                     , collatedPlanetStatusReportStatus = []
                     , collatedPlanetStatusReportDate = 0
                     }
@@ -263,7 +264,7 @@ instance ReportTransform (PlanetStatusReport, IconMapper PlanetaryStatus) Collat
     fromReport (report, icons) =
         CollatedPlanetStatusReport
             { collatedPlanetStatusReportPlanetId = planetStatusReportPlanetId report
-            , collatedPlanetStatusReportStatus = fmap (statusToInfo icons) $ planetStatusReportStatus report
+            , collatedPlanetStatusReportStatus = statusToInfo icons <$> planetStatusReportStatus report
             , collatedPlanetStatusReportDate = planetStatusReportDate report
             }
 
@@ -505,8 +506,7 @@ instance ToJSON CollatedStarSystemReport where
 
 planetStatusIconMapper :: (Route App -> Text) -> IconMapper PlanetaryStatus
 planetStatusIconMapper render =
-    IconMapper $ \icon ->
-        case icon of
+    IconMapper $ \case
             GoodHarvest ->
                 render $ StaticR images_statuses_wheat_up_png
 
@@ -541,5 +541,5 @@ statusDescription status =
         KragiiAttack -> "Kragii infestation in planet!"
 
 
-$(deriveJSON defaultOptions { fieldLabelModifier = \x -> drop 19 x } ''PlanetaryStatusInfo)
-$(deriveJSON defaultOptions { fieldLabelModifier = \x -> drop 26 x } ''CollatedPlanetStatusReport)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 19 } ''PlanetaryStatusInfo)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 26 } ''CollatedPlanetStatusReport)

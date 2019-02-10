@@ -1,6 +1,7 @@
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 
 -- | Catch all module for things that don't yet belong to anywhere else
@@ -124,7 +125,7 @@ derivePersistField "ComponentSlot"
 
 newtype PercentileChance =
     PercentileChance { unPercentileChance :: Int }
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Ord, Num)
 
 
 data RollResult =

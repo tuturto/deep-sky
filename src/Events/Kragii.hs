@@ -164,7 +164,7 @@ getFaction :: ( MonadIO m, PersistStoreRead backend, BaseBackend backend ~ SqlBa
               KragiiWormsEvent -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) (Entity Faction)
 getFaction event = MaybeT $ do
     planet <- lift $ get $ kragiiWormsPlanetId event
-    let owner = join $ fmap planetOwnerId planet
+    let owner = planet >>= planetOwnerId
     res <- lift $ mapM getEntity owner
     return $ join res
 
@@ -172,12 +172,12 @@ getFaction event = MaybeT $ do
 -- | Amount of biological resources left after consuming given amount
 -- first element of the tuple is cost and second one amount left after applying cost
 calculateNewBio :: Monad m =>
-                   RawResource Biological -> Faction -> MaybeT (WriterT [KragiiResults] m) ((RawResource Biological), (RawResource Biological))
+                   RawResource Biological -> Faction -> MaybeT (WriterT [KragiiResults] m) (RawResource Biological, RawResource Biological)
 calculateNewBio cost faction = MaybeT $ do
     let currentBio = factionBiologicals faction
     return $ if currentBio > 0
-                then Just $ ( cost
-                            , RawResource $ max 0 (currentBio - unRawResource cost))
+                then Just ( cost
+                          , RawResource $ max 0 (currentBio - unRawResource cost))
                 else Nothing
 
 

@@ -119,12 +119,12 @@ farmingChangeTargetPlanets fId = do
 
 -- | Obtain planet's total population and total amount of farms
 -- All tuples are considered to be for same planet
-farmAndPopCount :: [(Entity Planet, Maybe (Entity PlanetPopulation), Maybe (Entity Building))] -> Maybe ((Entity Planet), Int, Int)
+farmAndPopCount :: [(Entity Planet, Maybe (Entity PlanetPopulation), Maybe (Entity Building))] -> Maybe (Entity Planet, Int, Int)
 farmAndPopCount [] = Nothing
 farmAndPopCount xs =
     let
-        populationCount = (sum . (fmap (planetPopulationPopulation . entityVal)) . nub . catMaybes . (fmap (\(_, x, _) -> x))) xs
-        farmCount = (length . nub . catMaybes . (fmap (\(_, _, x) -> x))) xs
+        populationCount = (sum . fmap (planetPopulationPopulation . entityVal) . nub . catMaybes . fmap (\(_, x, _) -> x)) xs
+        farmCount = (length . nub . catMaybes . fmap (\(_, _, x) -> x)) xs
         (planet, _, _) = P.head xs
     in
-        Just $ (planet, populationCount, farmCount)
+        Just (planet, populationCount, farmCount)

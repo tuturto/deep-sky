@@ -1,8 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE FunctionalDependencies     #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
 
@@ -25,25 +23,25 @@ import Resources ( ResourceType(..) )
 
 -- | Handle all special events for given faction
 -- After processing an event, it is marked as handled and dismissed
--- Returned list contains keys to news articles that were created as a result of processing
 handleFactionEvents :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, PersistQueryRead backend, PersistQueryWrite backend, MonadIO m) =>
-    Time -> Entity Faction -> ReaderT backend m [Key News]
+    Time -> Entity Faction -> ReaderT backend m ()
 handleFactionEvents date faction = do
     -- doing it like this requires that all special events for the faction are to be processed
     -- in case where handling a special event for one faction might create special event for
     -- another faction, this method will fail
     -- if that ever comes to be, we can add NewsDate into query and only process special events
     -- that are old enough.
-    loadedMessages <- selectList [ NewsFactionId ==. (entityKey faction)
+    loadedMessages <- selectList [ NewsFactionId ==. entityKey faction
                                  , NewsSpecialEvent ==. UnhandledSpecialEvent ] [ Desc NewsDate ]
     let specials = mapMaybe extractSpecialNews $ parseNewsEntities loadedMessages
-    mapM (handleSpecialEvent (entityKey faction) date) specials
+    _ <- mapM (handleSpecialEvent (entityKey faction) date) specials
+    return ()
 
 
 -- | Extract possible special event from news article
 extractSpecialNews :: (Key News, NewsArticle) -> Maybe (Key News, SpecialNews)
-extractSpecialNews (nId, (Special article)) = Just (nId, article)
+extractSpecialNews (nId, Special article) = Just (nId, article)
 extractSpecialNews _ = Nothing
 
 
@@ -51,12 +49,12 @@ extractSpecialNews _ = Nothing
 handleSpecialEvent :: (PersistQueryWrite backend, MonadIO m
     , BaseBackend backend ~ SqlBackend) =>
     Key Faction -> Time -> (Key News, SpecialNews) -> ReaderT backend m (Key News)
-handleSpecialEvent fId date (nId, (KragiiWorms event _ choice)) = do
+handleSpecialEvent fId date (nId, KragiiWorms event _ choice) = do
     (removal, results) <- resolveEvent (nId, event) choice
     -- events that signal that they should be removed or that fail to signal anything are marked processed
     -- this is done to remove events that failed to process so they won't dangle around for eternity
     -- in future, it would be good idea to log such cases somewhere for further inspection
-    _ <- when (removal /= Just KeepOriginalEvent) $
+    when (removal /= Just KeepOriginalEvent) $
                     updateWhere [ NewsId ==. nId ]
                                 [ NewsSpecialEvent =. HandledSpecialEvent
                                 , NewsDismissed =. True ]
@@ -67,12 +65,13 @@ handleSpecialEvent fId date (nId, (KragiiWorms event _ choice)) = do
 addSpecialEvents :: ( PersistQueryRead backend, MonadIO m, PersistStoreWrite backend
     , BackendCompatible SqlBackend backend
     , PersistUniqueRead backend, BaseBackend backend ~ SqlBackend) =>
-    Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))
+    Time -> Entity Faction -> ReaderT backend m ()
 addSpecialEvents date faction = do
     -- TODO: dynamic length
     n <- liftIO $ randomRIO (0, 2)
     let (odds, eventCreator) = eventCreators P.!! n
-    runEvent odds date faction eventCreator
+    _ <- runEvent odds date faction eventCreator
+    return ()
 
 
 eventCreators :: (PersistStoreWrite backend, PersistUniqueRead backend,
@@ -98,7 +97,7 @@ runEvent odds date faction fn = do
         Success ->
             fn date faction
 
-        Failure -> do
+        Failure ->
             return Nothing
 
 

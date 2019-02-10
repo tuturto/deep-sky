@@ -10,8 +10,10 @@ import Browser.Navigation as Nav
 import Data.Accessors
     exposing
         ( availableBuildingsA
+        , availableResearchA
         , buildingsA
         , constructionsA
+        , currentResearchA
         , errorsA
         , iconsA
         , newsA
@@ -50,6 +52,7 @@ import Navigation exposing (parseLocation)
 import Url exposing (Url)
 import ViewModels.Messages exposing (MessagesRMsg(..))
 import ViewModels.Planet exposing (PlanetRMsg(..))
+import ViewModels.Research exposing (ResearchRMsg(..))
 import ViewModels.StarSystem exposing (StarSystemRMsg(..))
 import Views.Admin
 import Views.Bases
@@ -107,7 +110,10 @@ init flags url key =
             , starSystemsR = ViewModels.StarSystem.init
             , planetR = ViewModels.Planet.init
             , messagesR = ViewModels.Messages.init
+            , availableResearch = Nothing
+            , currentResearch = Nothing
             , errors = []
+            , researchR = ViewModels.Research.init
             }
     in
     ( model
@@ -153,6 +159,9 @@ update msg model =
 
         NewsMessage message ->
             Views.Messages.update message model
+
+        ResearchMessage message ->
+            Views.Research.update message model
 
 
 {-| Handle messages related to API calls
@@ -293,7 +302,29 @@ handleApiMsg msg model =
 
         PlanetStatusReceived (Err err) ->
             ( set planetStatusA Nothing model
-                |> over errorsA (\errors -> error err "Failed to planet status" :: errors)
+                |> over errorsA (\errors -> error err "Failed to load planet statuses" :: errors)
+            , Cmd.none
+            )
+
+        AvailableResearchReceived (Ok status) ->
+            ( set availableResearchA (Just status) model
+            , Cmd.none
+            )
+
+        AvailableResearchReceived (Err err) ->
+            ( set availableResearchA Nothing model
+                |> over errorsA (\errors -> error err "Failed to load available research" :: errors)
+            , Cmd.none
+            )
+
+        CurrentResearchReceived (Ok status) ->
+            ( set currentResearchA (Just status) model
+            , Cmd.none
+            )
+
+        CurrentResearchReceived (Err err) ->
+            ( set currentResearchA Nothing model
+                |> over errorsA (\errors -> error err "Failed to load current research" :: errors)
             , Cmd.none
             )
 

@@ -95,7 +95,7 @@ putConstructionCmd construction =
 deleteConstructionCmd : Construction -> Cmd Msg
 deleteConstructionCmd construction =
     Http.send (ApiMsgCompleted << ConstructionsReceived)
-        (delete (ApiConstruction construction) (list constructionDecoder))
+        (delete (ApiConstruction construction) Nothing (list constructionDecoder))
 
 
 {-| Command to retrieve buildings available for construction

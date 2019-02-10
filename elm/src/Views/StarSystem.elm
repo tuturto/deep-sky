@@ -109,7 +109,7 @@ systemDetails : StarSystemId -> Model -> List (Html Msg)
 systemDetails systemId model =
     let
         system =
-            get starSystemsA model
+            model.starSystems
                 |> andThen (Dict.get (unStarSystemId systemId))
     in
     div [ class "row design-panel-title" ]
@@ -147,7 +147,7 @@ starsInfo systemId model =
         , div [ class "col-lg-4" ] [ text "Class" ]
         , div [ class "col-lg-4" ] [ text "Date" ]
         ]
-        :: (get starsA model
+        :: (model.stars
                 |> andThen (Dict.get (unStarSystemId systemId))
                 |> withDefault []
                 |> List.map
@@ -174,7 +174,7 @@ planetsInfo systemId model =
         , div [ class "col-lg-2" ] [ text "Gravity" ]
         , div [ class "col-lg-4" ] [ text "Date" ]
         ]
-        :: (get planetsA model
+        :: (model.planets
                 |> andThen (Dict.get (unStarSystemId systemId))
                 |> withDefault []
                 |> List.map

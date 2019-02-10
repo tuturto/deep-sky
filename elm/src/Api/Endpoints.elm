@@ -27,6 +27,8 @@ type Endpoint
     | ApiSingleMessage MessageId
     | ApiIcon
     | ApiPlanetStatus PlanetId
+    | ApiAvailableResearch
+    | ApiCurrentResearch
 
 
 endpointToString : Endpoint -> String
@@ -81,3 +83,9 @@ endpointToString endpoint =
 
         ApiPlanetStatus planetId ->
             "/api/planet/" ++ planetIdToString planetId ++ "/status"
+
+        ApiAvailableResearch ->
+            "/api/research/available"
+
+        ApiCurrentResearch ->
+            "/api/research/current"

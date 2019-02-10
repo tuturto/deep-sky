@@ -1,6 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE OverloadedStrings          #-}
 
 module Simulation.Time (advanceTime)
     where

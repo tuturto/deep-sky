@@ -3,6 +3,7 @@ module Api.Common exposing
     , get
     , getResourcesCmd
     , getStarDateCmd
+    , is
     , locationDecoder
     , post
     , put
@@ -75,9 +76,14 @@ put endpoint body decoder =
 {-| Send HTTP DELETE to specific end point. Response will be parsed with the
 given decoder.
 -}
-delete : Endpoint -> Decode.Decoder a -> Http.Request a
-delete endpoint decoder =
-    send "DELETE" (endpointToString endpoint) Http.emptyBody decoder
+delete : Endpoint -> Maybe Encode.Value -> Decode.Decoder a -> Http.Request a
+delete endpoint body decoder =
+    case body of
+        Nothing ->
+            send "DELETE" (endpointToString endpoint) Http.emptyBody decoder
+
+        Just msg ->
+            send "DELETE" (endpointToString endpoint) (Http.jsonBody msg) decoder
 
 
 {-| Perform HTTP method call. Prefer @get, @post, @put and @delete over this one
@@ -244,3 +250,10 @@ resourceTypeEncoder item =
 
             ChemicalResource ->
                 "ChemicalResource"
+
+
+{-| Helper function to write fluent looking decoders
+-}
+is : String -> String -> Bool
+is a b =
+    a == b

@@ -9,12 +9,13 @@ module Dto.News ( NewsDto(..), NewsArticleDto(..), StarFoundNewsDto(..), PlanetF
                 , UserWrittenNewsDto(..), DesignCreatedNewsDto(..)
                 , ConstructionFinishedNewsDto(..), UserNewsIconDto(..), SpecialNewsDto(..)
                 , KragiiWormsEventDto(..), UserOptionDto(..), KragiiWormsChoiceDto(..), KragiiNewsDto(..)
-                , ProductionChangedNewsDto(..)
+                , ProductionChangedNewsDto(..), ResearchCompletedNewsDto(..)
                 ) where
 
 import Import
 import Data.Aeson ( object, (.=), (.!=), (.:?), withObject )
 import Data.Aeson.TH ( deriveJSON, defaultOptions, constructorTagModifier, fieldLabelModifier )
+import Research.Data ( Technology )
 import Resources ( ResourceType(..) )
 
 
@@ -38,6 +39,7 @@ data NewsArticleDto =
     | ProductionSlowdownStartedDto ProductionChangedNewsDto
     | ProductionBoostEndedDto ProductionChangedNewsDto
     | ProductionSlowdownEndedDto ProductionChangedNewsDto
+    | ResearchCompletedDto ResearchCompletedNewsDto
     | KragiiDto KragiiNewsDto
     | SpecialDto SpecialNewsDto
     deriving (Show, Read, Eq)
@@ -154,9 +156,9 @@ data ConstructionFinishedNewsDto = ConstructionFinishedNewsDto
 
 -- | Turn NewsDto into JSON
 instance ToJSON NewsDto where
-    toJSON (NewsDto { newsDtoId = nId
-                    , newsContents = contents
-                    , newsIcon = icon }) =
+    toJSON NewsDto { newsDtoId = nId
+                   , newsContents = contents
+                   , newsIcon = icon } =
         object [ "id" .= nId
                , "contents" .= contents
                , "tag" .= jsonTag contents
@@ -184,7 +186,7 @@ jsonTag news =
         DesignCreatedDto _ ->
             "DesignCreated"
 
-        ConstructionFinishedDto (ConstructionFinishedNewsDto { constructionFinishedNewsDtoBuildingId = mbId}) ->
+        ConstructionFinishedDto ConstructionFinishedNewsDto { constructionFinishedNewsDtoBuildingId = mbId} ->
             case mbId of
                 Just _ ->
                     "BuildingFinished"
@@ -203,6 +205,9 @@ jsonTag news =
 
         ProductionSlowdownEndedDto _ ->
             "ProductionSlowdownEnded"
+
+        ResearchCompletedDto _ ->
+            "ResearchCompleted"
 
         SpecialDto (KragiiEventDto _) ->
             "KragiiEvent"
@@ -223,6 +228,7 @@ instance ToJSON NewsArticleDto where
             ProductionSlowdownStartedDto dto -> toJSON dto
             ProductionBoostEndedDto dto -> toJSON dto
             ProductionSlowdownEndedDto dto -> toJSON dto
+            ResearchCompletedDto dto -> toJSON dto
             KragiiDto dto -> toJSON dto
             SpecialDto (KragiiEventDto dto) -> toJSON dto
 
@@ -282,11 +288,11 @@ instance ToJSON SpecialNewsDto where
 
 -- | map planet found news into JSON
 instance ToJSON PlanetFoundNewsDto where
-    toJSON (PlanetFoundNewsDto { planetFoundNewsDtoPlanetName = pName
-                               , planetFoundNewsDtoSystemId = sId
-                               , planetFoundNewsDtoPlanetId = pId
-                               , planetFoundNewsDtoSystemName = sName
-                               }) =
+    toJSON PlanetFoundNewsDto { planetFoundNewsDtoPlanetName = pName
+                              , planetFoundNewsDtoSystemId = sId
+                              , planetFoundNewsDtoPlanetId = pId
+                              , planetFoundNewsDtoSystemName = sName
+                              } =
         object [ "planetName" .= pName
                , "systemName" .= sName
                , "planetId" .= pId
@@ -306,10 +312,10 @@ instance FromJSON PlanetFoundNewsDto where
 
 -- | map star found news into JSON
 instance ToJSON StarFoundNewsDto where
-    toJSON (StarFoundNewsDto { starFoundNewsDtoStarName = sName
-                             , starFoundNewsDtoSystemName = sysName
-                             , starFoundNewsDtoSystemId = sId
-                             }) =
+    toJSON StarFoundNewsDto { starFoundNewsDtoStarName = sName
+                            , starFoundNewsDtoSystemName = sysName
+                            , starFoundNewsDtoSystemId = sId
+                            } =
         object [ "starName" .= sName
                , "systemName" .= sysName
                , "systemId" .= sId
@@ -326,11 +332,11 @@ instance FromJSON StarFoundNewsDto where
 
 
 instance ToJSON UserWrittenNewsDto where
-    toJSON (UserWrittenNewsDto { userWrittenNewsDtoContent = content
-                               , userWrittenNewsDtoUser = userName
-                               , userWrittenNewsDtoDate = sDate
-                               , userWrittenNewsDtoIcon = icon
-                               }) =
+    toJSON UserWrittenNewsDto { userWrittenNewsDtoContent = content
+                              , userWrittenNewsDtoUser = userName
+                              , userWrittenNewsDtoDate = sDate
+                              , userWrittenNewsDtoIcon = icon
+                              } =
         object [ "content" .= content
                , "userName" .= userName
                , "starDate" .= sDate
@@ -348,10 +354,10 @@ instance FromJSON UserWrittenNewsDto where
 
 
 instance ToJSON DesignCreatedNewsDto where
-    toJSON (DesignCreatedNewsDto { designCreatedNewsDtoDesignId = dId
-                                 , designCreatedNewsDtoName = dName
-                                 , designCreatedNewsDtoDate = sDate
-                                 }) =
+    toJSON DesignCreatedNewsDto { designCreatedNewsDtoDesignId = dId
+                                , designCreatedNewsDtoName = dName
+                                , designCreatedNewsDtoDate = sDate
+                                } =
         object [ "designId" .= dId
                , "name" .= dName
                , "starDate" .= sDate
@@ -367,14 +373,14 @@ instance FromJSON DesignCreatedNewsDto where
 
 
 instance ToJSON ConstructionFinishedNewsDto where
-    toJSON (ConstructionFinishedNewsDto { constructionFinishedNewsDtoPlanetName = mpName
-                                        , constructionFinishedNewsDtoPlanetId = mpId
-                                        , constructionFinishedNewsDtoSystemName = sName
-                                        , constructionFinishedNewsDtoSystemId = sId
-                                        , constructionFinishedNewsDtoConstructionName = cName
-                                        , constructionFinishedNewsDtoBuildingId = mbId
-                                        , constructionFinishedNewsDtoShipId = msId
-                                        }) =
+    toJSON ConstructionFinishedNewsDto { constructionFinishedNewsDtoPlanetName = mpName
+                                       , constructionFinishedNewsDtoPlanetId = mpId
+                                       , constructionFinishedNewsDtoSystemName = sName
+                                       , constructionFinishedNewsDtoSystemId = sId
+                                       , constructionFinishedNewsDtoConstructionName = cName
+                                       , constructionFinishedNewsDtoBuildingId = mbId
+                                       , constructionFinishedNewsDtoShipId = msId
+                                       } =
         case mbId of
             Just _ ->
                 object [ "planetName" .= mpName
@@ -419,6 +425,14 @@ data ProductionChangedNewsDto = ProductionChangedNewsDto
     deriving (Show, Read, Eq)
 
 
+data ResearchCompletedNewsDto = ResearchCompletedNewsDto
+    { researchCompletedNewsDtoTechnology :: Technology
+    , researchCompletedNewsDtoName :: Text
+    , researchCompletedNewsDtoDate :: Int
+    }
+    deriving (Show, Read, Eq)
+
+
 {-| Star date of the event that is being reported in this news article
 -}
 newsStarDate :: NewsArticleDto -> Int
@@ -451,6 +465,9 @@ newsStarDate article =
         ProductionSlowdownEndedDto details ->
             productionChangedNewsDtoDate details
 
+        ResearchCompletedDto details ->
+            researchCompletedNewsDtoDate details
+
         KragiiDto details ->
             kragiiNewsDtoDate details
 
@@ -459,8 +476,9 @@ newsStarDate article =
 
 
 $(deriveJSON defaultOptions { constructorTagModifier = \x -> take (length x - 3) x } ''UserNewsIconDto)
-$(deriveJSON defaultOptions { fieldLabelModifier = \x -> drop 14 x } ''KragiiWormsEventDto)
-$(deriveJSON defaultOptions { fieldLabelModifier = \x -> drop 13 x } ''UserOptionDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 14 } ''KragiiWormsEventDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 13 } ''UserOptionDto)
 $(deriveJSON defaultOptions { constructorTagModifier = \x -> take (length x - 3) x } ''KragiiWormsChoiceDto)
-$(deriveJSON defaultOptions { fieldLabelModifier = \x -> drop 13 x } ''KragiiNewsDto)
-$(deriveJSON defaultOptions { fieldLabelModifier = \x -> drop 24 x } ''ProductionChangedNewsDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 13 } ''KragiiNewsDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 24 } ''ProductionChangedNewsDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 24 } ''ResearchCompletedNewsDto)
