@@ -24,7 +24,7 @@ import Data.Common
         , unMech
         )
 import Data.Model exposing (Model, Msg(..))
-import Html exposing (Html, div, hr, i, text)
+import Html exposing (Html, div, hr, i, span, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 
@@ -177,8 +177,9 @@ infoPanel config pagingConfig generator model =
     [ div [ class "row info-panel-header" ]
         [ div [ class lSize ]
             [ text config.title ]
-        , div [ class rSize ] <|
-            infoPanelButtons config pagingConfig
+        , div [ class rSize ]
+            [ span [ class "pull-right" ] <| infoPanelButtons config pagingConfig
+            ]
         ]
     ]
         ++ (case config.currentStatus of

@@ -5,15 +5,17 @@
 
 module Handler.Research
     ( getApiAvailableResearchR, getApiCurrentResearchR, postApiCurrentResearchR
-    , deleteApiCurrentResearchR, getResearchR )
+    , deleteApiCurrentResearchR, getResearchR, getApiResearchProductionR )
     where
 
 import Import
 import qualified Data.Map as Map
 import Common ( apiRequireFaction, apiError, apiNotFound )
 import Handler.Home ( getNewHomeR )
+import Queries ( factionBuildings )
 import Research.Data ( ResearchProgress(..), ResearchScore(..), Research(..)
                      , sameTopCategory )
+import Research.Import ( researchOutput )
 import Research.Tree ( techMap )
 
 
@@ -59,6 +61,16 @@ deleteApiCurrentResearchR = do
                              , CurrentResearchType ==. (researchType . researchProgressResearch) newRes]
     res <- runDB $ loadCurrentResearch fId
     return $ toJSON res
+
+
+-- | Api to get current research production
+getApiResearchProductionR :: Handler Value
+getApiResearchProductionR = do
+    (_, _, fId) <- apiRequireFaction
+    pNb <- runDB $ factionBuildings fId
+    let output = researchOutput . entityVal <$> (catMaybes $ snd <$> pNb)
+    let total = mconcat output
+    return $ toJSON total
 
 
 -- | Save new current research in database

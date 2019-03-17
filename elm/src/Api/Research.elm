@@ -3,6 +3,7 @@ module Api.Research exposing
     , cancelResearchCmd
     , currentResearchCmd
     , researchDecoder
+    , researchProductionCmd
     , researchTierDecoder
     , startResearchCmd
     , technologyDecoder
@@ -66,6 +67,11 @@ startResearchCmd research =
 cancelResearchCmd : CurrentResearch -> Cmd Msg
 cancelResearchCmd research =
     Http.send (ApiMsgCompleted << CurrentResearchReceived) (delete ApiCurrentResearch (Just <| currentResearchEncoder research) (list currentResearchDecoder))
+
+
+researchProductionCmd : Cmd Msg
+researchProductionCmd =
+    Http.send (ApiMsgCompleted << ResearchProductionReceived) (get ApiResearchProduction totalResearchScoreDecoder)
 
 
 researchDecoder : Decode.Decoder Research

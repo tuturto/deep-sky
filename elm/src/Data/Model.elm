@@ -10,7 +10,7 @@ import Browser.Navigation exposing (Key)
 import Data.Common exposing (InfoPanelStatus, Resources, StarDate)
 import Data.Construction exposing (Building, BuildingInfo, Construction)
 import Data.Messages exposing (NewsArticle, UserIcon)
-import Data.Research exposing (CurrentResearch, Research)
+import Data.Research exposing (CurrentResearch, Research, TotalResearchScore)
 import Data.StarSystem
     exposing
         ( Planet
@@ -48,6 +48,7 @@ type alias Model =
     , icons : Maybe (List ( UserIcon, String ))
     , availableResearch : Maybe (List Research)
     , currentResearch : Maybe (List CurrentResearch)
+    , researchProduction : Maybe TotalResearchScore
     , errors : List ErrorMessage
     , researchR : ResearchViewModel
     }
@@ -79,6 +80,7 @@ type ApiMsg
     | PlanetStatusReceived (Result Http.Error PlanetStatus)
     | AvailableResearchReceived (Result Http.Error (List Research))
     | CurrentResearchReceived (Result Http.Error (List CurrentResearch))
+    | ResearchProductionReceived (Result Http.Error TotalResearchScore)
 
 
 type ErrorMessage

@@ -46,6 +46,7 @@
 
 /api/research/available                             ApiAvailableResearchR           GET
 /api/research/current                               ApiCurrentResearchR             GET POST DELETE
+/api/research/production                            ApiResearchProductionR          GET
 
 /api/message                                        ApiMessageR                     GET POST
 /api/message/#NewsId                                ApiMessageIdR                   DELETE PUT

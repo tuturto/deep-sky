@@ -12,6 +12,13 @@ There are three different categories for research: engineering,
 natural sciences and social sciences. Each category has several different
 projects that can be reseached.
 
+Production
+----------
+
+Performing research requires research points. These are produced by various
+buildings. Total research point production is shown at the top of the
+screen.
+
 Projects
 --------
 

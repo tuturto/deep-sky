@@ -31,7 +31,9 @@ module Data.Accessors exposing
     , planetsStatusA
     , populationStatusA
     , populationsA
+    , productionStatusA
     , researchFieldStatusA
+    , researchProductionA
     , researchRA
     , starLanesStatusA
     , starListStatusA
@@ -44,6 +46,20 @@ module Data.Accessors exposing
     )
 
 import Accessors exposing (Relation, makeOneToOne)
+
+
+productionStatusA : Relation field sub wrap -> Relation { rec | productionStatus : field } sub wrap
+productionStatusA =
+    makeOneToOne
+        .productionStatus
+        (\change rec -> { rec | productionStatus = change rec.productionStatus })
+
+
+researchProductionA : Relation field sub wrap -> Relation { rec | researchProduction : field } sub wrap
+researchProductionA =
+    makeOneToOne
+        .researchProduction
+        (\change rec -> { rec | researchProduction = change rec.researchProduction })
 
 
 focusedTopCategoryA : Relation field sub wrap -> Relation { rec | focusedTopCategory : field } sub wrap

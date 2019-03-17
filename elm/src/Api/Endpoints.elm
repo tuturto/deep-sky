@@ -29,6 +29,7 @@ type Endpoint
     | ApiPlanetStatus PlanetId
     | ApiAvailableResearch
     | ApiCurrentResearch
+    | ApiResearchProduction
 
 
 endpointToString : Endpoint -> String
@@ -89,3 +90,6 @@ endpointToString endpoint =
 
         ApiCurrentResearch ->
             "/api/research/current"
+
+        ApiResearchProduction ->
+            "/api/research/production"

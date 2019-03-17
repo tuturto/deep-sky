@@ -7,6 +7,7 @@ import Api.Research
         ( availableResearchCmd
         , cancelResearchCmd
         , currentResearchCmd
+        , researchProductionCmd
         , startResearchCmd
         )
 import Data.Accessors
@@ -14,6 +15,7 @@ import Data.Accessors
         ( currentResearchA
         , currentResearchStatusA
         , focusedTopCategoryA
+        , productionStatusA
         , researchFieldStatusA
         , researchRA
         )
@@ -50,7 +52,57 @@ import Views.Helpers
 -}
 page : Model -> Html Msg
 page model =
-    div [] <| twinPanels EqualPanels leftPanel rightPanel model
+    div []
+        [ div [ class "row" ]
+            [ div [ class "col-lg-12" ] <|
+                statusPanel model
+            ]
+        , div [ class "row" ]
+            [ div [ class "col-lg-12" ] <|
+                twinPanels EqualPanels leftPanel rightPanel model
+            ]
+        ]
+
+
+{-| Display status panel at top of the screen
+-}
+statusPanel : Model -> List (Html Msg)
+statusPanel model =
+    infoPanel
+        { title = "Production"
+        , currentStatus = model.researchR.productionStatus
+        , openingMessage = ResearchMessage <| ProductionStatusChanged InfoPanelOpen
+        , closingMessage = ResearchMessage <| ProductionStatusChanged InfoPanelClosed
+        , refreshMessage = Nothing
+        }
+        Nothing
+        productionStatus
+        model
+
+
+productionStatus : Model -> List (Html Msg)
+productionStatus model =
+    let
+        ( eng, nat, soc ) =
+            case model.researchProduction of
+                Nothing ->
+                    ( 0, 0, 0 )
+
+                Just production ->
+                    ( unResearchScore production.engineering
+                    , unResearchScore production.natural
+                    , unResearchScore production.social
+                    )
+    in
+    [ div [ class "row" ]
+        [ div [ class "col-lg-2" ]
+            [ text <| "Engineering: " ++ String.fromInt eng ]
+        , div [ class "col-lg-2" ]
+            [ text <| "Natural sciences: " ++ String.fromInt nat ]
+        , div [ class "col-lg-2" ]
+            [ text <| "Social sciences: " ++ String.fromInt soc ]
+        ]
+    ]
 
 
 {-| Display right panel that shows research that is available for selection
@@ -259,6 +311,11 @@ update msg model =
             , Cmd.none
             )
 
+        ProductionStatusChanged status ->
+            ( set (researchRA << productionStatusA) status model
+            , Cmd.none
+            )
+
         ProjectFocused category ->
             ( set (researchRA << focusedTopCategoryA) category model
             , Cmd.none
@@ -282,4 +339,5 @@ init model =
     Cmd.batch
         [ availableResearchCmd
         , currentResearchCmd
+        , researchProductionCmd
         ]

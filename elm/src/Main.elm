@@ -20,6 +20,7 @@ import Data.Accessors
         , planetStatusA
         , planetsA
         , populationsA
+        , researchProductionA
         , starSystemsA
         , starsA
         )
@@ -112,6 +113,7 @@ init flags url key =
             , messagesR = ViewModels.Messages.init
             , availableResearch = Nothing
             , currentResearch = Nothing
+            , researchProduction = Nothing
             , errors = []
             , researchR = ViewModels.Research.init
             }
@@ -325,6 +327,17 @@ handleApiMsg msg model =
         CurrentResearchReceived (Err err) ->
             ( set currentResearchA Nothing model
                 |> over errorsA (\errors -> error err "Failed to load current research" :: errors)
+            , Cmd.none
+            )
+
+        ResearchProductionReceived (Ok status) ->
+            ( set researchProductionA (Just status) model
+            , Cmd.none
+            )
+
+        ResearchProductionReceived (Err err) ->
+            ( set researchProductionA Nothing model
+                |> over errorsA (\errors -> error err "Failed to load research production" :: errors)
             , Cmd.none
             )
 

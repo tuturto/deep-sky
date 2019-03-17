@@ -16,6 +16,7 @@ import Data.Research
 type ResearchRMsg
     = CurrentResearchDetailsStatusChanged InfoPanelStatus
     | ResearchFieldDetailsStatusChanged InfoPanelStatus
+    | ProductionStatusChanged InfoPanelStatus
     | ProjectFocused (Maybe TopResearchCategory)
     | ProjectStarted Research
     | ProjectCancelled CurrentResearch
@@ -24,6 +25,7 @@ type ResearchRMsg
 type alias ResearchViewModel =
     { currentResearchStatus : InfoPanelStatus
     , researchFieldStatus : InfoPanelStatus
+    , productionStatus : InfoPanelStatus
     , focusedTopCategory : Maybe TopResearchCategory
     }
 
@@ -34,5 +36,6 @@ init : ResearchViewModel
 init =
     { currentResearchStatus = InfoPanelOpen
     , researchFieldStatus = InfoPanelOpen
+    , productionStatus = InfoPanelOpen
     , focusedTopCategory = Nothing
     }

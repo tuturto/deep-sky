@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 
 module Queries ( planetPopulationReports, shipsAtPlanet, ShipLandingStatus(..), planetConstructionQueue
-               , kragiiTargetPlanets, farmingChangeTargetPlanets )
+               , kragiiTargetPlanets, farmingChangeTargetPlanets, factionBuildings )
     where
 
 import Import
@@ -128,3 +128,15 @@ farmAndPopCount xs =
         (planet, _, _) = P.head xs
     in
         Just (planet, populationCount, farmCount)
+
+
+factionBuildings :: (MonadIO m,
+    BackendCompatible SqlBackend backend, PersistQueryRead backend,
+    PersistUniqueRead backend) =>
+    Key Faction -> ReaderT backend m [(Entity Planet, Maybe (Entity Building))]
+factionBuildings fId = do
+    E.select $
+        E.from $ \(planet `E.LeftOuterJoin` building) -> do
+            E.on (building E.?. BuildingPlanetId E.==. E.just (planet E.^. PlanetId))
+            E.where_ (planet E.^. PlanetOwnerId E.==. E.val (Just fId))
+            return (planet, building)
