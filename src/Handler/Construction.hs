@@ -72,6 +72,7 @@ postApiBuildingConstructionR :: Handler Value
 postApiBuildingConstructionR = do
     _ <- apiRequireFaction
     msg <- requireJsonBody
+    -- TODO: validate permissions
     _ <- runDB $ createBuildingConstruction msg
     newConstructions <- runDB $ loadPlanetConstructionQueue $ bcdtoPlanet msg
     return $ toJSON newConstructions

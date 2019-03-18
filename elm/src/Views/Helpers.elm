@@ -9,6 +9,7 @@ module Views.Helpers exposing
     , mechanicalsToText
     , starDateToString
     , starDateToText
+    , triplePanels
     , twinPanels
     )
 
@@ -107,6 +108,11 @@ href route =
     Html.Attributes.href <| routeToString route
 
 
+{-| Create panel layout with two panels.
+Size of the panels is controlled by PanelSizing parameter.
+Resulting function will expect single Model parameter that is used to determine
+what will be rendered on screen.
+-}
 twinPanels : PanelSizing -> (Model -> List (Html msg)) -> (Model -> List (Html msg)) -> (Model -> List (Html msg))
 twinPanels sizing left right model =
     let
@@ -125,6 +131,23 @@ twinPanels sizing left right model =
         [ div [ class lpSize ]
             (left model)
         , div [ class rpSize ]
+            (right model)
+        ]
+    ]
+
+
+{-| Create panel layout with three equal sized panels.
+Resulting function will expect single Model parameter that is used to determine
+what will be rendered on screen.
+-}
+triplePanels : ( Model -> List (Html msg), String ) -> ( Model -> List (Html msg), String ) -> ( Model -> List (Html msg), String ) -> (Model -> List (Html msg))
+triplePanels ( left, lSize ) ( middle, mSize ) ( right, rSize ) model =
+    [ div [ class "row" ]
+        [ div [ class lSize ]
+            (left model)
+        , div [ class mSize ]
+            (middle model)
+        , div [ class rSize ]
             (right model)
         ]
     ]
@@ -165,19 +188,10 @@ paginating the data
 -}
 infoPanel : InfoPanelConfig -> Maybe PagingConfig -> (Model -> List (Html Msg)) -> Model -> List (Html Msg)
 infoPanel config pagingConfig generator model =
-    let
-        ( lSize, rSize ) =
-            case pagingConfig of
-                Just _ ->
-                    ( "col-lg-9", "col-lg-3" )
-
-                Nothing ->
-                    ( "col-lg-10", "col-lg-2" )
-    in
     [ div [ class "row info-panel-header" ]
-        [ div [ class lSize ]
+        [ div [ class "col-lg-6" ]
             [ text config.title ]
-        , div [ class rSize ]
+        , div [ class "col-lg-6" ]
             [ span [ class "pull-right" ] <| infoPanelButtons config pagingConfig
             ]
         ]

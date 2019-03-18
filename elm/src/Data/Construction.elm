@@ -8,7 +8,6 @@ module Data.Construction exposing
     , Construction(..)
     , ConstructionIndex(..)
     , ShipConstructionData
-    , ShipType(..)
     , buildingDamageToString
     , buildingTypeToString
     , constructionIndex
@@ -116,17 +115,6 @@ unConstructionIndex (ConstructionIndex x) =
     x
 
 
-type ShipType
-    = Satellite
-    | Fighter
-    | Destroyer
-    | Frigate
-    | Cruiser
-    | BattleShip
-    | MobileBase
-    | Station
-
-
 type alias BuildingConstructionData =
     { id : ConstructionId
     , name : String
@@ -141,7 +129,6 @@ type alias BuildingConstructionData =
 type alias ShipConstructionData =
     { id : ConstructionId
     , name : String
-    , shipType : ShipType
     , index : ConstructionIndex
     }
 

@@ -11,6 +11,10 @@
     background:#9292f7;
 }
 
+.info-panel-content-header {
+    font-weight: bold
+}
+
 .title-left {
     font-weight: bold;
     border-top-right-radius: 10px;
@@ -99,15 +103,15 @@
     border-radius: 4px;
   }
 
-  .news-title > li {
+.news-title > li {
     display: inline-block;
-  }
+ }
 
-  .news-title > li + li:before {
+.news-title > li + li:before {
     content: "-\00a0";
     padding: 0 5px;
     color: #cccccc;
-  }
+ }
 
 .news-title-button {
     padding: 8px 15px;
@@ -189,4 +193,51 @@
     border-style: solid;
     border-radius: 0.5em;
     border-color: #9292f7;
+}
+
+.space-top {
+    padding-top: 0.5em;
+    margin-top: 0.5em;
+}
+
+.selected-chassis {
+    font-weight: bold
+}
+
+.available-component {
+    padding: 0.5em;
+    margin: 0.5em;
+    border-width: 0.15em;
+    border-style: solid;
+    border-radius: 0.5em;
+    border-color: #9292f7;
+}
+
+.selected-component {
+    padding: 0.5em;
+    margin: 0.5em;
+    border-width: 0.15em;
+    border-style: solid;
+    border-radius: 0.5em;
+    border-color: #9292f7;
+}
+
+.ship-name-input {
+    width: 100%;
+    resize: none;
+}
+
+.panel-sub-title {
+    font-weight: bold
+}
+
+.panel-table-heading {
+    font-weight: bold
+}
+
+.command-button {
+    padding-top: 0.5em;
+    margin-top: 0.5em;
+    padding-right: 0.5em;
+    margin-right: 0.5em;
 }

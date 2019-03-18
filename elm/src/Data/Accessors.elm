@@ -1,16 +1,32 @@
 module Data.Accessors exposing
     ( activeUserIconA
+    , amountA
     , availableBuildingsA
+    , availableChassisA
+    , availableComponentsA
     , availableResearchA
     , buildingSearchTextA
     , buildingsA
     , buildingsStatusA
+    , chassisCurrentPageA
+    , chassisListStatusA
     , choiceA
+    , commandsStatusA
+    , componentListStatusA
+    , componentsA
+    , componentsCurrentPageA
     , constructionStatusA
     , constructionsA
+    , currentDesignA
     , currentPageA
     , currentResearchA
     , currentResearchStatusA
+    , designPanelStatusA
+    , designerRA
+    , designsA
+    , designsCurrentPageA
+    , designsPanelStatusA
+    , emptyPanelStatusA
     , errorsA
     , focusedTopCategoryA
     , iconsA
@@ -18,6 +34,8 @@ module Data.Accessors exposing
     , indexA
     , landedShipsStatusA
     , messagesRA
+    , messagesStatusA
+    , nameA
     , newsA
     , newsPanelStatusA
     , orbitingShipsStatusA
@@ -35,6 +53,8 @@ module Data.Accessors exposing
     , researchFieldStatusA
     , researchProductionA
     , researchRA
+    , selectedChassisA
+    , selectedComponentsA
     , starLanesStatusA
     , starListStatusA
     , starSystemsA
@@ -43,9 +63,158 @@ module Data.Accessors exposing
     , systemDetailsStatusA
     , userEntryA
     , userEntryStatusA
+    , validatationMessagesA
     )
 
-import Accessors exposing (Relation, makeOneToOne)
+import Accessors exposing (Relation, makeOneToN, makeOneToOne)
+import Accessors.Library exposing (onEach)
+
+
+componentsCurrentPageA : Relation field sub wrap -> Relation { rec | componentsCurrentPage : field } sub wrap
+componentsCurrentPageA =
+    makeOneToOne
+        .componentsCurrentPage
+        (\change rec -> { rec | componentsCurrentPage = change rec.componentsCurrentPage })
+
+
+designsCurrentPageA : Relation field sub wrap -> Relation { rec | designsCurrentPage : field } sub wrap
+designsCurrentPageA =
+    makeOneToOne
+        .designsCurrentPage
+        (\change rec -> { rec | designsCurrentPage = change rec.designsCurrentPage })
+
+
+chassisCurrentPageA : Relation field sub wrap -> Relation { rec | chassisCurrentPage : field } sub wrap
+chassisCurrentPageA =
+    makeOneToOne
+        .chassisCurrentPage
+        (\change rec -> { rec | chassisCurrentPage = change rec.chassisCurrentPage })
+
+
+designsPanelStatusA : Relation field sub wrap -> Relation { rec | designsPanelStatus : field } sub wrap
+designsPanelStatusA =
+    makeOneToOne
+        .designsPanelStatus
+        (\change rec -> { rec | designsPanelStatus = change rec.designsPanelStatus })
+
+
+validatationMessagesA : Relation field sub wrap -> Relation { rec | validatationMessages : field } sub wrap
+validatationMessagesA =
+    makeOneToOne
+        .validatationMessages
+        (\change rec -> { rec | validatationMessages = change rec.validatationMessages })
+
+
+nameA : Relation field sub wrap -> Relation { rec | name : field } sub wrap
+nameA =
+    makeOneToOne
+        .name
+        (\change rec -> { rec | name = change rec.name })
+
+
+amountA : Relation field sub wrap -> Relation { rec | amount : field } sub wrap
+amountA =
+    makeOneToOne
+        .amount
+        (\change rec -> { rec | amount = change rec.amount })
+
+
+componentsA : Relation field sub wrap -> Relation { rec | components : field } sub wrap
+componentsA =
+    makeOneToOne
+        .components
+        (\change rec -> { rec | components = change rec.components })
+
+
+currentDesignA : Relation field sub wrap -> Relation { rec | currentDesign : field } sub wrap
+currentDesignA =
+    makeOneToOne
+        .currentDesign
+        (\change rec -> { rec | currentDesign = change rec.currentDesign })
+
+
+designPanelStatusA : Relation field sub wrap -> Relation { rec | designPanelStatus : field } sub wrap
+designPanelStatusA =
+    makeOneToOne
+        .designPanelStatus
+        (\change rec -> { rec | designPanelStatus = change rec.designPanelStatus })
+
+
+selectedComponentsA : Relation field sub wrap -> Relation { rec | selectedComponents : field } sub wrap
+selectedComponentsA =
+    makeOneToOne
+        .selectedComponents
+        (\change rec -> { rec | selectedComponents = change rec.selectedComponents })
+
+
+selectedChassisA : Relation field sub wrap -> Relation { rec | selectedChassis : field } sub wrap
+selectedChassisA =
+    makeOneToOne
+        .selectedChassis
+        (\change rec -> { rec | selectedChassis = change rec.selectedChassis })
+
+
+messagesStatusA : Relation field sub wrap -> Relation { rec | messagesStatus : field } sub wrap
+messagesStatusA =
+    makeOneToOne
+        .messagesStatus
+        (\change rec -> { rec | messagesStatus = change rec.messagesStatus })
+
+
+emptyPanelStatusA : Relation field sub wrap -> Relation { rec | emptyPanelStatus : field } sub wrap
+emptyPanelStatusA =
+    makeOneToOne
+        .emptyPanelStatus
+        (\change rec -> { rec | emptyPanelStatus = change rec.emptyPanelStatus })
+
+
+designerRA : Relation field sub wrap -> Relation { rec | designerR : field } sub wrap
+designerRA =
+    makeOneToOne
+        .designerR
+        (\change rec -> { rec | designerR = change rec.designerR })
+
+
+componentListStatusA : Relation field sub wrap -> Relation { rec | componentListStatus : field } sub wrap
+componentListStatusA =
+    makeOneToOne
+        .componentListStatus
+        (\change rec -> { rec | componentListStatus = change rec.componentListStatus })
+
+
+commandsStatusA : Relation field sub wrap -> Relation { rec | commandsStatus : field } sub wrap
+commandsStatusA =
+    makeOneToOne
+        .commandsStatus
+        (\change rec -> { rec | commandsStatus = change rec.commandsStatus })
+
+
+chassisListStatusA : Relation field sub wrap -> Relation { rec | chassisListStatus : field } sub wrap
+chassisListStatusA =
+    makeOneToOne
+        .chassisListStatus
+        (\change rec -> { rec | chassisListStatus = change rec.chassisListStatus })
+
+
+designsA : Relation field sub wrap -> Relation { rec | designs : field } sub wrap
+designsA =
+    makeOneToOne
+        .designs
+        (\change rec -> { rec | designs = change rec.designs })
+
+
+availableChassisA : Relation field sub wrap -> Relation { rec | availableChassis : field } sub wrap
+availableChassisA =
+    makeOneToOne
+        .availableChassis
+        (\change rec -> { rec | availableChassis = change rec.availableChassis })
+
+
+availableComponentsA : Relation field sub wrap -> Relation { rec | availableComponents : field } sub wrap
+availableComponentsA =
+    makeOneToOne
+        .availableComponents
+        (\change rec -> { rec | availableComponents = change rec.availableComponents })
 
 
 productionStatusA : Relation field sub wrap -> Relation { rec | productionStatus : field } sub wrap

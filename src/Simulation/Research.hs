@@ -1,30 +1,33 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
-
+{-# LANGUAGE FlexibleContexts           #-}
 
 module Simulation.Research ( handleFactionResearch )
     where
 
 import Import
-import qualified Data.Map.Strict as Map
+import Control.Lens ( (+~) )
 import System.Random
-import Common ( mkUniq, getR )
+import Common ( mkUniq, getR, entityValL )
 import News.Import ( researchCompleted )
+import Queries ( factionBuildings )
 import Research.Data ( TotalResearchScore(..), ResearchProduction(..), ResearchCategory(..)
                      , ResearchScore(..), TechTree(..), Research(..), ResearchLimit(..)
                      , isEngineering, isNaturalScience, isSocialScience, topCategory )
-import Research.Import ( researchOutput, researchReady, antecedentsAvailable )
+import Research.Import ( researchOutput, researchReady, antecedentsAvailable
+                       , currentResearchProgressL )
 import Research.Tree ( techTree, techMap )
 
 
 
 -- | Process all research that faction can do
-handleFactionResearch :: (MonadIO m, PersistQueryWrite backend,
-    BaseBackend backend ~ SqlBackend) =>
+handleFactionResearch :: (MonadIO m,
+    BackendCompatible SqlBackend backend, PersistUniqueRead backend,
+    PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
     Time -> Entity Faction -> ReaderT backend m ()
 handleFactionResearch date faction = do
-    production <- totalProduction faction
+    production <- totalProduction $ entityKey faction
     current <- selectList [ CurrentResearchFactionId ==. entityKey faction ] []
     let updated = updateProgress production <$> current
     _ <- updateUnfinished updated
@@ -34,14 +37,13 @@ handleFactionResearch date faction = do
 
 
 -- | total research production of a faction
-totalProduction :: (PersistQueryRead backend, MonadIO m,
-    BaseBackend backend ~ SqlBackend) =>
-    Entity Faction
-    -> ReaderT backend m (TotalResearchScore ResearchProduction)
-totalProduction faction = do
-    planets <- selectList [ PlanetOwnerId ==. Just (entityKey faction)] []
-    let planetIds = entityKey <$> planets
-    buildings <- selectList [ BuildingPlanetId <-. planetIds ] []
+totalProduction :: (MonadIO m,
+    BackendCompatible SqlBackend backend, PersistQueryRead backend,
+    PersistUniqueRead backend) =>
+    Key Faction -> ReaderT backend m (TotalResearchScore ResearchProduction)
+totalProduction fId = do
+    pnbs <- factionBuildings fId
+    let buildings = join $ fmap snd pnbs
     return $ mconcat $ researchOutput . entityVal <$> buildings
 
 
@@ -74,21 +76,18 @@ currentToCompleted date research =
 
 -- | Current research after given amount of research has been done
 updateProgress :: TotalResearchScore ResearchProduction -> Entity CurrentResearch -> Entity CurrentResearch
-updateProgress prod (Entity key res) =
-    case researchCategory <$> research of
-        Just (Engineering _) ->
-            Entity key (res { currentResearchProgress = currentResearchProgress res + engResearch })
+updateProgress prod curr =
+    case researchCategory research of
+        Engineering _ ->
+            entityValL . currentResearchProgressL +~ engResearch $ curr
 
-        Just (NaturalScience _) ->
-            Entity key (res { currentResearchProgress = currentResearchProgress res + natResearch })
+        NaturalScience _ ->
+            entityValL . currentResearchProgressL +~ natResearch $ curr
 
-        Just (SocialScience _) ->
-            Entity key (res { currentResearchProgress = currentResearchProgress res + socResearch })
-
-        Nothing ->
-            Entity key res
+        SocialScience _ ->
+            entityValL . currentResearchProgressL +~ socResearch $ curr
     where
-        research = Map.lookup (currentResearchType res) techMap
+        research = techMap (currentResearchType . entityVal $ curr)
         engResearch = unResearchScore $ totalResearchScoreEngineering prod
         natResearch = unResearchScore $ totalResearchScoreNatural prod
         socResearch = unResearchScore $ totalResearchScoreSocial prod
@@ -165,6 +164,6 @@ newAvailableResearch selector limit available completed =
 -- | Is given available research entity of certain research category
 availableResearchFilter :: (ResearchCategory -> Bool) -> Entity AvailableResearch -> Bool
 availableResearchFilter f x =
-    maybe False (f . researchCategory) res
+    f . researchCategory $ res
     where
-        res = Map.lookup (availableResearchType $ entityVal x) techMap
+        res = techMap (availableResearchType $ entityVal x)

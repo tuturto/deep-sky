@@ -155,18 +155,33 @@ newtype ResearchTier = ResearchTier { unResearchTier :: Int }
 data Technology =
     HighSensitivitySensors -- various sensors
     | SideChannelSensors
-    | HighTensileMaterials -- armour
+    | HighTensileMaterials -- heavy armour
     | SatelliteTechnology
     -- hulls
-    | DestroyerHulls
+    | BawleyHulls
+    | YawlHulls
+    | BilanderHulls
+    | CogHulls
+    | FreighterHulls
+    | CraneShipHulls
+    | CruiseLinerHulls
+    | SatelliteLayerHulls
+    | FlyboatHulls
+    | BrigantineHulls
+    | SchoonerHulls
+    | BlackwallFrigateHulls
+    | ClipperHulls
+    | CaravelHulls
+    | CorvetteHulls
     | FrigateHulls
-    | CruiserHulls
-    | BattleShipHulls
+    | GalleonHulls
+    | ManOfWarHulls
     | MobileBaseHulls
     | StationHulls
     -- general military theory
-    | CarrierOps -- Fighter bay and related
     | ExplorerCorps
+    -- motive systems
+    | HoverCrafts
     deriving (Show, Read, Eq, Enum, Bounded, Ord)
 
 

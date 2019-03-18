@@ -9,7 +9,6 @@ module Handler.Research
     where
 
 import Import
-import qualified Data.Map as Map
 import Common ( apiRequireFaction, apiError, apiNotFound )
 import Handler.Home ( getNewHomeR )
 import Queries ( factionBuildings )
@@ -25,7 +24,7 @@ getApiAvailableResearchR = do
     (_, _, fId) <- apiRequireFaction
     available <- runDB $ selectList [ AvailableResearchFactionId ==. fId ] []
     let tech = availableResearchType . entityVal <$> available
-    let research = mapMaybe (`Map.lookup` techMap) tech
+    let research = techMap <$> tech
     return $ toJSON research
 
 
@@ -67,9 +66,9 @@ deleteApiCurrentResearchR = do
 getApiResearchProductionR :: Handler Value
 getApiResearchProductionR = do
     (_, _, fId) <- apiRequireFaction
-    pNb <- runDB $ factionBuildings fId
-    let output = researchOutput . entityVal <$> (catMaybes $ snd <$> pNb)
-    let total = mconcat output
+    pnbs <- runDB $ factionBuildings fId
+    let buildings = pnbs >>= snd
+    let total = mconcat $ (researchOutput . entityVal) <$> buildings
     return $ toJSON total
 
 
@@ -80,14 +79,9 @@ saveNewResearch :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backe
     Key Faction -> (ResearchProgress, Research) -> ReaderT backend m (Key CurrentResearch)
 saveNewResearch fId (progress, research) = do
     current <- selectList [ CurrentResearchFactionId ==. fId ] []
-    let curRes = fmap (\x -> (entityKey x, Map.lookup (currentResearchType $ entityVal x) techMap)) current
+    let curRes = fmap (\x -> (entityKey x, techMap (currentResearchType $ entityVal x))) current
     let matchingCat = mapMaybe (\(key, res) ->
-                case res of
-                    Nothing ->
-                        Nothing
-
-                    Just x ->
-                        if researchCategory x `sameTopCategory` researchCategory research
+                        if researchCategory res `sameTopCategory` researchCategory research
                             then Just key
                             else Nothing) curRes
 
@@ -111,24 +105,19 @@ getResearchR = getNewHomeR
 -- is the matching research from the tech tree
 validateNewResearch :: [AvailableResearch] -> ResearchProgress -> Either (Status, Text) (ResearchProgress, Research)
 validateNewResearch available res =
-    canBeIdentified res
+    toResearch res
         >>= researchMatchesTechTree
         >>= zeroProgress
         >>= availableResearch available
 
 
 -- | New research should be one that can be identified in tech tree
-canBeIdentified :: ResearchProgress -> Either (Status, Text) (ResearchProgress, Research)
-canBeIdentified res =
-        case research of
-            Just x ->
-                Right (res, x)
-
-            Nothing ->
-                Left (status400, "Unknown technology in research")
+toResearch :: ResearchProgress -> Either (Status, Text) (ResearchProgress, Research)
+toResearch res =
+        Right (res, research)
     where
         tech = researchType . researchProgressResearch $ res
-        research = Map.lookup tech techMap
+        research = techMap tech
 
 
 -- | Research should match one in tech tree
@@ -164,16 +153,15 @@ loadCurrentResearch :: (PersistQueryRead backend, MonadIO m,
     Key Faction -> ReaderT backend m [ResearchProgress]
 loadCurrentResearch fId = do
     current <- selectList [ CurrentResearchFactionId ==. fId ] []
-    let res = catMaybes $ currentToProgress <$> current
+    let res = currentToProgress <$> current
     return res
 
 
 -- | Map current research into research progress
--- this might result into Nothing, as lookup to techMap can produce Nothing
-currentToProgress :: Entity CurrentResearch -> Maybe ResearchProgress
+currentToProgress :: Entity CurrentResearch -> ResearchProgress
 currentToProgress (Entity _ curr) =
-    ResearchProgress <$> research <*> Just rLeft
+    ResearchProgress research rLeft
     where
         tech = currentResearchType curr
-        research = Map.lookup tech techMap
+        research = techMap tech
         rLeft = ResearchScore $ currentResearchProgress curr

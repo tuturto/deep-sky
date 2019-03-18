@@ -105,14 +105,25 @@ PlannedComponent json
     deriving Show Read Eq
 
 Chassis json
-    name Text
-    tonnage Int
+    name ChassisName
+    tonnage Weight
+    type ChassisType
+    technology Technology Maybe
+    armourSlots SlotAmount
+    innerSlots SlotAmount
+    outerSlots SlotAmount
+    sensorSlots SlotAmount
+    weaponSlots SlotAmount
+    engineSlots SlotAmount
+    motiveSlots SlotAmount
+    sailSlots SlotAmount
     deriving Show Read Eq
 
 RequiredComponent json
     chassisId ChassisId
     componentType ComponentType
     level Int
+    amount Int
     deriving Show Read Eq
 
 InstalledComponent json

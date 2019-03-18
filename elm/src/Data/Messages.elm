@@ -31,6 +31,7 @@ import Data.Common
         , UserId
         )
 import Data.User exposing (UserName)
+import Data.Vehicles exposing (DesignName)
 
 
 type alias NewsArticle =
@@ -83,7 +84,7 @@ type alias UserWrittenNews =
 
 type alias DesignCreatedNews =
     { designId : DesignId
-    , name : String
+    , name : DesignName
     }
 
 

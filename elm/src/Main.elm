@@ -5,15 +5,19 @@ module Main exposing (handleApiMsg, init, main, subscriptions, update)
 
 import Accessors exposing (get, over, set)
 import Api.Common exposing (resourcesCmd, starDateCmd)
+import Api.Designer exposing (availableDesignsCmd)
 import Browser
 import Browser.Navigation as Nav
 import Data.Accessors
     exposing
         ( availableBuildingsA
+        , availableChassisA
+        , availableComponentsA
         , availableResearchA
         , buildingsA
         , constructionsA
         , currentResearchA
+        , designsA
         , errorsA
         , iconsA
         , newsA
@@ -26,8 +30,10 @@ import Data.Accessors
         )
 import Data.Common
     exposing
-        ( InfoPanelStatus(..)
+        ( ErrorMessage(..)
+        , InfoPanelStatus(..)
         , Route(..)
+        , error
         , unPlanetId
         , unStarId
         , unStarSystemId
@@ -36,7 +42,6 @@ import Data.Construction exposing (constructionPlanet)
 import Data.Model
     exposing
         ( ApiMsg(..)
-        , ErrorMessage(..)
         , Model
         , Msg(..)
         )
@@ -51,6 +56,7 @@ import List
 import Maybe.Extra exposing (isJust)
 import Navigation exposing (parseLocation)
 import Url exposing (Url)
+import ViewModels.Designer exposing (DesignerRMsg(..))
 import ViewModels.Messages exposing (MessagesRMsg(..))
 import ViewModels.Planet exposing (PlanetRMsg(..))
 import ViewModels.Research exposing (ResearchRMsg(..))
@@ -116,6 +122,10 @@ init flags url key =
             , researchProduction = Nothing
             , errors = []
             , researchR = ViewModels.Research.init
+            , availableComponents = Nothing
+            , availableChassis = Nothing
+            , designs = Nothing
+            , designerR = ViewModels.Designer.init
             }
     in
     ( model
@@ -164,6 +174,9 @@ update msg model =
 
         ResearchMessage message ->
             Views.Research.update message model
+
+        DesignerMessage message ->
+            Views.Designer.update message model
 
 
 {-| Handle messages related to API calls
@@ -341,6 +354,49 @@ handleApiMsg msg model =
             , Cmd.none
             )
 
+        ComponentsReceived (Ok status) ->
+            ( set availableComponentsA (Just status) model
+            , Cmd.none
+            )
+
+        ComponentsReceived (Err err) ->
+            ( set availableComponentsA Nothing model
+                |> over errorsA (\errors -> error err "Failed to load components" :: errors)
+            , Cmd.none
+            )
+
+        ChassisReceived (Ok status) ->
+            ( set availableChassisA (Just status) model
+            , Cmd.none
+            )
+
+        ChassisReceived (Err err) ->
+            ( set availableChassisA Nothing model
+                |> over errorsA (\errors -> error err "Failed to load chassis" :: errors)
+            , Cmd.none
+            )
+
+        DesignsReceived (Ok status) ->
+            ( set designsA (Just status) model
+            , Cmd.none
+            )
+
+        DesignsReceived (Err err) ->
+            ( set designsA Nothing model
+                |> over errorsA (\errors -> error err "Failed to load designs" :: errors)
+            , Cmd.none
+            )
+
+        DesignSaved (Ok design) ->
+            ( Views.Designer.designSaveOk model design
+            , availableDesignsCmd
+            )
+
+        DesignSaved (Err err) ->
+            ( Views.Designer.desginSaveFailure model err
+            , Cmd.none
+            )
+
 
 {-| Unsafe method to get x from Just x
 -}
@@ -352,34 +408,6 @@ just b =
 
         Nothing ->
             Debug.todo "Partial function"
-
-
-{-| Turn given error with descriptive text into error message
--}
-error : Error -> String -> ErrorMessage
-error err msg =
-    ErrorMessage (msg ++ " - " ++ errorToString err)
-
-
-{-| Turn Http error message into user readable string
--}
-errorToString : Error -> String
-errorToString err =
-    case err of
-        BadUrl url ->
-            "Bad URL: " ++ url
-
-        Timeout ->
-            "timeout"
-
-        NetworkError ->
-            "network error"
-
-        BadStatus _ ->
-            "bad status"
-
-        BadPayload msg _ ->
-            "Bad payload: " ++ msg
 
 
 {-| Given list of star systems, turn them into dictionary with star system id as key

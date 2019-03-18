@@ -19,6 +19,7 @@ import Api.Common
         , starDateDecoder
         , starDateEncoder
         )
+import Api.Designer exposing (designIdDecoder, designNameDecoder)
 import Api.Endpoints exposing (Endpoint(..))
 import Api.StarSystem
     exposing
@@ -368,7 +369,14 @@ messageIdEncoder (MessageId x) =
 -}
 designCreatedNewsArticle : Decode.Decoder NewsContent
 designCreatedNewsArticle =
-    fail "not implemented"
+    let
+        decoder =
+            succeed DesignCreatedNews
+                |> andMap (field "designId" designIdDecoder)
+                |> andMap (field "name" designNameDecoder)
+    in
+    succeed DesignCreated
+        |> andMap decoder
 
 
 {-| Decoder for building finished news article

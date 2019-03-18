@@ -1,13 +1,12 @@
 module Data.Model exposing
     ( ApiMsg(..)
-    , ErrorMessage(..)
     , Model
     , Msg(..)
     )
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
-import Data.Common exposing (InfoPanelStatus, Resources, StarDate)
+import Data.Common exposing (ErrorMessage, InfoPanelStatus, Resources, StarDate)
 import Data.Construction exposing (Building, BuildingInfo, Construction)
 import Data.Messages exposing (NewsArticle, UserIcon)
 import Data.Research exposing (CurrentResearch, Research, TotalResearchScore)
@@ -19,9 +18,11 @@ import Data.StarSystem
         , Star
         , StarSystem
         )
+import Data.Vehicles exposing (Chassis, Component, Design)
 import Dict exposing (Dict)
 import Http
 import Url exposing (Url)
+import ViewModels.Designer exposing (DesignerRMsg, DesignerViewModel)
 import ViewModels.Messages exposing (MessagesRMsg, MessagesViewModel)
 import ViewModels.Planet exposing (PlanetRMsg(..), PlanetViewModel)
 import ViewModels.Research exposing (ResearchRMsg(..), ResearchViewModel)
@@ -51,6 +52,10 @@ type alias Model =
     , researchProduction : Maybe TotalResearchScore
     , errors : List ErrorMessage
     , researchR : ResearchViewModel
+    , availableComponents : Maybe (List Component)
+    , availableChassis : Maybe (List Chassis)
+    , designs : Maybe (List Design)
+    , designerR : DesignerViewModel
     }
 
 
@@ -63,6 +68,7 @@ type Msg
     | PlanetMessage PlanetRMsg
     | NewsMessage MessagesRMsg
     | ResearchMessage ResearchRMsg
+    | DesignerMessage DesignerRMsg
 
 
 type ApiMsg
@@ -81,7 +87,7 @@ type ApiMsg
     | AvailableResearchReceived (Result Http.Error (List Research))
     | CurrentResearchReceived (Result Http.Error (List CurrentResearch))
     | ResearchProductionReceived (Result Http.Error TotalResearchScore)
-
-
-type ErrorMessage
-    = ErrorMessage String
+    | ComponentsReceived (Result Http.Error (List Component))
+    | ChassisReceived (Result Http.Error (List Chassis))
+    | DesignsReceived (Result Http.Error (List Design))
+    | DesignSaved (Result Http.Error Design)

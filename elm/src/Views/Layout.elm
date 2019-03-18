@@ -6,11 +6,12 @@ import Browser.Navigation as Nav
 import Data.Accessors exposing (planetsA, starSystemsA)
 import Data.Common
     exposing
-        ( Route(..)
+        ( ErrorMessage(..)
+        , Route(..)
         , unPlanetId
         , unStarSystemId
         )
-import Data.Model exposing (ErrorMessage(..), Model, Msg(..))
+import Data.Model exposing (Model, Msg(..))
 import Data.User exposing (Role(..))
 import Dict
 import Html exposing (..)

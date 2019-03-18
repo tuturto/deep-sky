@@ -4,6 +4,7 @@ module Data.Common exposing
     , ChemResource(..)
     , ConstructionId(..)
     , DesignId(..)
+    , ErrorMessage(..)
     , FactionId(..)
     , InfoPanelStatus(..)
     , Location(..)
@@ -18,7 +19,11 @@ module Data.Common exposing
     , StarId(..)
     , StarSystemId(..)
     , UserId(..)
+    , capitalize
     , constructionIdToString
+    , designIdToString
+    , error
+    , findFirst
     , locationToString
     , maxPage
     , messageIdToString
@@ -39,7 +44,10 @@ module Data.Common exposing
     , unStarId
     , unStarSystemId
     , unUserId
+    , writtenNumber
     )
+
+import Http exposing (Error(..))
 
 
 type StarDate
@@ -240,6 +248,11 @@ unDesignId (DesignId x) =
     x
 
 
+designIdToString : DesignId -> String
+designIdToString (DesignId x) =
+    String.fromInt x
+
+
 type ShipId
     = ShipId Int
 
@@ -294,3 +307,97 @@ type ResourceType
     = BiologicalResource
     | MechanicalResource
     | ChemicalResource
+
+
+{-| First element of the list that satisfies predicate
+-}
+findFirst : (a -> Bool) -> List a -> Maybe a
+findFirst pred l =
+    List.head <| List.filter pred l
+
+
+{-| Turn number into name of the number.
+Only small space is currently supported
+-}
+writtenNumber : Int -> String
+writtenNumber n =
+    case n of
+        0 ->
+            "zero"
+
+        1 ->
+            "one"
+
+        2 ->
+            "two"
+
+        3 ->
+            "three"
+
+        4 ->
+            "four"
+
+        5 ->
+            "five"
+
+        6 ->
+            "six"
+
+        7 ->
+            "seven"
+
+        8 ->
+            "eight"
+
+        9 ->
+            "nine"
+
+        10 ->
+            "ten"
+
+        _ ->
+            "many"
+
+
+{-| String with first letter turned into upper-case
+-}
+capitalize : String -> String
+capitalize s =
+    case String.uncons s of
+        Nothing ->
+            s
+
+        Just ( x, xs ) ->
+            String.cons (Char.toUpper x) xs
+
+
+{-| Turn given error with descriptive text into error message
+-}
+error : Http.Error -> String -> ErrorMessage
+error err msg =
+    ErrorMessage (msg ++ " - " ++ errorToString err)
+
+
+type ErrorMessage
+    = ErrorMessage String
+
+
+{-| Turn Http error message into user readable string
+-}
+errorToString : Error -> String
+errorToString err =
+    case err of
+        BadUrl url ->
+            "Bad URL: " ++ url
+
+        Timeout ->
+            "timeout"
+
+        NetworkError ->
+            "network error"
+
+        BadStatus _ ->
+            "bad status"
+
+        BadPayload msg _ ->
+            "Bad payload: " ++ msg

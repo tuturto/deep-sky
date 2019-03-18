@@ -25,5 +25,4 @@ sky.cabal
 todo
 elm/elm-stuff/
 static/js/client.js
-static/images/*
 .hlint.yaml

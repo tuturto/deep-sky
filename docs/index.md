@@ -11,6 +11,7 @@ Contents
   * [Viewing star systems](starsystem)
   * [Managing planets](planet)
   * [Doing research](research)
+  * [Designing vehicles](designer)
   * [News archive](messages)
 
 Released under MIT license

@@ -2,9 +2,11 @@ module Api.Endpoints exposing (Endpoint(..), endpointToString)
 
 import Data.Common
     exposing
-        ( MessageId
+        ( DesignId
+        , MessageId
         , PlanetId
         , constructionIdToString
+        , designIdToString
         , messageIdToString
         , planetIdToString
         )
@@ -30,6 +32,10 @@ type Endpoint
     | ApiAvailableResearch
     | ApiCurrentResearch
     | ApiResearchProduction
+    | ApiAvailableComponents
+    | ApiAvailableChassis
+    | ApiAllDesigns
+    | ApiSingleDesign DesignId
 
 
 endpointToString : Endpoint -> String
@@ -93,3 +99,15 @@ endpointToString endpoint =
 
         ApiResearchProduction ->
             "/api/research/production"
+
+        ApiAvailableComponents ->
+            "/api/components"
+
+        ApiAvailableChassis ->
+            "api/chassis"
+
+        ApiAllDesigns ->
+            "api/design"
+
+        ApiSingleDesign designId ->
+            "api/design/" ++ designIdToString designId

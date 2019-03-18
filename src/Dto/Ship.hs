@@ -2,94 +2,79 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE RecordWildCards       #-}
 
-module Dto.Ship where
+module Dto.Ship
+    where
 
-import Data.Aeson (object, (.=), (.:?))
+import Data.Aeson.TH ( deriveJSON, defaultOptions, fieldLabelModifier )
 import Import
-import Components (ComponentLevel, ComponentId)
+import Vehicles.Components ( ComponentId, ComponentPower, ChassisType, SlotAmount
+                           , ChassisName, Weight )
 
-data ChassisDto = ChassisDto { chassisDtoId :: Key Chassis
-                             , chassisDtoName :: Text
-                             , chassisDtoMaxTonnage :: Int
-                             , chassisDtoRequiredTypes :: [ ComponentLevel ]}
-    deriving Show
 
-instance ToJSON ChassisDto where
-    toJSON (ChassisDto idKey name maxTonnage types) =
-        object [ "id" .= idKey
-               , "name" .= name
-               , "maxTonnage" .= maxTonnage
-               , "requiredTypes" .= array types 
-               ]
+data ChassisDto = ChassisDto
+    { chassisDtoId :: Key Chassis
+    , chassisDtoName :: ChassisName
+    , chassisDtoType :: ChassisType
+    , chassisDtoMaxTonnage :: Weight
+    , chassisDtoRequiredTypes :: [ RequiredComponentDto ]
+    , chassisDtoArmourSlots :: SlotAmount
+    , chassisDtoInnerSlots :: SlotAmount
+    , chassisDtoOuterSlots :: SlotAmount
+    , chassisDtoSensorSlots :: SlotAmount
+    , chassisDtoWeaponSlots :: SlotAmount
+    , chassisDtoEngineSlots :: SlotAmount
+    , chassisDtoMotiveSlots :: SlotAmount
+    , chassisDtoSailSlots :: SlotAmount
+    }
+    deriving (Show, Read, Eq)
 
-data ComponentDto = ComponentDto
-    { componentDtoId :: ComponentId
-    , componentDtoLevel :: Int
-    } deriving Show
 
-data InstalledComponentDto = InstalledComponentDto
-    { installedComponentDtoComponents :: ComponentDto
-    , installedComponentDtoAmount :: Int
-    } deriving Show
+data RequiredComponentDto = RequiredComponentDto
+    { requiredComponentDtoPower :: ComponentPower
+    , requiredComponentDtoAmount :: Int
+    }
+    deriving (Show, Read, Eq)
+
+
+data PlannedComponentDto = PlannedComponentDto
+    { plannedComponentDtoId :: ComponentId
+    , plannedComponentDtoLevel :: Int
+    , plannedComponentDtoAmount :: Int
+    }
+    deriving (Show, Read, Eq)
+
 
 data DesignDto = DesignDto
     { designDtoId :: Maybe (Key Design)
     , designDtoChassisId :: Key Chassis
+    , designDtoChassisLevel :: Int
     , designDtoName :: Text
-    , designDtoComponents :: [ InstalledComponentDto ]
-    } deriving Show
+    , designDtoComponents :: [ PlannedComponentDto ]
+    }
+    deriving (Show, Read, Eq)
 
-instance FromJSON ComponentDto where
-    parseJSON (Object v) =
-        ComponentDto <$> v .: "id"
-                     <*> v .: "level"
-    parseJSON _ = mzero
-
-instance ToJSON ComponentDto where
-    toJSON (ComponentDto cId level) =
-        object [ "id" .= cId
-               , "level" .= level
-               ]
-
-instance FromJSON InstalledComponentDto where
-    parseJSON (Object v) =
-        InstalledComponentDto <$> v .: "component"
-                              <*> v .: "amount"
-    parseJSON _ = mzero
-
-instance ToJSON InstalledComponentDto where
-    toJSON (InstalledComponentDto comp amount) =
-        object [ "component" .= comp
-               , "amount" .= amount 
-               ]
-
-instance FromJSON DesignDto where
-    parseJSON (Object v) =
-        DesignDto <$> v .:? "id"
-                  <*> v .: "chassisId"
-                  <*> v .: "name"
-                  <*> v .: "components"
-    parseJSON _ = mzero
-
-instance ToJSON DesignDto where
-    toJSON (DesignDto dId chassisId name components) =
-        object [ "id" .= dId
-               , "chassisId" .= chassisId
-               , "name" .= name
-               , "components" .= components
-               ]
 
 designToDesignDto :: (Key Design, Design) -> [ Entity PlannedComponent ] -> DesignDto
-designToDesignDto (newId, design) comps = 
-    DesignDto (Just newId) (designChassisId design) (designName design) $ map plannedComponentToComponentDto comps
+designToDesignDto (newId, Design{..}) comps =
+    -- TODO: chassis level
+    DesignDto (Just newId) designChassisId 1 designName $ fmap (plannedComponentToComponentDto . entityVal) comps
 
-plannedComponentToComponentDto :: Entity PlannedComponent -> InstalledComponentDto
-plannedComponentToComponentDto entity =
-    InstalledComponentDto (ComponentDto (plannedComponentComponentId comp) (plannedComponentLevel comp)) (plannedComponentAmount comp)
-    where
-        comp = entityVal entity
 
-componentDtoToPlannedComponent :: Key Design -> InstalledComponentDto -> PlannedComponent
-componentDtoToPlannedComponent dId (InstalledComponentDto (ComponentDto cId level) amount) =
-    PlannedComponent dId cId level amount
+plannedComponentToComponentDto :: PlannedComponent -> PlannedComponentDto
+plannedComponentToComponentDto PlannedComponent{..} =
+    PlannedComponentDto plannedComponentComponentId plannedComponentLevel plannedComponentAmount
+
+
+componentDtoToPlannedComponent :: Key Design -> PlannedComponentDto -> PlannedComponent
+componentDtoToPlannedComponent dId (PlannedComponentDto {..}) =
+    PlannedComponent dId plannedComponentDtoId plannedComponentDtoLevel plannedComponentDtoAmount
+
+
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 10 } ''ChassisDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 19 } ''PlannedComponentDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 9 } ''DesignDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 20 } ''RequiredComponentDto)
+

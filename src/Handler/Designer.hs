@@ -9,54 +9,94 @@ module Handler.Designer ( getDesignerR, getApiComponentsR, getApiChassisR, getAp
                         , postApiDesignR, putApiDesignIdR, deleteApiDesignIdR )
     where
 
-import Database.Persist.Sql (fromSqlKey)
-import Data.Maybe (fromJust)
-import Dto.Ship
 import Import
-import Components
-import News.Import (designCreatedNews)
-import MenuHelpers (starDate)
-import Common (apiRequireFaction)
+import Data.Maybe ( fromJust, maybe )
+import Common ( apiRequireFaction, mkUniq )
+import Vehicles.Components ( ComponentPower(..), ComponentLevel(..), ComponentId(..), Component
+                           , components, requirements )
+import Dto.Ship ( DesignDto(..), ChassisDto(..), RequiredComponentDto(..), designToDesignDto
+                , componentDtoToPlannedComponent )
+import Handler.Home ( getNewHomeR )
+import MenuHelpers ( starDate )
+import News.Import ( designCreatedNews )
+import Research.Data ( Technology )
+import Queries ( chassisList )
 
 
 getDesignerR :: Handler Html
-getDesignerR =
-    defaultLayout $ do
-        setTitle "Deep Sky - Ship designer"
-        addStylesheet $ StaticR css_site_css
-        $(widgetFile "shipdesigner")
+getDesignerR = getNewHomeR
 
 
 -- | Get list of all components that currently logged in user has access to
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
-    _ <- apiRequireFaction
-    let json = toJSON [ component CidArmour $ CLevel 1
-                      , component CidEngine $ CLevel 1
-                      , component CidBridge $ CLevel 1
-                      , component CidLongRangeSensors $ CLevel 1
-                      , component CidSupplyPod $ CLevel 2
-                      ]
-    return json
+    (_, _, fId) <- apiRequireFaction
+    completed <- runDB $ selectList [ CompletedResearchFactionId ==. fId ] []
+    let comps = mkUniq . join $ toComponent <$> completed
+    return $ toJSON comps
+
+
+-- | Given a list of technology requirements, technology map and completed research, figure our which
+-- components are available
+componentLookup :: [(Maybe Technology, ComponentId)] -> (ComponentLevel -> ComponentId -> Component)
+    -> CompletedResearch -> [Component]
+componentLookup reqs comps completed =
+    (comps level) . snd <$> enabled
+    where
+        tech = completedResearchType completed
+        level = ComponentLevel $ completedResearchLevel completed
+        enabled = filter (\(rtech, _) -> maybe True ((==) tech) rtech) reqs
+
+
+-- | turn completed research into list of components it enables or don't have tech requirement
+toComponent :: Entity CompletedResearch -> [Component]
+toComponent = (componentLookup requirements components) . entityVal
 
 
 -- | Get list of all chassis that currently logged in user has access to
 getApiChassisR :: Handler Value
 getApiChassisR = do
-    _ <- apiRequireFaction
-    loadedChassis <- runDB $ selectList [] []
-    loadedRequirements <- runDB $ selectList [ RequiredComponentChassisId <-. map entityKey loadedChassis ] []
-    let chassis = map (\c -> ChassisDto (entityKey c) (chassisName (entityVal c)) (chassisTonnage (entityVal c))
-                             $ map (\r -> ComponentLevel (CLevel $ requiredComponentLevel $ entityVal r)
-                                                         $ requiredComponentComponentType $ entityVal r)
-                             $ filter (\r -> requiredComponentChassisId (entityVal r) == entityKey c) loadedRequirements)
-                      loadedChassis
-    return $ toJSON chassis
+    (_, _, fId) <- apiRequireFaction
+    chassisRequirements <- runDB $ chassisList fId
+    return $ toJSON $ toChassisDto <$> chassisRequirements
+
+
+-- | Map chassis and required component information into chassis dto
+toChassisDto :: (Entity Chassis, [Entity RequiredComponent]) -> ChassisDto
+toChassisDto (chassis, reqs) =
+    ChassisDto
+        { chassisDtoId = entityKey chassis
+        , chassisDtoName = chassisName . entityVal $ chassis
+        , chassisDtoType = chassisType . entityVal $ chassis
+        , chassisDtoMaxTonnage = chassisTonnage . entityVal $ chassis
+        , chassisDtoRequiredTypes = toRequirement . entityVal <$> reqs
+        , chassisDtoArmourSlots = chassisArmourSlots . entityVal $ chassis
+        , chassisDtoInnerSlots = chassisInnerSlots . entityVal $ chassis
+        , chassisDtoOuterSlots = chassisOuterSlots . entityVal $ chassis
+        , chassisDtoSensorSlots = chassisSensorSlots . entityVal $ chassis
+        , chassisDtoWeaponSlots = chassisWeaponSlots . entityVal $ chassis
+        , chassisDtoEngineSlots = chassisEngineSlots . entityVal $ chassis
+        , chassisDtoMotiveSlots = chassisMotiveSlots . entityVal $ chassis
+        , chassisDtoSailSlots = chassisSailSlots . entityVal $ chassis
+        }
+
+
+-- | Map required component to requirement
+toRequirement :: RequiredComponent -> RequiredComponentDto
+toRequirement comp =
+    RequiredComponentDto
+        { requiredComponentDtoPower = ComponentPower
+                                        { componentPowerLevel = ComponentLevel $ requiredComponentLevel comp
+                                        , componentPowerType = requiredComponentComponentType comp
+                                        }
+        , requiredComponentDtoAmount = requiredComponentAmount comp
+        }
 
 
 -- | Get details of all designs that currently logged in user has access to
 getApiDesignR :: Handler Value
 getApiDesignR = do
+    -- TODO: use esqueleto and refactor into own function
     (_, _, fId) <- apiRequireFaction
     loadedDesigns <- runDB $ selectList [ DesignOwnerId ==. fId ] []
     loadedComponents <- runDB $ selectList [ PlannedComponentDesignId <-. map entityKey loadedDesigns ] []
@@ -92,9 +132,14 @@ putApiDesignIdR dId = do
 -- | Permanently delete design
 deleteApiDesignIdR :: Key Design -> Handler Value
 deleteApiDesignIdR dId = do
-    _ <- apiRequireFaction
+    (_, _, fId) <- apiRequireFaction
     _ <- runDB $ deleteDesign dId
-    sendResponseStatus status200 $ show $ fromSqlKey dId
+    loadedDesigns <- runDB $ selectList [ DesignOwnerId ==. fId ] []
+    loadedComponents <- runDB $ selectList [ PlannedComponentDesignId <-. map entityKey loadedDesigns ] []
+    let designs = map (\d -> designToDesignDto (entityKey d, entityVal d)
+                    $ filter (\c -> plannedComponentDesignId (entityVal c) == entityKey d) loadedComponents)
+                    loadedDesigns
+    return $ toJSON designs
 
 
 -- | Validate that given design is valid

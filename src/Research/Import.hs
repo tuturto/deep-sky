@@ -5,12 +5,12 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
 
 module Research.Import ( availableForResearch, isAvailable, researchOutput, researchReady
-                       , antecedentsAvailable )
+                       , antecedentsAvailable, currentResearchProgressL, currentResearchTypeL )
     where
 
 
 import Import
-import qualified Data.Map.Strict as Map
+import Control.Lens ( Lens', lens )
 import CustomTypes ( BuildingType(..) )
 import Research.Data ( TechTree(..), Research(..), TotalResearchScore(..)
                      , ResearchProduction(..), ResearchScore(..), ResearchCategory(..)
@@ -55,43 +55,38 @@ researchOutput Building { buildingType = ParticleAccelerator } =
     , totalResearchScoreSocial = ResearchScore 0
     }
 
-researchOutput _ =
-    TotalResearchScore
-    { totalResearchScoreEngineering = ResearchScore 0
-    , totalResearchScoreNatural = ResearchScore 0
-    , totalResearchScoreSocial = ResearchScore 0
-    }
+researchOutput _ = mempty
 
 
 -- | Is current research completed
 researchReady :: CurrentResearch -> Bool
 researchReady r =
-    case researchCategory <$> research of
-        Just (Engineering _) ->
-            completed (fmap totalResearchScoreEngineering cost) (currentResearchProgress r)
+    case researchCategory research of
+        Engineering _ ->
+            completed (totalResearchScoreEngineering cost) (currentResearchProgress r)
 
-        Just (NaturalScience _) ->
-            completed (fmap totalResearchScoreNatural cost) (currentResearchProgress r)
+        NaturalScience _ ->
+            completed (totalResearchScoreNatural cost) (currentResearchProgress r)
 
-        Just (SocialScience _) ->
-            completed (fmap totalResearchScoreSocial cost) (currentResearchProgress r)
-
-        Nothing ->
-            False
-
+        SocialScience _ ->
+            completed (totalResearchScoreSocial cost) (currentResearchProgress r)
     where
-        research = Map.lookup (currentResearchType r) techMap
-        cost = researchCost <$> research
-        completed c done =
-            case c of
-                Nothing ->
-                    False
-
-                Just techCost ->
-                    unResearchScore techCost <= done
+        research = techMap $ currentResearchType r
+        cost = researchCost research
+        completed c done = unResearchScore c <= done
 
 
 -- | Is given list of known technology enough to satisfy antecedents of research
 antecedentsAvailable :: [Technology] -> Research -> Bool
 antecedentsAvailable known research =
     all (`elem` known) $ researchAntecedents research
+
+
+-- Lens for accessing research progress of current research
+currentResearchProgressL :: Lens' CurrentResearch Int
+currentResearchProgressL = lens currentResearchProgress (\r v -> r { currentResearchProgress = v})
+
+
+-- | Lens for accessing type of current research
+currentResearchTypeL :: Lens' CurrentResearch Technology
+currentResearchTypeL = lens currentResearchType (\r v -> r { currentResearchType = v})

@@ -1,5 +1,6 @@
 module Api.Common exposing
     ( delete
+    , encodeMaybe
     , get
     , getResourcesCmd
     , getStarDateCmd
@@ -54,7 +55,15 @@ import Maybe.Extra exposing (isNothing)
 -}
 get : Endpoint -> Decode.Decoder a -> Http.Request a
 get endpoint decoder =
-    Http.get (endpointToString endpoint) decoder
+    Http.request
+        { method = "GET"
+        , headers = [ Http.header "Cache-Control" "no-cache" ]
+        , url = endpointToString endpoint
+        , body = Http.emptyBody
+        , expect = Http.expectJson decoder
+        , timeout = Nothing
+        , withCredentials = True
+        }
 
 
 {-| Send HTTP POST to specific end point. Body of the message is json created
@@ -257,3 +266,13 @@ resourceTypeEncoder item =
 is : String -> String -> Bool
 is a b =
     a == b
+
+
+encodeMaybe : (b -> Encode.Value) -> Maybe b -> Encode.Value
+encodeMaybe f val =
+    case val of
+        Just x ->
+            f x
+
+        Nothing ->
+            Encode.null

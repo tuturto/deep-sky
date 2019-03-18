@@ -3,8 +3,8 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
-module Queries ( planetPopulationReports, shipsAtPlanet, ShipLandingStatus(..), planetConstructionQueue
-               , kragiiTargetPlanets, farmingChangeTargetPlanets, factionBuildings )
+module Queries ( ShipLandingStatus(..), planetPopulationReports, shipsAtPlanet, planetConstructionQueue
+               , kragiiTargetPlanets, farmingChangeTargetPlanets, factionBuildings, chassisList )
     where
 
 import Import
@@ -130,13 +130,49 @@ farmAndPopCount xs =
         Just (planet, populationCount, farmCount)
 
 
+-- | Load given faction's planets and buildings on them
 factionBuildings :: (MonadIO m,
     BackendCompatible SqlBackend backend, PersistQueryRead backend,
     PersistUniqueRead backend) =>
-    Key Faction -> ReaderT backend m [(Entity Planet, Maybe (Entity Building))]
+    Key Faction -> ReaderT backend m [(Entity Planet, [Entity Building])]
 factionBuildings fId = do
-    E.select $
+    planetBuildings <- E.select $
         E.from $ \(planet `E.LeftOuterJoin` building) -> do
             E.on (building E.?. BuildingPlanetId E.==. E.just (planet E.^. PlanetId))
             E.where_ (planet E.^. PlanetOwnerId E.==. E.val (Just fId))
+            E.orderBy [ E.asc (planet E.^. PlanetId)]
             return (planet, building)
+    let grouped = groupBy (\a b -> (entityKey $ fst a) == (entityKey $ fst b)) planetBuildings
+    return $ mapMaybe groupUnderParent grouped
+
+
+-- | Load chassis and their required components for a given faction, taking
+-- faction's current completed research into account
+chassisList :: (MonadIO m, BackendCompatible SqlBackend backend,
+    PersistQueryRead backend, PersistUniqueRead backend) =>
+    (Key Faction) -> ReaderT backend m [(Entity Chassis, [Entity RequiredComponent])]
+chassisList fId = do
+    chassisRequirements <- E.select $
+        E.from $ \(chassis `E.LeftOuterJoin` requirement) -> do
+            E.on (requirement E.?. RequiredComponentChassisId E.==. E.just (chassis E.^. ChassisId))
+            E.where_ (chassis E.^. ChassisTechnology `E.in_`
+                        (E.subList_select $
+                            E.from $ \tech -> do
+                                E.where_ (tech E.^. CompletedResearchFactionId E.==. (E.val fId))
+                                return $ E.just $ tech E.^. CompletedResearchType)
+                      E.||. E.isNothing (chassis E.^. ChassisTechnology))
+            E.orderBy [ E.asc ( chassis E.^. ChassisId) ]
+            return (chassis, requirement)
+    let grouped = groupBy (\a b -> (entityKey $ fst a) == (entityKey $ fst b)) chassisRequirements
+    return $ mapMaybe groupUnderParent grouped
+
+
+-- | Given a list of tuples, where first element is always the same and is
+-- considered as a parent for second element in tuple, group children
+-- under single parent
+groupUnderParent :: [(a, Maybe b)] -> Maybe (a, [b])
+groupUnderParent xs =
+    (,) <$> parent <*> Just childs
+    where
+        parent = fst <$> (safeHead xs)
+        childs = mapMaybe snd xs

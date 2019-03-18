@@ -6,11 +6,13 @@
 
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
               , FromDto(..), ToDto(..), apiNotFound, apiInvalidArgs, apiInternalError, apiOk
-              , safeHead, apiForbidden, mkUniq, choose, getR, apiError, Frequency(..) )
+              , safeHead, apiForbidden, mkUniq, choose, getR, apiError, entityValL, entityKeyL
+              , Frequency(..) )
     where
 
 import Import
 import qualified Prelude as P ( (!!), length )
+import Control.Lens ( Lens', lens )
 import Data.Set
 import qualified Data.List as List
 import System.Random
@@ -183,3 +185,13 @@ getR g n xs =
     fmap (xs P.!!) ids
     where
         ids = List.take (min n $ length xs) $ List.nub $ randomRs (0, length xs - 1) g
+
+
+-- | Lens for accessing entity value in Entity
+entityValL :: Lens' (Entity a) a
+entityValL = lens entityVal (\(Entity key _) value -> Entity key value)
+
+
+-- | Lens for accessing entity key in Entity
+entityKeyL :: Lens' (Entity a) (Key a)
+entityKeyL = lens entityKey (\(Entity _ value) key -> Entity key value)

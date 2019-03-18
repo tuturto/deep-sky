@@ -23,6 +23,7 @@ import Buildings (BuildingInfo(..), BLevel(..), building)
 import News.Import (buildingConstructionFinishedNews)
 import Data.Maybe (fromJust)
 
+
 -- | Process through all construction queues of a faction and update them
 --   New buildings will be constructed when applicable, resources are spent
 --   and overall resource consumption is taken into account when selecting the speed

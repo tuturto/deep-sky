@@ -94,7 +94,7 @@ buildingConstructionToDto bce =
 
 shipConstructionToDto :: Entity ShipConstruction -> ConstructionDto
 shipConstructionToDto sce =
-  ShipConstructionDto key "TODO: ship name" Destroyer (shipConstructionIndex sc)
+  ShipConstructionDto key "TODO: ship name" Schooner (shipConstructionIndex sc)
   where
     sc = entityVal sce
     key = entityKey sce

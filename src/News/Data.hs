@@ -16,7 +16,6 @@ module News.Data ( NewsArticle(..), UserNewsIcon(..), StarFoundNews(..)
 import Import
 import Data.Aeson.TH
 import Data.Aeson.Text ( encodeToLazyText )
-import qualified Data.Map.Strict as Map
 import Common ( ToDto(..), FromDto(..) )
 import CustomTypes ( SpecialEventStatus(..) )
 import Dto.Icons ( IconMapper(..) )
@@ -240,14 +239,7 @@ instance ToDto ResearchCompletedNews ResearchCompletedNewsDto where
         }
         where
             tech = researchCompletedNewsTechnology news
-            research = Map.lookup tech techMap
-            name = case research of
-                    Just x ->
-                        researchName x
-
-                    Nothing ->
-                        "Classified project"
-
+            name = researchName . techMap $ tech
 
 instance FromDto ResearchCompletedNews ResearchCompletedNewsDto where
     fromDto dto = ResearchCompletedNews

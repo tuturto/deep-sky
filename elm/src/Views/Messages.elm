@@ -42,6 +42,7 @@ import Data.Messages
         )
 import Data.Model exposing (Model, Msg(..))
 import Data.User exposing (Role(..), unUserName)
+import Data.Vehicles exposing (unDesignName)
 import Html
     exposing
         ( Html
@@ -121,7 +122,7 @@ leftPanel model =
             let
                 shownEntries =
                     List.sortWith descendingStarDate entries
-                        |> List.drop (5 * get (messagesRA << currentPageA) model)
+                        |> List.drop (get (messagesRA << pageSizeA) model * get (messagesRA << currentPageA) model)
                         |> List.take (get (messagesRA << pageSizeA) model)
             in
             List.map newsEntry shownEntries
@@ -295,7 +296,7 @@ newsBody article =
 
         DesignCreated details ->
             [ text "A new design called "
-            , text details.name
+            , text <| unDesignName details.name
             , text " has been submitted and approved."
             ]
 
