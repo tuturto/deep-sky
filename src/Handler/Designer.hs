@@ -86,7 +86,7 @@ toRequirement :: RequiredComponent -> RequiredComponentDto
 toRequirement comp =
     RequiredComponentDto
         { requiredComponentDtoPower = ComponentPower
-                                        { componentPowerLevel = ComponentLevel $ requiredComponentLevel comp
+                                        { componentPowerLevel = requiredComponentLevel comp
                                         , componentPowerType = requiredComponentComponentType comp
                                         }
         , requiredComponentDtoAmount = requiredComponentAmount comp

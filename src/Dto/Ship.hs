@@ -11,7 +11,7 @@ module Dto.Ship
 import Data.Aeson.TH ( deriveJSON, defaultOptions, fieldLabelModifier )
 import Import
 import Vehicles.Components ( ComponentId, ComponentPower, ChassisType, SlotAmount
-                           , ChassisName, Weight )
+                           , ChassisName, Weight, ComponentLevel, ComponentAmount )
 
 
 data ChassisDto = ChassisDto
@@ -34,15 +34,15 @@ data ChassisDto = ChassisDto
 
 data RequiredComponentDto = RequiredComponentDto
     { requiredComponentDtoPower :: ComponentPower
-    , requiredComponentDtoAmount :: Int
+    , requiredComponentDtoAmount :: ComponentAmount
     }
     deriving (Show, Read, Eq)
 
 
 data PlannedComponentDto = PlannedComponentDto
     { plannedComponentDtoId :: ComponentId
-    , plannedComponentDtoLevel :: Int
-    , plannedComponentDtoAmount :: Int
+    , plannedComponentDtoLevel :: ComponentLevel
+    , plannedComponentDtoAmount :: ComponentAmount
     }
     deriving (Show, Read, Eq)
 

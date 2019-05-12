@@ -100,8 +100,8 @@ Design json
 PlannedComponent json
     designId DesignId
     componentId ComponentId
-    level Int
-    amount Int
+    level ComponentLevel
+    amount ComponentAmount
     deriving Show Read Eq
 
 Chassis json
@@ -122,14 +122,14 @@ Chassis json
 RequiredComponent json
     chassisId ChassisId
     componentType ComponentType
-    level Int
-    amount Int
+    level ComponentLevel
+    amount ComponentAmount
     deriving Show Read Eq
 
 InstalledComponent json
     shipId ShipId
     componentId ComponentId
-    level Int
+    level ComponentLevel
     damage Double
     deriving Show Read Eq
 

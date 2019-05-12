@@ -11,7 +11,8 @@
 module Vehicles.Components
     ( Component(..), ComponentSlot(..), ComponentId(..), ComponentType(..), ComponentLevel(..)
     , ComponentPower(..), Weight(..), ChassisType(..), SlotAmount(..), ChassisName(..)
-    , scaleLevel, components, requirements, componentRequirements )
+    , ComponentAmount(..), scaleLevel, components, requirements
+    , componentRequirements )
     where
 
 import Data.Aeson ( ToJSON(..), withScientific, withText )
@@ -58,6 +59,70 @@ newtype ComponentLevel = ComponentLevel { unComponentLevel :: Int }
 scaleLevel :: ComponentLevel -> Int -> ComponentLevel
 scaleLevel (ComponentLevel lvl) scale =
     ComponentLevel $ lvl * scale
+
+
+instance ToJSON ComponentLevel where
+    toJSON = toJSON . unComponentLevel
+
+
+instance FromJSON ComponentLevel where
+    parseJSON =
+        withScientific "component level"
+                       (\x -> case toBoundedInteger x of
+                            Nothing ->
+                                mempty
+
+                            Just n ->
+                                return $ ComponentLevel n)
+
+
+instance PersistField ComponentLevel where
+    toPersistValue (ComponentLevel n) =
+        PersistInt64 $ fromIntegral n
+
+    fromPersistValue (PersistInt64 n) =
+        Right $ ComponentLevel $ fromIntegral n
+
+    fromPersistValue _ =
+        Left "Failed to deserialize"
+
+
+instance PersistFieldSql ComponentLevel where
+    sqlType _ = SqlInt64
+
+
+newtype ComponentAmount = ComponentAmount { unComponentAmount :: Int }
+    deriving (Show, Read, Eq, Ord, Num)
+
+
+instance ToJSON ComponentAmount where
+    toJSON = toJSON . unComponentAmount
+
+
+instance FromJSON ComponentAmount where
+    parseJSON =
+        withScientific "component amount"
+                       (\x -> case toBoundedInteger x of
+                            Nothing ->
+                                mempty
+
+                            Just n ->
+                                return $ ComponentAmount n)
+
+
+instance PersistField ComponentAmount where
+    toPersistValue (ComponentAmount n) =
+        PersistInt64 $ fromIntegral n
+
+    fromPersistValue (PersistInt64 n) =
+        Right $ ComponentAmount $ fromIntegral n
+
+    fromPersistValue _ =
+        Left "Failed to deserialize"
+
+
+instance PersistFieldSql ComponentAmount where
+    sqlType _ = SqlInt64
 
 
 -- | Weight of something
@@ -311,23 +376,6 @@ components level VehicleHoverMotiveSystem =
         , componentCost = RawResources (RawResource 30) (RawResource 0) (RawResource 0)
         , componentChassisType = LandVehicle
         }
-
-
-instance ToJSON ComponentLevel where
-    toJSON = toJSON . unComponentLevel
-
-
-instance FromJSON ComponentLevel where
-    parseJSON =
-        withScientific "component level"
-                       (\x -> case toBoundedInteger x of
-                            Nothing ->
-                                mempty
-
-                            Just n ->
-                                return $ ComponentLevel n)
-
-
 
 
 data ComponentSlot =
