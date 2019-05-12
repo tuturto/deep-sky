@@ -130,7 +130,7 @@ InstalledComponent json
     shipId ShipId
     componentId ComponentId
     level ComponentLevel
-    damage Double
+    damage ComponentDamage
     deriving Show Read Eq
 
 ShipConstruction json

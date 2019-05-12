@@ -11,14 +11,14 @@
 module Vehicles.Components
     ( Component(..), ComponentSlot(..), ComponentId(..), ComponentType(..), ComponentLevel(..)
     , ComponentPower(..), Weight(..), ChassisType(..), SlotAmount(..), ChassisName(..)
-    , ComponentAmount(..), ComponentName(..), ComponentDescription(..), scaleLevel, components
-    , requirements, componentRequirements )
+    , ComponentAmount(..), ComponentName(..), ComponentDescription(..), ComponentDamage(..)
+    , scaleLevel, components, requirements, componentRequirements )
     where
 
 import Data.Aeson ( ToJSON(..), withScientific, withText )
 import Data.Aeson.TH
     ( deriveJSON, defaultOptions, fieldLabelModifier  )
-import Data.Scientific ( toBoundedInteger )
+import Data.Scientific ( toBoundedInteger, toRealFloat )
 import Database.Persist.TH
 import Database.Persist.Sql
 import ClassyPrelude.Yesod   as Import
@@ -459,6 +459,35 @@ instance PersistField SlotAmount where
 
 instance PersistFieldSql SlotAmount where
     sqlType _ = SqlInt64
+
+
+newtype ComponentDamage = ComponentDamage { unComponentDamage :: Double }
+    deriving (Show, Read, Eq, Num, Ord)
+
+
+instance ToJSON ComponentDamage where
+    toJSON = toJSON . unComponentDamage
+
+
+instance FromJSON ComponentDamage where
+    parseJSON =
+        withScientific "Component damage"
+            (return . ComponentDamage . toRealFloat)
+
+
+instance PersistField ComponentDamage where
+    toPersistValue (ComponentDamage n) =
+        PersistDouble n
+
+    fromPersistValue (PersistDouble n) =
+        Right $ ComponentDamage n
+
+    fromPersistValue _ =
+        Left "Failed to deserialize"
+
+
+instance PersistFieldSql ComponentDamage where
+    sqlType _ = SqlNumeric 3 2
 
 
 derivePersistField "ComponentSlot"
