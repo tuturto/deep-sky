@@ -11,8 +11,8 @@
 module Vehicles.Components
     ( Component(..), ComponentSlot(..), ComponentId(..), ComponentType(..), ComponentLevel(..)
     , ComponentPower(..), Weight(..), ChassisType(..), SlotAmount(..), ChassisName(..)
-    , ComponentAmount(..), scaleLevel, components, requirements
-    , componentRequirements )
+    , ComponentAmount(..), ComponentName(..), ComponentDescription(..), scaleLevel, components
+    , requirements, componentRequirements )
     where
 
 import Data.Aeson ( ToJSON(..), withScientific, withText )
@@ -31,8 +31,8 @@ import Resources ( RawResources(..), RawResource(..), ResourceCost )
 data Component = Component
     { componentId :: ComponentId
     , componentLevel :: ComponentLevel
-    , componentName :: String
-    , componentDescription :: String
+    , componentName :: ComponentName
+    , componentDescription :: ComponentDescription
     , componentWeight :: Weight
     , componentSlot :: ComponentSlot
     , componentType :: [ ComponentPower ]
@@ -40,6 +40,42 @@ data Component = Component
     , componentChassisType :: ChassisType
     }
     deriving (Show, Read, Eq, Ord)
+
+
+newtype ComponentName = ComponentName { unComponentName :: Text }
+    deriving (Show, Read, Eq, Ord)
+
+
+instance IsString ComponentName where
+    fromString = ComponentName . fromString
+
+
+instance ToJSON ComponentName where
+    toJSON = toJSON . unComponentName
+
+
+instance FromJSON ComponentName where
+    parseJSON =
+        withText "Component name"
+            (\x -> return $ ComponentName x)
+
+
+newtype ComponentDescription = ComponentDescription { unComponentDescription :: Text }
+    deriving (Show, Read, Eq, Ord)
+
+
+instance IsString ComponentDescription where
+    fromString = ComponentDescription . fromString
+
+
+instance ToJSON ComponentDescription where
+    toJSON = toJSON . unComponentDescription
+
+
+instance FromJSON ComponentDescription where
+    parseJSON =
+        withText "Component name"
+            (\x -> return $ ComponentDescription x)
 
 
 -- | Type of component and relative power of the component
