@@ -241,3 +241,9 @@ PlanetStatusReport json
     factionId FactionId
     date Int
     deriving Show Read Eq
+
+Person json
+    name PersonName
+    sex Sex
+    gender Gender
+    deriving Show Read Eq

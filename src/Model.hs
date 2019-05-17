@@ -14,6 +14,7 @@ import ClassyPrelude.Yesod
 import Database.Persist.Quasi
 import CustomTypes
 import Vehicles.Components
+import People
 import Research.Data
 
 -- You can define all of your database entities in the entities file.
