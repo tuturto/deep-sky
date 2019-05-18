@@ -17,7 +17,7 @@ import Import
 import Data.Aeson.TH
 import Data.Aeson.Text ( encodeToLazyText )
 import Common ( ToDto(..), FromDto(..) )
-import CustomTypes ( SpecialEventStatus(..) )
+import CustomTypes ( SpecialEventStatus(..), StarDate )
 import Dto.Icons ( IconMapper(..) )
 import Dto.News ( NewsDto(..), NewsArticleDto(..), StarFoundNewsDto(..), PlanetFoundNewsDto(..)
                 , UserWrittenNewsDto(..), DesignCreatedNewsDto(..), ConstructionFinishedNewsDto(..)
@@ -52,7 +52,7 @@ data StarFoundNews = StarFoundNews
     { starFoundNewsStarName :: Text
     , starFoundNewsSystemName :: Text
     , starFoundNewsSystemId :: Key StarSystem
-    , starFoundNewsDate :: Int
+    , starFoundNewsDate :: StarDate
     }
 
 
@@ -80,7 +80,7 @@ data PlanetFoundNews = PlanetFoundNews
     , planetFoundNewsSystemName :: Text
     , planetFoundNewsSystemId :: Key StarSystem
     , planetFoundNewsPlanetId :: Key Planet
-    , planetFoundNewsDate :: Int
+    , planetFoundNewsDate :: StarDate
     }
 
 
@@ -108,7 +108,7 @@ instance FromDto PlanetFoundNews PlanetFoundNewsDto where
 data UserWrittenNews = UserWrittenNews
     { userWrittenNewsContent :: Text
     , userWrittenNewsIcon :: UserNewsIcon
-    , userWrittenNewsDate :: Int
+    , userWrittenNewsDate :: StarDate
     , userWrittenNewsUser :: Text
     }
 
@@ -135,7 +135,7 @@ instance FromDto UserWrittenNews UserWrittenNewsDto where
 data DesignCreatedNews = DesignCreatedNews
     { designCreatedNewsDesignId :: Key Design
     , designCreatedNewsName :: Text
-    , designCreatedDate :: Int
+    , designCreatedDate :: StarDate
     }
 
 
@@ -163,7 +163,7 @@ data ConstructionFinishedNews = ConstructionFinishedNews
     , constructionFinishedConstructionName :: Text
     , constructionFinishedBuildingId :: Maybe (Key Building)
     , constructionFinishedShipId :: Maybe (Key Ship)
-    , constructionFinishedDate :: Int
+    , constructionFinishedDate :: StarDate
     }
 
 
@@ -199,7 +199,7 @@ data ProductionChangedNews = ProductionChangedNews
     , productionChangedNewsSystemId :: Key StarSystem
     , productionChangedNewsSystemName :: Text
     , productionChangedNewsType :: ResourceType
-    , productionChangedNewsDate :: Int
+    , productionChangedNewsDate :: StarDate
     }
 
 
@@ -227,7 +227,7 @@ instance FromDto ProductionChangedNews ProductionChangedNewsDto where
 
 data ResearchCompletedNews = ResearchCompletedNews
     { researchCompletedNewsTechnology :: Technology
-    , researchCompletedNewsData :: Int
+    , researchCompletedNewsData :: StarDate
     }
 
 
@@ -382,22 +382,22 @@ instance FromDto UserNewsIcon UserNewsIconDto where
 
 
 -- | Helper function for creating News that aren't special events and haven't been dismissed
-mkNews :: Key Faction -> Time -> NewsArticle -> News
+mkNews :: Key Faction -> StarDate -> NewsArticle -> News
 mkNews fId date content =
     News { newsContent = toStrict $ encodeToLazyText content
          , newsFactionId = fId
-         , newsDate = timeCurrentTime date
+         , newsDate = date
          , newsDismissed = False
          , newsSpecialEvent = NoSpecialEvent
          }
 
 
 -- | Helper function for creating News that are special events and haven't been handled
-mkSpecialNews :: Time -> Key Faction -> SpecialNews -> News
+mkSpecialNews :: StarDate -> Key Faction -> SpecialNews -> News
 mkSpecialNews date fId content =
     News { newsContent = toStrict $ encodeToLazyText $ Special content
          , newsFactionId = fId
-         , newsDate = timeCurrentTime date
+         , newsDate = date
          , newsDismissed = False
          , newsSpecialEvent = UnhandledSpecialEvent
          }

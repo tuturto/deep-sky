@@ -7,8 +7,11 @@
 -- | Catch all module for things that don't yet belong to anywhere else
 module CustomTypes where
 
+import Data.Aeson ( ToJSON(..), withScientific )
 import Data.Aeson.TH
+import Data.Scientific ( toBoundedInteger )
 import Database.Persist.TH
+import Database.Persist.Sql
 import Data.Text
 import ClassyPrelude.Yesod   as Import
 import Data.Monoid ()
@@ -145,6 +148,40 @@ class Boostable a where
 
     -- | Apply bonus to a, scaling it accordingly
     applyBonus :: Bonus -> a -> a
+
+
+newtype StarDate = StarDate { unStarDate :: Int }
+    deriving (Show, Read, Eq, Num, Ord)
+
+
+instance ToJSON StarDate where
+    toJSON = toJSON . unStarDate
+
+
+instance FromJSON StarDate where
+    parseJSON =
+        withScientific "star date"
+            (\x -> case toBoundedInteger x of
+                Nothing ->
+                    mempty
+
+                Just n ->
+                    return $ StarDate n)
+
+
+instance PersistField StarDate where
+    toPersistValue (StarDate n) =
+        PersistInt64 $ fromIntegral n
+
+    fromPersistValue (PersistInt64 n) =
+        Right $ StarDate $ fromIntegral n
+
+    fromPersistValue _ =
+        Left "Failed to deserialize"
+
+
+instance PersistFieldSql StarDate where
+    sqlType _ = SqlInt64
 
 
 $(deriveJSON defaultOptions ''SpecialEventStatus)

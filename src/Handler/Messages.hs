@@ -12,7 +12,7 @@ import Import
 import Data.Aeson.Text (encodeToLazyText)
 
 import Common ( apiRequireFaction, toDto, fromDto, apiNotFound, apiForbidden )
-import CustomTypes ( SpecialEventStatus(..) )
+import CustomTypes ( SpecialEventStatus(..), StarDate )
 import Handler.Home ( getNewHomeR )
 import MenuHelpers ( starDate )
 import News.Data ( NewsArticle(..), UserWrittenNews(..) )
@@ -69,7 +69,7 @@ postApiMessageR = do
     _ <- if isUserSupplied article
             then runDB $ insert News { newsContent = toStrict $ encodeToLazyText article
                                      , newsFactionId = fId
-                                     , newsDate = timeCurrentTime currentDate
+                                     , newsDate = currentDate
                                      , newsDismissed = False
                                      , newsSpecialEvent = NoSpecialEvent
                                      }
@@ -103,9 +103,9 @@ isSpecialEvent _ = False
 
 -- | Update news article to have specific star date
 -- This is specific to only user supplied news. For other news articles, no changes are made
-setStarDate :: Time -> NewsArticle -> NewsArticle
-setStarDate sDate (UserWritten details) =
-    UserWritten $ details { userWrittenNewsDate = timeCurrentTime sDate }
+setStarDate :: StarDate -> NewsArticle -> NewsArticle
+setStarDate date (UserWritten details) =
+    UserWritten $ details { userWrittenNewsDate = date }
 
 setStarDate _ article =
     article

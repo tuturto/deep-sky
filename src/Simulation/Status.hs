@@ -7,7 +7,7 @@ module Simulation.Status ( removeExpiredStatuses )
     where
 
 import Import
-import CustomTypes ( PlanetaryStatus(..) )
+import CustomTypes ( PlanetaryStatus(..), StarDate )
 import News.Data ( ProductionChangedNews(..), NewsArticle(..), mkNews )
 import Resources ( ResourceType(..) )
 
@@ -16,7 +16,7 @@ import Resources ( ResourceType(..) )
 -- items signaling ending of statuses.
 removeExpiredStatuses :: (MonadIO m, PersistQueryWrite backend,
     BaseBackend backend ~ SqlBackend) =>
-    Time -> ReaderT backend m [News]
+    StarDate -> ReaderT backend m [News]
 removeExpiredStatuses date = do
     planetNews <- processPlanetStatus date
     insertMany_ planetNews
@@ -27,10 +27,10 @@ removeExpiredStatuses date = do
 -- news articles
 processPlanetStatus :: (MonadIO m, PersistQueryWrite backend,
     BaseBackend backend ~ SqlBackend) =>
-    Time -> ReaderT backend m [News]
+    StarDate -> ReaderT backend m [News]
 processPlanetStatus date = do
-    loaded <- selectList [ PlanetStatusExpiration <=. Just (timeCurrentTime date)] []
-    deleteWhere [ PlanetStatusExpiration <=. Just (timeCurrentTime date)]
+    loaded <- selectList [ PlanetStatusExpiration <=. Just date ] []
+    deleteWhere [ PlanetStatusExpiration <=. Just date ]
     let planetIds = fmap (planetStatusPlanetId . entityVal) loaded
     planets <- selectList [ PlanetId <-. planetIds ] []
     let systemIds = fmap (planetStarSystemId . entityVal) planets
@@ -43,7 +43,7 @@ processPlanetStatus date = do
 -- List of planet entities and list of star system entities are used for caching data
 -- These two lists should contain information that given PlanetStatus refers to, in
 -- order for this function to be able to retrieve planet's and star system's name
-expirationNews :: [Entity Planet] -> [Entity StarSystem] -> Time -> PlanetStatus -> Maybe News
+expirationNews :: [Entity Planet] -> [Entity StarSystem] -> StarDate -> PlanetStatus -> Maybe News
 expirationNews planets systems date (PlanetStatus pId GoodHarvest _) =
     boostEnded planets systems date pId BiologicalResource Boost
 
@@ -72,7 +72,7 @@ expirationNews _ _ _ (PlanetStatus _ KragiiAttack _) =
 -- owner.
 boostEnded :: (SemiSequence seq1, SemiSequence seq2,
     Element seq1 ~ Entity Planet, Element seq2 ~ Entity StarSystem) =>
-    seq1 -> seq2 -> Time -> Key Planet -> ResourceType -> StatusType -> Maybe News
+    seq1 -> seq2 -> StarDate -> Key Planet -> ResourceType -> StatusType -> Maybe News
 boostEnded planets systems date pId resource sType =
         mkNews <$> fId
                <*> Just date
@@ -88,7 +88,7 @@ boostEnded planets systems date pId resource sType =
                         <*> fmap entityKey system
                         <*> fmap (starSystemName . entityVal) system
                         <*> Just resource
-                        <*> (Just . timeCurrentTime) date
+                        <*> Just date
         fId = planet >>= (planetOwnerId . entityVal)
         planet = find (\p -> entityKey p == pId) planets
         system = find (\s -> Just (entityKey s) == fmap (planetStarSystemId . entityVal) planet) systems

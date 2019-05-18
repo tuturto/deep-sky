@@ -11,6 +11,7 @@ import Data.Maybe (isJust, isNothing)
 import Database.Persist.Sql
 import Model
 import Report
+import QC.Generators.Common ( ArbStarDate(..) )
 import QC.Generators.StarSystems
 import QC.Generators.Planets
 import QC.Generators.Database
@@ -48,7 +49,7 @@ starReport entity = do
     aLuminosityClass <- oneof [ return Nothing
                               , return $ Just $ starLuminosityClass star ]
     aDate <- arbitrary `suchThat` \x -> x > 18000
-    return $ Just $ CollatedStarReport aStarId aStarSystemId aName aSpectralType aLuminosityClass aDate
+    return $ Just $ CollatedStarReport aStarId aStarSystemId aName aSpectralType aLuminosityClass (unArbStarDate aDate)
 
 
 -- | generator to simply return Nothing
@@ -137,7 +138,7 @@ planetReport entity = do
     aGravity <- oneof [ return Nothing
                       , return $ Just $ planetGravity planet ]
     aDate <- arbitrary `suchThat` \x -> x > 18000
-    return $ Just $ CollatedPlanetReport aPlanetId aStarSystemId aOwnerId aName aPosition aGravity aDate
+    return $ Just $ CollatedPlanetReport aPlanetId aStarSystemId aOwnerId aName aPosition aGravity (unArbStarDate aDate)
 
 
 -- | generator that creates fully filled in planet report from a planet
@@ -151,7 +152,7 @@ fullPlanetReport entity = do
     let aPosition = Just $ planetPosition planet
     let aGravity = Just $ planetGravity planet
     aDate <- arbitrary `suchThat` \x -> x > 18000
-    return $ Just $ CollatedPlanetReport aPlanetId aStarSystemId aOwnerId aName aPosition aGravity aDate
+    return $ Just $ CollatedPlanetReport aPlanetId aStarSystemId aOwnerId aName aPosition aGravity (unArbStarDate aDate)
 
 
 -- | generator to simply return Nothing

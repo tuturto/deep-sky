@@ -18,6 +18,7 @@ import Common (safeHead)
 import Construction ( Constructable(..), constructionLeft, ConstructionSpeedCoeff(..)
                     , OverallConstructionSpeed(..), speedLimitedByOverallSpeed, resourceScaledBySpeed
                     , constructionWillFinish, speedLimitedByWorkLeft )
+import CustomTypes ( StarDate )
 import MenuHelpers (getScore)
 import Buildings (BuildingInfo(..), BLevel(..), building)
 import News.Import (buildingConstructionFinishedNews)
@@ -33,7 +34,7 @@ handleFactionConstruction :: (BaseBackend backend ~ SqlBackend,
                               PersistQueryWrite backend,
                               PersistStoreWrite backend, PersistQueryRead backend, PersistUniqueRead backend,
                               MonadIO m) =>
-                             Time -> Entity Faction -> ReaderT backend m ()
+                              StarDate -> Entity Faction -> ReaderT backend m ()
 handleFactionConstruction date factionE = do
     let faction = entityVal factionE
     planets <- selectList [ PlanetOwnerId ==. Just (entityKey factionE)] []
@@ -64,7 +65,7 @@ planetAndFirstConstruction (planet, []) =
 -- | Perform construction on a planet at given speed
 doPlanetConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                         MonadIO m, BaseBackend backend ~ SqlBackend) =>
-                        Key Faction -> Time -> OverallConstructionSpeed -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction))
+                        Key Faction -> StarDate -> OverallConstructionSpeed -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction))
                         -> ReaderT backend m ()
 doPlanetConstruction fId date speed (Just planetE, Just bConsE) = do
     let bCons = entityVal bConsE
@@ -84,7 +85,7 @@ doPlanetConstruction _ _ _ _ =
 ---  are created for the faction.
 finishConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                        MonadIO m, BaseBackend backend ~ SqlBackend) =>
-                       Key Faction -> Time -> Entity BuildingConstruction -> ReaderT backend m ()
+                       Key Faction -> StarDate -> Entity BuildingConstruction -> ReaderT backend m ()
 finishConstruction fId date bConsE = do
     let bCons = entityVal bConsE
     let bConsId = entityKey bConsE
@@ -105,7 +106,7 @@ finishConstruction fId date bConsE = do
                                 , buildingReportLevel = Just $ buildingConstructionLevel bCons
                                 , buildingReportDamage = Just 0.0
                                 , buildingReportFactionId = fId
-                                , buildingReportDate = timeCurrentTime date
+                                , buildingReportDate = date
                                 }
     _ <- insert report
     -- TODO: rather messy piece, clean up this

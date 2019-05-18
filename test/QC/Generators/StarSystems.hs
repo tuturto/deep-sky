@@ -72,7 +72,7 @@ singleStarReport = do
     aLuminosityClass <- perhaps arbitrary
     aDate <- arbitrary `suchThat` \x -> x > 0
     return $ CollatedStarReport aStarId aStarSystemId aName (fmap unArbSpectralType aSpectralType)
-                                (fmap unArbLuminosityClass aLuminosityClass) aDate
+                                (fmap unArbLuminosityClass aLuminosityClass) (unArbStarDate aDate)
 
 
 allStars :: Gen [Star]
@@ -122,7 +122,7 @@ singleStarLaneReport = do
     aSystemName1 <- perhaps arbitrary
     aSystemName2 <- perhaps arbitrary
     aDate <- arbitrary `suchThat` \x -> x > 0
-    return $ CollatedStarLaneReport aLaneId aSystem1 aSystem2 aSystemName1 aSystemName2 aDate
+    return $ CollatedStarLaneReport aLaneId aSystem1 aSystem2 aSystemName1 aSystemName2 (unArbStarDate aDate)
 
 
 starLaneEntities :: Gen [(Entity StarLane)]

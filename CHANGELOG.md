@@ -6,10 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- Level of component changed from Int to ComponentLevel
-- Amount of components changed from Int to ComponentAmount
-- Component name changed from String to ComponentName
-- Component description changed from String to ComponentDescription
+- Database table `time` replaced with `simulation`
+- `StarDate` used instead of `Time` everywhere
+- Level of component changed from `Int` to `ComponentLevel`
+- Amount of components changed from `Int` to `ComponentAmount`
+- Component name changed from `String` to `ComponentName`
+- Component description changed from `String` to `ComponentDescription`
 
 ## [0.1.0] - 2019-05-11
 ### Added

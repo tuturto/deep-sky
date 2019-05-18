@@ -12,6 +12,7 @@ module Handler.Designer ( getDesignerR, getApiComponentsR, getApiChassisR, getAp
 import Import
 import Data.Maybe ( fromJust, maybe )
 import Common ( apiRequireFaction, mkUniq )
+import CustomTypes ( StarDate )
 import Vehicles.Components ( ComponentPower(..), ComponentLevel(..), ComponentId(..), Component
                            , components, requirements )
 import Dto.Ship ( DesignDto(..), ChassisDto(..), RequiredComponentDto(..), designToDesignDto
@@ -150,7 +151,7 @@ validateSaveDesign _ = True
 -- | Save given design into database and create a news article about it
 saveDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     BaseBackend backend ~ SqlBackend) =>
-    Time -> DesignDto -> Key Faction -> ReaderT backend m DesignDto
+    StarDate -> DesignDto -> Key Faction -> ReaderT backend m DesignDto
 saveDesign date design fId = do
     newId <- insert $ Design (designDtoName design) fId (designDtoChassisId design)
     _ <- mapM (insert . componentDtoToPlannedComponent newId) (designDtoComponents design)

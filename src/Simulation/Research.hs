@@ -10,6 +10,7 @@ import Import
 import Control.Lens ( (+~) )
 import System.Random
 import Common ( mkUniq, getR, entityValL )
+import CustomTypes ( StarDate )
 import News.Import ( researchCompleted )
 import Queries ( factionBuildings )
 import Research.Data ( TotalResearchScore(..), ResearchProduction(..), ResearchCategory(..)
@@ -25,7 +26,7 @@ import Research.Tree ( techTree, techMap )
 handleFactionResearch :: (MonadIO m,
     BackendCompatible SqlBackend backend, PersistUniqueRead backend,
     PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
-    Time -> Entity Faction -> ReaderT backend m ()
+    StarDate -> Entity Faction -> ReaderT backend m ()
 handleFactionResearch date faction = do
     production <- totalProduction $ entityKey faction
     current <- selectList [ CurrentResearchFactionId ==. entityKey faction ] []
@@ -52,7 +53,7 @@ totalProduction fId = do
 -- entry from available researches. Create new article for each completed research.
 handleCompleted :: (MonadIO m, PersistQueryWrite backend,
     BaseBackend backend ~ SqlBackend) =>
-    Time -> [Entity CurrentResearch] -> Key Faction -> ReaderT backend m ()
+    StarDate -> [Entity CurrentResearch] -> Key Faction -> ReaderT backend m ()
 handleCompleted date updated fId = do
     let finished = filter (researchReady . entityVal) updated
     let finishedTech = currentResearchType . entityVal <$> finished
@@ -64,13 +65,13 @@ handleCompleted date updated fId = do
 
 
 -- | Map current research into completed research
-currentToCompleted :: Time -> CurrentResearch -> CompletedResearch
+currentToCompleted :: StarDate -> CurrentResearch -> CompletedResearch
 currentToCompleted date research =
     CompletedResearch
         { completedResearchType = currentResearchType research
         , completedResearchLevel = 1
         , completedResearchFactionId = currentResearchFactionId research
-        , completedResearchDate = timeCurrentTime date
+        , completedResearchDate = date
         }
 
 

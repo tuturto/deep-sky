@@ -17,7 +17,8 @@ import Control.Monad.Trans.Writer ( WriterT, runWriterT, tell )
 import Data.Aeson.TH
 
 import Common ( ToDto(..), FromDto(..) )
-import CustomTypes ( PercentileChance(..), RollResult(..), PlanetaryStatus(..), roll )
+import CustomTypes ( PercentileChance(..), RollResult(..), PlanetaryStatus(..)
+                   , StarDate, roll )
 import Dto.News ( KragiiWormsChoiceDto(..), UserOptionDto(..), KragiiNewsDto(..) )
 import Events.Import ( SpecialEvent(..), EventRemoval(..), UserOption(..) )
 import Resources ( RawResource(..), Biological(..) )
@@ -29,7 +30,7 @@ data KragiiWormsEvent = KragiiWormsEvent
     , kragiiWormsPlanetName :: Text
     , kragiiWormsSystemId :: Key StarSystem
     , kragiiWormsSystemName :: Text
-    , kragiiWormsDate :: Int
+    , kragiiWormsDate :: StarDate
     }
     deriving (Show, Read, Eq)
 
@@ -58,7 +59,7 @@ data KragiiNews = KragiiNews
     , kragiiNewsSystemId :: Key StarSystem
     , kragiiNewsSystemName :: Text
     , kragiiNewsExplanation :: Text
-    , kragiiNewsDate :: Int
+    , kragiiNewsDate :: StarDate
     }
     deriving (Show, Read, Eq)
 

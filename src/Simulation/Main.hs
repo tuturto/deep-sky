@@ -10,6 +10,7 @@ module Simulation.Main (processTurn)
     where
 
 import Import
+import CustomTypes ( StarDate )
 import Simulation.Construction ( handleFactionConstruction )
 import Simulation.Events ( handleFactionEvents, addSpecialEvents )
 import Simulation.Food ( handleFactionFood )
@@ -24,7 +25,7 @@ processTurn :: (BaseBackend backend ~ SqlBackend,
     BackendCompatible SqlBackend backend, PersistUniqueRead backend,
     PersistQueryWrite backend,
     PersistQueryRead backend, PersistStoreWrite backend, MonadIO m) =>
-    ReaderT backend m Time
+    ReaderT backend m StarDate
 processTurn = do
     newTime <- advanceTime
     _ <- removeExpiredStatuses newTime

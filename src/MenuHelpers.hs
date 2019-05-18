@@ -7,7 +7,10 @@
 {-# LANGUAGE InstanceSigs               #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
-module MenuHelpers where
+module MenuHelpers ( starDate, systemNameById, planetNameById, statusBarScore
+                   , maybeFaction, getMaybeEntity, getScore, usersRoles, isAdmin
+                   , authorizeAdmin, toDisplayDate )
+    where
 
 import Model
 import Import.NoFoundation
@@ -16,15 +19,15 @@ import CustomTypes
 import Text.Printf (printf)
 import Resources (RawResources(..), ResourcesAvailable(..), RawResource(..))
 
+
+-- | Current star date of the simulation
 starDate :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistQueryRead backend) =>
-    ReaderT backend m Time
+    ReaderT backend m StarDate
 starDate = do
-    systemTime <- get (toSqlKey 1)
-    let res = case systemTime of
-                (Just x) -> x
-                Nothing  -> Time 0
-    return res
+    simulation <- get (toSqlKey 1)
+    return $ maybe 0 simulationCurrentTime simulation
+
 
 systemNameById :: (BaseBackend backend ~ SqlBackend,
     PersistStoreRead backend, MonadIO m) =>
@@ -101,5 +104,8 @@ authorizeAdmin (Just userId) = do
 authorizeAdmin _ =
     return $ Unauthorized "This part is only for administrators"
 
-toDisplayDate :: Int -> String
-toDisplayDate date = printf "%.1f" $ fromIntegral date * (0.1 :: Double)
+
+-- | Format star date for displaying it
+toDisplayDate :: StarDate -> String
+toDisplayDate date =
+    printf "%.1f" $ fromIntegral (unStarDate date) * (0.1 :: Double)

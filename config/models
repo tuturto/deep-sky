@@ -63,7 +63,7 @@ PlanetPopulation json
 PlanetStatus json
     planetId PlanetId
     status PlanetaryStatus
-    expiration Int Maybe
+    expiration StarDate Maybe
     deriving Show Read Eq
 
 StarLane json
@@ -78,8 +78,8 @@ Building json
     damage Double
     deriving Show Read Eq
 
-Time json
-    currentTime Int
+Simulation json
+    currentTime StarDate
     deriving Show Read Eq
 
 Ship json
@@ -153,7 +153,7 @@ BuildingConstruction json
 News json
     content Text
     factionId FactionId
-    date Int
+    date StarDate
     dismissed Bool
     specialEvent SpecialEventStatus
     deriving Show Read Eq
@@ -174,7 +174,7 @@ CompletedResearch json
     type Technology
     level Int
     factionId FactionId
-    date Int
+    date StarDate
     deriving Show Read Eq
 
 StarSystemReport json
@@ -183,7 +183,7 @@ StarSystemReport json
     coordX Double
     coordY Double
     factionId FactionId
-    date Int
+    date StarDate
     deriving Show Read Eq
 
 StarReport json
@@ -193,7 +193,7 @@ StarReport json
     spectralType SpectralType Maybe
     luminosityClass LuminosityClass Maybe
     factionId FactionId
-    date Int
+    date StarDate
     deriving Show Read Eq
 
 PlanetReport json
@@ -204,7 +204,7 @@ PlanetReport json
     position Int Maybe
     gravity Double Maybe
     factionId FactionId
-    date Int
+    date StarDate
     deriving Show Read Eq
 
 StarLaneReport json
@@ -214,7 +214,7 @@ StarLaneReport json
     starSystemName1 Text Maybe
     starSystemName2 Text Maybe
     factionId FactionId
-    date Int
+    date StarDate
     deriving Show Read Eq
 
 BuildingReport json
@@ -224,7 +224,7 @@ BuildingReport json
     level Int Maybe
     damage Double Maybe
     factionId FactionId
-    date Int
+    date StarDate
     deriving Show Read Eq
 
 PlanetPopulationReport json
@@ -232,18 +232,19 @@ PlanetPopulationReport json
     raceId RaceId Maybe
     population Int Maybe
     factionId FactionId
-    date Int
+    date StarDate
     deriving Show Read Eq
 
 PlanetStatusReport json
     planetId PlanetId
     status [PlanetaryStatus]
     factionId FactionId
-    date Int
+    date StarDate
     deriving Show Read Eq
 
 Person json
     name PersonName
     sex Sex
     gender Gender
+    dateOfBirth StarDate
     deriving Show Read Eq

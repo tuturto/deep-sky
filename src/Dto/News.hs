@@ -15,6 +15,7 @@ module Dto.News ( NewsDto(..), NewsArticleDto(..), StarFoundNewsDto(..), PlanetF
 import Import
 import Data.Aeson ( object, (.=), (.!=), (.:?), withObject )
 import Data.Aeson.TH ( deriveJSON, defaultOptions, constructorTagModifier, fieldLabelModifier )
+import CustomTypes ( StarDate )
 import Research.Data ( Technology )
 import Resources ( ResourceType(..) )
 
@@ -59,7 +60,7 @@ data KragiiWormsEventDto = KragiiWormsEventDto
     , kragiiWormsDtoSystemName :: Text
     , kragiiWormsDtoOptions :: [UserOptionDto KragiiWormsChoiceDto]
     , kragiiWormsDtoChoice :: Maybe KragiiWormsChoiceDto
-    , kragiiWormsDtoDate :: Int
+    , kragiiWormsDtoDate :: StarDate
     }
     deriving (Show, Read, Eq)
 
@@ -87,7 +88,7 @@ data KragiiNewsDto = KragiiNewsDto
     , kragiiNewsDtoSystemId :: Key StarSystem
     , kragiiNewsDtoSystemName :: Text
     , kragiiNewsDtoResolution :: Text
-    , kragiiNewsDtoDate :: Int
+    , kragiiNewsDtoDate :: StarDate
     }
     deriving (Show, Read, Eq)
 
@@ -97,7 +98,7 @@ data StarFoundNewsDto = StarFoundNewsDto
     { starFoundNewsDtoStarName :: Text
     , starFoundNewsDtoSystemName :: Text
     , starFoundNewsDtoSystemId :: Key StarSystem
-    , starFoundNewsDtoDate :: Int
+    , starFoundNewsDtoDate :: StarDate
     }
     deriving (Show, Read, Eq)
 
@@ -108,7 +109,7 @@ data PlanetFoundNewsDto = PlanetFoundNewsDto
     , planetFoundNewsDtoSystemName :: Text
     , planetFoundNewsDtoSystemId :: Key StarSystem
     , planetFoundNewsDtoPlanetId :: Key Planet
-    , planetFoundNewsDtoDate :: Int
+    , planetFoundNewsDtoDate :: StarDate
     }
     deriving (Show, Read, Eq)
 
@@ -116,7 +117,7 @@ data PlanetFoundNewsDto = PlanetFoundNewsDto
 -- | data transfer object for user written news
 data UserWrittenNewsDto = UserWrittenNewsDto
     { userWrittenNewsDtoContent :: Text
-    , userWrittenNewsDtoDate :: Int
+    , userWrittenNewsDtoDate :: StarDate
     , userWrittenNewsDtoUser :: Text
     , userWrittenNewsDtoIcon :: UserNewsIconDto
     }
@@ -135,7 +136,7 @@ data UserNewsIconDto =
 data DesignCreatedNewsDto = DesignCreatedNewsDto
     { designCreatedNewsDtoDesignId :: Key Design
     , designCreatedNewsDtoName :: Text
-    , designCreatedNewsDtoDate :: Int
+    , designCreatedNewsDtoDate :: StarDate
     }
     deriving (Show, Read, Eq)
 
@@ -149,7 +150,7 @@ data ConstructionFinishedNewsDto = ConstructionFinishedNewsDto
     , constructionFinishedNewsDtoConstructionName :: Text
     , constructionFinishedNewsDtoBuildingId :: Maybe (Key Building)
     , constructionFinishedNewsDtoShipId :: Maybe (Key Ship)
-    , constructionFinishedNewsDtoDate :: Int
+    , constructionFinishedNewsDtoDate :: StarDate
     }
     deriving (Show, Read, Eq)
 
@@ -420,7 +421,7 @@ data ProductionChangedNewsDto = ProductionChangedNewsDto
     , productionChangedNewsDtoSystemId :: Key StarSystem
     , productionChangedNewsDtoSystemName :: Text
     , productionChangedNewsDtoType :: ResourceType
-    , productionChangedNewsDtoDate :: Int
+    , productionChangedNewsDtoDate :: StarDate
     }
     deriving (Show, Read, Eq)
 
@@ -428,14 +429,14 @@ data ProductionChangedNewsDto = ProductionChangedNewsDto
 data ResearchCompletedNewsDto = ResearchCompletedNewsDto
     { researchCompletedNewsDtoTechnology :: Technology
     , researchCompletedNewsDtoName :: Text
-    , researchCompletedNewsDtoDate :: Int
+    , researchCompletedNewsDtoDate :: StarDate
     }
     deriving (Show, Read, Eq)
 
 
 {-| Star date of the event that is being reported in this news article
 -}
-newsStarDate :: NewsArticleDto -> Int
+newsStarDate :: NewsArticleDto -> StarDate
 newsStarDate article =
     case article of
         StarFoundDto details ->

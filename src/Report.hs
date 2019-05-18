@@ -38,7 +38,7 @@ data CollatedStarSystemReport = CollatedStarSystemReport
     { cssrSystemId :: Key StarSystem
     , cssrName     :: Maybe Text
     , cssrLocation :: Coordinates
-    , cssrDate     :: Int
+    , cssrDate     :: StarDate
     } deriving Show
 
 
@@ -81,7 +81,7 @@ data CollatedStarReport = CollatedStarReport {
     , csrName            :: Maybe Text
     , csrSpectralType    :: Maybe SpectralType
     , csrLuminosityClass :: Maybe LuminosityClass
-    , csrDate            :: Int
+    , csrDate            :: StarDate
 } deriving Show
 
 
@@ -135,7 +135,7 @@ data CollatedPlanetReport = CollatedPlanetReport
     , cprName     :: Maybe Text
     , cprPosition :: Maybe Int
     , cprGravity  :: Maybe Double
-    , cprDate     :: Int
+    , cprDate     :: StarDate
     } deriving Show
 
 
@@ -191,7 +191,7 @@ data CollatedPopulationReport = CollatedPopulationReport
     , cpopRaceId     :: Maybe (Key Race)
     , cpopRace       :: Maybe Text
     , cpopPopulation :: Maybe Int
-    , cpopDate       :: Int
+    , cpopDate       :: StarDate
     } deriving Show
 
 
@@ -238,7 +238,7 @@ instance Grouped (PlanetPopulationReport, Maybe Race) where
 data CollatedPlanetStatusReport = CollatedPlanetStatusReport
     { collatedPlanetStatusReportPlanetId :: Key Planet
     , collatedPlanetStatusReportStatus :: [PlanetaryStatusInfo]
-    , collatedPlanetStatusReportDate :: Int
+    , collatedPlanetStatusReportDate :: StarDate
     }
     deriving (Show, Read, Eq)
 
@@ -292,7 +292,7 @@ data CollatedStarLaneReport = CollatedStarLaneReport
     , cslSystemId2       :: Key StarSystem
     , cslStarSystemName1 :: Maybe Text
     , cslStarSystemName2 :: Maybe Text
-    , cslDate            :: Int
+    , cslDate            :: StarDate
     } deriving Show
 
 
@@ -347,7 +347,7 @@ data CollatedBuildingReport = CollatedBuildingReport
     , cbrType         :: Maybe BuildingType
     , cbrLevel        :: Maybe Int
     , cbrDamage       :: Maybe Double
-    , cbrDate         :: Int
+    , cbrDate         :: StarDate
     } deriving Show
 
 

@@ -12,7 +12,7 @@ import qualified Prelude as P
 import System.Random
 import Common ( maybeGet )
 import CustomTypes ( SpecialEventStatus(..), PercentileChance(..), RollResult(..)
-                   , PlanetaryStatus(..), roll )
+                   , PlanetaryStatus(..), StarDate, roll )
 import Events.Import ( resolveEvent, EventRemoval(..) )
 import Events.News ( report, kragiiWormsEvent )
 import News.Data ( SpecialNews(..), NewsArticle(..) )
@@ -25,7 +25,7 @@ import Resources ( ResourceType(..) )
 -- After processing an event, it is marked as handled and dismissed
 handleFactionEvents :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, PersistQueryRead backend, PersistQueryWrite backend, MonadIO m) =>
-    Time -> Entity Faction -> ReaderT backend m ()
+    StarDate -> Entity Faction -> ReaderT backend m ()
 handleFactionEvents date faction = do
     -- doing it like this requires that all special events for the faction are to be processed
     -- in case where handling a special event for one faction might create special event for
@@ -48,7 +48,7 @@ extractSpecialNews _ = Nothing
 -- | Handle special event, mark it processed and dismissed, create news article about results
 handleSpecialEvent :: (PersistQueryWrite backend, MonadIO m
     , BaseBackend backend ~ SqlBackend) =>
-    Key Faction -> Time -> (Key News, SpecialNews) -> ReaderT backend m (Key News)
+    Key Faction -> StarDate -> (Key News, SpecialNews) -> ReaderT backend m (Key News)
 handleSpecialEvent fId date (nId, KragiiWorms event _ choice) = do
     (removal, results) <- resolveEvent (nId, event) choice
     -- events that signal that they should be removed or that fail to signal anything are marked processed
@@ -65,7 +65,7 @@ handleSpecialEvent fId date (nId, KragiiWorms event _ choice) = do
 addSpecialEvents :: ( PersistQueryRead backend, MonadIO m, PersistStoreWrite backend
     , BackendCompatible SqlBackend backend
     , PersistUniqueRead backend, BaseBackend backend ~ SqlBackend) =>
-    Time -> Entity Faction -> ReaderT backend m ()
+    StarDate -> Entity Faction -> ReaderT backend m ()
 addSpecialEvents date faction = do
     -- TODO: dynamic length
     n <- liftIO $ randomRIO (0, 2)
@@ -77,7 +77,7 @@ addSpecialEvents date faction = do
 eventCreators :: (PersistStoreWrite backend, PersistUniqueRead backend,
     PersistQueryRead backend, BackendCompatible SqlBackend backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
-    [ (PercentileChance, Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))) ]
+    [ (PercentileChance, StarDate -> Entity Faction -> ReaderT backend m (Maybe (Key News))) ]
 eventCreators =
     [ (PercentileChance 2, kragiiAttack)
     , (PercentileChance 5, biologicalsBoost)
@@ -88,8 +88,8 @@ eventCreators =
 runEvent :: (PersistStoreWrite backend, PersistUniqueRead backend,
     PersistQueryRead backend, BackendCompatible SqlBackend backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
-    PercentileChance -> Time -> Entity Faction ->
-    (Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))) ->
+    PercentileChance -> StarDate -> Entity Faction ->
+    (StarDate -> Entity Faction -> ReaderT backend m (Maybe (Key News))) ->
     ReaderT backend m (Maybe (Key News))
 runEvent odds date faction fn = do
     res <- liftIO $ roll odds
@@ -104,7 +104,7 @@ runEvent odds date faction fn = do
 kragiiAttack :: (PersistStoreWrite backend, PersistUniqueRead backend,
     PersistQueryRead backend, BackendCompatible SqlBackend backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
-    Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))
+    StarDate -> Entity Faction -> ReaderT backend m (Maybe (Key News))
 kragiiAttack date faction = do
     planets <- kragiiTargetPlanets 10 5 $ entityKey faction
     if length planets == 0
@@ -124,7 +124,7 @@ kragiiAttack date faction = do
 biologicalsBoost :: (PersistStoreWrite backend, PersistUniqueRead backend,
     PersistQueryRead backend, BackendCompatible SqlBackend backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
-    Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))
+    StarDate -> Entity Faction -> ReaderT backend m (Maybe (Key News))
 biologicalsBoost date faction = do
     planets <- farmingChangeTargetPlanets $ entityKey faction
     if length planets == 0
@@ -134,7 +134,7 @@ biologicalsBoost date faction = do
             let planet = maybeGet n planets
             let statusRec = PlanetStatus <$> fmap entityKey planet
                                          <*> Just GoodHarvest
-                                         <*> Just (Just (timeCurrentTime date + 6))
+                                         <*> Just (Just (date + 6))
             _ <- mapM insert statusRec
             starSystem <- mapM (getEntity . planetStarSystemId . entityVal) planet
             let event = productionBoostStartedNews <$> planet
@@ -148,7 +148,7 @@ biologicalsBoost date faction = do
 biologicalsSlowdown :: (PersistStoreWrite backend, PersistUniqueRead backend,
     PersistQueryRead backend, BackendCompatible SqlBackend backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
-    Time -> Entity Faction -> ReaderT backend m (Maybe (Key News))
+    StarDate -> Entity Faction -> ReaderT backend m (Maybe (Key News))
 biologicalsSlowdown date faction = do
     planets <- farmingChangeTargetPlanets $ entityKey faction
     if length planets == 0
@@ -158,7 +158,7 @@ biologicalsSlowdown date faction = do
             let planet = maybeGet n planets
             let statusRec = PlanetStatus <$> fmap entityKey planet
                                          <*> Just PoorHarvest
-                                         <*> Just (Just (timeCurrentTime date + 6))
+                                         <*> Just (Just (date + 6))
             _ <- mapM insert statusRec
             starSystem <- mapM (getEntity . planetStarSystemId . entityVal) planet
             let event = productionSlowdownStartedNews <$> planet

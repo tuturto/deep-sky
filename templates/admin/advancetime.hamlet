@@ -6,4 +6,4 @@
         <div .col-lg-2>
             Current time:
         <div .col-lg-1>
-            #{toDisplayDate $ timeCurrentTime newTime}
+            #{toDisplayDate newTime}

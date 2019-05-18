@@ -43,10 +43,10 @@ spec = withApp $ do
                         , planetStatusExpiration = Just 20201
                         }
 
-                let time = Time 20201
-                _ <- runDB $ insert time
+                let status = Simulation 20201
+                _ <- runDB $ insert status
 
-                news <- runDB $ removeExpiredStatuses time
+                news <- runDB $ removeExpiredStatuses (simulationCurrentTime status)
 
                 statuses <- runDB $ selectList [ PlanetStatusPlanetId ==. pId1 ] []
                 loadedNews <- runDB $ selectList [] [ Asc NewsDate ]

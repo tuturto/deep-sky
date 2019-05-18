@@ -153,7 +153,7 @@ getResourcesCmd model =
 currentTimeDecoder : Decode.Decoder StarDate
 currentTimeDecoder =
     succeed StarDate
-        |> andMap (field "currentTime" int)
+        |> andMap (field "CurrentTime" int)
 
 
 {-| Decode StarDate

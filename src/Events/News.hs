@@ -10,6 +10,7 @@ module Events.News ( ResultsReport(..), kragiiWormsEvent )
     where
 
 import Import
+import CustomTypes ( StarDate )
 import Events.Kragii ( KragiiWormsChoice(..), KragiiResults(..), KragiiNews(..)
                      , KragiiWormsEvent(..) )
 import News.Data ( NewsArticle(..), SpecialNews(..), mkNews, mkSpecialNews )
@@ -18,12 +19,12 @@ import Resources ( RawResource(..) )
 
 -- | class used to turn special event with given choice and results into a news article
 class ResultsReport a b c | a -> b, a -> c where
-    report :: Key Faction -> Time -> a -> Maybe b -> [c] -> News
+    report :: Key Faction -> StarDate -> a -> Maybe b -> [c] -> News
 
 
 -- | Special event of kragii worms attacking a given planet
 -- In case the planet is not currently owned by anyone, event is not created
-kragiiWormsEvent :: Entity Planet -> Entity StarSystem -> Time -> Maybe News
+kragiiWormsEvent :: Entity Planet -> Entity StarSystem -> StarDate -> Maybe News
 kragiiWormsEvent planetEntity systemEntity date =
     let
         planet = entityVal planetEntity
@@ -32,7 +33,7 @@ kragiiWormsEvent planetEntity systemEntity date =
                         , kragiiWormsPlanetName = planetName planet
                         , kragiiWormsSystemId = entityKey systemEntity
                         , kragiiWormsSystemName = starSystemName $ entityVal systemEntity
-                        , kragiiWormsDate = timeCurrentTime date
+                        , kragiiWormsDate = date
                         }) [] Nothing
     in
         mkSpecialNews date <$> planetOwnerId planet
@@ -47,7 +48,7 @@ instance ResultsReport KragiiWormsEvent KragiiWormsChoice KragiiResults where
                                  , kragiiNewsSystemId = kragiiWormsSystemId event
                                  , kragiiNewsSystemName = kragiiWormsSystemName event
                                  , kragiiNewsExplanation = repText
-                                 , kragiiNewsDate = timeCurrentTime date
+                                 , kragiiNewsDate = date
                                  }
         in
             mkNews fId date $ KragiiResolution content

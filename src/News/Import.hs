@@ -14,6 +14,7 @@ import Data.ByteString.Builder( toLazyByteString )
 import Data.Maybe ( isJust, fromJust )
 import Data.Text.Encoding ( encodeUtf8Builder )
 import Buildings ( building, BLevel(..), BuildingInfo(..) )
+import CustomTypes ( StarDate )
 import Dto.Icons ( IconMapper(..) )
 import Dto.News ( NewsArticleDto(..), UserWrittenNewsDto(..), UserNewsIconDto(..)
                 , SpecialNewsDto(..), ProductionChangedNewsDto(..)
@@ -166,49 +167,49 @@ iconInfo mapper =
 
 
 -- | Construct news entry for user submitted news
-userWrittenNews :: Text -> UserNewsIcon -> Time -> User -> News
+userWrittenNews :: Text -> UserNewsIcon -> StarDate -> User -> News
 userWrittenNews msg icon date user =
     let
-        content = UserWritten $ UserWrittenNews msg icon (timeCurrentTime date) (userIdent user)
+        content = UserWritten $ UserWrittenNews msg icon date (userIdent user)
     in
         mkNews (fromJust $ userFactionId user) date content
 
 
 -- | Construct news entry for discovery of new planet
-planetFoundNews :: Entity Planet -> StarSystem -> Time -> Key Faction -> News
+planetFoundNews :: Entity Planet -> StarSystem -> StarDate -> Key Faction -> News
 planetFoundNews planetEnt system date fId =
     let
         planet = entityVal planetEnt
         planetKey = entityKey planetEnt
-        content = PlanetFound $ PlanetFoundNews (planetName planet) (starSystemName system) (planetStarSystemId planet) planetKey (timeCurrentTime date)
+        content = PlanetFound $ PlanetFoundNews (planetName planet) (starSystemName system) (planetStarSystemId planet) planetKey date
     in
         mkNews fId date content
 
 
 -- | Construct news entry for discovery of new star
-starFoundNews :: Star -> Entity StarSystem -> Time -> Key Faction -> News
+starFoundNews :: Star -> Entity StarSystem -> StarDate -> Key Faction -> News
 starFoundNews star systemEnt date fId =
     let
         system = entityVal systemEnt
         systemId = entityKey systemEnt
-        content = StarFound $ StarFoundNews (starName star) (starSystemName system) systemId (timeCurrentTime date)
+        content = StarFound $ StarFoundNews (starName star) (starSystemName system) systemId date
     in
         mkNews fId date content
 
 
 -- | Construct news entry for creation of new space ship desgin
-designCreatedNews :: Entity Design -> Time -> Key Faction -> News
+designCreatedNews :: Entity Design -> StarDate -> Key Faction -> News
 designCreatedNews design date fId =
     let
         dId = entityKey design
         name = designName $ entityVal design
-        content = DesignCreated $ DesignCreatedNews dId name (timeCurrentTime date)
+        content = DesignCreated $ DesignCreatedNews dId name date
     in
         mkNews fId date content
 
 
 -- | Construct news entry for a finished building construction
-buildingConstructionFinishedNews :: Entity Planet -> Entity StarSystem -> Entity Building -> Time -> Key Faction -> News
+buildingConstructionFinishedNews :: Entity Planet -> Entity StarSystem -> Entity Building -> StarDate -> Key Faction -> News
 buildingConstructionFinishedNews planetE starSystemE buildingE date fId =
     let
         modelBuilding = building (buildingType $ entityVal buildingE) (BLevel $ buildingLevel $ entityVal buildingE)
@@ -220,13 +221,13 @@ buildingConstructionFinishedNews planetE starSystemE buildingE date fId =
                     , constructionFinishedConstructionName = buildingInfoName modelBuilding
                     , constructionFinishedBuildingId = Just $ entityKey buildingE
                     , constructionFinishedShipId = Nothing
-                    , constructionFinishedDate = timeCurrentTime date
+                    , constructionFinishedDate = date
                     }
     in
         mkNews fId date content
 
 
-productionBoostStartedNews :: Entity Planet -> Entity StarSystem -> ResourceType -> Time -> Key Faction -> News
+productionBoostStartedNews :: Entity Planet -> Entity StarSystem -> ResourceType -> StarDate -> Key Faction -> News
 productionBoostStartedNews planet system rType date fId =
     let
         content = ProductionBoostStarted $ productionChanged planet system rType date
@@ -234,7 +235,7 @@ productionBoostStartedNews planet system rType date fId =
         mkNews fId date content
 
 
-productionSlowdownStartedNews :: Entity Planet -> Entity StarSystem -> ResourceType -> Time -> Key Faction -> News
+productionSlowdownStartedNews :: Entity Planet -> Entity StarSystem -> ResourceType -> StarDate -> Key Faction -> News
 productionSlowdownStartedNews planet system rType date fId =
     let
         content = ProductionSlowdownStarted $ productionChanged planet system rType date
@@ -242,7 +243,7 @@ productionSlowdownStartedNews planet system rType date fId =
         mkNews fId date content
 
 
-productionChanged :: Entity Planet -> Entity StarSystem -> ResourceType -> Time -> ProductionChangedNews
+productionChanged :: Entity Planet -> Entity StarSystem -> ResourceType -> StarDate -> ProductionChangedNews
 productionChanged planet system rType date =
     ProductionChangedNews
         { productionChangedNewsPlanetId = entityKey planet
@@ -250,15 +251,15 @@ productionChanged planet system rType date =
         , productionChangedNewsSystemId = entityKey system
         , productionChangedNewsSystemName = (starSystemName . entityVal) system
         , productionChangedNewsType = rType
-        , productionChangedNewsDate = timeCurrentTime date
+        , productionChangedNewsDate = date
         }
 
-researchCompleted :: Time -> Key Faction -> Technology -> News
+researchCompleted :: StarDate -> Key Faction -> Technology -> News
 researchCompleted date fId tech =
     let
         content = ResearchCompleted $ ResearchCompletedNews
                     { researchCompletedNewsTechnology = tech
-                    , researchCompletedNewsData = timeCurrentTime date
+                    , researchCompletedNewsData = date
                     }
     in
         mkNews fId date content
