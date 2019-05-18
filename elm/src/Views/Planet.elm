@@ -6,7 +6,7 @@ the actual situation on the planet, especially if the reports are old
 or inaccurate.
 -}
 
-import Accessors exposing (get, set)
+import Accessors exposing (get, over, set)
 import Api.Construction
     exposing
         ( deleteConstructionCmd
@@ -18,6 +18,7 @@ import Api.Construction
 import Api.StarSystem
     exposing
         ( getBuildingsCmd
+        , getPlanetCmd
         , getPlanetsCmd
         , getPopulationsCmd
         , getStarSystemsCmd
@@ -31,9 +32,11 @@ import Data.Accessors
         , buildingsStatusA
         , constructionStatusA
         , constructionsA
+        , errorsA
         , indexA
         , landedShipsStatusA
         , orbitingShipsStatusA
+        , planetA
         , planetDetailsStatusA
         , planetRA
         , planetStatusesStatusA
@@ -49,6 +52,7 @@ import Data.Common
         , PlanetId(..)
         , Route(..)
         , StarSystemId(..)
+        , error
         , unBuildingId
         , unPlanetId
         , unStarSystemId
@@ -72,6 +76,7 @@ import Data.Construction
         , unConstructionIndex
         )
 import Data.Model exposing (Model, Msg(..))
+import Data.People exposing (displayName)
 import Data.StarSystem
     exposing
         ( Planet
@@ -118,9 +123,7 @@ leftPanel : StarSystemId -> PlanetId -> Model -> List (Html Msg)
 leftPanel systemId planetId model =
     let
         planet =
-            get planetsA model
-                |> andThen (Dict.get (unStarSystemId systemId))
-                |> andThen (List.head << List.filter (\x -> x.id == planetId))
+            model.planetR.planet
 
         population =
             get populationsA model
@@ -372,8 +375,8 @@ orbitingShips ships model =
 planetDetails : Maybe Planet -> Model -> List (Html Msg)
 planetDetails planet model =
     [ div [ class "row" ]
-        [ div [ class "col-lg-4 design-panel-title" ] [ text "Name" ]
-        , div [ class "col-lg-8" ]
+        [ div [ class "col-lg-2 design-panel-title" ] [ text "Name" ]
+        , div [ class "col-lg-4" ]
             [ planet
                 |> andThen (\x -> Just x.name)
                 |> withDefault "-"
@@ -381,8 +384,8 @@ planetDetails planet model =
             ]
         ]
     , div [ class "row" ]
-        [ div [ class "col-lg-4 design-panel-title" ] [ text "Position" ]
-        , div [ class "col-lg-8" ]
+        [ div [ class "col-lg-2 design-panel-title" ] [ text "Position" ]
+        , div [ class "col-lg-4" ]
             [ planet
                 |> andThen (\x -> andThen (Just << unPlanetPosition) x.position)
                 |> andThen (Just << String.fromInt)
@@ -391,7 +394,7 @@ planetDetails planet model =
             ]
         ]
     , div [ class "row" ]
-        [ div [ class "col-lg-4 design-panel-title" ] [ text "Gravity" ]
+        [ div [ class "col-lg-2 design-panel-title" ] [ text "Gravity" ]
         , div [ class "col-lg-4" ]
             [ planet
                 |> andThen (\x -> andThen (Just << gravityToString) x.gravity)
@@ -400,7 +403,17 @@ planetDetails planet model =
             ]
         ]
     , div [ class "row" ]
-        [ div [ class "col-lg-4 design-panel-title" ] [ text "Date" ]
+        [ div [ class "col-lg-2 design-panel-title" ] [ text "Ruler" ]
+        , div [ class "col-lg-4" ]
+            [ planet
+                |> andThen (\x -> x.rulerName)
+                |> andThen (\x -> Just <| displayName x)
+                |> withDefault "No ruler"
+                |> text
+            ]
+        ]
+    , div [ class "row" ]
+        [ div [ class "col-lg-2 design-panel-title" ] [ text "Date" ]
         , div [ class "col-lg-4" ]
             [ planet
                 |> andThen (\x -> Just <| starDateToString x.date)
@@ -494,7 +507,7 @@ buildingRow building =
 init : StarSystemId -> PlanetId -> Model -> Cmd Msg
 init sId pId model =
     Cmd.batch
-        [ getPlanetsCmd model
+        [ getPlanetCmd (PlanetMessage << PlanetDetailsReceived) pId
         , getPopulationsCmd model pId
         , getBuildingsCmd model pId
         , getConstructionsCmd model pId
@@ -572,6 +585,17 @@ update msg model =
 
         PlanetStatusesStatusChanged status ->
             ( set (planetRA << planetStatusesStatusA) status model, Cmd.none )
+
+        PlanetDetailsReceived (Ok planet) ->
+            ( set (planetRA << planetA) (Just planet) model
+            , Cmd.none
+            )
+
+        PlanetDetailsReceived (Err err) ->
+            ( set (planetRA << planetA) Nothing model
+                |> over errorsA (\errors -> error err "Failed to load planet details" :: errors)
+            , Cmd.none
+            )
 
 
 {-| Maps building info to construction

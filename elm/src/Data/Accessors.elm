@@ -40,6 +40,7 @@ module Data.Accessors exposing
     , newsPanelStatusA
     , orbitingShipsStatusA
     , pageSizeA
+    , planetA
     , planetDetailsStatusA
     , planetIdA
     , planetRA
@@ -68,6 +69,13 @@ module Data.Accessors exposing
 
 import Accessors exposing (Relation, makeOneToN, makeOneToOne)
 import Accessors.Library exposing (onEach)
+
+
+planetA : Relation field sub wrap -> Relation { rec | planet : field } sub wrap
+planetA =
+    makeOneToOne
+        .planet
+        (\change rec -> { rec | planet = change rec.planet })
 
 
 componentsCurrentPageA : Relation field sub wrap -> Relation { rec | componentsCurrentPage : field } sub wrap

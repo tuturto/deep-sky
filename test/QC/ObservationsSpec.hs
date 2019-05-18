@@ -66,7 +66,7 @@ starAndReportMatch _ = True
 
 
 planetAndReportMatch :: (Entity Planet, Maybe CollatedPlanetReport) -> Bool
-planetAndReportMatch (planet, (Just report)) = (entityKey planet) == (cprPlanetId report)
+planetAndReportMatch (planet, (Just report)) = (entityKey planet) == (cprId report)
 planetAndReportMatch _ = True
 
 

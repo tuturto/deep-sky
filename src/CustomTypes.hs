@@ -5,7 +5,12 @@
 
 
 -- | Catch all module for things that don't yet belong to anywhere else
-module CustomTypes where
+module CustomTypes
+    ( SpecialEventStatus(..), SpectralType(..), LuminosityClass(..)
+    , Coordinates(..), BuildingType(..), ShipType(..), Role(..)
+    , PercentileChance(..), RollResult(..), PlanetaryStatus(..), Bonus(..)
+    , Boostable(..), StarDate(..), Age(..), age, buildingTypeName, roll )
+    where
 
 import Data.Aeson ( ToJSON(..), withScientific )
 import Data.Aeson.TH
@@ -182,6 +187,16 @@ instance PersistField StarDate where
 
 instance PersistFieldSql StarDate where
     sqlType _ = SqlInt64
+
+
+newtype Age = Age { unAge :: Int }
+    deriving (Show, Read, Eq, Num, Ord)
+
+
+-- | Age (ie. difference between two star dates)
+age :: StarDate -> StarDate -> Age
+age start end =
+    (Age . unStarDate) (end - start)
 
 
 $(deriveJSON defaultOptions ''SpecialEventStatus)

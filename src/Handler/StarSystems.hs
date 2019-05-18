@@ -12,7 +12,7 @@ import Import
 import Report ( collateReports, collateReport, planetStatusIconMapper )
 
 import Common ( requireFaction, apiRequireFaction )
-import Queries ( planetPopulationReports )
+import Queries ( planetPopulationReports, planetReports )
 import Handler.Home (getNewHomeR)
 
 
@@ -65,10 +65,8 @@ getApiAllPlanetsR = do
 getApiPlanetR :: Key Planet -> Handler Value
 getApiPlanetR planetId = do
     (_, _, fId) <- apiRequireFaction
-    loadedPlanetReports <- runDB $ selectList [ PlanetReportPlanetId ==. planetId
-                                              , PlanetReportFactionId ==. fId ] [ Asc PlanetReportDate ]
-    let planetReport = collateReport $ map entityVal loadedPlanetReports
-    return $ toJSON planetReport
+    reports <- runDB $ planetReports fId planetId
+    return $ toJSON $ collateReport reports
 
 
 -- | api method to retrieve buildings on a planet

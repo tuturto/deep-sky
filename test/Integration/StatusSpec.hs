@@ -35,6 +35,7 @@ spec = withApp $ do
                         , planetStarSystemId = sId
                         , planetOwnerId = Just fId
                         , planetGravity = 1.0
+                        , planetRulerId = Nothing
                         }
 
                 _ <- runDB $ insert $ PlanetStatus

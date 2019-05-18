@@ -21,7 +21,7 @@ singlePlanet = do
     aStarSystemId <- randomStarSystemKey
     aOwnerId <- perhaps randomFactionKey
     aGravity <- arbitrary `suchThat` \x -> x > 0
-    return $ Planet aName aPosition aStarSystemId aOwnerId aGravity
+    return $ Planet aName aPosition aStarSystemId aOwnerId aGravity Nothing
 
 singlePlanetEntity :: Gen (Entity Planet)
 singlePlanetEntity = do
@@ -39,7 +39,7 @@ singlePlanetReport = do
     aGravity <- perhaps $ arbitrary `suchThat` \x -> x > 0
     aDate <- arbitrary `suchThat` \x -> x > 0
     return $ CollatedPlanetReport aPlanetId aStarSystemId aOwnerId aName aPosition
-                                  aGravity (unArbStarDate aDate)
+                                  aGravity (unArbStarDate aDate) Nothing
 
 allPlanets :: Gen [Planet]
 allPlanets = do

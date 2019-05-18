@@ -7,6 +7,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE LambdaCase                 #-}
 
+
 module Report ( createPlanetReports, createStarReports, createStarLaneReports, createSystemReport
               , collateReports, collateReport, spectralInfo, createPlanetStatusReport
               , planetStatusIconMapper
@@ -22,6 +23,7 @@ import Database.Persist.Sql (toSqlKey)
 
 import CustomTypes
 import Dto.Icons ( IconMapper(..) )
+import People ( PersonName(..) )
 
 
 -- | Class to transform a report stored in db to respective collated report
@@ -129,61 +131,70 @@ instance ToJSON CollatedStarReport where
 
 
 data CollatedPlanetReport = CollatedPlanetReport
-    { cprPlanetId :: Key Planet
+    { cprId :: Key Planet
     , cprSystemId :: Key StarSystem
-    , cprOwnerId  :: Maybe (Key Faction)
-    , cprName     :: Maybe Text
+    , cprOwnerId :: Maybe (Key Faction)
+    , cprName :: Maybe Text
     , cprPosition :: Maybe Int
-    , cprGravity  :: Maybe Double
-    , cprDate     :: StarDate
+    , cprGravity :: Maybe Double
+    , cprDate :: StarDate
+    , cprRulerId :: Maybe (Key Person)
+    , cprRulerName :: Maybe PersonName
     } deriving Show
 
 
 instance Semigroup CollatedPlanetReport where
-    (<>) a b = CollatedPlanetReport (cprPlanetId a)
-                                    (cprSystemId a)
-                                    (cprOwnerId a <|> cprOwnerId b)
-                                    (cprName a <|> cprName b)
-                                    (cprPosition a <|> cprPosition b)
-                                    (cprGravity a <|> cprGravity b)
-                                    (max (cprDate a) (cprDate b))
+    (<>) a b =
+        CollatedPlanetReport
+            { cprId = cprId a
+            , cprSystemId = cprSystemId a
+            , cprOwnerId = cprOwnerId a <|> cprOwnerId b
+            , cprName = cprName a <|> cprName b
+            , cprPosition = cprPosition a <|> cprPosition b
+            , cprGravity = cprGravity a <|> cprGravity b
+            , cprDate = max (cprDate a) (cprDate b)
+            , cprRulerId = cprRulerId a -- Ruler info is always up to date
+            , cprRulerName = cprRulerName a
+            }
 
 
 instance Monoid CollatedPlanetReport where
-    mempty = CollatedPlanetReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing Nothing 0
+    mempty = CollatedPlanetReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing Nothing 0 Nothing Nothing
 
 
 instance ReportTransform PlanetReport CollatedPlanetReport where
     fromReport report =
-        CollatedPlanetReport (planetReportPlanetId report)
-                             (planetReportStarSystemId report)
-                             (planetReportOwnerId report)
-                             (planetReportName report)
-                             (planetReportPosition report)
-                             (planetReportGravity report)
-                             (planetReportDate report)
+        CollatedPlanetReport
+            { cprId = planetReportPlanetId report
+            , cprSystemId = planetReportStarSystemId report
+            , cprOwnerId = planetReportOwnerId report
+            , cprName = planetReportName report
+            , cprPosition = planetReportPosition report
+            , cprGravity = planetReportGravity report
+            , cprDate = planetReportDate report
+            , cprRulerId = planetReportRulerId report
+            , cprRulerName = Nothing
+            }
+
+
+instance ReportTransform (PlanetReport, Maybe Person) CollatedPlanetReport where
+    fromReport (report, person) =
+        CollatedPlanetReport
+            { cprId = planetReportPlanetId report
+            , cprSystemId = planetReportStarSystemId report
+            , cprOwnerId = planetReportOwnerId report
+            , cprName = planetReportName report
+            , cprPosition = planetReportPosition report
+            , cprGravity = planetReportGravity report
+            , cprDate = planetReportDate report
+            , cprRulerId = planetReportRulerId report
+            , cprRulerName = personName <$> person
+            }
 
 
 instance Grouped PlanetReport where
     sameGroup a b =
         planetReportPlanetId a == planetReportPlanetId b
-
-
-instance ToJSON CollatedPlanetReport where
-  toJSON CollatedPlanetReport { cprPlanetId = rId
-                              , cprSystemId = rSId
-                              , cprOwnerId = rOId
-                              , cprName = rName
-                              , cprPosition = rPosition
-                              , cprGravity = rGravity
-                              , cprDate = rDate } =
-    object [ "id" .= rId
-           , "systemId" .= rSId
-           , "name" .= rName
-           , "position" .= rPosition
-           , "gravity" .= rGravity
-           , "ownerId" .= rOId
-           , "date" .= rDate ]
 
 
 data CollatedPopulationReport = CollatedPopulationReport
@@ -541,5 +552,6 @@ statusDescription status =
         KragiiAttack -> "Kragii infestation in planet!"
 
 
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 3 } ''CollatedPlanetReport)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 19 } ''PlanetaryStatusInfo)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 26 } ''CollatedPlanetStatusReport)

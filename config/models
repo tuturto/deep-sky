@@ -47,6 +47,7 @@ Planet json
     starSystemId StarSystemId
     ownerId FactionId Maybe
     gravity Double
+    rulerId PersonId Maybe
     SystemPosition starSystemId position
     deriving Show Read Eq
 
@@ -205,6 +206,7 @@ PlanetReport json
     gravity Double Maybe
     factionId FactionId
     date StarDate
+    rulerId PersonId Maybe
     deriving Show Read Eq
 
 StarLaneReport json

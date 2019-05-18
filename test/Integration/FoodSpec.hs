@@ -26,6 +26,7 @@ spec = withApp $ do
                     , planetStarSystemId = sId
                     , planetOwnerId = Nothing
                     , planetGravity = 1.0
+                    , planetRulerId = Nothing
                      }
 
             pId2 <- runDB $ insert $ Planet
@@ -34,6 +35,7 @@ spec = withApp $ do
                     , planetStarSystemId = sId
                     , planetOwnerId = Nothing
                     , planetGravity = 1.0
+                    , planetRulerId = Nothing
                     }
 
             _ <- runDB $ insert $ Building

@@ -22,11 +22,13 @@ import Data.Common
     exposing
         ( FactionId
         , Location(..)
+        , PersonId
         , PlanetId
         , StarDate(..)
         , StarId
         , StarSystemId
         )
+import Data.People exposing (PersonName)
 import Maybe exposing (andThen, withDefault)
 
 
@@ -158,6 +160,8 @@ type alias Planet =
     , gravity : Maybe Gravity
     , ownerId : Maybe FactionId
     , date : StarDate
+    , rulerId : Maybe PersonId
+    , rulerName : Maybe PersonName
     }
 
 

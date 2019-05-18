@@ -1,20 +1,24 @@
 insert into time (current_time) values (20191);
 
+insert into person (name, sex, gender, date_of_birth)
+    values ('RegularName (FirstName {unFirstName = "Paavo"}) (FamilyName {unFamilyName = "Virtanen"}) Nothing',
+            'Male', 'Man', 19751);
+
 insert into star_system (name, coord_x, coord_y) values ('Sol', 0, 0);
 insert into star (name, star_system_id, spectral_type, luminosity_class) values ('Sun', 1, 'G', 'V');
-insert into planet (name, position, star_system_id, owner_id, gravity) values ('Mercury', 1, 1, NULL, 0.38);
-insert into planet (name, position, star_system_id, owner_id, gravity) values ('Venus', 2, 1, NULL, 0.904);
-insert into planet (name, position, star_system_id, owner_id, gravity) values ('Earth', 3, 1, 1, 1.0);
-insert into planet (name, position, star_system_id, owner_id, gravity) values ('Mars', 4, 1, NULL, 0.376);
-insert into planet (name, position, star_system_id, owner_id, gravity) values ('Jupiter', 6, 1, NULL, 2.528);
-insert into planet (name, position, star_system_id, owner_id, gravity) values ('Saturn', 7, 1, NULL, 1.065);
-insert into planet (name, position, star_system_id, owner_id, gravity) values ('Uranus', 8, 1, NULL, 0.886);
-insert into planet (name, position, star_system_id, owner_id, gravity) values ('Neptune', 9, 1, NULL, 1.14);
+insert into planet (name, position, star_system_id, owner_id, gravity) values ('Mercury', 1, 1, NULL, 0.38, NULL);
+insert into planet (name, position, star_system_id, owner_id, gravity) values ('Venus', 2, 1, NULL, 0.904, NULL);
+insert into planet (name, position, star_system_id, owner_id, gravity) values ('Earth', 3, 1, 1, 1.0, 1);
+insert into planet (name, position, star_system_id, owner_id, gravity) values ('Mars', 4, 1, NULL, 0.376, NULL);
+insert into planet (name, position, star_system_id, owner_id, gravity) values ('Jupiter', 6, 1, NULL, 2.528, NULL);
+insert into planet (name, position, star_system_id, owner_id, gravity) values ('Saturn', 7, 1, NULL, 1.065, NULL);
+insert into planet (name, position, star_system_id, owner_id, gravity) values ('Uranus', 8, 1, NULL, 0.886, NULL);
+insert into planet (name, position, star_system_id, owner_id, gravity) values ('Neptune', 9, 1, NULL, 1.14, NULL);
 
 insert into star_system (name, coord_x, coord_y) values ('Aclael', 4.2, -1.2);
 insert into star (name, star_system_id, spectral_type, luminosity_class) values ('Aclael alpha', 2, 'A', 'II');
 insert into star (name, star_system_id, spectral_type, luminosity_class) values ('Aclael beta', 2, 'M', 'VI');
-insert into planet (name, position, star_system_id, owner_id, gravity) values ('Aclael I', 1, 2, NULL, 0.9);
+insert into planet (name, position, star_system_id, owner_id, gravity) values ('Aclael I', 1, 2, NULL, 0.9, NULL);
 
 insert into race (name) values ('Terrans');
 insert into race (name) values ('Aclaelites');

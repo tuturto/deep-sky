@@ -11,6 +11,8 @@ import Data.Construction
         , Construction
         , ConstructionIndex
         )
+import Data.StarSystem exposing (Planet)
+import Http
 
 
 {-| Messages that planet view might create
@@ -28,6 +30,7 @@ type PlanetRMsg
     | BuildingSearch String
     | ClearBuildingSearch
     | QueueConstruction BuildingInfo
+    | PlanetDetailsReceived (Result Http.Error Planet)
 
 
 {-| Record that holds information regarding to planet view.
@@ -43,6 +46,7 @@ type alias PlanetViewModel =
     , constructionStatus : InfoPanelStatus
     , buildingSearchText : String
     , planetStatusesStatus : InfoPanelStatus
+    , planet : Maybe Planet
     }
 
 
@@ -58,4 +62,5 @@ init =
     , constructionStatus = InfoPanelOpen
     , buildingSearchText = ""
     , planetStatusesStatus = InfoPanelOpen
+    , planet = Nothing
     }

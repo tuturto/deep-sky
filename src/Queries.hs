@@ -3,8 +3,10 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
-module Queries ( ShipLandingStatus(..), planetPopulationReports, shipsAtPlanet, planetConstructionQueue
-               , kragiiTargetPlanets, farmingChangeTargetPlanets, factionBuildings, chassisList )
+module Queries
+    ( ShipLandingStatus(..), planetPopulationReports, shipsAtPlanet
+    , planetConstructionQueue, kragiiTargetPlanets, farmingChangeTargetPlanets
+    , factionBuildings, chassisList, planetReports )
     where
 
 import Import
@@ -176,3 +178,22 @@ groupUnderParent xs =
     where
         parent = fst <$> (safeHead xs)
         childs = mapMaybe snd xs
+
+
+-- | Load reports of given planet and join people for ruler name
+planetReports :: (MonadIO m, BackendCompatible SqlBackend backend,
+    PersistQueryRead backend, PersistUniqueRead backend) =>
+    Key Faction -> Key Planet
+    -> ReaderT backend m [(PlanetReport, Maybe (Person))]
+planetReports fId planetId = do
+    pairs <- E.select $
+        E.from $ \(planet `E.LeftOuterJoin` person) -> do
+            E.on (person E.?. PersonId E.==. ( planet E.^. PlanetReportRulerId))
+            E.where_ (planet E.^. PlanetReportFactionId E.==. (E.val fId)
+                      E.&&. planet E.^. PlanetReportPlanetId E.==. (E.val planetId))
+            E.orderBy [ E.asc (planet E.^. PlanetReportPlanetId)
+                      , E.desc (planet E.^. PlanetReportDate)]
+            return (planet, person)
+    let res = fmap (\(x, y) -> (entityVal x, entityVal <$> y)) pairs
+    return res
+

@@ -5,7 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Planets can have ruler
+- `Person` to represent people in detailed way
 ### Changed
+- planet can have ruler (`ruler_id INTEGER NULL REFERENCES person`)
+- planet report JSON result has all keys starting with uppercase
 - Database table `time` replaced with `simulation`
 - `StarDate` used instead of `Time` everywhere
 - Level of component changed from `Int` to `ComponentLevel`

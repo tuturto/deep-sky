@@ -205,7 +205,7 @@ init systemId model =
     Cmd.batch
         [ getStarsCmd model
         , getStarSystemsCmd model
-        , getPlanetsCmd model
+        , getPlanetsCmd
         ]
 
 

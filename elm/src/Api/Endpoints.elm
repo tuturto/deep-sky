@@ -19,6 +19,7 @@ type Endpoint
     | ApiStarSystem
     | ApiStar
     | ApiPlanet
+    | ApiSinglePlanet PlanetId
     | ApiPopulation PlanetId
     | ApiBuilding PlanetId
     | ApiConstructionQueue PlanetId
@@ -55,6 +56,9 @@ endpointToString endpoint =
 
         ApiPlanet ->
             "/api/planet/"
+
+        ApiSinglePlanet planetId ->
+            "/api/planet/" ++ planetIdToString planetId
 
         ApiPopulation planetId ->
             "/api/planet/" ++ planetIdToString planetId ++ "/population"

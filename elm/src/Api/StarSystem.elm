@@ -6,6 +6,7 @@ module Api.StarSystem exposing
     , buildingTypeEncoder
     , buildingsCmd
     , getBuildingsCmd
+    , getPlanetCmd
     , getPlanetsCmd
     , getPopulationsCmd
     , getStarSystemsCmd
@@ -16,7 +17,6 @@ module Api.StarSystem exposing
     , planetIdEncoder
     , planetPositionDecoder
     , planetStatus
-    , planetsCmd
     , starDecoder
     , starSystemIdDecoder
     , starSystemIdEncoder
@@ -33,6 +33,7 @@ import Api.Common
         , starDateDecoder
         )
 import Api.Endpoints exposing (Endpoint(..))
+import Api.People exposing (personIdDecoder, personNameDecoder)
 import Api.User exposing (factionIdDecoder)
 import Data.Accessors exposing (planetIdA, planetStatusA)
 import Data.Common
@@ -114,18 +115,14 @@ getStarsCmd model =
         Cmd.none
 
 
-planetsCmd : Cmd Msg
-planetsCmd =
+getPlanetsCmd : Cmd Msg
+getPlanetsCmd =
     Http.send (ApiMsgCompleted << PlanetsReceived) (get ApiPlanet (list planetDecoder))
 
 
-getPlanetsCmd : Model -> Cmd Msg
-getPlanetsCmd model =
-    if isNothing model.planets then
-        planetsCmd
-
-    else
-        Cmd.none
+getPlanetCmd : (Result Http.Error Planet -> Msg) -> PlanetId -> Cmd Msg
+getPlanetCmd msg pId =
+    Http.send msg (get (ApiSinglePlanet pId) planetDecoder)
 
 
 getPopulationsCmd : Model -> PlanetId -> Cmd Msg
@@ -309,13 +306,15 @@ planetPositionDecoder =
 planetDecoder : Decode.Decoder Planet
 planetDecoder =
     succeed Planet
-        |> andMap (field "id" planetIdDecoder)
-        |> andMap (field "systemId" starSystemIdDecoder)
-        |> andMap (field "name" string)
-        |> andMap (field "position" (maybe planetPositionDecoder))
-        |> andMap (field "gravity" (maybe gravityDecoder))
-        |> andMap (field "ownerId" (maybe factionIdDecoder))
-        |> andMap (field "date" starDateDecoder)
+        |> andMap (field "Id" planetIdDecoder)
+        |> andMap (field "SystemId" starSystemIdDecoder)
+        |> andMap (field "Name" string)
+        |> andMap (field "Position" (maybe planetPositionDecoder))
+        |> andMap (field "Gravity" (maybe gravityDecoder))
+        |> andMap (field "OwnerId" (maybe factionIdDecoder))
+        |> andMap (field "Date" starDateDecoder)
+        |> andMap (field "RulerId" (maybe personIdDecoder))
+        |> andMap (field "RulerName" (maybe personNameDecoder))
 
 
 populationDecoder : Decode.Decoder Population

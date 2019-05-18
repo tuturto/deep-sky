@@ -52,9 +52,17 @@ doPlanetObservation :: (BaseBackend backend ~ SqlBackend,
     StarDate -> Entity Faction -> Entity Planet -> ReaderT backend m ()
 doPlanetObservation date faction planet = do
     let p = entityVal planet
-    let observation = PlanetReport (entityKey planet) Nothing (planetStarSystemId p)
-                                   (Just $ planetName p) (Just $ planetPosition p) (Just $ planetGravity p)
-                                   (entityKey faction) date
+    let observation = PlanetReport
+                      { planetReportPlanetId = entityKey planet
+                      , planetReportOwnerId = planetOwnerId p
+                      , planetReportStarSystemId = planetStarSystemId p
+                      , planetReportName = Just $ planetName p
+                      , planetReportPosition = Just $ planetPosition p
+                      , planetReportGravity = Just $ planetGravity p
+                      , planetReportFactionId = entityKey faction
+                      , planetReportDate = date
+                      , planetReportRulerId = planetRulerId p
+                      }
     _ <- insert observation
     pops <- selectList [ PlanetPopulationPlanetId ==. entityKey planet] []
     let popObservations = map (\pop -> PlanetPopulationReport (entityKey planet) (Just $ planetPopulationRaceId $ entityVal pop)
@@ -145,8 +153,18 @@ observeTarget date faction (Just (OCPlanet planetEntity _ observationType)) _ = 
     let planet = entityVal planetEntity
     let pid = entityKey planetEntity
     aGravity <- liftIO $ chooseOne (Just (planetGravity planet)) Nothing
-    let res = PlanetReport pid (planetOwnerId planet) (planetStarSystemId planet) (Just $ planetName planet)
-                           (Just $ planetPosition planet) aGravity (entityKey faction) date
+    -- current ruler of the planet is always deduced while observing
+    let res = PlanetReport
+                { planetReportPlanetId = pid
+                , planetReportOwnerId = planetOwnerId planet
+                , planetReportStarSystemId = planetStarSystemId planet
+                , planetReportName = Just $ planetName planet
+                , planetReportPosition = Just $ planetPosition planet
+                , planetReportGravity = aGravity
+                , planetReportFactionId = entityKey faction
+                , planetReportDate = date
+                , planetReportRulerId = planetRulerId planet
+                }
     system <- get (planetStarSystemId planet)
     let news = case observationType of
                 NewObservation ->
@@ -183,7 +201,7 @@ groupPlanetReports :: [Entity Planet] -> [CollatedPlanetReport] -> [(Entity Plan
 groupPlanetReports planets reports =
     map fn planets
         where fn planet = (planet, matchingReport planet)
-              matchingReport planet = find (\a -> cprPlanetId a == entityKey planet) reports
+              matchingReport planet = find (\a -> cprId a == entityKey planet) reports
 
 
 -- | given list of starlanes and collated reports, build list of pairs with starlane and maybe respective report

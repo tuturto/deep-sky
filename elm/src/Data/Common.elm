@@ -10,6 +10,7 @@ module Data.Common exposing
     , Location(..)
     , MechResource(..)
     , MessageId(..)
+    , PersonId(..)
     , PlanetId(..)
     , ResourceType(..)
     , Resources
@@ -27,6 +28,7 @@ module Data.Common exposing
     , locationToString
     , maxPage
     , messageIdToString
+    , personIdToString
     , planetIdToString
     , routeToString
     , triple
@@ -38,6 +40,7 @@ module Data.Common exposing
     , unFactionId
     , unMech
     , unMessageId
+    , unPersonId
     , unPlanetId
     , unShipId
     , unStarDate
@@ -273,6 +276,20 @@ unMessageId (MessageId x) =
 
 messageIdToString : MessageId -> String
 messageIdToString (MessageId x) =
+    String.fromInt x
+
+
+type PersonId
+    = PersonId Int
+
+
+unPersonId : PersonId -> Int
+unPersonId (PersonId x) =
+    x
+
+
+personIdToString : PersonId -> String
+personIdToString (PersonId x) =
     String.fromInt x
 
 
