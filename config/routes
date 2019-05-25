@@ -9,27 +9,20 @@
 
 / HomeR GET
 /newhome NewHomeR GET
-
 /profile ProfileR GET
-
 /starsystem                          StarSystemsR        GET
 /starsystem/#StarSystemId            StarSystemR         GET
 /starsystem/#StarSystemId/#PlanetId  PlanetR             GET
-
 /research                            ResearchR           GET
-
 /fleet                               FleetR              GET
-
 /construction                        ConstructionR       GET
-
 /designer                            DesignerR           GET
-
 /base                                BasesR              GET
 /base/#StarSystemId/#PlanetId        BaseR               GET
-
 /faction                             FactionR            GET POST
-
 /message                             MessageR            GET
+/person/#PersonId                    PersonR             GET
+/person                              PeopleR             GET
 
 /api/stardate                                       ApiStarDateR                    GET
 /api/resources                                      ApiResourcesR                   GET
@@ -59,6 +52,9 @@
 /api/planet/#PlanetId/buildings                     ApiPlanetBuildingsR             GET
 /api/planet/#PlanetId/population                    ApiPlanetPopulationR            GET
 /api/planet/#PlanetId/status                        ApiPlanetStatusR                GET
+
+-- /api/person                                         ApiPeopleR                      GET
+/api/person/#PersonId                               ApiPersonR                      GET
 
 /admin                               AdminPanelR          GET
 /admin/time                          AdminAdvanceTimeR    GET

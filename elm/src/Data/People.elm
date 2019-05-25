@@ -2,13 +2,19 @@ module Data.People exposing
     ( Cognomen(..)
     , FamilyName(..)
     , FirstName(..)
+    , Gender(..)
+    , Person
     , PersonName(..)
     , RegnalNumber(..)
+    , Sex(..)
+    , StatValue(..)
+    , StatValues
     , displayName
     , unCognomen
     , unFamilyName
     , unFirstName
     , unRegnalNumber
+    , unStatValue
     )
 
 import Data.Common exposing (findFirst)
@@ -131,3 +137,42 @@ numerals =
     , ( "IV", 4 )
     , ( "I", 1 )
     ]
+
+
+type alias Person =
+    { name : PersonName
+    , stats : Maybe StatValues
+    , sex : Sex
+    , gender : Gender
+    }
+
+
+type StatValue
+    = StatValue Int
+
+
+unStatValue : StatValue -> Int
+unStatValue (StatValue n) =
+    n
+
+
+type alias StatValues =
+    { diplomacy : StatValue
+    , learning : StatValue
+    , martial : StatValue
+    , intrique : StatValue
+    , stewardship : StatValue
+    }
+
+
+type Sex
+    = Male
+    | Female
+    | Intersex
+
+
+type Gender
+    = Man
+    | Woman
+    | Agender
+    | Nonbinary

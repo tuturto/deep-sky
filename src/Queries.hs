@@ -196,4 +196,3 @@ planetReports fId planetId = do
             return (planet, person)
     let res = fmap (\(x, y) -> (entityVal x, entityVal <$> y)) pairs
     return res
-

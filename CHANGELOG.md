@@ -6,8 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Planets can have ruler
 - `Person` to represent people in detailed way
+- `StatScore` to represent basic skills of a person
+- `PersonFactionIntel` to represent level of person intel
+- Players have avatar that they're playing as
 ### Changed
 - planet can have ruler (`ruler_id INTEGER NULL REFERENCES person`)
 - planet report JSON result has all keys starting with uppercase
@@ -17,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Amount of components changed from `Int` to `ComponentAmount`
 - Component name changed from `String` to `ComponentName`
 - Component description changed from `String` to `ComponentDescription`
+- Players are not directly members of faction, but via their avatar
+- `requireFaction` returns also user avatar
+- `apiRequireFaction` returns also user avatar
+### Removed
+- `maybeFaction` function removed
 
 ## [0.1.0] - 2019-05-11
 ### Added

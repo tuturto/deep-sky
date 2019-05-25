@@ -3,7 +3,13 @@ module Navigation exposing (parseLocation, routes)
 {-| Navigation related functions and data types
 -}
 
-import Data.Common exposing (PlanetId(..), Route(..), StarSystemId(..))
+import Data.Common
+    exposing
+        ( PersonId(..)
+        , PlanetId(..)
+        , Route(..)
+        , StarSystemId(..)
+        )
 import Url exposing (Url)
 import Url.Parser
     exposing
@@ -31,6 +37,12 @@ planetId =
         stringToPlanetId
 
 
+personId : Parser (PersonId -> a) a
+personId =
+    custom "PERSON_ID" <|
+        stringToPersonId
+
+
 stringToStarSystemId : String -> Maybe StarSystemId
 stringToStarSystemId s =
     Maybe.map StarSystemId (String.toInt s)
@@ -39,6 +51,11 @@ stringToStarSystemId s =
 stringToPlanetId : String -> Maybe PlanetId
 stringToPlanetId s =
     Maybe.map PlanetId (String.toInt s)
+
+
+stringToPersonId : String -> Maybe PersonId
+stringToPersonId s =
+    Maybe.map PersonId (String.toInt s)
 
 
 routes : Parser (Route -> a) a
@@ -55,6 +72,7 @@ routes =
         , map DesignerR (s "designer")
         , map ConstructionR (s "construction")
         , map MessagesR (s "message")
+        , map PersonR (s "person" </> personId)
         , map AdminR (s "admin")
         , map LogoutR (s "logout")
         ]

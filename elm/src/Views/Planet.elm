@@ -405,11 +405,20 @@ planetDetails planet model =
     , div [ class "row" ]
         [ div [ class "col-lg-2 design-panel-title" ] [ text "Ruler" ]
         , div [ class "col-lg-4" ]
-            [ planet
-                |> andThen (\x -> x.rulerName)
-                |> andThen (\x -> Just <| displayName x)
-                |> withDefault "No ruler"
-                |> text
+            [ let
+                rulerText =
+                    planet
+                        |> andThen (\x -> x.rulerName)
+                        |> andThen (\x -> Just <| displayName x)
+                        |> withDefault "No ruler"
+                        |> text
+              in
+              case planet |> andThen (\x -> x.rulerId) of
+                Nothing ->
+                    rulerText
+
+                Just rId ->
+                    a [ href (PersonR rId) ] [ rulerText ]
             ]
         ]
     , div [ class "row" ]

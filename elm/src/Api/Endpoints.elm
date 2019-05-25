@@ -9,6 +9,8 @@ import Data.Common
         , designIdToString
         , messageIdToString
         , planetIdToString
+        , personIdToString
+        , PersonId
         )
 import Data.Construction exposing (Construction(..))
 
@@ -37,6 +39,7 @@ type Endpoint
     | ApiAvailableChassis
     | ApiAllDesigns
     | ApiSingleDesign DesignId
+    | ApiSinglePerson PersonId
 
 
 endpointToString : Endpoint -> String
@@ -115,3 +118,6 @@ endpointToString endpoint =
 
         ApiSingleDesign designId ->
             "api/design/" ++ designIdToString designId
+
+        ApiSinglePerson personId ->
+            "/api/person/" ++ personIdToString personId

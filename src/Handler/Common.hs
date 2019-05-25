@@ -37,7 +37,7 @@ getApiStarDateR = do
 -- | API for loading currently available resources
 getApiResourcesR :: Handler Value
 getApiResourcesR = do
-    (_, _, fId) <- apiRequireFaction
+    (_, _, _, fId) <- apiRequireFaction
     faction <- runDB $ get fId
     let score = getScore faction
     return $ toJSON score

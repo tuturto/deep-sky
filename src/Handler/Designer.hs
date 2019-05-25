@@ -31,7 +31,7 @@ getDesignerR = getNewHomeR
 -- | Get list of all components that currently logged in user has access to
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
-    (_, _, fId) <- apiRequireFaction
+    (_, _, _, fId) <- apiRequireFaction
     completed <- runDB $ selectList [ CompletedResearchFactionId ==. fId ] []
     let comps = mkUniq . join $ toComponent <$> completed
     return $ toJSON comps
@@ -57,7 +57,7 @@ toComponent = (componentLookup requirements components) . entityVal
 -- | Get list of all chassis that currently logged in user has access to
 getApiChassisR :: Handler Value
 getApiChassisR = do
-    (_, _, fId) <- apiRequireFaction
+    (_, _, _, fId) <- apiRequireFaction
     chassisRequirements <- runDB $ chassisList fId
     return $ toJSON $ toChassisDto <$> chassisRequirements
 
@@ -98,7 +98,7 @@ toRequirement comp =
 getApiDesignR :: Handler Value
 getApiDesignR = do
     -- TODO: use esqueleto and refactor into own function
-    (_, _, fId) <- apiRequireFaction
+    (_, _, _, fId) <- apiRequireFaction
     loadedDesigns <- runDB $ selectList [ DesignOwnerId ==. fId ] []
     loadedComponents <- runDB $ selectList [ PlannedComponentDesignId <-. map entityKey loadedDesigns ] []
     let designs = map (\d -> designToDesignDto (entityKey d, entityVal d)
@@ -110,7 +110,7 @@ getApiDesignR = do
 -- | Create a new design
 postApiDesignR :: Handler Value
 postApiDesignR = do
-    (_, _, fId) <- apiRequireFaction
+    (_, _, _, fId) <- apiRequireFaction
     msg <- requireJsonBody
     if validateSaveDesign msg then
         (do date <- runDB starDate
@@ -122,7 +122,7 @@ postApiDesignR = do
 -- | Update existing design
 putApiDesignIdR :: Key Design -> Handler Value
 putApiDesignIdR dId = do
-    (_, _, fId) <- apiRequireFaction
+    (_, _, _, fId) <- apiRequireFaction
     msg <- requireJsonBody
     if validateSaveDesign msg then
         (do savedDesign <- runDB $ updateDesign dId msg fId
@@ -133,7 +133,8 @@ putApiDesignIdR dId = do
 -- | Permanently delete design
 deleteApiDesignIdR :: Key Design -> Handler Value
 deleteApiDesignIdR dId = do
-    (_, _, fId) <- apiRequireFaction
+    (_, _, _, fId) <- apiRequireFaction
+    --TODO: allow deleting only faction's designs
     _ <- runDB $ deleteDesign dId
     loadedDesigns <- runDB $ selectList [ DesignOwnerId ==. fId ] []
     loadedComponents <- runDB $ selectList [ PlannedComponentDesignId <-. map entityKey loadedDesigns ] []
@@ -145,6 +146,7 @@ deleteApiDesignIdR dId = do
 
 -- | Validate that given design is valid
 validateSaveDesign :: DesignDto -> Bool
+-- TODO: implement validating designs
 validateSaveDesign _ = True
 
 

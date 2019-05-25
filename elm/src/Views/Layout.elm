@@ -37,6 +37,7 @@ import Views.Helpers
         )
 import Views.Home
 import Views.Messages
+import Views.Person
 import Views.Planet
 import Views.Profile
 import Views.Research
@@ -222,6 +223,9 @@ segment model route =
             in
             ( planetName, Just (StarSystemR systemId) )
 
+        PersonR personId ->
+            ( "unimplemented", Just HomeR )
+
         LogoutR ->
             ( "Logout", Just HomeR )
 
@@ -308,6 +312,9 @@ currentPage url =
 
         PlanetR systemId planetId ->
             Views.Planet.page systemId planetId
+
+        PersonR personId ->
+            Views.Person.page personId
 
         LogoutR ->
             Views.Home.page

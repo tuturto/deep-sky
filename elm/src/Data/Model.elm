@@ -27,6 +27,7 @@ import ViewModels.Messages exposing (MessagesRMsg, MessagesViewModel)
 import ViewModels.Planet exposing (PlanetRMsg(..), PlanetViewModel)
 import ViewModels.Research exposing (ResearchRMsg(..), ResearchViewModel)
 import ViewModels.StarSystem exposing (StarSystemRMsg, StarSystemViewModel)
+import ViewModels.Person exposing (PersonRMsg, PersonViewModel)
 
 
 type alias Model =
@@ -56,6 +57,7 @@ type alias Model =
     , availableChassis : Maybe (List Chassis)
     , designs : Maybe (List Design)
     , designerR : DesignerViewModel
+    , personR : PersonViewModel
     }
 
 
@@ -69,6 +71,7 @@ type Msg
     | NewsMessage MessagesRMsg
     | ResearchMessage ResearchRMsg
     | DesignerMessage DesignerRMsg
+    | PersonMessage PersonRMsg
 
 
 type ApiMsg

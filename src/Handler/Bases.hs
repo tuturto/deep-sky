@@ -13,7 +13,7 @@ import Common (requireFaction)
 
 getBasesR :: Handler Html
 getBasesR = do
-    (_, _, factionId) <- requireFaction
+    (_, _, _, factionId) <- requireFaction
 
     loadedPlanets <- runDB $ selectList [ PlanetOwnerId ==. Just factionId] [ Asc PlanetName ]
     let planetIds = map entityKey loadedPlanets
@@ -22,7 +22,7 @@ getBasesR = do
 
     let planetReports = filter (\x -> Just factionId == cprOwnerId x) $ collateReports $ map entityVal loadedPlanetReports
     baseReports <- mapM addBaseDetails planetReports
- 
+
     defaultLayout $ do
         setTitle "Deep Sky - Bases"
         $(widgetFile "bases")

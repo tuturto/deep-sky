@@ -9,17 +9,21 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 
-module People ( PersonName(..), FirstName(..), FamilyName(..), Cognomen(..)
-              , RegnalNumber(..), Sex(..), Gender(..) )
+module People.Data
+    ( PersonName(..), FirstName(..), FamilyName(..), Cognomen(..)
+    , RegnalNumber(..), Sex(..), Gender(..), PersonIntel(..), StatScore(..)
+    , Diplomacy(..), Martial(..), Stewardship(..), Intrique(..), Learning(..)
+    , PersonReport(..), StatReport(..) )
     where
 
 import Data.Aeson ( ToJSON(..), Object, withScientific, withText, withObject )
-import Data.Aeson.TH
-    ( deriveJSON, defaultOptions )
+import Data.Aeson.TH ( deriveJSON, defaultOptions, fieldLabelModifier )
 import Data.Aeson.Types ( Parser )
 import Data.Scientific ( toBoundedInteger )
 import Database.Persist.TH
+import Database.Persist.Sql
 import ClassyPrelude.Yesod   as Import
+import CustomTypes ( Age )
 
 
 data PersonName =
@@ -171,9 +175,83 @@ data Gender =
     deriving (Show, Read, Eq, Enum, Bounded)
 
 
+data PersonIntel =
+    Stats
+    deriving (Show, Read, Eq, Enum, Bounded)
+
+
+newtype StatScore a = StatScore { unStatScore :: Int }
+    deriving (Show, Read, Eq, Num, Ord)
+
+
+instance ToJSON (StatScore a) where
+    toJSON = toJSON . unStatScore
+
+
+instance FromJSON (StatScore a) where
+    parseJSON =
+        withScientific "stat score"
+            (\x -> case toBoundedInteger x of
+                Nothing ->
+                    mempty
+
+                Just n ->
+                    return $ StatScore n)
+
+
+instance PersistField (StatScore a) where
+    toPersistValue (StatScore n) =
+        PersistInt64 $ fromIntegral n
+
+    fromPersistValue (PersistInt64 n) =
+        Right $ StatScore $ fromIntegral n
+
+    fromPersistValue _ =
+        Left "Failed to deserialize"
+
+
+instance PersistFieldSql (StatScore a) where
+    sqlType _ = SqlInt64
+
+
+data Diplomacy = Diplomacy
+
+data Martial = Martial
+
+data Stewardship = Stewardship
+
+data Intrique = Intrique
+
+data Learning = Learning
+
+
+data PersonReport = PersonReport
+    { personReportName :: PersonName
+    , personReportSex :: Sex
+    , personReportGender :: Gender
+    , personReportAge :: Age
+    , personReportStats :: Maybe StatReport
+    }
+    deriving (Show, Read, Eq)
+
+
+data StatReport = StatReport
+    { statReportDiplomacy :: StatScore Diplomacy
+    , statReportMartial :: StatScore Martial
+    , statReportStewardship :: StatScore Stewardship
+    , statReportIntrique :: StatScore Intrique
+    , statReportLearning :: StatScore Learning
+    }
+    deriving (Show, Read, Eq)
+
+
 derivePersistField "PersonName"
 derivePersistField "Sex"
 derivePersistField "Gender"
+derivePersistField "PersonIntel"
 
 $(deriveJSON defaultOptions ''Sex)
 $(deriveJSON defaultOptions ''Gender)
+$(deriveJSON defaultOptions ''PersonIntel)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 12 } ''PersonReport)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 10 } ''StatReport)

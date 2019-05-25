@@ -23,7 +23,7 @@ import Database.Persist.Sql (toSqlKey)
 
 import CustomTypes
 import Dto.Icons ( IconMapper(..) )
-import People ( PersonName(..) )
+import People.Data ( PersonName(..) )
 
 
 -- | Class to transform a report stored in db to respective collated report

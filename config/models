@@ -4,7 +4,7 @@
 User json
     ident Text
     password Text Maybe
-    factionId FactionId Maybe
+    avatar PersonId Maybe
     UniqueUser ident
     deriving Typeable Show Read Eq
 
@@ -249,4 +249,16 @@ Person json
     sex Sex
     gender Gender
     dateOfBirth StarDate
+    diplomacy (StatScore Diplomacy)
+    martial (StatScore Martial)
+    stewardship (StatScore Stewardship)
+    intrique (StatScore Intrique)
+    learning (StatScore Learning)
+    factionId FactionId Maybe
+    deriving Show Read Eq
+
+HumanIntelligence json
+    personId PersonId
+    ownerId PersonId
+    level PersonIntel
     deriving Show Read Eq

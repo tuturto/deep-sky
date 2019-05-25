@@ -58,6 +58,7 @@ import Navigation exposing (parseLocation)
 import Url exposing (Url)
 import ViewModels.Designer exposing (DesignerRMsg(..))
 import ViewModels.Messages exposing (MessagesRMsg(..))
+import ViewModels.Person
 import ViewModels.Planet exposing (PlanetRMsg(..))
 import ViewModels.Research exposing (ResearchRMsg(..))
 import ViewModels.StarSystem exposing (StarSystemRMsg(..))
@@ -69,6 +70,7 @@ import Views.Fleet
 import Views.Home
 import Views.Layout exposing (view)
 import Views.Messages
+import Views.Person
 import Views.Planet
 import Views.Profile
 import Views.Research
@@ -126,6 +128,7 @@ init flags url key =
             , availableChassis = Nothing
             , designs = Nothing
             , designerR = ViewModels.Designer.init
+            , personR = ViewModels.Person.init
             }
     in
     ( model
@@ -177,6 +180,9 @@ update msg model =
 
         DesignerMessage message ->
             Views.Designer.update message model
+
+        PersonMessage message ->
+            Views.Person.update message model
 
 
 {-| Handle messages related to API calls
@@ -472,6 +478,9 @@ currentInit url =
 
         PlanetR starSystemId planetId ->
             Views.Planet.init starSystemId planetId
+
+        PersonR personId ->
+            Views.Person.init personId
 
         LogoutR ->
             Views.Home.init

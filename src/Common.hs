@@ -1,8 +1,9 @@
-{-# LANGUAGE NoImplicitPrelude      #-}
-{-# LANGUAGE OverloadedStrings      #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
-{-# LANGUAGE TypeFamilies           #-}
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE FunctionalDependencies     #-}
+{-# LANGUAGE FlexibleContexts           #-}
 
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
               , FromDto(..), ToDto(..), apiNotFound, apiInvalidArgs, apiInternalError, apiOk
@@ -43,13 +44,32 @@ chooseOne item1 item2 = do
 
 -- | Check that user has logged in and is member of a faction
 --   In case user is not member of a faction, http 500 will be returned as an error page
-requireFaction :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User, Key Faction)
+requireFaction :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User, Entity Person, Key Faction)
 requireFaction = do
     (authId, user) <- requireAuthPair
-    fId <- case userFactionId user of
-                        Just x -> return x
-                        Nothing -> sendResponseStatus status500 ("Not a member of a faction" :: Text)
-    return (authId, user, fId)
+    pId <- case userAvatar user of
+                Nothing ->
+                    sendResponseStatus status500 ("No avatar selected" :: Text)
+
+                Just x ->
+                    return x
+    loaded <- runDB $ get pId
+    avatar <- case loaded of
+                Nothing ->
+                    sendResponseStatus status500 ("No avatar found" :: Text)
+
+                Just x ->
+                    return x
+
+    fId <- case personFactionId avatar of
+                Nothing ->
+                    sendResponseStatus status500 ("Not a memeber of faction" :: Text)
+
+                Just x ->
+                    return x
+
+
+    return (authId, user, Entity pId avatar, fId)
 
 
 -- | Check that user has logged in
@@ -58,19 +78,41 @@ apiRequireAuthPair :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), Aut
 apiRequireAuthPair = do
     authData <- maybeAuthPair
     case authData of
-            Just x -> return x
-            Nothing -> sendStatusJSON status401 $ toJSON $ ErrorJson "Not logged in"
+            Just x ->
+                return x
+
+            Nothing ->
+                sendStatusJSON status401 $ toJSON $ ErrorJson "Not logged in"
 
 
 -- | Check that user has logged in and is member of a faction
 --   In case user is not member of a faction, http 500 with json body will be returned
-apiRequireFaction :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User, Key Faction)
+apiRequireFaction :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User, Entity Person, Key Faction)
 apiRequireFaction = do
     (authId, user) <- apiRequireAuthPair
-    fId <- case userFactionId user of
-                        Just x -> return x
-                        Nothing -> sendStatusJSON status500 $ toJSON $ ErrorJson "Not a member of a faction"
-    return (authId, user, fId)
+    pId <- case userAvatar user of
+                Nothing ->
+                    sendStatusJSON status500 ("No avatar selected" :: Text)
+
+                Just x ->
+                    return x
+    loaded <- runDB $ get pId
+    avi <- case loaded of
+                Nothing ->
+                    sendStatusJSON status500 ("No avatar found" :: Text)
+
+                Just foo ->
+                    return foo
+
+    fId <- case personFactionId avi of
+                Nothing ->
+                    sendStatusJSON status500 ("Not a memeber of faction" :: Text)
+
+                Just x ->
+                    return x
+
+
+    return (authId, user, Entity pId avi, fId)
 
 
 -- | Send 404 error with json body

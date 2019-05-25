@@ -23,7 +23,7 @@ import News.Import ( parseNewsEntities, iconMapper, iconInfo, userNewsIconMapper
 -- | Api method to retrieve all pending messages
 getApiMessageR :: Handler Value
 getApiMessageR = do
-    (_, _, fId) <- apiRequireFaction
+    (_, _, _, fId) <- apiRequireFaction
     loadAllMessages fId
 
 
@@ -31,7 +31,7 @@ getApiMessageR = do
 -- any effect.
 deleteApiMessageIdR :: Key News -> Handler Value
 deleteApiMessageIdR mId = do
-    (_, _, fId) <- apiRequireFaction
+    (_, _, _, fId) <- apiRequireFaction
     loadedMessages <- runDB $ selectList [ NewsId ==. mId
                                          , NewsFactionId ==. fId ] [ Asc NewsDate ]
     _ <- if null loadedMessages
@@ -44,7 +44,7 @@ deleteApiMessageIdR mId = do
 -- event
 putApiMessageIdR :: Key News -> Handler Value
 putApiMessageIdR mId = do
-    (_, _, fId) <- apiRequireFaction
+    (_, _, _, fId) <- apiRequireFaction
     msg <- requireJsonBody
     let article = fromDto msg
     _ <- if isSpecialEvent article
@@ -62,7 +62,7 @@ putApiMessageIdR mId = do
 -- Trying to submit any other type of news article will return
 postApiMessageR :: Handler Value
 postApiMessageR = do
-    (_, user, fId) <- apiRequireFaction
+    (_, user, _, fId) <- apiRequireFaction
     currentDate <- runDB starDate
     msg <- requireJsonBody
     let article = (setUser user . setStarDate currentDate . fromDto) msg

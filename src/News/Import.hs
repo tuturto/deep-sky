@@ -172,7 +172,7 @@ userWrittenNews msg icon date user =
     let
         content = UserWritten $ UserWrittenNews msg icon date (userIdent user)
     in
-        mkNews (fromJust $ userFactionId user) date content
+        mkNews (fromJust $ Nothing) date content
 
 
 -- | Construct news entry for discovery of new planet

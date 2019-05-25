@@ -193,10 +193,25 @@ newtype Age = Age { unAge :: Int }
     deriving (Show, Read, Eq, Num, Ord)
 
 
--- | Age (ie. difference between two star dates)
+instance ToJSON Age where
+    toJSON = toJSON . unAge
+
+
+instance FromJSON Age where
+    parseJSON =
+        withScientific "age"
+            (\x -> case toBoundedInteger x of
+                Nothing ->
+                    mempty
+
+                Just n ->
+                    return $ Age n)
+
+
+-- | Age (ie. difference between two star dates in whole years)
 age :: StarDate -> StarDate -> Age
-age start end =
-    (Age . unStarDate) (end - start)
+age (StarDate start) (StarDate end) =
+    Age $ ((end - start) `quot` 10)
 
 
 $(deriveJSON defaultOptions ''SpecialEventStatus)

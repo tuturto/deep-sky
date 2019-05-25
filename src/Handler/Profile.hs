@@ -6,16 +6,7 @@
 module Handler.Profile where
 
 import Import
-import MenuHelpers
 
+-- TODO: profile page
 getProfileR :: Handler Html
-getProfileR = do
-    (_, user) <- requireAuthPair
-    mFac <- runDB $ maybeFaction user
-    faction <- case mFac of
-                   Just fac -> return fac
-                   Nothing  -> redirect FactionR
-
-    defaultLayout $ do
-        setTitle . toHtml $ "Deep Sky - " <> userIdent user <> "'s User page"
-        $(widgetFile "profile")
+getProfileR = undefined

@@ -7,9 +7,9 @@
 {-# LANGUAGE InstanceSigs               #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
-module MenuHelpers ( starDate, systemNameById, planetNameById, statusBarScore
-                   , maybeFaction, getMaybeEntity, getScore, usersRoles, isAdmin
-                   , authorizeAdmin, toDisplayDate )
+module MenuHelpers
+    ( starDate, systemNameById, planetNameById, statusBarScore, getMaybeEntity
+    , getScore, usersRoles, isAdmin, authorizeAdmin, toDisplayDate )
     where
 
 import Model
@@ -49,20 +49,27 @@ planetNameById planetId = do
                         Nothing  -> "Unknown"
     return name
 
+
 statusBarScore :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistStoreRead backend) =>
     Maybe (a, User) -> ReaderT backend m (RawResources ResourcesAvailable)
 statusBarScore (Just (_, user)) = do
-    faction <- getMaybeEntity $ userFactionId user
+    dbAvatar <- case userAvatar user of
+                    Nothing ->
+                        return Nothing
+
+                    Just aId ->
+                        get aId
+    let fId = join $ personFactionId <$> dbAvatar
+    faction <- case fId of
+                Nothing ->
+                    return Nothing
+
+                Just x ->
+                    get x
     return $ getScore faction
 statusBarScore _ =
     return mempty
-
-maybeFaction :: (BaseBackend backend ~ SqlBackend, MonadIO m,
-    PersistStoreRead backend) =>
-    User -> ReaderT backend m (Maybe Faction)
-maybeFaction user =
-    getMaybeEntity $ userFactionId user
 
 
 getMaybeEntity :: (PersistEntityBackend record ~ BaseBackend backend,

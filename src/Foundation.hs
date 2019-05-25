@@ -104,9 +104,8 @@ instance Yesod App where
         mmsg <- getMessage
 
         muser <- maybeAuthPair
-        let mfaction = case muser of
-                            Nothing -> Nothing
-                            Just (_, user) -> userFactionId user
+        let mAvatarId = (userAvatar . snd) <$> muser
+
         mcurrentRoute <- getCurrentRoute
         adminOnly <- case muser of
                         Just (userId, _) -> runDB $ isAdmin userId
@@ -130,37 +129,37 @@ instance Yesod App where
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Star Systems"
                     , menuItemRoute = StarSystemsR
-                    , menuItemAccessCallback = isJust mfaction
+                    , menuItemAccessCallback = isJust mAvatarId
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Bases"
                     , menuItemRoute = BasesR
-                    , menuItemAccessCallback = isJust mfaction
+                    , menuItemAccessCallback = isJust mAvatarId
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Fleet"
                     , menuItemRoute = FleetR
-                    , menuItemAccessCallback = isJust mfaction
+                    , menuItemAccessCallback = isJust mAvatarId
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Designer"
                     , menuItemRoute = DesignerR
-                    , menuItemAccessCallback = isJust mfaction
+                    , menuItemAccessCallback = isJust mAvatarId
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Research"
                     , menuItemRoute = ResearchR
-                    , menuItemAccessCallback = isJust mfaction
+                    , menuItemAccessCallback = isJust mAvatarId
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Construction"
                     , menuItemRoute = ConstructionR
-                    , menuItemAccessCallback = isJust mfaction
+                    , menuItemAccessCallback = isJust mAvatarId
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Messages"
                     , menuItemRoute = MessageR
-                    , menuItemAccessCallback = isJust mfaction
+                    , menuItemAccessCallback = isJust mAvatarId
                     }
                 , NavbarRight $ MenuItem
                     { menuItemLabel = "Admin"
@@ -227,15 +226,17 @@ instance Yesod App where
     isAuthorized NewHomeR _           = isAuthenticated
     isAuthorized MessageR _           = isAuthenticated
     -- Routes requiring faction membership
-    isAuthorized StarSystemsR _       = isInFaction
-    isAuthorized (StarSystemR _) _    = isInFaction
-    isAuthorized PlanetR {} _         = isInFaction
-    isAuthorized BasesR _             = isInFaction
-    isAuthorized BaseR {} _           = isInFaction
-    isAuthorized ResearchR _          = isInFaction
-    isAuthorized FleetR _             = isInFaction
-    isAuthorized DesignerR _          = isInFaction
-    isAuthorized ConstructionR _      = isInFaction
+    isAuthorized StarSystemsR _       = hasAvatar
+    isAuthorized (StarSystemR _) _    = hasAvatar
+    isAuthorized PlanetR {} _         = hasAvatar
+    isAuthorized BasesR _             = hasAvatar
+    isAuthorized BaseR {} _           = hasAvatar
+    isAuthorized ResearchR _          = hasAvatar
+    isAuthorized FleetR _             = hasAvatar
+    isAuthorized DesignerR _          = hasAvatar
+    isAuthorized ConstructionR _      = hasAvatar
+    isAuthorized (PersonR _) _        = hasAvatar
+    isAuthorized PeopleR _            = hasAvatar
 
     -- Special authorization
     isAuthorized AdminPanelR _     = do
@@ -269,6 +270,7 @@ instance Yesod App where
     isAuthorized ApiAvailableResearchR _            = return Authorized
     isAuthorized ApiCurrentResearchR _              = return Authorized
     isAuthorized ApiResearchProductionR _           = return Authorized
+    isAuthorized (ApiPersonR _) _                   = return Authorized
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of
@@ -305,14 +307,18 @@ instance Yesod App where
     makeLogger :: App -> IO Logger
     makeLogger = return . appLogger
 
-isInFaction :: Handler AuthResult
-isInFaction = do
-    authPair <- maybeAuthPair
-    return $ case authPair of
-        Nothing -> Unauthorized "You must login to access this page"
-        Just (_, user) -> case userFactionId user of
-                            Just _ -> Authorized
-                            Nothing -> Unauthorized "You must be member of a faction"
+
+-- | Authorize user that has logged in and have selected an avatar
+hasAvatar :: Handler AuthResult
+hasAvatar = do
+    muser <- maybeAuthPair
+    return $ case (userAvatar . snd) <$> muser of
+                Nothing ->
+                    Unauthorized "You must have an avatar"
+
+                Just _ ->
+                    Authorized
+
 
 -- Define breadcrumbs.
 instance YesodBreadcrumbs App where
@@ -379,7 +385,7 @@ instance YesodAuth App where
             Nothing -> Authenticated <$> insert User
                 { userIdent = credsIdent creds
                 , userPassword = Nothing
-                , userFactionId = Nothing
+                , userAvatar = Nothing
                 }
 
     -- You can add other plugins like Google Email, email or OAuth here

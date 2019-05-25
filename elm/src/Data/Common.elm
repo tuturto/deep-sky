@@ -116,6 +116,7 @@ type Route
     | DesignerR
     | ConstructionR
     | MessagesR
+    | PersonR PersonId
     | AdminR
     | LogoutR
     | ResearchR
@@ -217,6 +218,9 @@ routeToString route =
 
         MessagesR ->
             "/message"
+
+        PersonR pId ->
+            "/person/" ++ personIdToString pId
 
         AdminR ->
             "/admin"
