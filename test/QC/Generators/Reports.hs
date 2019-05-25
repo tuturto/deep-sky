@@ -138,7 +138,7 @@ planetReport entity = do
     aGravity <- oneof [ return Nothing
                       , return $ Just $ planetGravity planet ]
     aDate <- arbitrary `suchThat` \x -> x > 18000
-    return $ Just $ CollatedPlanetReport aPlanetId aStarSystemId aOwnerId aName aPosition aGravity (unArbStarDate aDate) Nothing
+    return $ Just $ CollatedPlanetReport aPlanetId aStarSystemId aOwnerId aName aPosition aGravity (unArbStarDate aDate) Nothing Nothing
 
 
 -- | generator that creates fully filled in planet report from a planet
@@ -152,7 +152,7 @@ fullPlanetReport entity = do
     let aPosition = Just $ planetPosition planet
     let aGravity = Just $ planetGravity planet
     aDate <- arbitrary `suchThat` \x -> x > 18000
-    return $ Just $ CollatedPlanetReport aPlanetId aStarSystemId aOwnerId aName aPosition aGravity (unArbStarDate aDate) Nothing
+    return $ Just $ CollatedPlanetReport aPlanetId aStarSystemId aOwnerId aName aPosition aGravity (unArbStarDate aDate) Nothing Nothing
 
 
 -- | generator to simply return Nothing

@@ -39,7 +39,7 @@ singlePlanetReport = do
     aGravity <- perhaps $ arbitrary `suchThat` \x -> x > 0
     aDate <- arbitrary `suchThat` \x -> x > 0
     return $ CollatedPlanetReport aPlanetId aStarSystemId aOwnerId aName aPosition
-                                  aGravity (unArbStarDate aDate) Nothing
+                                  aGravity (unArbStarDate aDate) Nothing Nothing
 
 allPlanets :: Gen [Planet]
 allPlanets = do
