@@ -1,5 +1,6 @@
 module Data.People exposing
-    ( Cognomen(..)
+    ( Age(..)
+    , Cognomen(..)
     , FamilyName(..)
     , FirstName(..)
     , Gender(..)
@@ -10,6 +11,7 @@ module Data.People exposing
     , StatValue(..)
     , StatValues
     , displayName
+    , unAge
     , unCognomen
     , unFamilyName
     , unFirstName
@@ -17,7 +19,7 @@ module Data.People exposing
     , unStatValue
     )
 
-import Data.Common exposing (findFirst)
+import Data.Common exposing (PersonId, findFirst)
 import List exposing (repeat)
 import Maybe exposing (map, withDefault)
 import String exposing (join)
@@ -140,10 +142,12 @@ numerals =
 
 
 type alias Person =
-    { name : PersonName
+    { id : PersonId
+    , name : PersonName
     , stats : Maybe StatValues
     , sex : Sex
     , gender : Gender
+    , age : Age
     }
 
 
@@ -176,3 +180,12 @@ type Gender
     | Woman
     | Agender
     | Nonbinary
+
+
+type Age
+    = Age Int
+
+
+unAge : Age -> Int
+unAge (Age n) =
+    n

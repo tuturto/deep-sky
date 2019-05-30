@@ -10,7 +10,8 @@ import Data.Common exposing (PersonId(..))
 import Data.Model exposing (Msg(..))
 import Data.People
     exposing
-        ( Cognomen(..)
+        ( Age(..)
+        , Cognomen(..)
         , FamilyName(..)
         , FirstName(..)
         , Gender(..)
@@ -114,10 +115,12 @@ cognomenDecoder =
 personDecoder : Decode.Decoder Person
 personDecoder =
     succeed Person
+        |> andMap (field "Id" personIdDecoder)
         |> andMap (field "Name" personNameDecoder)
         |> andMap (field "Stats" (maybe statsDecoder))
         |> andMap (field "Sex" sexDecoder)
         |> andMap (field "Gender" genderDecoder)
+        |> andMap (field "Age" ageDecoder)
 
 
 statDecoder : Decode.Decoder StatValue
@@ -179,3 +182,9 @@ stringToGender s =
 genderDecoder : Decode.Decoder Gender
 genderDecoder =
     string |> andThen stringToGender
+
+
+ageDecoder : Decode.Decoder Age
+ageDecoder =
+    succeed Age
+        |> andMap int

@@ -30,11 +30,11 @@ getApiPersonR :: Key Person -> HandlerFor App Value
 getApiPersonR pId = do
     (_, _, avatar, _) <- apiRequireFaction
     today <- runDB $ starDate
-    loaded <- runDB $ get pId
+    person <- runDB $ selectFirst [ PersonId ==. pId ] []
     intel <- runDB $ selectList [ HumanIntelligencePersonId ==. pId
                                 , HumanIntelligenceOwnerId ==. entityKey avatar
                                 ] []
     let report = personReport <$> Just today
-                              <*> loaded
+                              <*> person
                               <*> Just ((humanIntelligenceLevel . entityVal) <$> intel)
     return $ toJSON report

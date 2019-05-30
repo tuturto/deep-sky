@@ -12,6 +12,7 @@ import Data.Common
         , unStarSystemId
         )
 import Data.Model exposing (Model, Msg(..))
+import Data.People exposing (displayName)
 import Data.User exposing (Role(..))
 import Dict
 import Html exposing (..)
@@ -224,7 +225,16 @@ segment model route =
             ( planetName, Just (StarSystemR systemId) )
 
         PersonR personId ->
-            ( "unimplemented", Just HomeR )
+            let
+                personName =
+                    case model.personR.person of
+                        Nothing ->
+                            "-"
+
+                        Just person ->
+                            displayName person.name
+            in
+            ( personName, Just HomeR )
 
         LogoutR ->
             ( "Logout", Just HomeR )
@@ -314,7 +324,7 @@ currentPage url =
             Views.Planet.page systemId planetId
 
         PersonR personId ->
-            Views.Person.page personId
+            Views.Person.page
 
         LogoutR ->
             Views.Home.page

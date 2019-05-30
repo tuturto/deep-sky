@@ -1,5 +1,6 @@
 module Data.Accessors exposing
     ( activeUserIconA
+    , ageA
     , amountA
     , availableBuildingsA
     , availableChassisA
@@ -26,13 +27,18 @@ module Data.Accessors exposing
     , designsA
     , designsCurrentPageA
     , designsPanelStatusA
+    , diplomacyA
     , emptyPanelStatusA
     , errorsA
     , focusedTopCategoryA
+    , genderA
     , iconsA
     , idA
     , indexA
+    , intriqueA
     , landedShipsStatusA
+    , learningA
+    , martialA
     , messagesRA
     , messagesStatusA
     , nameA
@@ -40,6 +46,9 @@ module Data.Accessors exposing
     , newsPanelStatusA
     , orbitingShipsStatusA
     , pageSizeA
+    , personA
+    , personDetailsStatusA
+    , personRA
     , planetA
     , planetDetailsStatusA
     , planetIdA
@@ -56,11 +65,15 @@ module Data.Accessors exposing
     , researchRA
     , selectedChassisA
     , selectedComponentsA
+    , sexA
     , starLanesStatusA
     , starListStatusA
     , starSystemsA
     , starSystemsRA
     , starsA
+    , statsA
+    , statsStatusA
+    , stewardshipA
     , systemDetailsStatusA
     , userEntryA
     , userEntryStatusA
@@ -69,6 +82,97 @@ module Data.Accessors exposing
 
 import Accessors exposing (Relation, makeOneToN, makeOneToOne)
 import Accessors.Library exposing (onEach)
+
+
+statsStatusA : Relation field sub wrap -> Relation { rec | statsStatus : field } sub wrap
+statsStatusA =
+    makeOneToOne
+        .statsStatus
+        (\change rec -> { rec | statsStatus = change rec.statsStatus })
+
+
+statsA : Relation field sub wrap -> Relation { rec | stats : field } sub wrap
+statsA =
+    makeOneToOne
+        .stats
+        (\change rec -> { rec | stats = change rec.stats })
+
+
+martialA : Relation field sub wrap -> Relation { rec | martial : field } sub wrap
+martialA =
+    makeOneToOne
+        .martial
+        (\change rec -> { rec | martial = change rec.martial })
+
+
+intriqueA : Relation field sub wrap -> Relation { rec | intrique : field } sub wrap
+intriqueA =
+    makeOneToOne
+        .intrique
+        (\change rec -> { rec | intrique = change rec.intrique })
+
+
+learningA : Relation field sub wrap -> Relation { rec | learning : field } sub wrap
+learningA =
+    makeOneToOne
+        .learning
+        (\change rec -> { rec | learning = change rec.learning })
+
+
+stewardshipA : Relation field sub wrap -> Relation { rec | stewardship : field } sub wrap
+stewardshipA =
+    makeOneToOne
+        .stewardship
+        (\change rec -> { rec | stewardship = change rec.stewardship })
+
+
+diplomacyA : Relation field sub wrap -> Relation { rec | diplomacy : field } sub wrap
+diplomacyA =
+    makeOneToOne
+        .diplomacy
+        (\change rec -> { rec | diplomacy = change rec.diplomacy })
+
+
+genderA : Relation field sub wrap -> Relation { rec | gender : field } sub wrap
+genderA =
+    makeOneToOne
+        .gender
+        (\change rec -> { rec | gender = change rec.gender })
+
+
+sexA : Relation field sub wrap -> Relation { rec | sex : field } sub wrap
+sexA =
+    makeOneToOne
+        .sex
+        (\change rec -> { rec | sex = change rec.sex })
+
+
+personDetailsStatusA : Relation field sub wrap -> Relation { rec | personDetailsStatus : field } sub wrap
+personDetailsStatusA =
+    makeOneToOne
+        .personDetailsStatus
+        (\change rec -> { rec | personDetailsStatus = change rec.personDetailsStatus })
+
+
+ageA : Relation field sub wrap -> Relation { rec | age : field } sub wrap
+ageA =
+    makeOneToOne
+        .age
+        (\change rec -> { rec | age = change rec.age })
+
+
+personRA : Relation field sub wrap -> Relation { rec | personR : field } sub wrap
+personRA =
+    makeOneToOne
+        .personR
+        (\change rec -> { rec | personR = change rec.personR })
+
+
+personA : Relation field sub wrap -> Relation { rec | person : field } sub wrap
+personA =
+    makeOneToOne
+        .person
+        (\change rec -> { rec | person = change rec.person })
 
 
 planetA : Relation field sub wrap -> Relation { rec | planet : field } sub wrap

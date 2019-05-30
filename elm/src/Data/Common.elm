@@ -25,6 +25,7 @@ module Data.Common exposing
     , designIdToString
     , error
     , findFirst
+    , joinMaybe
     , locationToString
     , maxPage
     , messageIdToString
@@ -422,3 +423,13 @@ errorToString err =
 
         BadPayload msg _ ->
             "Bad payload: " ++ msg
+
+
+joinMaybe : Maybe (Maybe a) -> Maybe a
+joinMaybe m =
+    case m of
+        Nothing ->
+            Nothing
+
+        Just x ->
+            x

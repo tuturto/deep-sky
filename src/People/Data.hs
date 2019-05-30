@@ -12,8 +12,7 @@
 module People.Data
     ( PersonName(..), FirstName(..), FamilyName(..), Cognomen(..)
     , RegnalNumber(..), Sex(..), Gender(..), PersonIntel(..), StatScore(..)
-    , Diplomacy(..), Martial(..), Stewardship(..), Intrique(..), Learning(..)
-    , PersonReport(..), StatReport(..) )
+    , Diplomacy(..), Martial(..), Stewardship(..), Intrique(..), Learning(..) )
     where
 
 import Data.Aeson ( ToJSON(..), Object, withScientific, withText, withObject )
@@ -225,26 +224,6 @@ data Intrique = Intrique
 data Learning = Learning
 
 
-data PersonReport = PersonReport
-    { personReportName :: PersonName
-    , personReportSex :: Sex
-    , personReportGender :: Gender
-    , personReportAge :: Age
-    , personReportStats :: Maybe StatReport
-    }
-    deriving (Show, Read, Eq)
-
-
-data StatReport = StatReport
-    { statReportDiplomacy :: StatScore Diplomacy
-    , statReportMartial :: StatScore Martial
-    , statReportStewardship :: StatScore Stewardship
-    , statReportIntrique :: StatScore Intrique
-    , statReportLearning :: StatScore Learning
-    }
-    deriving (Show, Read, Eq)
-
-
 derivePersistField "PersonName"
 derivePersistField "Sex"
 derivePersistField "Gender"
@@ -253,5 +232,3 @@ derivePersistField "PersonIntel"
 $(deriveJSON defaultOptions ''Sex)
 $(deriveJSON defaultOptions ''Gender)
 $(deriveJSON defaultOptions ''PersonIntel)
-$(deriveJSON defaultOptions { fieldLabelModifier = drop 12 } ''PersonReport)
-$(deriveJSON defaultOptions { fieldLabelModifier = drop 10 } ''StatReport)
