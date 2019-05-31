@@ -37,6 +37,8 @@ type alias StarSystem =
     , name : String
     , location : Location
     , date : StarDate
+    , rulerId : Maybe PersonId
+    , rulerName : Maybe PersonName
     }
 
 

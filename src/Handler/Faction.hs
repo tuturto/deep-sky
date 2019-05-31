@@ -3,14 +3,14 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
-module Handler.Faction where
+
+module Handler.Faction
+    ( getFactionR )
+    where
 
 import Import
+import Handler.Home ( getNewHomeR )
 
---TODO: selecting avatar
+
 getFactionR :: Handler Html
-getFactionR = undefined
-
-
-postFactionR :: Handler Html
-postFactionR = undefined
+getFactionR = getNewHomeR

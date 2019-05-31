@@ -6,7 +6,7 @@
 module Queries
     ( ShipLandingStatus(..), planetPopulationReports, shipsAtPlanet
     , planetConstructionQueue, kragiiTargetPlanets, farmingChangeTargetPlanets
-    , factionBuildings, chassisList, planetReports )
+    , factionBuildings, chassisList, planetReports, starSystemReports )
     where
 
 import Import
@@ -194,5 +194,23 @@ planetReports fId planetId = do
             E.orderBy [ E.asc (planet E.^. PlanetReportPlanetId)
                       , E.desc (planet E.^. PlanetReportDate)]
             return (planet, person)
+    let res = fmap (\(x, y) -> (entityVal x, entityVal <$> y)) pairs
+    return res
+
+
+starSystemReports :: (MonadIO m,
+    BackendCompatible SqlBackend backend, PersistQueryRead backend,
+    PersistUniqueRead backend) =>
+    Key Faction -> Key StarSystem
+   -> ReaderT backend m [(StarSystemReport, Maybe Person)]
+starSystemReports fId sId = do
+    pairs <- E.select $
+        E.from $ \(system `E.LeftOuterJoin` person) -> do
+            E.on (person E.?. PersonId E.==. ( system E.^. StarSystemReportRulerId))
+            E.where_ (system E.^. StarSystemReportFactionId E.==. (E.val fId)
+                      E.&&. system E.^. StarSystemReportStarSystemId E.==. (E.val sId))
+            E.orderBy [ E.asc (system E.^. StarSystemReportStarSystemId)
+                      , E.desc (system E.^. StarSystemReportDate)]
+            return (system, person)
     let res = fmap (\(x, y) -> (entityVal x, entityVal <$> y)) pairs
     return res

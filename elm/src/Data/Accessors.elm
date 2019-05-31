@@ -68,6 +68,8 @@ module Data.Accessors exposing
     , sexA
     , starLanesStatusA
     , starListStatusA
+    , starSystemA
+    , starSystemRA
     , starSystemsA
     , starSystemsRA
     , starsA
@@ -82,6 +84,20 @@ module Data.Accessors exposing
 
 import Accessors exposing (Relation, makeOneToN, makeOneToOne)
 import Accessors.Library exposing (onEach)
+
+
+starSystemA : Relation field sub wrap -> Relation { rec | starSystem : field } sub wrap
+starSystemA =
+    makeOneToOne
+        .starSystem
+        (\change rec -> { rec | starSystem = change rec.starSystem })
+
+
+starSystemRA : Relation field sub wrap -> Relation { rec | starSystemR : field } sub wrap
+starSystemRA =
+    makeOneToOne
+        .starSystemR
+        (\change rec -> { rec | starSystemR = change rec.starSystemR })
 
 
 statsStatusA : Relation field sub wrap -> Relation { rec | statsStatus : field } sub wrap

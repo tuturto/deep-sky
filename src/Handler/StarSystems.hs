@@ -3,16 +3,17 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE FlexibleContexts           #-}
 
-module Handler.StarSystems ( getApiStarSystemsR, getStarSystemsR, getStarSystemR, getPlanetR
-                           , getApiPlanetR, getApiPlanetBuildingsR, getApiPlanetPopulationR
-                           , getApiStarsR, getApiAllPlanetsR, getApiPlanetStatusR )
+module Handler.StarSystems
+    ( getApiStarSystemsR, getStarSystemsR, getStarSystemR, getPlanetR
+    , getApiPlanetR, getApiPlanetBuildingsR, getApiPlanetPopulationR
+    , getApiStarsR, getApiAllPlanetsR, getApiPlanetStatusR, getApiStarSystemR )
     where
 
 import Import
 import Report ( collateReports, collateReport, planetStatusIconMapper )
 
-import Common ( apiRequireFaction )
-import Queries ( planetPopulationReports, planetReports )
+import Common ( apiRequireFaction, apiNotFound )
+import Queries ( planetPopulationReports, planetReports, starSystemReports )
 import Handler.Home (getNewHomeR)
 
 
@@ -29,6 +30,15 @@ getStarSystemR _ = getNewHomeR
 -- | serve client program and have it start displaying specific planet
 getPlanetR :: Key StarSystem -> Key Planet -> Handler Html
 getPlanetR _ _ = getNewHomeR
+
+
+-- | api method to retrieve single star system
+getApiStarSystemR :: Key StarSystem -> Handler Value
+getApiStarSystemR sId = do
+    (_, _, _, fId) <- apiRequireFaction
+    reports <- runDB $ starSystemReports fId sId
+    _ <- when (reports == mempty) apiNotFound
+    return $ toJSON $ collateReport reports
 
 
 -- | api method to retrieve all known star systems

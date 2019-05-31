@@ -37,26 +37,32 @@ class Grouped a where
 
 
 data CollatedStarSystemReport = CollatedStarSystemReport
-    { cssrSystemId :: Key StarSystem
-    , cssrName     :: Maybe Text
+    { cssrId :: Key StarSystem
+    , cssrName :: Maybe Text
     , cssrLocation :: Coordinates
-    , cssrDate     :: StarDate
+    , cssrRulerId :: Maybe (Key Person)
+    , cssrRulerName :: Maybe PersonName
+    , cssrDate :: StarDate
     } deriving Show
 
 
 instance Semigroup CollatedStarSystemReport where
     (<>) a b = CollatedStarSystemReport
-                { cssrSystemId = cssrSystemId a
+                { cssrId = cssrId a
                 , cssrName = cssrName a <|> cssrName b
                 , cssrLocation = cssrLocation a
+                , cssrRulerId = cssrRulerId a
+                , cssrRulerName = cssrRulerName a
                 , cssrDate = max (cssrDate a) (cssrDate b)
                 }
 
 
 instance Monoid CollatedStarSystemReport where
     mempty = CollatedStarSystemReport
-                { cssrSystemId = toSqlKey 0
+                { cssrId = toSqlKey 0
                 , cssrName = Nothing
+                , cssrRulerId = Nothing
+                , cssrRulerName = Nothing
                 , cssrLocation = Coordinates 0 0
                 , cssrDate = 0
                 }
@@ -65,9 +71,23 @@ instance Monoid CollatedStarSystemReport where
 instance ReportTransform StarSystemReport CollatedStarSystemReport where
     fromReport report =
         CollatedStarSystemReport
-            { cssrSystemId = starSystemReportStarSystemId report
+            { cssrId = starSystemReportStarSystemId report
             , cssrName = starSystemReportName report
             , cssrLocation = Coordinates (starSystemReportCoordX report) (starSystemReportCoordY report)
+            , cssrRulerId = starSystemReportRulerId report
+            , cssrRulerName = Nothing
+            , cssrDate = starSystemReportDate report
+            }
+
+
+instance ReportTransform (StarSystemReport, Maybe Person) CollatedStarSystemReport where
+    fromReport (report, person) =
+        CollatedStarSystemReport
+            { cssrId = starSystemReportStarSystemId report
+            , cssrName = starSystemReportName report
+            , cssrLocation = Coordinates (starSystemReportCoordX report) (starSystemReportCoordY report)
+            , cssrRulerId = starSystemReportRulerId report
+            , cssrRulerName = personName <$> person
             , cssrDate = starSystemReportDate report
             }
 
@@ -77,14 +97,14 @@ instance Grouped StarSystemReport where
         starSystemReportStarSystemId a == starSystemReportStarSystemId b
 
 
-data CollatedStarReport = CollatedStarReport {
-      csrStarId          :: Key Star
+data CollatedStarReport = CollatedStarReport
+    { csrStarId          :: Key Star
     , csrSystemId        :: Key StarSystem
     , csrName            :: Maybe Text
     , csrSpectralType    :: Maybe SpectralType
     , csrLuminosityClass :: Maybe LuminosityClass
     , csrDate            :: StarDate
-} deriving Show
+    } deriving Show
 
 
 instance Semigroup CollatedStarReport where
@@ -504,16 +524,6 @@ rearrangeStarLanes systemId = fmap arrangeStarLane
                                                                     (cslStarSystemName1 starLane)
                                                                     (cslDate starLane)
 
-instance ToJSON CollatedStarSystemReport where
-  toJSON CollatedStarSystemReport { cssrSystemId = rId
-                                  , cssrName = rName
-                                  , cssrLocation = rLocation
-                                  , cssrDate = rDate } =
-    object [ "id" .= rId
-           , "name" .= rName
-           , "location" .= rLocation
-           , "date" .= rDate ]
-
 
 planetStatusIconMapper :: (Route App -> Text) -> IconMapper PlanetaryStatus
 planetStatusIconMapper render =
@@ -552,6 +562,8 @@ statusDescription status =
         KragiiAttack -> "Kragii infestation in planet!"
 
 
+
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 4 } ''CollatedStarSystemReport)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 3 } ''CollatedPlanetReport)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 19 } ''PlanetaryStatusInfo)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 26 } ''CollatedPlanetStatusReport)

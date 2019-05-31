@@ -94,7 +94,7 @@ createUser ident = runDB $ do
     user <- insertEntity User
         { userIdent = ident
         , userPassword = Nothing
-        , userFactionId = Nothing
+        , userAvatar = Nothing
         }
     _ <- insert Email
         { emailEmail = ident

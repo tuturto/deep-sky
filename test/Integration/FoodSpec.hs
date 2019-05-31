@@ -18,6 +18,7 @@ spec = withApp $ do
                     { starSystemName = "Aldebaraan"
                     , starSystemCoordX = 10
                     , starSystemCoordY = 20
+                    , starSystemRulerId = Nothing
                     }
 
             pId1 <- runDB $ insert $ Planet

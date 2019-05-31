@@ -9,6 +9,7 @@ module Api.StarSystem exposing
     , getPlanetCmd
     , getPlanetsCmd
     , getPopulationsCmd
+    , getStarSystemCmd
     , getStarSystemsCmd
     , getStarsCmd
     , gravityDecoder
@@ -101,6 +102,11 @@ getStarSystemsCmd model =
         Cmd.none
 
 
+getStarSystemCmd : (Result Http.Error StarSystem -> Msg) -> StarSystemId -> Cmd Msg
+getStarSystemCmd msg starSystemId =
+    Http.send msg (get (ApiSingleStarSystem starSystemId) starSystemDecoder)
+
+
 starsCmd : Cmd Msg
 starsCmd =
     Http.send (ApiMsgCompleted << StarsReceived) (get ApiStar (list starDecoder))
@@ -176,10 +182,12 @@ starSystemIdEncoder (StarSystemId x) =
 starSystemDecoder : Decode.Decoder StarSystem
 starSystemDecoder =
     succeed StarSystem
-        |> andMap (field "id" starSystemIdDecoder)
-        |> andMap (field "name" string)
-        |> andMap (field "location" locationDecoder)
-        |> andMap (field "date" starDateDecoder)
+        |> andMap (field "Id" starSystemIdDecoder)
+        |> andMap (field "Name" string)
+        |> andMap (field "Location" locationDecoder)
+        |> andMap (field "Date" starDateDecoder)
+        |> andMap (field "RulerId" (maybe personIdDecoder))
+        |> andMap (field "RulerName" (maybe personNameDecoder))
 
 
 starDecoder : Decode.Decoder Star

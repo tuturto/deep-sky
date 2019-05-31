@@ -4,7 +4,7 @@ insert into person (name, sex, gender, date_of_birth)
     values ('RegularName (FirstName {unFirstName = "Paavo"}) (FamilyName {unFamilyName = "Virtanen"}) Nothing',
             'Male', 'Man', 19751);
 
-insert into star_system (name, coord_x, coord_y) values ('Sol', 0, 0);
+insert into star_system (name, coord_x, coord_y,ruler_id) values ('Sol', 0, 0, 2);
 insert into star (name, star_system_id, spectral_type, luminosity_class) values ('Sun', 1, 'G', 'V');
 insert into planet (name, position, star_system_id, owner_id, gravity) values ('Mercury', 1, 1, NULL, 0.38, NULL);
 insert into planet (name, position, star_system_id, owner_id, gravity) values ('Venus', 2, 1, NULL, 0.904, NULL);
@@ -15,7 +15,7 @@ insert into planet (name, position, star_system_id, owner_id, gravity) values ('
 insert into planet (name, position, star_system_id, owner_id, gravity) values ('Uranus', 8, 1, NULL, 0.886, NULL);
 insert into planet (name, position, star_system_id, owner_id, gravity) values ('Neptune', 9, 1, NULL, 1.14, NULL);
 
-insert into star_system (name, coord_x, coord_y) values ('Aclael', 4.2, -1.2);
+insert into star_system (name, coord_x, coord_y, ruler_id) values ('Aclael', 4.2, -1.2, null);
 insert into star (name, star_system_id, spectral_type, luminosity_class) values ('Aclael alpha', 2, 'A', 'II');
 insert into star (name, star_system_id, spectral_type, luminosity_class) values ('Aclael beta', 2, 'M', 'VI');
 insert into planet (name, position, star_system_id, owner_id, gravity) values ('Aclael I', 1, 2, NULL, 0.9, NULL);

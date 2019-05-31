@@ -250,6 +250,7 @@ instance Yesod App where
 
     -- API routes
     isAuthorized ApiStarSystemsR _                  = return Authorized
+    isAuthorized (ApiStarSystemR _) _               = return Authorized
     isAuthorized ApiStarsR _                        = return Authorized
     isAuthorized ApiComponentsR _                   = return Authorized
     isAuthorized ApiChassisR _                      = return Authorized

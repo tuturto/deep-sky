@@ -16,13 +16,12 @@ module People.Data
     where
 
 import Data.Aeson ( ToJSON(..), Object, withScientific, withText, withObject )
-import Data.Aeson.TH ( deriveJSON, defaultOptions, fieldLabelModifier )
+import Data.Aeson.TH ( deriveJSON, defaultOptions )
 import Data.Aeson.Types ( Parser )
 import Data.Scientific ( toBoundedInteger )
 import Database.Persist.TH
 import Database.Persist.Sql
 import ClassyPrelude.Yesod   as Import
-import CustomTypes ( Age )
 
 
 data PersonName =

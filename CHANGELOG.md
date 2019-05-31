@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PersonFactionIntel` to represent level of person intel
 - Players have avatar that they're playing as
 ### Changed
-- planet can have ruler (`ruler_id INTEGER NULL REFERENCES person`)
+- planet can have ruler
 - planet report JSON result has all keys starting with uppercase
+- star system can have ruler
 - Database table `time` replaced with `simulation`
 - `StarDate` used instead of `Time` everywhere
 - Level of component changed from `Int` to `ComponentLevel`

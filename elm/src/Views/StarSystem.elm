@@ -1,13 +1,22 @@
 module Views.StarSystem exposing (init, page, update)
 
 import Accessors exposing (get, over, set)
-import Api.StarSystem exposing (getPlanetsCmd, getStarSystemsCmd, getStarsCmd)
+import Api.StarSystem
+    exposing
+        ( getPlanetsCmd
+        , getStarSystemCmd
+        , getStarSystemsCmd
+        , getStarsCmd
+        )
 import Data.Accessors
     exposing
-        ( planetsA
+        ( errorsA
+        , planetsA
         , planetsStatusA
         , starLanesStatusA
         , starListStatusA
+        , starSystemA
+        , starSystemRA
         , starSystemsA
         , starSystemsRA
         , starsA
@@ -18,10 +27,12 @@ import Data.Common
         ( InfoPanelStatus(..)
         , Route(..)
         , StarSystemId(..)
+        , error
         , locationToString
         , unStarSystemId
         )
 import Data.Model exposing (Model, Msg(..))
+import Data.People exposing (displayName)
 import Data.StarSystem
     exposing
         ( PlanetPosition(..)
@@ -108,36 +119,60 @@ rightPanel systemId model =
 systemDetails : StarSystemId -> Model -> List (Html Msg)
 systemDetails systemId model =
     let
-        system =
-            model.starSystems
-                |> andThen (Dict.get (unStarSystemId systemId))
+        name =
+            model.starSystemsR.starSystem
+                |> andThen (\x -> Just x.name)
+                |> withDefault ""
+                |> text
+
+        location =
+            model.starSystemsR.starSystem
+                |> andThen (\x -> Just <| locationToString x.location)
+                |> withDefault ""
+                |> text
+
+        date =
+            model.starSystemsR.starSystem
+                |> andThen (\x -> Just <| starDateToString x.date)
+                |> withDefault ""
+                |> text
+
+        rulerName =
+            model.starSystemsR.starSystem
+                |> andThen (\x -> x.rulerName)
+                |> andThen (\x -> Just <| displayName x)
+                |> withDefault "No ruler"
+                |> text
+
+        rulerLink =
+            model.starSystemsR.starSystem
+                |> andThen (\x -> x.rulerId)
+                |> andThen (\rId -> Just (a [ href (PersonR rId) ] [ rulerName ]))
     in
-    div [ class "row design-panel-title" ]
-        [ div [ class "col-lg-4" ] [ text "Name" ]
-        , div [ class "col-lg-4" ] [ text "Location" ]
-        , div [ class "col-lg-4" ] [ text "Date" ]
+    [ div [ class "row" ]
+        [ div [ class "col-lg-4 design-panel-title" ] [ text "Name" ]
+        , div [ class "col-lg-8" ] [ name ]
         ]
-        :: [ div [ class "row" ]
-                [ div [ class "col-lg-4" ]
-                    [ system
-                        |> andThen (\x -> Just x.name)
-                        |> withDefault ""
-                        |> text
-                    ]
-                , div [ class "col-lg-4" ]
-                    [ system
-                        |> andThen (\x -> Just <| locationToString x.location)
-                        |> withDefault ""
-                        |> text
-                    ]
-                , div [ class "col-lg-4" ]
-                    [ system
-                        |> andThen (\x -> Just <| starDateToString x.date)
-                        |> withDefault ""
-                        |> text
-                    ]
-                ]
-           ]
+    , div [ class "row" ]
+        [ div [ class "col-lg-4 design-panel-title" ] [ text "Location" ]
+        , div [ class "col-lg-8" ] [ location ]
+        ]
+    , div [ class "row" ]
+        [ div [ class "col-lg-4 design-panel-title" ] [ text "Ruler" ]
+        , div [ class "col-lg-8" ]
+            [ case rulerLink of
+                Nothing ->
+                    rulerName
+
+                Just link ->
+                    link
+            ]
+        ]
+    , div [ class "row" ]
+        [ div [ class "col-lg-4 design-panel-title" ] [ text "Date" ]
+        , div [ class "col-lg-8" ] [ date ]
+        ]
+    ]
 
 
 starsInfo : StarSystemId -> Model -> List (Html Msg)
@@ -200,12 +235,17 @@ planetsInfo systemId model =
            )
 
 
+
+--TODO: get stars and planets specifically for this star system
+
+
 init : StarSystemId -> Model -> Cmd Msg
 init systemId model =
     Cmd.batch
         [ getStarsCmd model
         , getStarSystemsCmd model
         , getPlanetsCmd
+        , getStarSystemCmd (StarSystemMessage << StarSystemReceived) systemId
         ]
 
 
@@ -223,3 +263,14 @@ update msg model =
 
         PlanetListStatusChanged status ->
             ( set (starSystemsRA << planetsStatusA) status model, Cmd.none )
+
+        StarSystemReceived (Ok system) ->
+            ( set (starSystemsRA << starSystemA) (Just system) model
+            , Cmd.none
+            )
+
+        StarSystemReceived (Err err) ->
+            ( set (starSystemsRA << starSystemA) Nothing model
+                |> over errorsA (\errors -> error err "Failed to load star system" :: errors)
+            , Cmd.none
+            )

@@ -4,13 +4,15 @@ import Data.Common
     exposing
         ( DesignId
         , MessageId
+        , PersonId
         , PlanetId
+        , StarSystemId
         , constructionIdToString
         , designIdToString
         , messageIdToString
-        , planetIdToString
         , personIdToString
-        , PersonId
+        , planetIdToString
+        , starSystemIdToString
         )
 import Data.Construction exposing (Construction(..))
 
@@ -19,6 +21,7 @@ type Endpoint
     = ApiStarDate
     | ApiResources
     | ApiStarSystem
+    | ApiSingleStarSystem StarSystemId
     | ApiStar
     | ApiPlanet
     | ApiSinglePlanet PlanetId
@@ -53,6 +56,9 @@ endpointToString endpoint =
 
         ApiStarSystem ->
             "/api/starsystem"
+
+        ApiSingleStarSystem systemId ->
+            "/api/starsystem/" ++ starSystemIdToString systemId
 
         ApiStar ->
             "/api/star"

@@ -32,6 +32,7 @@ module Data.Common exposing
     , personIdToString
     , planetIdToString
     , routeToString
+    , starSystemIdToString
     , triple
     , unBio
     , unBuildingId
@@ -125,6 +126,11 @@ type Route
 
 type StarSystemId
     = StarSystemId Int
+
+
+starSystemIdToString : StarSystemId -> String
+starSystemIdToString (StarSystemId x) =
+    String.fromInt x
 
 
 type StarId

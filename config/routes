@@ -7,9 +7,9 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/ HomeR GET
-/newhome NewHomeR GET
-/profile ProfileR GET
+/                                    HomeR               GET
+/newhome                             NewHomeR            GET
+/profile                             ProfileR            GET
 /starsystem                          StarSystemsR        GET
 /starsystem/#StarSystemId            StarSystemR         GET
 /starsystem/#StarSystemId/#PlanetId  PlanetR             GET
@@ -19,7 +19,7 @@
 /designer                            DesignerR           GET
 /base                                BasesR              GET
 /base/#StarSystemId/#PlanetId        BaseR               GET
-/faction                             FactionR            GET POST
+/faction                             FactionR            GET
 /message                             MessageR            GET
 /person/#PersonId                    PersonR             GET
 /person                              PeopleR             GET
@@ -27,6 +27,7 @@
 /api/stardate                                       ApiStarDateR                    GET
 /api/resources                                      ApiResourcesR                   GET
 /api/starsystem                                     ApiStarSystemsR                 GET
+/api/starsystem/#StarSystemId                       ApiStarSystemR                  GET
 /api/star                                           ApiStarsR                       GET
 /api/components                                     ApiComponentsR                  GET
 /api/chassis                                        ApiChassisR                     GET

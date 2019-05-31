@@ -30,8 +30,9 @@ Faction json
 
 StarSystem json
     name Text
-    coordX Int
-    coordY Int
+    coordX Double
+    coordY Double
+    rulerId PersonId Maybe
     deriving Show Read Eq
 
 Star json
@@ -185,6 +186,7 @@ StarSystemReport json
     coordY Double
     factionId FactionId
     date StarDate
+    rulerId PersonId Maybe
     deriving Show Read Eq
 
 StarReport json

@@ -19,6 +19,7 @@ spec = withApp $ do
                         { starSystemName = "Aldebaraan"
                         , starSystemCoordX = 10
                         , starSystemCoordY = 20
+                        , starSystemRulerId = Nothing
                         }
 
                 fId <- runDB $ insert $ Faction

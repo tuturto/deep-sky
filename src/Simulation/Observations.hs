@@ -20,7 +20,9 @@ import Common
 import CustomTypes
 import News.Import ( planetFoundNews, starFoundNews )
 import Report ( createPlanetReports, createStarLaneReports, createStarReports
-              , CollatedPlanetReport(..), CollatedStarLaneReport(..), CollatedStarReport(..))
+              , CollatedPlanetReport(..), CollatedStarLaneReport(..)
+              , CollatedStarReport(..), CollatedStarSystemReport(..)
+              )
 
 
 -- | Generate reports for all kinds of things faction can currently observe
@@ -82,6 +84,22 @@ doPlanetObservation date faction planet = do
                                           , planetStatusReportDate = date
                                           }
     _ <- insert statusReport
+    systemDb <- get $ planetStarSystemId p
+    let systemReport = case systemDb of
+                        Nothing ->
+                            Nothing
+
+                        Just system ->
+                            Just $ StarSystemReport
+                                    { starSystemReportStarSystemId = planetStarSystemId p
+                                    , starSystemReportName = Just $ starSystemName system
+                                    , starSystemReportCoordX = starSystemCoordX system
+                                    , starSystemReportCoordY = starSystemCoordY system
+                                    , starSystemReportFactionId = entityKey faction
+                                    , starSystemReportDate = date
+                                    , starSystemReportRulerId = starSystemRulerId system
+                                    }
+    _ <- mapM insert systemReport
     return ()
 
 
@@ -175,10 +193,27 @@ observeTarget date faction (Just (OCPlanet planetEntity _ observationType)) _ = 
     _ <- insert res
     return ()
 
+observeTarget date faction (Just (OCStarSystem starSystemEntity _)) _ = do
+    let system = entityVal starSystemEntity
+    let sId = entityKey starSystemEntity
+    -- current ruler of star system is always deduced while observing
+    let res = StarSystemReport
+                { starSystemReportStarSystemId = sId
+                , starSystemReportName = Just $ starSystemName system
+                , starSystemReportCoordX = starSystemCoordX system
+                , starSystemReportCoordY = starSystemCoordY system
+                , starSystemReportFactionId = entityKey faction
+                , starSystemReportDate = date
+                , starSystemReportRulerId = starSystemRulerId system
+                }
+    _ <- insert res
+    return ()
+
 
 data ObservationCandidate = OCStar (Entity Star) (Maybe CollatedStarReport) ObservationType
                           | OCPlanet (Entity Planet) (Maybe CollatedPlanetReport) ObservationType
                           | OCStarLane (Entity StarLane) (Maybe CollatedStarLaneReport)
+                          | OCStarSystem (Entity StarSystem) (Maybe CollatedStarSystemReport)
     deriving Show
 
 
@@ -243,6 +278,7 @@ buildOCStarLaneList reports = filter needsObservation $ map combineFn reports
 needsObservation :: ObservationCandidate -> Bool
 needsObservation (OCStar _ Nothing _) = True
 needsObservation (OCPlanet _ Nothing _) = True
+needsObservation (OCStarSystem _ Nothing) = True
 needsObservation OCStarLane {} = False
 
 needsObservation (OCStar entity (Just report) _) =
@@ -259,3 +295,8 @@ needsObservation (OCPlanet entity (Just report) _) =
     || cprGravity report /= (Just $ planetGravity planet)
     where
         planet = entityVal entity
+
+needsObservation (OCStarSystem (Entity _ starSystem) (Just report)) =
+    cssrName report /= (Just $ starSystemName starSystem)
+    || cssrLocation report /= Coordinates (starSystemCoordX starSystem) (starSystemCoordY starSystem)
+    || cssrRulerId report /= starSystemRulerId starSystem
