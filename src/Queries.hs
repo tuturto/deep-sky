@@ -59,11 +59,12 @@ planetConstructionQueue :: (MonadIO m, BackendCompatible SqlBackend backend,
 planetConstructionQueue pId = do
     res <- E.select $
             E.from $ \(planet `E.LeftOuterJoin` bConstruction) -> do
-                E.on (bConstruction E.^. BuildingConstructionPlanetId E.==. planet E.^. PlanetId)
+                E.on (bConstruction E.?. BuildingConstructionPlanetId E.==. E.just (planet E.^. PlanetId))
                 E.where_ (planet E.^. PlanetId E.==. E.val pId)
                 return (planet, bConstruction)
     let planet = fst <$> safeHead res
-    return (planet, map snd res)
+    let constructions = mapMaybe snd res
+    return (planet, constructions)
 
 
 -- | Load planets that are kragii attack candidates
@@ -180,7 +181,7 @@ groupUnderParent xs =
         childs = mapMaybe snd xs
 
 
--- | Load reports of given planet and join people for ruler name
+-- | Load reports of given planet and join people for ruler information
 planetReports :: (MonadIO m, BackendCompatible SqlBackend backend,
     PersistQueryRead backend, PersistUniqueRead backend) =>
     Key Faction -> Key Planet
@@ -198,6 +199,7 @@ planetReports fId planetId = do
     return res
 
 
+-- | Load reports of given star system and join people for ruler information
 starSystemReports :: (MonadIO m,
     BackendCompatible SqlBackend backend, PersistQueryRead backend,
     PersistUniqueRead backend) =>
