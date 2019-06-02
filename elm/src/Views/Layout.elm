@@ -9,7 +9,9 @@ import Data.Common
         ( ErrorMessage(..)
         , Route(..)
         , unPlanetId
+        , unPlanetName
         , unStarSystemId
+        , unStarSystemName
         )
 import Data.Model exposing (Model, Msg(..))
 import Data.People exposing (displayName)
@@ -203,7 +205,7 @@ segment model route =
                 starSystemName =
                     model.starSystems
                         |> andThen (Dict.get (unStarSystemId systemId))
-                        |> andThen (\x -> Just x.name)
+                        |> andThen (\x -> Just (unStarSystemName x.name))
                         |> withDefault "Unknown star system"
             in
             ( starSystemName, Just StarSystemsR )
@@ -219,7 +221,7 @@ segment model route =
                         |> withDefault []
                         |> List.filter (\planet -> unPlanetId planet.id == unPlanetId planetId)
                         |> List.head
-                        |> andThen (\x -> Just x.name)
+                        |> andThen (\x -> Just (unPlanetName x.name))
                         |> withDefault "Unknown planet"
             in
             ( planetName, Just (StarSystemR systemId) )

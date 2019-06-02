@@ -56,6 +56,7 @@
 
 -- /api/person                                         ApiPeopleR                      GET
 /api/person/#PersonId                               ApiPersonR                      GET
+/api/person/#PersonId/demesne                       ApiDemesneR                     GET
 
 /admin                               AdminPanelR          GET
 /admin/time                          AdminAdvanceTimeR    GET

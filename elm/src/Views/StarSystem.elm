@@ -29,10 +29,13 @@ import Data.Common
         , StarSystemId(..)
         , error
         , locationToString
+        , unPlanetName
+        , unStarName
         , unStarSystemId
+        , unStarSystemName
         )
 import Data.Model exposing (Model, Msg(..))
-import Data.People exposing (displayName)
+import Data.People exposing (displayName, unShortTitle)
 import Data.StarSystem
     exposing
         ( PlanetPosition(..)
@@ -121,7 +124,7 @@ systemDetails systemId model =
     let
         name =
             model.starSystemsR.starSystem
-                |> andThen (\x -> Just x.name)
+                |> andThen (\x -> Just (unStarSystemName x.name))
                 |> withDefault ""
                 |> text
 
@@ -137,17 +140,24 @@ systemDetails systemId model =
                 |> withDefault ""
                 |> text
 
-        rulerName =
+        title =
+            model.starSystemsR.starSystem
+                |> andThen (\x -> x.rulerTitle)
+                |> andThen (Just << unShortTitle)
+                |> withDefault " "
+
+        rulerText =
             model.starSystemsR.starSystem
                 |> andThen (\x -> x.rulerName)
                 |> andThen (\x -> Just <| displayName x)
+                |> andThen (\x -> Just <| title ++ " " ++ x)
                 |> withDefault "No ruler"
                 |> text
 
         rulerLink =
             model.starSystemsR.starSystem
                 |> andThen (\x -> x.rulerId)
-                |> andThen (\rId -> Just (a [ href (PersonR rId) ] [ rulerName ]))
+                |> andThen (\rId -> Just (a [ href (PersonR rId) ] [ rulerText ]))
     in
     [ div [ class "row" ]
         [ div [ class "col-lg-4 design-panel-title" ] [ text "Name" ]
@@ -162,7 +172,7 @@ systemDetails systemId model =
         , div [ class "col-lg-8" ]
             [ case rulerLink of
                 Nothing ->
-                    rulerName
+                    rulerText
 
                 Just link ->
                     link
@@ -188,7 +198,7 @@ starsInfo systemId model =
                 |> List.map
                     (\entry ->
                         div [ class "row" ]
-                            [ div [ class "col-lg-4" ] [ text entry.name ]
+                            [ div [ class "col-lg-4" ] [ text (unStarName entry.name) ]
                             , div [ class "col-lg-4" ] [ text <| stellarClassification entry ]
                             , div [ class "col-lg-4" ] [ text <| starDateToString entry.date ]
                             ]
@@ -216,7 +226,7 @@ planetsInfo systemId model =
                     (\entry ->
                         div [ class "row" ]
                             [ div [ class "col-lg-4" ]
-                                [ a [ href (PlanetR systemId entry.id) ] [ text entry.name ] ]
+                                [ a [ href (PlanetR systemId entry.id) ] [ text (unPlanetName entry.name) ] ]
                             , div [ class "col-lg-1" ]
                                 [ entry.position
                                     |> andThen (\(PlanetPosition x) -> Just <| String.fromInt x)

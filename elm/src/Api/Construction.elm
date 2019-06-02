@@ -13,6 +13,8 @@ import Api.Common
     exposing
         ( delete
         , get
+        , planetIdDecoder
+        , planetIdEncoder
         , post
         , put
         , resourcesDecoder
@@ -25,8 +27,6 @@ import Api.StarSystem
         , buildingLevelEncoder
         , buildingTypeDecoder
         , buildingTypeEncoder
-        , planetIdDecoder
-        , planetIdEncoder
         )
 import Data.Common exposing (ConstructionId(..), PlanetId)
 import Data.Construction

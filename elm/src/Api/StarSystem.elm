@@ -14,13 +14,9 @@ module Api.StarSystem exposing
     , getStarsCmd
     , gravityDecoder
     , planetDecoder
-    , planetIdDecoder
-    , planetIdEncoder
     , planetPositionDecoder
     , planetStatus
     , starDecoder
-    , starSystemIdDecoder
-    , starSystemIdEncoder
     , starSystemsCmd
     , starsCmd
     )
@@ -31,10 +27,15 @@ import Api.Common
     exposing
         ( get
         , locationDecoder
+        , planetIdDecoder
+        , planetNameDecoder
         , starDateDecoder
+        , starNameDecoder
+        , starSystemIdDecoder
+        , starSystemNameDecoder
         )
 import Api.Endpoints exposing (Endpoint(..))
-import Api.People exposing (personIdDecoder, personNameDecoder)
+import Api.People exposing (personIdDecoder, personNameDecoder, shortTitleDecoder)
 import Api.User exposing (factionIdDecoder)
 import Data.Accessors exposing (planetIdA, planetStatusA)
 import Data.Common
@@ -168,26 +169,16 @@ planetStatus model planetId =
             Http.send (ApiMsgCompleted << PlanetStatusReceived) (get (ApiPlanetStatus planetId) planetStatusDecoder)
 
 
-starSystemIdDecoder : Decode.Decoder StarSystemId
-starSystemIdDecoder =
-    succeed StarSystemId
-        |> andMap int
-
-
-starSystemIdEncoder : StarSystemId -> Encode.Value
-starSystemIdEncoder (StarSystemId x) =
-    Encode.int x
-
-
 starSystemDecoder : Decode.Decoder StarSystem
 starSystemDecoder =
     succeed StarSystem
         |> andMap (field "Id" starSystemIdDecoder)
-        |> andMap (field "Name" string)
+        |> andMap (field "Name" starSystemNameDecoder)
         |> andMap (field "Location" locationDecoder)
         |> andMap (field "Date" starDateDecoder)
         |> andMap (field "RulerId" (maybe personIdDecoder))
         |> andMap (field "RulerName" (maybe personNameDecoder))
+        |> andMap (field "RulerTitle" (maybe shortTitleDecoder))
 
 
 starDecoder : Decode.Decoder Star
@@ -195,7 +186,7 @@ starDecoder =
     succeed Star
         |> andMap (field "id" starIdDecoder)
         |> andMap (field "systemId" starSystemIdDecoder)
-        |> andMap (field "name" string)
+        |> andMap (field "name" starNameDecoder)
         |> andMap (field "spectralType" (maybe spectralTypeDecoder))
         |> andMap (field "luminosityClass" (maybe luminosityClassDecoder))
         |> andMap (field "date" starDateDecoder)
@@ -288,17 +279,6 @@ stringToLuminosity s =
             fail "unknown type"
 
 
-planetIdDecoder : Decode.Decoder PlanetId
-planetIdDecoder =
-    succeed PlanetId
-        |> andMap int
-
-
-planetIdEncoder : PlanetId -> Encode.Value
-planetIdEncoder (PlanetId x) =
-    Encode.int x
-
-
 gravityDecoder : Decode.Decoder Gravity
 gravityDecoder =
     succeed Gravity
@@ -316,13 +296,14 @@ planetDecoder =
     succeed Planet
         |> andMap (field "Id" planetIdDecoder)
         |> andMap (field "SystemId" starSystemIdDecoder)
-        |> andMap (field "Name" string)
+        |> andMap (field "Name" planetNameDecoder)
         |> andMap (field "Position" (maybe planetPositionDecoder))
         |> andMap (field "Gravity" (maybe gravityDecoder))
         |> andMap (field "OwnerId" (maybe factionIdDecoder))
         |> andMap (field "Date" starDateDecoder)
         |> andMap (field "RulerId" (maybe personIdDecoder))
         |> andMap (field "RulerName" (maybe personNameDecoder))
+        |> andMap (field "RulerTitle" (maybe shortTitleDecoder))
 
 
 populationDecoder : Decode.Decoder Population

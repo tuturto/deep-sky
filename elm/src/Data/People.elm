@@ -1,25 +1,43 @@
 module Data.People exposing
     ( Age(..)
     , Cognomen(..)
+    , DemesneShortInfo(..)
     , FamilyName(..)
     , FirstName(..)
     , Gender(..)
+    , LongTitle(..)
     , Person
     , PersonName(..)
+    , PlanetDemesneReportShort
     , RegnalNumber(..)
     , Sex(..)
+    , ShortTitle(..)
+    , StarSystemDemesneReportShort
     , StatValue(..)
     , StatValues
     , displayName
+    , formalName
     , unAge
     , unCognomen
     , unFamilyName
     , unFirstName
+    , unLongTitle
     , unRegnalNumber
+    , unShortTitle
     , unStatValue
     )
 
-import Data.Common exposing (PersonId, findFirst)
+import Data.Common
+    exposing
+        ( DemesneName
+        , PersonId
+        , PlanetId
+        , PlanetName
+        , StarDate
+        , StarSystemId
+        , StarSystemName
+        , findFirst
+        )
 import List exposing (repeat)
 import Maybe exposing (map, withDefault)
 import String exposing (join)
@@ -144,6 +162,8 @@ numerals =
 type alias Person =
     { id : PersonId
     , name : PersonName
+    , shortTitle : Maybe ShortTitle
+    , longTitle : Maybe LongTitle
     , stats : Maybe StatValues
     , sex : Sex
     , gender : Gender
@@ -189,3 +209,55 @@ type Age
 unAge : Age -> Int
 unAge (Age n) =
     n
+
+
+{-| Short form demesne report, listing only ID and Name
+-}
+type DemesneShortInfo
+    = PlanetDemesneShort PlanetDemesneReportShort
+    | StarSystemDemesneShort StarSystemDemesneReportShort
+
+
+type alias PlanetDemesneReportShort =
+    { planetId : PlanetId
+    , starSystemId : StarSystemId
+    , name : PlanetName
+    , formalName : DemesneName
+    , date : StarDate
+    }
+
+
+type alias StarSystemDemesneReportShort =
+    { starSystemId : StarSystemId
+    , name : StarSystemName
+    , formalName : DemesneName
+    , date : StarDate
+    }
+
+
+formalName : DemesneShortInfo -> DemesneName
+formalName info =
+    case info of
+        PlanetDemesneShort report ->
+            report.formalName
+
+        StarSystemDemesneShort report ->
+            report.formalName
+
+
+type ShortTitle
+    = ShortTitle String
+
+
+unShortTitle : ShortTitle -> String
+unShortTitle (ShortTitle s) =
+    s
+
+
+type LongTitle
+    = LongTitle String
+
+
+unLongTitle : LongTitle -> String
+unLongTitle (LongTitle s) =
+    s

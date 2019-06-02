@@ -257,6 +257,8 @@ Person json
     intrique (StatScore Intrique)
     learning (StatScore Learning)
     factionId FactionId Maybe
+    planetTitle PlanetId Maybe
+    starSystemTitle StarSystemId Maybe
     deriving Show Read Eq
 
 HumanIntelligence json

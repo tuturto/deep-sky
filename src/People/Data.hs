@@ -12,7 +12,8 @@
 module People.Data
     ( PersonName(..), FirstName(..), FamilyName(..), Cognomen(..)
     , RegnalNumber(..), Sex(..), Gender(..), PersonIntel(..), StatScore(..)
-    , Diplomacy(..), Martial(..), Stewardship(..), Intrique(..), Learning(..) )
+    , Diplomacy(..), Martial(..), Stewardship(..), Intrique(..), Learning(..)
+    , DemesneName(..), ShortTitle(..), LongTitle(..) )
     where
 
 import Data.Aeson ( ToJSON(..), Object, withScientific, withText, withObject )
@@ -175,6 +176,7 @@ data Gender =
 
 data PersonIntel =
     Stats
+    | Demesne
     deriving (Show, Read, Eq, Enum, Bounded)
 
 
@@ -222,6 +224,53 @@ data Intrique = Intrique
 
 data Learning = Learning
 
+
+newtype DemesneName = DemesneName { unDemesneName :: Text }
+    deriving (Show, Read, Eq)
+
+
+instance IsString DemesneName where
+    fromString = DemesneName . fromString
+
+
+instance ToJSON DemesneName where
+    toJSON = toJSON . unDemesneName
+
+
+newtype ShortTitle = ShortTitle { unShortTitle :: Text}
+    deriving (Show, Read, Eq)
+
+
+instance IsString ShortTitle where
+    fromString = ShortTitle . fromString
+
+
+instance ToJSON ShortTitle where
+    toJSON = toJSON . unShortTitle
+
+
+instance FromJSON ShortTitle where
+    parseJSON =
+        withText "short title"
+            (\x -> return $ ShortTitle x)
+
+
+newtype LongTitle = LongTitle { unLongTitle :: Text}
+    deriving (Show, Read, Eq)
+
+
+instance IsString LongTitle where
+    fromString = LongTitle . fromString
+
+
+instance ToJSON LongTitle where
+    toJSON = toJSON . unLongTitle
+
+
+instance FromJSON LongTitle where
+    parseJSON =
+        withText "long title"
+            (\x -> return $ LongTitle x)
 
 derivePersistField "PersonName"
 derivePersistField "Sex"

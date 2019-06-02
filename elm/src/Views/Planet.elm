@@ -55,6 +55,7 @@ import Data.Common
         , error
         , unBuildingId
         , unPlanetId
+        , unPlanetName
         , unStarSystemId
         )
 import Data.Construction
@@ -76,7 +77,7 @@ import Data.Construction
         , unConstructionIndex
         )
 import Data.Model exposing (Model, Msg(..))
-import Data.People exposing (displayName)
+import Data.People exposing (displayName, unShortTitle)
 import Data.StarSystem
     exposing
         ( Planet
@@ -378,7 +379,7 @@ planetDetails planet model =
         [ div [ class "col-lg-2 design-panel-title" ] [ text "Name" ]
         , div [ class "col-lg-4" ]
             [ planet
-                |> andThen (\x -> Just x.name)
+                |> andThen (\x -> Just (unPlanetName x.name))
                 |> withDefault "-"
                 |> text
             ]
@@ -404,12 +405,19 @@ planetDetails planet model =
         ]
     , div [ class "row" ]
         [ div [ class "col-lg-2 design-panel-title" ] [ text "Ruler" ]
-        , div [ class "col-lg-4" ]
+        , div [ class "col-lg-10" ]
             [ let
+                title =
+                    planet
+                        |> andThen (\x -> x.rulerTitle)
+                        |> andThen (Just << unShortTitle)
+                        |> withDefault " "
+
                 rulerText =
                     planet
                         |> andThen (\x -> x.rulerName)
                         |> andThen (\x -> Just <| displayName x)
+                        |> andThen (\x -> Just <| title ++ " " ++ x)
                         |> withDefault "No ruler"
                         |> text
               in

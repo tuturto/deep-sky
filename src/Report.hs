@@ -23,7 +23,8 @@ import Database.Persist.Sql (toSqlKey)
 
 import CustomTypes
 import Dto.Icons ( IconMapper(..) )
-import People.Data ( PersonName(..) )
+import People.Data ( PersonName(..), ShortTitle )
+import People.Import ( shortTitle )
 
 
 -- | Class to transform a report stored in db to respective collated report
@@ -42,6 +43,7 @@ data CollatedStarSystemReport = CollatedStarSystemReport
     , cssrLocation :: Coordinates
     , cssrRulerId :: Maybe (Key Person)
     , cssrRulerName :: Maybe PersonName
+    , cssrRulerTitle :: Maybe ShortTitle
     , cssrDate :: StarDate
     } deriving Show
 
@@ -53,6 +55,7 @@ instance Semigroup CollatedStarSystemReport where
                 , cssrLocation = cssrLocation a
                 , cssrRulerId = cssrRulerId a
                 , cssrRulerName = cssrRulerName a
+                , cssrRulerTitle = cssrRulerTitle a
                 , cssrDate = max (cssrDate a) (cssrDate b)
                 }
 
@@ -63,6 +66,7 @@ instance Monoid CollatedStarSystemReport where
                 , cssrName = Nothing
                 , cssrRulerId = Nothing
                 , cssrRulerName = Nothing
+                , cssrRulerTitle = Nothing
                 , cssrLocation = Coordinates 0 0
                 , cssrDate = 0
                 }
@@ -76,6 +80,7 @@ instance ReportTransform StarSystemReport CollatedStarSystemReport where
             , cssrLocation = Coordinates (starSystemReportCoordX report) (starSystemReportCoordY report)
             , cssrRulerId = starSystemReportRulerId report
             , cssrRulerName = Nothing
+            , cssrRulerTitle = Nothing
             , cssrDate = starSystemReportDate report
             }
 
@@ -88,6 +93,7 @@ instance ReportTransform (StarSystemReport, Maybe Person) CollatedStarSystemRepo
             , cssrLocation = Coordinates (starSystemReportCoordX report) (starSystemReportCoordY report)
             , cssrRulerId = starSystemReportRulerId report
             , cssrRulerName = personName <$> person
+            , cssrRulerTitle = join $ shortTitle <$> person
             , cssrDate = starSystemReportDate report
             }
 
@@ -160,6 +166,7 @@ data CollatedPlanetReport = CollatedPlanetReport
     , cprDate :: StarDate
     , cprRulerId :: Maybe (Key Person)
     , cprRulerName :: Maybe PersonName
+    , cprRulerTitle :: Maybe ShortTitle
     } deriving Show
 
 
@@ -175,11 +182,23 @@ instance Semigroup CollatedPlanetReport where
             , cprDate = max (cprDate a) (cprDate b)
             , cprRulerId = cprRulerId a -- Ruler info is always up to date
             , cprRulerName = cprRulerName a
+            , cprRulerTitle = cprRulerTitle a
             }
 
 
 instance Monoid CollatedPlanetReport where
-    mempty = CollatedPlanetReport (toSqlKey 0) (toSqlKey 0) Nothing Nothing Nothing Nothing 0 Nothing Nothing
+    mempty = CollatedPlanetReport
+                { cprId = toSqlKey 0
+                , cprSystemId = toSqlKey 0
+                , cprOwnerId = Nothing
+                , cprName = Nothing
+                , cprPosition = Nothing
+                , cprGravity = Nothing
+                , cprRulerId = Nothing
+                , cprRulerName = Nothing
+                , cprRulerTitle = Nothing
+                , cprDate = 0
+                }
 
 
 instance ReportTransform PlanetReport CollatedPlanetReport where
@@ -194,6 +213,7 @@ instance ReportTransform PlanetReport CollatedPlanetReport where
             , cprDate = planetReportDate report
             , cprRulerId = planetReportRulerId report
             , cprRulerName = Nothing
+            , cprRulerTitle = Nothing
             }
 
 
@@ -209,6 +229,7 @@ instance ReportTransform (PlanetReport, Maybe Person) CollatedPlanetReport where
             , cprDate = planetReportDate report
             , cprRulerId = planetReportRulerId report
             , cprRulerName = personName <$> person
+            , cprRulerTitle = join $ shortTitle <$> person
             }
 
 

@@ -22,6 +22,9 @@ module Data.Accessors exposing
     , currentPageA
     , currentResearchA
     , currentResearchStatusA
+    , demesneA
+    , demesneCurrentPageA
+    , demesneStatusA
     , designPanelStatusA
     , designerRA
     , designsA
@@ -66,6 +69,7 @@ module Data.Accessors exposing
     , selectedChassisA
     , selectedComponentsA
     , sexA
+    , shortTitleA
     , starLanesStatusA
     , starListStatusA
     , starSystemA
@@ -84,6 +88,34 @@ module Data.Accessors exposing
 
 import Accessors exposing (Relation, makeOneToN, makeOneToOne)
 import Accessors.Library exposing (onEach)
+
+
+shortTitleA : Relation field sub wrap -> Relation { rec | shortTitle : field } sub wrap
+shortTitleA =
+    makeOneToOne
+        .shortTitle
+        (\change rec -> { rec | shortTitle = change rec.shortTitle })
+
+
+demesneCurrentPageA : Relation field sub wrap -> Relation { rec | demesneCurrentPage : field } sub wrap
+demesneCurrentPageA =
+    makeOneToOne
+        .demesneCurrentPage
+        (\change rec -> { rec | demesneCurrentPage = change rec.demesneCurrentPage })
+
+
+demesneStatusA : Relation field sub wrap -> Relation { rec | demesneStatus : field } sub wrap
+demesneStatusA =
+    makeOneToOne
+        .demesneStatus
+        (\change rec -> { rec | demesneStatus = change rec.demesneStatus })
+
+
+demesneA : Relation field sub wrap -> Relation { rec | demesne : field } sub wrap
+demesneA =
+    makeOneToOne
+        .demesne
+        (\change rec -> { rec | demesne = change rec.demesne })
 
 
 starSystemA : Relation field sub wrap -> Relation { rec | starSystem : field } sub wrap

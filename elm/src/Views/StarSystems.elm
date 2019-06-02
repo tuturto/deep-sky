@@ -1,7 +1,13 @@
 module Views.StarSystems exposing (init, page)
 
 import Api.StarSystem exposing (getStarSystemsCmd)
-import Data.Common exposing (Location(..), Route(..), locationToString)
+import Data.Common
+    exposing
+        ( Location(..)
+        , Route(..)
+        , locationToString
+        , unStarSystemName
+        )
 import Data.Model exposing (Model, Msg(..))
 import Data.StarSystem exposing (StarSystem)
 import Data.User exposing (Role(..))
@@ -44,7 +50,7 @@ systemRow : StarSystem -> Html Msg
 systemRow starSystem =
     div [ class "row" ]
         [ div [ class "col-lg-2" ]
-            [ a [ href (StarSystemR starSystem.id) ] [ text starSystem.name ] ]
+            [ a [ href (StarSystemR starSystem.id) ] [ text (unStarSystemName starSystem.name) ] ]
         , div [ class "col-lg-1" ]
             [ text <| locationToString starSystem.location ]
         , div [ class "col-lg-2" ]

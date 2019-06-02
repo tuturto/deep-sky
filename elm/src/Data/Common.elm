@@ -3,6 +3,7 @@ module Data.Common exposing
     , BuildingId(..)
     , ChemResource(..)
     , ConstructionId(..)
+    , DemesneName(..)
     , DesignId(..)
     , ErrorMessage(..)
     , FactionId(..)
@@ -12,13 +13,16 @@ module Data.Common exposing
     , MessageId(..)
     , PersonId(..)
     , PlanetId(..)
+    , PlanetName(..)
     , ResourceType(..)
     , Resources
     , Route(..)
     , ShipId(..)
     , StarDate(..)
     , StarId(..)
+    , StarName(..)
     , StarSystemId(..)
+    , StarSystemName(..)
     , UserId(..)
     , capitalize
     , constructionIdToString
@@ -38,16 +42,20 @@ module Data.Common exposing
     , unBuildingId
     , unChem
     , unConstructionId
+    , unDemesneName
     , unDesignId
     , unFactionId
     , unMech
     , unMessageId
     , unPersonId
     , unPlanetId
+    , unPlanetName
     , unShipId
     , unStarDate
     , unStarId
+    , unStarName
     , unStarSystemId
+    , unStarSystemName
     , unUserId
     , writtenNumber
     )
@@ -439,3 +447,37 @@ joinMaybe m =
 
         Just x ->
             x
+
+
+type PlanetName
+    = PlanetName String
+
+
+unPlanetName (PlanetName s) =
+    s
+
+
+type StarSystemName
+    = StarSystemName String
+
+
+unStarSystemName (StarSystemName s) =
+    s
+
+
+type StarName
+    = StarName String
+
+
+unStarName : StarName -> String
+unStarName (StarName s) =
+    s
+
+
+type DemesneName
+    = DemesneName String
+
+
+unDemesneName : DemesneName -> String
+unDemesneName (DemesneName s) =
+    s

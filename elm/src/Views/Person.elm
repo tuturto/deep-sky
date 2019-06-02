@@ -6,10 +6,13 @@ intelligence level. The higher the level, the more details are shown.
 
 import Accessors exposing (get, over, set)
 import Accessors.Library exposing (try)
-import Api.People exposing (personDetails)
+import Api.People exposing (getDemesne, getPersonDetails)
 import Data.Accessors
     exposing
         ( ageA
+        , demesneA
+        , demesneCurrentPageA
+        , demesneStatusA
         , diplomacyA
         , errorsA
         , genderA
@@ -22,6 +25,7 @@ import Data.Accessors
         , personDetailsStatusA
         , personRA
         , sexA
+        , shortTitleA
         , statsA
         , statsStatusA
         , stewardshipA
@@ -30,18 +34,26 @@ import Data.Common
     exposing
         ( InfoPanelStatus(..)
         , PersonId
+        , Route(..)
         , error
         , joinMaybe
+        , maxPage
+        , unDemesneName
+        , unPlanetName
+        , unStarSystemName
         )
 import Data.Model exposing (Model, Msg(..))
 import Data.People
     exposing
-        ( Gender(..)
+        ( DemesneShortInfo(..)
+        , Gender(..)
         , Person
         , PersonName
         , Sex(..)
         , displayName
+        , formalName
         , unAge
+        , unShortTitle
         , unStatValue
         )
 import Html exposing (..)
@@ -51,6 +63,7 @@ import ViewModels.Person exposing (PersonRMsg(..), PersonViewModel)
 import Views.Helpers
     exposing
         ( PanelSizing(..)
+        , href
         , infoPanel
         , twinPanels
         )
@@ -60,7 +73,10 @@ import Views.Helpers
 -}
 init : PersonId -> Model -> Cmd Msg
 init pId model =
-    Cmd.batch [ personDetails (PersonMessage << PersonDetailsReceived) pId ]
+    Cmd.batch
+        [ getPersonDetails (PersonMessage << PersonDetailsReceived) pId
+        , getDemesne (PersonMessage << DemesneReceived) pId
+        ]
 
 
 {-| Render page of displaying the person
@@ -75,6 +91,7 @@ page model =
 leftPanel : Model -> List (Html Msg)
 leftPanel model =
     personDetailsPanel model
+        ++ demesnePanel model
 
 
 {-| Render right side of the screen
@@ -110,6 +127,19 @@ personDetailsContent model =
                 |> Maybe.map displayName
                 |> Maybe.withDefault "-"
 
+        title =
+            get (personRA << personA << try << shortTitleA) model
+                |> joinMaybe
+                |> Maybe.map unShortTitle
+
+        fullName =
+            case title of
+                Nothing ->
+                    name
+
+                Just s ->
+                    s ++ " " ++ name
+
         age =
             get (personRA << personA << try << ageA) model
                 |> Maybe.map (String.fromInt << unAge)
@@ -126,24 +156,26 @@ personDetailsContent model =
                 |> Maybe.withDefault (text "-")
     in
     [ div [ class "row" ]
-        [ div [ class "col-lg-6 panel-table-heading" ] [ text "Name" ]
-        , div [ class "col-lg-6" ] [ text name ]
+        [ div [ class "col-lg-4 panel-table-heading" ] [ text "Name" ]
+        , div [ class "col-lg-8" ] [ text fullName ]
         ]
     , div [ class "row" ]
-        [ div [ class "col-lg-6 panel-table-heading" ] [ text "Age" ]
-        , div [ class "col-lg-6" ] [ text age ]
+        [ div [ class "col-lg-4 panel-table-heading" ] [ text "Age" ]
+        , div [ class "col-lg-8" ] [ text age ]
         ]
     , div [ class "row" ]
-        [ div [ class "col-lg-6 panel-table-heading" ] [ text "Sex" ]
-        , div [ class "col-lg-6" ] [ sex ]
+        [ div [ class "col-lg-4 panel-table-heading" ] [ text "Sex" ]
+        , div [ class "col-lg-8" ] [ sex ]
         ]
     , div [ class "row" ]
-        [ div [ class "col-lg-6 panel-table-heading" ] [ text "Gender" ]
-        , div [ class "col-lg-6" ] [ gender ]
+        [ div [ class "col-lg-4 panel-table-heading" ] [ text "Gender" ]
+        , div [ class "col-lg-8" ] [ gender ]
         ]
     ]
 
 
+{-| Map Sex into displayable text
+-}
 displaySex : Sex -> Html msg
 displaySex s =
     case s of
@@ -157,6 +189,8 @@ displaySex s =
             text "Intersex"
 
 
+{-| Map Gender into displayable tex
+-}
 displayGender : Gender -> Html msg
 displayGender g =
     case g of
@@ -189,6 +223,8 @@ statsPanel model =
         model
 
 
+{-| Contents of stats panel
+-}
 statsContent : Model -> List (Html Msg)
 statsContent model =
     let
@@ -248,6 +284,104 @@ statsContent model =
     ]
 
 
+{-| Panel showing demesne
+-}
+demesnePanel : Model -> List (Html Msg)
+demesnePanel model =
+    infoPanel
+        { title = "Demesne"
+        , currentStatus = model.personR.demesneStatus
+        , openingMessage = PersonMessage <| DemesneStatusChanged InfoPanelOpen
+        , closingMessage = PersonMessage <| DemesneStatusChanged InfoPanelClosed
+        , refreshMessage = Just <| PersonMessage <| DemesneRefreshRequested
+        }
+        (Just
+            { pageSize = model.personR.demesnePageSize
+            , currentPage = model.personR.demesneCurrentPage
+            , maxPage =
+                model.personR.demesne
+                    |> Maybe.withDefault []
+                    |> maxPage model.personR.demesnePageSize
+            , pageChangedMessage = PersonMessage << DemesnePageChanged
+            }
+        )
+        demesneContent
+        model
+
+
+{-| Content of demesne panel
+-}
+demesneContent : Model -> List (Html Msg)
+demesneContent model =
+    [ div [ class "row panel-table-heading" ]
+        [ div [ class "col-lg-8" ] [ text "Name" ]
+        , div [ class "col-lg-4" ] [ text "Type" ]
+        ]
+    ]
+        ++ (model.personR.demesne
+                |> Maybe.withDefault []
+                |> List.sortWith demesneSorter
+                |> List.map demesneEntry
+           )
+
+
+{-| Single demesne entry in demesne panel
+-}
+demesneEntry : DemesneShortInfo -> Html Msg
+demesneEntry entry =
+    let
+        name =
+            formalName entry
+                |> unDemesneName
+
+        link =
+            case entry of
+                PlanetDemesneShort report ->
+                    a [ href (PlanetR report.starSystemId report.planetId) ] [ text name ]
+
+                StarSystemDemesneShort report ->
+                    a [ href (StarSystemR report.starSystemId) ] [ text name ]
+    in
+    div [ class "row" ]
+        [ div [ class "col-lg-8" ]
+            [ link ]
+        , div [ class "col-lg-4" ]
+            [ text <| demesneType entry ]
+        ]
+
+
+{-| Sort demesne report by type and then by name
+-}
+demesneSorter : DemesneShortInfo -> DemesneShortInfo -> Order
+demesneSorter a b =
+    case a of
+        PlanetDemesneShort pa ->
+            case b of
+                PlanetDemesneShort pb ->
+                    compare (unPlanetName pa.name) (unPlanetName pb.name)
+
+                StarSystemDemesneShort _ ->
+                    GT
+
+        StarSystemDemesneShort sa ->
+            case b of
+                PlanetDemesneShort _ ->
+                    LT
+
+                StarSystemDemesneShort sb ->
+                    compare (unStarSystemName sa.name) (unStarSystemName sb.name)
+
+
+demesneType : DemesneShortInfo -> String
+demesneType info =
+    case info of
+        PlanetDemesneShort _ ->
+            "Planet"
+
+        StarSystemDemesneShort _ ->
+            "Star system"
+
+
 {-| Handle messages specific to this page
 -}
 update : PersonRMsg -> Model -> ( Model, Cmd Msg )
@@ -264,6 +398,17 @@ update msg model =
             , Cmd.none
             )
 
+        DemesneReceived (Ok demesne) ->
+            ( set (personRA << demesneA) (Just demesne) model
+            , Cmd.none
+            )
+
+        DemesneReceived (Err err) ->
+            ( set (personRA << demesneA) Nothing model
+                |> over errorsA (\errors -> error err "Failed to load demesne" :: errors)
+            , Cmd.none
+            )
+
         PersonDetailsStatusChanged status ->
             ( set (personRA << personDetailsStatusA) status model
             , Cmd.none
@@ -276,10 +421,46 @@ update msg model =
 
                 Just pId ->
                     ( set (personRA << personA) Nothing model
-                    , personDetails (PersonMessage << PersonDetailsReceived) pId
+                    , getPersonDetails (PersonMessage << PersonDetailsReceived) pId
                     )
 
         StatsStatusChanged status ->
             ( set (personRA << statsStatusA) status model
+            , Cmd.none
+            )
+
+        DemesneStatusChanged status ->
+            ( set (personRA << demesneStatusA) status model
+            , Cmd.none
+            )
+
+        DemesneRefreshRequested ->
+            case get (personRA << personA << try << idA) model of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just pId ->
+                    ( set (personRA << demesneA) Nothing model
+                    , getDemesne (PersonMessage << DemesneReceived) pId
+                    )
+
+        DemesnePageChanged pageNumber ->
+            let
+                lastPgNumber =
+                    model.personR.demesne
+                        |> Maybe.withDefault []
+                        |> maxPage model.personR.demesnePageSize
+
+                setPage target _ =
+                    if target < 0 then
+                        0
+
+                    else if target > lastPgNumber then
+                        lastPgNumber
+
+                    else
+                        target
+            in
+            ( over (personRA << demesneCurrentPageA) (setPage pageNumber) model
             , Cmd.none
             )

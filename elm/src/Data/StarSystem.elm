@@ -24,21 +24,25 @@ import Data.Common
         , Location(..)
         , PersonId
         , PlanetId
+        , PlanetName
         , StarDate(..)
         , StarId
+        , StarName
         , StarSystemId
+        , StarSystemName
         )
-import Data.People exposing (PersonName)
+import Data.People exposing (PersonName, ShortTitle)
 import Maybe exposing (andThen, withDefault)
 
 
 type alias StarSystem =
     { id : StarSystemId
-    , name : String
+    , name : StarSystemName
     , location : Location
     , date : StarDate
     , rulerId : Maybe PersonId
     , rulerName : Maybe PersonName
+    , rulerTitle : Maybe ShortTitle
     }
 
 
@@ -135,7 +139,7 @@ luminosityClassToString luminosity =
 type alias Star =
     { id : StarId
     , systemId : StarSystemId
-    , name : String
+    , name : StarName
     , spectralType : Maybe SpectralType
     , luminosityClass : Maybe LuminosityClass
     , date : StarDate
@@ -157,13 +161,14 @@ stellarClassification star =
 type alias Planet =
     { id : PlanetId
     , systemId : StarSystemId
-    , name : String
+    , name : PlanetName
     , position : Maybe PlanetPosition
     , gravity : Maybe Gravity
     , ownerId : Maybe FactionId
     , date : StarDate
     , rulerId : Maybe PersonId
     , rulerName : Maybe PersonName
+    , rulerTitle : Maybe ShortTitle
     }
 
 

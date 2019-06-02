@@ -6,6 +6,9 @@ module Api.Common exposing
     , getStarDateCmd
     , is
     , locationDecoder
+    , planetIdDecoder
+    , planetIdEncoder
+    , planetNameDecoder
     , post
     , put
     , resourceTypeDecoder
@@ -16,6 +19,10 @@ module Api.Common exposing
     , starDateCmd
     , starDateDecoder
     , starDateEncoder
+    , starNameDecoder
+    , starSystemIdDecoder
+    , starSystemIdEncoder
+    , starSystemNameDecoder
     )
 
 {-| Basic building blocs for accessing server API
@@ -28,9 +35,14 @@ import Data.Common
         , ChemResource(..)
         , Location(..)
         , MechResource(..)
+        , PlanetId(..)
+        , PlanetName(..)
         , ResourceType(..)
         , Resources
         , StarDate(..)
+        , StarName(..)
+        , StarSystemId(..)
+        , StarSystemName(..)
         )
 import Data.Model exposing (ApiMsg(..), Model, Msg(..))
 import Http
@@ -276,3 +288,43 @@ encodeMaybe f val =
 
         Nothing ->
             Encode.null
+
+
+starNameDecoder : Decode.Decoder StarName
+starNameDecoder =
+    succeed StarName
+        |> andMap string
+
+
+starSystemNameDecoder : Decode.Decoder StarSystemName
+starSystemNameDecoder =
+    succeed StarSystemName
+        |> andMap string
+
+
+planetNameDecoder : Decode.Decoder PlanetName
+planetNameDecoder =
+    succeed PlanetName
+        |> andMap string
+
+
+planetIdDecoder : Decode.Decoder PlanetId
+planetIdDecoder =
+    succeed PlanetId
+        |> andMap int
+
+
+planetIdEncoder : PlanetId -> Encode.Value
+planetIdEncoder (PlanetId x) =
+    Encode.int x
+
+
+starSystemIdDecoder : Decode.Decoder StarSystemId
+starSystemIdDecoder =
+    succeed StarSystemId
+        |> andMap int
+
+
+starSystemIdEncoder : StarSystemId -> Encode.Value
+starSystemIdEncoder (StarSystemId x) =
+    Encode.int x

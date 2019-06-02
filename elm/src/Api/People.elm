@@ -1,24 +1,40 @@
 module Api.People exposing
-    ( personDetails
+    ( getDemesne
+    , getPersonDetails
     , personIdDecoder
     , personNameDecoder
+    , shortTitleDecoder
     )
 
-import Api.Common exposing (get, is)
+import Api.Common
+    exposing
+        ( get
+        , is
+        , planetIdDecoder
+        , planetNameDecoder
+        , starDateDecoder
+        , starSystemIdDecoder
+        , starSystemNameDecoder
+        )
 import Api.Endpoints exposing (Endpoint(..))
-import Data.Common exposing (PersonId(..))
+import Data.Common exposing (DemesneName(..), PersonId(..))
 import Data.Model exposing (Msg(..))
 import Data.People
     exposing
         ( Age(..)
         , Cognomen(..)
+        , DemesneShortInfo(..)
         , FamilyName(..)
         , FirstName(..)
         , Gender(..)
+        , LongTitle(..)
         , Person
         , PersonName(..)
+        , PlanetDemesneReportShort
         , RegnalNumber(..)
         , Sex(..)
+        , ShortTitle(..)
+        , StarSystemDemesneReportShort
         , StatValue(..)
         , StatValues
         )
@@ -29,6 +45,7 @@ import Json.Decode as Decode
         , fail
         , field
         , int
+        , list
         , maybe
         , oneOf
         , string
@@ -37,9 +54,14 @@ import Json.Decode as Decode
 import Json.Decode.Extra exposing (andMap, when)
 
 
-personDetails : (Result Http.Error Person -> Msg) -> PersonId -> Cmd Msg
-personDetails msg pId =
+getPersonDetails : (Result Http.Error Person -> Msg) -> PersonId -> Cmd Msg
+getPersonDetails msg pId =
     Http.send msg (get (ApiSinglePerson pId) personDecoder)
+
+
+getDemesne : (Result Http.Error (List DemesneShortInfo) -> Msg) -> PersonId -> Cmd Msg
+getDemesne msg pId =
+    Http.send msg (get (ApiDemesne pId) (list demesneReportShortDecoder))
 
 
 personNameDecoder : Decode.Decoder PersonName
@@ -117,6 +139,8 @@ personDecoder =
     succeed Person
         |> andMap (field "Id" personIdDecoder)
         |> andMap (field "Name" personNameDecoder)
+        |> andMap (field "ShortTitle" (maybe shortTitleDecoder))
+        |> andMap (field "LongTitle" (maybe longTitleDecoder))
         |> andMap (field "Stats" (maybe statsDecoder))
         |> andMap (field "Sex" sexDecoder)
         |> andMap (field "Gender" genderDecoder)
@@ -188,3 +212,65 @@ ageDecoder : Decode.Decoder Age
 ageDecoder =
     succeed Age
         |> andMap int
+
+
+demesneReportShortDecoder : Decode.Decoder DemesneShortInfo
+demesneReportShortDecoder =
+    oneOf
+        [ when demesneType (is "Planet") planetDemesneReportShortDecoder
+        , when demesneType (is "StarSystem") starSystemDemesneReportShortDecoder
+        ]
+
+
+{-| Decoder for demesne report type string
+-}
+demesneType : Decode.Decoder String
+demesneType =
+    field "Tag" string
+
+
+planetDemesneReportShortDecoder : Decode.Decoder DemesneShortInfo
+planetDemesneReportShortDecoder =
+    let
+        decoder =
+            succeed PlanetDemesneReportShort
+                |> andMap (field "PlanetId" planetIdDecoder)
+                |> andMap (field "StarSystemId" starSystemIdDecoder)
+                |> andMap (field "Name" planetNameDecoder)
+                |> andMap (field "FormalName" demesneNameDecoder)
+                |> andMap (field "Date" starDateDecoder)
+    in
+    succeed PlanetDemesneShort
+        |> andMap decoder
+
+
+starSystemDemesneReportShortDecoder : Decode.Decoder DemesneShortInfo
+starSystemDemesneReportShortDecoder =
+    let
+        decoder =
+            succeed StarSystemDemesneReportShort
+                |> andMap (field "StarSystemId" starSystemIdDecoder)
+                |> andMap (field "Name" starSystemNameDecoder)
+                |> andMap (field "FormalName" demesneNameDecoder)
+                |> andMap (field "Date" starDateDecoder)
+    in
+    succeed StarSystemDemesneShort
+        |> andMap decoder
+
+
+demesneNameDecoder : Decode.Decoder DemesneName
+demesneNameDecoder =
+    succeed DemesneName
+        |> andMap string
+
+
+shortTitleDecoder : Decode.Decoder ShortTitle
+shortTitleDecoder =
+    succeed ShortTitle
+        |> andMap string
+
+
+longTitleDecoder : Decode.Decoder LongTitle
+longTitleDecoder =
+    succeed LongTitle
+        |> andMap string

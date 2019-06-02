@@ -43,8 +43,11 @@ type Endpoint
     | ApiAllDesigns
     | ApiSingleDesign DesignId
     | ApiSinglePerson PersonId
+    | ApiDemesne PersonId
 
 
+{-| Map type safe Endpoint into String that can be used in HTTP requests
+-}
 endpointToString : Endpoint -> String
 endpointToString endpoint =
     case endpoint of
@@ -127,3 +130,6 @@ endpointToString endpoint =
 
         ApiSinglePerson personId ->
             "/api/person/" ++ personIdToString personId
+
+        ApiDemesne personId ->
+            "/api/person/" ++ personIdToString personId ++ "/demesne"
