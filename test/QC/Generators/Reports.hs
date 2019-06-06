@@ -126,8 +126,6 @@ observedPlanet = do
 planetReport :: Entity Planet -> Gen (Maybe CollatedPlanetReport)
 planetReport entity = do
     let planet = entityVal entity
-    let aPlanetId = entityKey entity
-    let aStarSystemId = planetStarSystemId planet
     ownerId <- randomFactionKey
     aOwnerId <- oneof [ return Nothing
                       , return $ Just ownerId ]
@@ -138,21 +136,37 @@ planetReport entity = do
     aGravity <- oneof [ return Nothing
                       , return $ Just $ planetGravity planet ]
     aDate <- arbitrary `suchThat` \x -> x > 18000
-    return $ Just $ CollatedPlanetReport aPlanetId aStarSystemId aOwnerId aName aPosition aGravity (unArbStarDate aDate) Nothing Nothing
+    return $ Just $ CollatedPlanetReport
+                        { cprId = entityKey entity
+                        , cprSystemId = planetStarSystemId planet
+                        , cprOwnerId = aOwnerId
+                        , cprName = aName
+                        , cprPosition = aPosition
+                        , cprGravity = aGravity
+                        , cprDate = (unArbStarDate aDate)
+                        , cprRulerId = Nothing
+                        , cprRulerName = Nothing
+                        , cprRulerTitle = Nothing
+                        }
 
 
 -- | generator that creates fully filled in planet report from a planet
 fullPlanetReport :: Entity Planet -> Gen (Maybe CollatedPlanetReport)
 fullPlanetReport entity = do
     let planet = entityVal entity
-    let aPlanetId = entityKey entity
-    let aStarSystemId = planetStarSystemId planet
-    let aOwnerId = planetOwnerId planet
-    let aName = Just $ planetName planet
-    let aPosition = Just $ planetPosition planet
-    let aGravity = Just $ planetGravity planet
     aDate <- arbitrary `suchThat` \x -> x > 18000
-    return $ Just $ CollatedPlanetReport aPlanetId aStarSystemId aOwnerId aName aPosition aGravity (unArbStarDate aDate) Nothing Nothing
+    return $ Just $ CollatedPlanetReport
+                        { cprId = entityKey entity
+                        , cprSystemId = planetStarSystemId planet
+                        , cprOwnerId = planetOwnerId planet
+                        , cprName = Just $ planetName planet
+                        , cprPosition = Just $ planetPosition planet
+                        , cprGravity = Just $ planetGravity planet
+                        , cprDate = (unArbStarDate aDate)
+                        , cprRulerId = Nothing
+                        , cprRulerName = Nothing
+                        , cprRulerTitle = Nothing
+                        }
 
 
 -- | generator to simply return Nothing

@@ -38,8 +38,18 @@ singlePlanetReport = do
     aPosition <- perhaps $ arbitrary `suchThat` \x -> x > 0
     aGravity <- perhaps $ arbitrary `suchThat` \x -> x > 0
     aDate <- arbitrary `suchThat` \x -> x > 0
-    return $ CollatedPlanetReport aPlanetId aStarSystemId aOwnerId aName aPosition
-                                  aGravity (unArbStarDate aDate) Nothing Nothing
+    return $ CollatedPlanetReport
+                { cprId = aPlanetId
+                , cprSystemId = aStarSystemId
+                , cprOwnerId = aOwnerId
+                , cprName = aName
+                , cprPosition = aPosition
+                , cprGravity = aGravity
+                , cprDate = (unArbStarDate aDate)
+                , cprRulerId = Nothing
+                , cprRulerName = Nothing
+                , cprRulerTitle = Nothing
+                }
 
 allPlanets :: Gen [Planet]
 allPlanets = do
