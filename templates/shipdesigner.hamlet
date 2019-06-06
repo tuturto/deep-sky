@@ -1,8 +1,0 @@
-<div .code>
-    <div #main>
-
-<script>
-    window.onload = function() {
-        var node = document.getElementById('main');
-        var app = Elm.Main.embed(node);
-    }

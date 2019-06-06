@@ -1,8 +1,0 @@
-<div .code>
-    <div #code>
-
-    <script>
-        window.onload = function() {
-                            var node = document.getElementById('code');
-                            var app = Elm.Main.embed(node, #{planetKey});
-                        }
