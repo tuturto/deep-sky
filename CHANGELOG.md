@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `maybeFaction` function removed
 ### Fixed
 - [Empty construction queue on a planet causes error during simulation][4]
+- [Remove widget files][5]
 
 ## [0.1.0] - 2019-05-11
 ### Added
@@ -45,3 +46,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Unreleased]: https://github.com/tuturto/deep-sky/compare/0.1.0...HEAD
 [0.1.0]: https://github.com/tuturto/deep-sky/releases/tag/0.1.0
 [4]: https://github.com/tuturto/deep-sky/issues/4
+[5]: https://github.com/tuturto/deep-sky/issues/5
