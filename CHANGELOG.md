@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Players are not directly members of faction, but via their avatar
 - `requireFaction` returns also user avatar
 - `apiRequireFaction` returns also user avatar
+- User submitted news have player avatar as originator
 ### Removed
 - `maybeFaction` function removed
 ### Fixed

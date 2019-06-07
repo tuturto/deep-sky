@@ -17,6 +17,7 @@ module Data.People exposing
     , StatValues
     , displayName
     , formalName
+    , nameWithTitle
     , unAge
     , unCognomen
     , unFamilyName
@@ -114,6 +115,16 @@ displayName name =
 
                 Nothing ->
                     unFirstName firstName ++ " " ++ displayRegnal regnalNumber
+
+
+nameWithTitle : PersonName -> Maybe ShortTitle -> String
+nameWithTitle name title =
+    case title of
+        Nothing ->
+            displayName name
+
+        Just t ->
+            unShortTitle t ++ " " ++ displayName name
 
 
 {-| Representation of regnal number in roman numerals

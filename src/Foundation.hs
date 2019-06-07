@@ -27,6 +27,7 @@ import Yesod.Core.Types     (Logger)
 import qualified Yesod.Core.Unsafe as Unsafe
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Text.Encoding as TE
+import CustomTypes ( UserIdentity(..) )
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -381,11 +382,11 @@ instance YesodAuth App where
     authenticate :: (MonadHandler m, HandlerSite m ~ App)
                  => Creds App -> m (AuthenticationResult App)
     authenticate creds = liftHandler $ runDB $ do
-        x <- getBy $ UniqueUser $ credsIdent creds
+        x <- getBy $ UniqueUser (UserIdentity $ credsIdent creds)
         case x of
             Just (Entity uid _) -> return $ Authenticated uid
             Nothing -> Authenticated <$> insert User
-                { userIdent = credsIdent creds
+                { userIdent = UserIdentity $ credsIdent creds
                 , userPassword = Nothing
                 , userAvatar = Nothing
                 }

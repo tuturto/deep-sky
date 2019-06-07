@@ -17,6 +17,7 @@ import Data.Aeson ( object, (.=), (.!=), (.:?), withObject )
 import Data.Aeson.TH ( deriveJSON, defaultOptions, constructorTagModifier, fieldLabelModifier )
 import CustomTypes ( StarDate )
 import Research.Data ( Technology )
+import People.Data ( PersonName(..) )
 import Resources ( ResourceType(..) )
 
 
@@ -118,7 +119,7 @@ data PlanetFoundNewsDto = PlanetFoundNewsDto
 data UserWrittenNewsDto = UserWrittenNewsDto
     { userWrittenNewsDtoContent :: Text
     , userWrittenNewsDtoDate :: StarDate
-    , userWrittenNewsDtoUser :: Text
+    , userWrittenNewsDtoUser :: PersonName
     , userWrittenNewsDtoIcon :: UserNewsIconDto
     }
     deriving (Show, Read, Eq)
@@ -349,7 +350,7 @@ instance FromJSON UserWrittenNewsDto where
     parseJSON (Object b) =
         UserWrittenNewsDto <$> b .: "content"
                            <*> b .: "starDate"
-                           <*> b .:? "userName" .!= ""
+                           <*> b .:? "userName" .!= (SimpleName "" Nothing)
                            <*> b .: "icon"
     parseJSON _ = mzero
 

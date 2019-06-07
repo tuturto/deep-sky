@@ -26,6 +26,7 @@ import Dto.News ( NewsDto(..), NewsArticleDto(..), StarFoundNewsDto(..), PlanetF
                 )
 import Events.Import ( UserOption(..) )
 import Events.Kragii ( KragiiWormsEvent(..), KragiiWormsChoice(..), KragiiNews(..) )
+import People.Data ( PersonName )
 import Research.Data ( Technology, Research(..) )
 import Research.Tree ( techMap )
 import Resources ( ResourceType )
@@ -109,7 +110,7 @@ data UserWrittenNews = UserWrittenNews
     { userWrittenNewsContent :: Text
     , userWrittenNewsIcon :: UserNewsIcon
     , userWrittenNewsDate :: StarDate
-    , userWrittenNewsUser :: Text
+    , userWrittenNewsUser :: PersonName
     }
 
 

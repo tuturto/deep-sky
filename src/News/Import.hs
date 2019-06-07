@@ -167,10 +167,10 @@ iconInfo mapper =
 
 
 -- | Construct news entry for user submitted news
-userWrittenNews :: Text -> UserNewsIcon -> StarDate -> User -> News
-userWrittenNews msg icon date user =
+userWrittenNews :: Text -> UserNewsIcon -> StarDate -> Person -> News
+userWrittenNews msg icon date person =
     let
-        content = UserWritten $ UserWrittenNews msg icon date (userIdent user)
+        content = UserWritten $ UserWrittenNews msg icon date (personName person)
     in
         mkNews (fromJust $ Nothing) date content
 

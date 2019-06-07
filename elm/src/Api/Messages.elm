@@ -14,17 +14,24 @@ import Api.Common
         , is
         , planetIdDecoder
         , planetIdEncoder
+        , planetNameDecoder
+        , planetNameEncoder
         , post
         , put
         , resourceTypeDecoder
         , resourceTypeEncoder
         , starDateDecoder
         , starDateEncoder
+        , starNameDecoder
+        , starNameEncoder
         , starSystemIdDecoder
         , starSystemIdEncoder
+        , starSystemNameDecoder
+        , starSystemNameEncoder
         )
 import Api.Designer exposing (designIdDecoder, designNameDecoder)
 import Api.Endpoints exposing (Endpoint(..))
+import Api.People exposing (personNameDecoder)
 import Api.StarSystem exposing (buildingIdDecoder)
 import Api.User
     exposing
@@ -54,6 +61,7 @@ import Data.Messages
         , unSpecialEventChoice
         )
 import Data.Model exposing (ApiMsg(..), Model, Msg(..))
+import Data.People exposing (FirstName(..), PersonName(..))
 import Data.User exposing (UserName(..), unUserName)
 import Http
 import Json.Decode as Decode
@@ -104,7 +112,7 @@ postNews message icon =
         content =
             UserWritten
                 { message = message
-                , author = UserName "" -- Filled in by server
+                , author = SimpleName (FirstName "") Nothing -- Filled in by server
                 , icon = icon
                 }
 
@@ -190,7 +198,7 @@ newsContentEncoder newsArticle =
             Encode.object
                 [ ( "content", Encode.string article.message )
                 , ( "starDate", starDateEncoder newsArticle.starDate )
-                , ( "userName", Encode.string (unUserName article.author) )
+                , ( "userName", Encode.null ) -- filled in by server
                 , ( "icon", userIconEncoder article.icon )
                 ]
 
@@ -198,8 +206,8 @@ newsContentEncoder newsArticle =
             Encode.object
                 [ ( "PlanetId", planetIdEncoder article.planetId )
                 , ( "SystemId", starSystemIdEncoder article.systemId )
-                , ( "PlanetName", Encode.string article.planetName )
-                , ( "SystemName", Encode.string article.systemName )
+                , ( "PlanetName", planetNameEncoder article.planetName )
+                , ( "SystemName", starSystemNameEncoder article.systemName )
                 , ( "Date", starDateEncoder newsArticle.starDate )
                 , ( "Options", Encode.list Encode.string [] ) -- not used by server
                 , ( "Choice"
@@ -287,8 +295,8 @@ starFoundNewsArticle =
     let
         decoder =
             succeed StarFoundNews
-                |> andMap (field "starName" string)
-                |> andMap (field "systemName" string)
+                |> andMap (field "starName" starNameDecoder)
+                |> andMap (field "systemName" starSystemNameDecoder)
                 |> andMap (field "systemId" starSystemIdDecoder)
     in
     succeed StarFound
@@ -302,8 +310,8 @@ planetFoundNewsArticle =
     let
         decoder =
             succeed PlanetFoundNews
-                |> andMap (field "planetName" string)
-                |> andMap (field "systemName" string)
+                |> andMap (field "planetName" planetNameDecoder)
+                |> andMap (field "systemName" starSystemNameDecoder)
                 |> andMap (field "systemId" starSystemIdDecoder)
                 |> andMap (field "planetId" planetIdDecoder)
     in
@@ -319,7 +327,7 @@ userWrittenNewsArticle =
         decoder =
             succeed UserWrittenNews
                 |> andMap (field "content" string)
-                |> andMap (field "userName" userNameDecoder)
+                |> andMap (field "userName" personNameDecoder)
                 |> andMap (field "icon" userIconDecoder)
     in
     succeed UserWritten
@@ -383,9 +391,9 @@ buildingFinishedNewsArticle =
     let
         decoder =
             succeed BuildingFinishedNews
-                |> andMap (field "planetName" string)
+                |> andMap (field "planetName" planetNameDecoder)
                 |> andMap (field "planetId" planetIdDecoder)
-                |> andMap (field "systemName" string)
+                |> andMap (field "systemName" starSystemNameDecoder)
                 |> andMap (field "systemId" starSystemIdDecoder)
                 |> andMap (field "constructionName" string)
                 |> andMap (field "buildingId" buildingIdDecoder)
@@ -399,9 +407,9 @@ kragiiEventNewsArticle =
     let
         decoder =
             succeed KragiiSpecialEvent
-                |> andMap (field "PlanetName" string)
+                |> andMap (field "PlanetName" planetNameDecoder)
                 |> andMap (field "PlanetId" planetIdDecoder)
-                |> andMap (field "SystemName" string)
+                |> andMap (field "SystemName" starSystemNameDecoder)
                 |> andMap (field "SystemId" starSystemIdDecoder)
 
         -- |> andMap (field "Options" (list specialEventOptionDecoder))
@@ -417,9 +425,9 @@ kragiiResolutionNewsArticle =
     let
         decoder =
             succeed KragiiResolution
-                |> andMap (field "PlanetName" string)
+                |> andMap (field "PlanetName" planetNameDecoder)
                 |> andMap (field "PlanetId" planetIdDecoder)
-                |> andMap (field "SystemName" string)
+                |> andMap (field "SystemName" starSystemNameDecoder)
                 |> andMap (field "SystemId" starSystemIdDecoder)
                 |> andMap (field "Resolution" string)
     in
@@ -499,9 +507,9 @@ specialEventChoiceEncoder choice =
 productionChangeDecoder : Decode.Decoder ProductionChangeNews
 productionChangeDecoder =
     succeed ProductionChangeNews
-        |> andMap (field "PlanetName" string)
+        |> andMap (field "PlanetName" planetNameDecoder)
         |> andMap (field "PlanetId" planetIdDecoder)
-        |> andMap (field "SystemName" string)
+        |> andMap (field "SystemName" starSystemNameDecoder)
         |> andMap (field "SystemId" starSystemIdDecoder)
         |> andMap (field "Type" resourceTypeDecoder)
 

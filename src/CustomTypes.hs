@@ -9,10 +9,11 @@ module CustomTypes
     ( SpecialEventStatus(..), SpectralType(..), LuminosityClass(..)
     , Coordinates(..), BuildingType(..), ShipType(..), Role(..)
     , PercentileChance(..), RollResult(..), PlanetaryStatus(..), Bonus(..)
-    , Boostable(..), StarDate(..), Age(..), age, buildingTypeName, roll )
+    , Boostable(..), StarDate(..), Age(..), UserIdentity(..), age
+    , buildingTypeName, roll )
     where
 
-import Data.Aeson ( ToJSON(..), withScientific )
+import Data.Aeson ( ToJSON(..), withScientific, withText )
 import Data.Aeson.TH
 import Data.Scientific ( toBoundedInteger )
 import Database.Persist.TH
@@ -212,6 +213,39 @@ instance FromJSON Age where
 age :: StarDate -> StarDate -> Age
 age (StarDate start) (StarDate end) =
     Age $ ((end - start) `quot` 10)
+
+
+newtype UserIdentity = UserIdentity { unUserIdentity :: Text }
+    deriving (Show, Read, Eq)
+
+
+instance IsString UserIdentity where
+    fromString = UserIdentity . fromString
+
+
+instance ToJSON UserIdentity where
+    toJSON = toJSON . unUserIdentity
+
+
+instance FromJSON UserIdentity where
+    parseJSON =
+        withText "user identity"
+            (\x -> return $ UserIdentity x)
+
+
+instance PersistField UserIdentity where
+    toPersistValue (UserIdentity s) =
+        PersistText s
+
+    fromPersistValue (PersistText s) =
+        Right $ UserIdentity s
+
+    fromPersistValue _ =
+        Left "Failed to deserialize"
+
+
+instance PersistFieldSql UserIdentity where
+    sqlType _ = SqlString
 
 
 $(deriveJSON defaultOptions ''SpecialEventStatus)

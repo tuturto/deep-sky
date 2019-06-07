@@ -9,6 +9,7 @@ module Api.Common exposing
     , planetIdDecoder
     , planetIdEncoder
     , planetNameDecoder
+    , planetNameEncoder
     , post
     , put
     , resourceTypeDecoder
@@ -20,9 +21,11 @@ module Api.Common exposing
     , starDateDecoder
     , starDateEncoder
     , starNameDecoder
+    , starNameEncoder
     , starSystemIdDecoder
     , starSystemIdEncoder
     , starSystemNameDecoder
+    , starSystemNameEncoder
     )
 
 {-| Basic building blocs for accessing server API
@@ -296,16 +299,31 @@ starNameDecoder =
         |> andMap string
 
 
+starNameEncoder : StarName -> Encode.Value
+starNameEncoder (StarName s) =
+    Encode.string s
+
+
 starSystemNameDecoder : Decode.Decoder StarSystemName
 starSystemNameDecoder =
     succeed StarSystemName
         |> andMap string
 
 
+starSystemNameEncoder : StarSystemName -> Encode.Value
+starSystemNameEncoder (StarSystemName s) =
+    Encode.string s
+
+
 planetNameDecoder : Decode.Decoder PlanetName
 planetNameDecoder =
     succeed PlanetName
         |> andMap string
+
+
+planetNameEncoder : PlanetName -> Encode.Value
+planetNameEncoder (PlanetName s) =
+    Encode.string s
 
 
 planetIdDecoder : Decode.Decoder PlanetId

@@ -62,10 +62,10 @@ putApiMessageIdR mId = do
 -- Trying to submit any other type of news article will return
 postApiMessageR :: Handler Value
 postApiMessageR = do
-    (_, user, _, fId) <- apiRequireFaction
+    (_, _, avatar, fId) <- apiRequireFaction
     currentDate <- runDB starDate
     msg <- requireJsonBody
-    let article = (setUser user . setStarDate currentDate . fromDto) msg
+    let article = (setUser (entityVal avatar) . setStarDate currentDate . fromDto) msg
     _ <- if isUserSupplied article
             then runDB $ insert News { newsContent = toStrict $ encodeToLazyText article
                                      , newsFactionId = fId
@@ -111,11 +111,11 @@ setStarDate _ article =
     article
 
 
--- | Update news article to have specific user as article writer
+-- | Update news article to have specific person as article writer
 -- This is specific to only user supplied news. For other news articles, no changes are made
-setUser :: User -> NewsArticle -> NewsArticle
-setUser user (UserWritten details) =
-    UserWritten $ details { userWrittenNewsUser = userIdent user }
+setUser :: Person -> NewsArticle -> NewsArticle
+setUser person (UserWritten details) =
+    UserWritten $ details { userWrittenNewsUser = personName person }
 
 setUser _ article =
     article

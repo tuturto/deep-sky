@@ -29,7 +29,10 @@ import Data.Common
         , ResourceType(..)
         , Route(..)
         , maxPage
+        , unPlanetName
         , unStarDate
+        , unStarName
+        , unStarSystemName
         )
 import Data.Messages
     exposing
@@ -41,6 +44,7 @@ import Data.Messages
         , unSpecialEventChoice
         )
 import Data.Model exposing (Model, Msg(..))
+import Data.People exposing (displayName)
 import Data.User exposing (Role(..), unUserName)
 import Data.Vehicles exposing (unDesignName)
 import Html
@@ -239,7 +243,7 @@ newsTitle article =
             text "New star has been discovered!"
 
         UserWritten details ->
-            text <| unUserName details.author ++ " writes"
+            text <| displayName details.author ++ " writes"
 
         DesignCreated _ ->
             text "New design has been approved"
@@ -279,15 +283,15 @@ newsBody article =
     case article.content of
         PlanetFound details ->
             [ text "A new planet has been discovered in "
-            , a [ href (StarSystemR details.systemId) ] [ text details.systemName ]
+            , a [ href (StarSystemR details.systemId) ] [ text <| unStarSystemName details.systemName ]
             , text " and has been named to "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text "."
             ]
 
         StarFound details ->
             [ text "A new star has been discovered in "
-            , a [ href (StarSystemR details.systemId) ] [ text details.systemName ]
+            , a [ href (StarSystemR details.systemId) ] [ text <| unStarSystemName details.systemName ]
             , text "."
             ]
 
@@ -303,7 +307,7 @@ newsBody article =
         BuildingFinished details ->
             [ text details.name
             , text " has been finished in "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text "."
             ]
 
@@ -326,7 +330,7 @@ newsBody article =
             [ text "Production of "
             , text productionType
             , text " on "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text " is booming and record results are expected."
             ]
 
@@ -346,7 +350,7 @@ newsBody article =
             [ text "Production of "
             , text productionType
             , text " on "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text " is slowing down."
             ]
 
@@ -366,7 +370,7 @@ newsBody article =
             [ text "Recent boom in production of "
             , text productionType
             , text " on "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text " has come to end and production levels are returning to normal."
             ]
 
@@ -386,19 +390,19 @@ newsBody article =
             [ text "Recent downturn in production of "
             , text productionType
             , text " on "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text " has come to end and production levels are returning to normal."
             ]
 
         KragiiEvent details ->
             [ text "Large amount of kragii worms has been sighted on "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text ". As the situation develops, decision what to do about them needs to be made."
             ]
 
         KragiiResolved details ->
             [ text "Report from "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text details.planetName ]
+            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text ": \""
             , text details.report
             , text "\""

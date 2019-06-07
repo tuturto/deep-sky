@@ -18,6 +18,8 @@ import Yesod.Auth            as X
 import Yesod.Test            as X
 import Yesod.Core.Unsafe     (fakeHandlerGetLogger)
 
+import CustomTypes ( UserIdentity(..) )
+
 -- Wiping the database
 import Database.Persist.Sqlite              (sqlDatabase, mkSqliteConnectionInfo, fkEnabled, createSqlitePoolFromInfo)
 import Control.Monad.Logger                 (runLoggingT)
@@ -84,7 +86,7 @@ authenticateAs :: Entity User -> YesodExample App ()
 authenticateAs (Entity _ u) = do
     request $ do
         setMethod "POST"
-        addPostParam "ident" $ userIdent u
+        addPostParam "ident" $ (unUserIdentity . userIdent) u
         setUrl $ AuthR $ PluginR "dummy" []
 
 -- | Create a user.  The dummy email entry helps to confirm that foreign-key
@@ -92,7 +94,7 @@ authenticateAs (Entity _ u) = do
 createUser :: Text -> YesodExample App (Entity User)
 createUser ident = runDB $ do
     user <- insertEntity User
-        { userIdent = ident
+        { userIdent = UserIdentity ident
         , userPassword = Nothing
         , userAvatar = Nothing
         }

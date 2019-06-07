@@ -24,12 +24,16 @@ import Data.Common
         , FactionId
         , MessageId
         , PlanetId
+        , PlanetName
         , ResourceType
         , ShipId
         , StarDate
+        , StarName
         , StarSystemId
+        , StarSystemName
         , UserId
         )
+import Data.People exposing (PersonName)
 import Data.User exposing (UserName)
 import Data.Vehicles exposing (DesignName)
 
@@ -61,15 +65,15 @@ type NewsContent
 
 
 type alias StarFoundNews =
-    { starName : String
-    , systemName : String
+    { starName : StarName
+    , systemName : StarSystemName
     , systemId : StarSystemId
     }
 
 
 type alias PlanetFoundNews =
-    { planetName : String
-    , systemName : String
+    { planetName : PlanetName
+    , systemName : StarSystemName
     , systemId : StarSystemId
     , planetId : PlanetId
     }
@@ -77,7 +81,7 @@ type alias PlanetFoundNews =
 
 type alias UserWrittenNews =
     { message : String
-    , author : UserName
+    , author : PersonName
     , icon : UserIcon
     }
 
@@ -89,9 +93,9 @@ type alias DesignCreatedNews =
 
 
 type alias BuildingFinishedNews =
-    { planetName : String
+    { planetName : PlanetName
     , planetId : PlanetId
-    , systemName : String
+    , systemName : StarSystemName
     , systemId : StarSystemId
     , name : String
     , buildingId : BuildingId
@@ -99,9 +103,9 @@ type alias BuildingFinishedNews =
 
 
 type alias ShipFinishedNews =
-    { planetName : Maybe String
+    { planetName : Maybe PlanetName
     , planetId : Maybe PlanetId
-    , systemName : String
+    , systemName : StarSystemName
     , systemId : StarSystemId
     , name : String
     , shipId : ShipId
@@ -109,9 +113,9 @@ type alias ShipFinishedNews =
 
 
 type alias ProductionChangeNews =
-    { planetName : String
+    { planetName : PlanetName
     , planetId : PlanetId
-    , systemName : String
+    , systemName : StarSystemName
     , systemId : StarSystemId
     , resourceType : ResourceType
     }
@@ -123,17 +127,17 @@ type alias ResearchCompletedNews =
 
 
 type alias KragiiSpecialEvent =
-    { planetName : String
+    { planetName : PlanetName
     , planetId : PlanetId
-    , systemName : String
+    , systemName : StarSystemName
     , systemId : StarSystemId
     }
 
 
 type alias KragiiResolution =
-    { planetName : String
+    { planetName : PlanetName
     , planetId : PlanetId
-    , systemName : String
+    , systemName : StarSystemName
     , systemId : StarSystemId
     , report : String
     }

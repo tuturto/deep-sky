@@ -8,6 +8,7 @@ import Test.QuickCheck.Instances()
 
 import QC.Generators.Common ( ArbStarDate(..) )
 import QC.Generators.Database
+import QC.Generators.People
 import Dto.News ( DesignCreatedNewsDto(..), UserWrittenNewsDto(..), UserNewsIconDto(..)
                 , NewsArticleDto(..) )
 
@@ -42,7 +43,7 @@ singleUserWrittenNewsDto = do
     aIcon <- arbitrary
     return $ UserWrittenNewsDto { userWrittenNewsDtoContent = aMessage
                                 , userWrittenNewsDtoDate = unArbStarDate aDate
-                                , userWrittenNewsDtoUser = aUserName
+                                , userWrittenNewsDtoUser = unArbPersonName aUserName
                                 , userWrittenNewsDtoIcon = unArbUserNewsIconDto aIcon
                                 }
 
