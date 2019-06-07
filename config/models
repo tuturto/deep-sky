@@ -259,6 +259,8 @@ Person json
     factionId FactionId Maybe
     planetTitle PlanetId Maybe
     starSystemTitle StarSystemId Maybe
+    UniquePlanetTitle planetTitle !force
+    UniqueStarSystemTitle starSystemTitle !force
     deriving Show Read Eq
 
 HumanIntelligence json
