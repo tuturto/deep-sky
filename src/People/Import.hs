@@ -5,8 +5,9 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 module People.Import
-    ( PersonReport(..), StatReport(..), personReport, demesneReport, shortTitle
-    , longTitle )
+    ( PersonReport(..), StatReport(..), RelationLink(..), personReport
+    , demesneReport, shortTitle, longTitle, knownRelation, relationsReport
+    )
     where
 
 import Import
@@ -15,6 +16,7 @@ import CustomTypes ( StarDate, Age, age )
 import People.Data ( PersonIntel(..), Diplomacy, Martial, Stewardship
                    , Intrique, Learning, StatScore, PersonName, Sex
                    , Gender, DemesneName(..), ShortTitle(..), LongTitle(..)
+                   , RelationVisibility(..), RelationType(..)
                    )
 
 
@@ -27,6 +29,7 @@ data PersonReport = PersonReport
     , personReportGender :: Gender
     , personReportAge :: Age
     , personReportStats :: Maybe StatReport
+    , personReportRelations :: [RelationLink]
     } deriving (Show, Read, Eq)
 
 
@@ -151,8 +154,8 @@ systemReport date system =
 
 
 -- | Person report of given person and taking HUMINT level into account
-personReport :: StarDate -> Entity Person -> [PersonIntel] -> PersonReport
-personReport today personE intel =
+personReport :: StarDate -> Entity Person -> [PersonIntel] -> [Relation] -> [Entity Person] -> PersonReport
+personReport today personE intel relations related =
     PersonReport { personReportId = entityKey personE
                  , personReportName = personName person
                  , personReportShortTitle = shortTitle person
@@ -161,9 +164,49 @@ personReport today personE intel =
                  , personReportGender = personGender person
                  , personReportAge = age (personDateOfBirth person) today
                  , personReportStats = statReport person intel
+                 , personReportRelations = relationsReport relations related intel
                  }
     where
         person = entityVal personE
+
+
+-- | Relations of a specific person
+-- public relations are always known
+-- family relations are known if intel includes family relations or secret relations
+-- secret relations are known only if intel includes secret relations
+relationsReport :: [Relation] -> [Entity Person] -> [PersonIntel] -> [RelationLink]
+relationsReport relations related intel =
+    (relationLink known) <$> related
+    where
+        known = filter (knownRelation intel) relations
+
+
+-- | Is relation known with given level of intel
+knownRelation :: [PersonIntel] -> Relation -> Bool
+knownRelation _ Relation { relationVisibility = PublicRelation } =
+    True
+
+knownRelation intel Relation { relationVisibility = FamilyRelation } =
+    FamilyRelations `elem` intel
+    || SecretRelations `elem` intel
+
+knownRelation intel Relation { relationVisibility = SecretRelation } =
+    SecretRelations `elem` intel
+
+
+-- | Collect all relations of given person and report them
+relationLink :: [Relation] -> Entity Person -> RelationLink
+relationLink relations personE =
+    RelationLink
+        { relationLinkName = personName person
+        , relationLinkShortTitle = shortTitle person
+        , relationLinkLongTitle = longTitle person
+        , relationLinkTypes = relationType <$> relevant
+        , relationLinkId = entityKey personE
+        }
+    where
+        person = entityVal personE
+        relevant = filter (\x -> relationOriginatorId x == entityKey personE) relations
 
 
 shortTitle :: Person -> Maybe ShortTitle
@@ -198,5 +241,15 @@ statReport person intel =
         available = any (\x -> x == Stats) intel
 
 
+data RelationLink = RelationLink
+    { relationLinkName :: PersonName
+    , relationLinkShortTitle :: Maybe ShortTitle
+    , relationLinkLongTitle :: Maybe LongTitle
+    , relationLinkTypes :: [RelationType]
+    , relationLinkId :: Key Person
+    } deriving (Show, Read, Eq)
+
+
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 12 } ''PersonReport)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 10 } ''StatReport)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 12 } ''RelationLink)

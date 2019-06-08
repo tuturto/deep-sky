@@ -1,14 +1,20 @@
+{-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE TemplateHaskell            #-}
 
-module QC.Generators.People where
+module QC.Generators.People
+    where
 
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen
 import Test.QuickCheck.Instances()
 import QC.Generators.Common ( perhaps )
+import QC.Generators.Database
 
+import TestImport
 import People.Data ( PersonName(..), FirstName(..), FamilyName(..)
-                   , Cognomen(..), RegnalNumber(..) )
+                   , Cognomen(..), RegnalNumber(..), PersonIntel(..)
+                   , RelationType(..), RelationVisibility(..)
+                   )
 
 
 newtype ArbPersonName = ArbPersonName { unArbPersonName :: PersonName }
@@ -95,3 +101,82 @@ instance Arbitrary ArbRegnalNumber where
     arbitrary = do
         n <- arbitrary `suchThat` \x -> x > 0
         return $ ArbRegnalNumber $ RegnalNumber n
+
+
+publicRelation :: Gen ([PersonIntel], Relation)
+publicRelation = do
+    intel <- listOf anyPersonIntel
+    aRelation <- relationWithVisibility PublicRelation
+    return (intel, aRelation)
+
+
+familyRelationsWithoutFamilyOrSecretIntel :: Gen ([PersonIntel], Relation)
+familyRelationsWithoutFamilyOrSecretIntel = do
+    intel <- listOf intelWithoutFamilyOrSecretMatters
+    aRelation <- relationWithVisibility FamilyRelation
+    return (intel, aRelation)
+
+
+familyRelationsWithFamilyOrSecretIntel :: Gen ([PersonIntel], Relation)
+familyRelationsWithFamilyOrSecretIntel = do
+    intel <- listOf anyPersonIntel `suchThat` familyOrSecretIntelIncluded
+    aRelation <- relationWithVisibility FamilyRelation
+    return (intel, aRelation)
+
+
+secretRelationsWithoutSecretIntel :: Gen ([PersonIntel], Relation)
+secretRelationsWithoutSecretIntel = do
+    intel <- listOf intelWithoutSecretMatters
+    aRelation <- relationWithVisibility SecretRelation
+    return (intel, aRelation)
+
+
+secretRelationsWithSecretIntel :: Gen ([PersonIntel], Relation)
+secretRelationsWithSecretIntel = do
+    intel <- listOf anyPersonIntel `suchThat` \x -> SecretRelations `elem` x
+    aRelation <- relationWithVisibility SecretRelation
+    return (intel, aRelation)
+
+
+familyOrSecretIntelIncluded :: [PersonIntel] -> Bool
+familyOrSecretIntelIncluded intel =
+    FamilyRelations `elem` intel
+    || SecretRelations `elem` intel
+
+
+anyPersonIntel :: Gen PersonIntel
+anyPersonIntel = elements [minBound..]
+
+
+intelWithoutFamilyOrSecretMatters :: Gen PersonIntel
+intelWithoutFamilyOrSecretMatters = do
+    let relevant = filter (\x -> x /= FamilyRelations && x /= SecretRelations) [minBound..]
+    elements relevant
+
+
+intelWithoutSecretMatters :: Gen PersonIntel
+intelWithoutSecretMatters = do
+    let relevant = filter (\x -> x /= SecretRelations) [minBound..]
+    elements relevant
+
+
+anyRelationType :: Gen RelationType
+anyRelationType = elements [minBound..]
+
+
+anyRelationVisibility :: Gen RelationVisibility
+anyRelationVisibility = elements [minBound..]
+
+
+-- | Arbitrary relation with given visibility
+relationWithVisibility :: RelationVisibility -> Gen Relation
+relationWithVisibility visibility = do
+    originator <- randomPersonKey
+    target <- randomPersonKey `suchThat` \x -> x /= originator
+    aType <- anyRelationType
+    return $ Relation
+                { relationOriginatorId = originator
+                , relationTargetId = target
+                , relationType = aType
+                , relationVisibility = visibility
+                }

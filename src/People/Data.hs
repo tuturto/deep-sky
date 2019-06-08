@@ -13,7 +13,8 @@ module People.Data
     ( PersonName(..), FirstName(..), FamilyName(..), Cognomen(..)
     , RegnalNumber(..), Sex(..), Gender(..), PersonIntel(..), StatScore(..)
     , Diplomacy(..), Martial(..), Stewardship(..), Intrique(..), Learning(..)
-    , DemesneName(..), ShortTitle(..), LongTitle(..) )
+    , DemesneName(..), ShortTitle(..), LongTitle(..), RelationType(..)
+    , RelationVisibility(..) )
     where
 
 import Data.Aeson ( ToJSON(..), Object, withScientific, withText, withObject )
@@ -177,6 +178,8 @@ data Gender =
 data PersonIntel =
     Stats
     | Demesne
+    | FamilyRelations
+    | SecretRelations
     deriving (Show, Read, Eq, Enum, Bounded)
 
 
@@ -272,11 +275,39 @@ instance FromJSON LongTitle where
         withText "long title"
             (\x -> return $ LongTitle x)
 
+
+data RelationType =
+    Parent
+    | Child
+    | Sibling
+    | StepParent
+    | StepChild
+    | StepSibling
+    | Spouse
+    | ExSpouse
+    | Lover
+    | ExLover
+    | Friend
+    | Rival
+    deriving (Show, Read, Eq, Enum, Bounded)
+
+
+data RelationVisibility =
+    SecretRelation
+    | FamilyRelation
+    | PublicRelation
+    deriving (Show, Read, Eq, Enum, Bounded)
+
+
 derivePersistField "PersonName"
 derivePersistField "Sex"
 derivePersistField "Gender"
 derivePersistField "PersonIntel"
+derivePersistField "RelationType"
+derivePersistField "RelationVisibility"
 
 $(deriveJSON defaultOptions ''Sex)
 $(deriveJSON defaultOptions ''Gender)
 $(deriveJSON defaultOptions ''PersonIntel)
+$(deriveJSON defaultOptions ''RelationType)
+$(deriveJSON defaultOptions ''RelationVisibility)

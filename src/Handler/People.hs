@@ -36,9 +36,13 @@ getApiPersonR pId = do
     intel <- runDB $ selectList [ HumanIntelligencePersonId ==. pId
                                 , HumanIntelligenceOwnerId ==. entityKey avatar
                                 ] []
+    relations <- runDB $ selectList [ RelationTargetId ==. pId ] []
+    related <- runDB $ selectList [ PersonId <-. ((relationOriginatorId . entityVal) <$> relations)] []
     let report = personReport <$> Just today
                               <*> person
                               <*> Just ((humanIntelligenceLevel . entityVal) <$> intel)
+                              <*> Just (entityVal <$> relations)
+                              <*> Just related
     return $ toJSON report
 
 

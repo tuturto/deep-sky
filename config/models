@@ -268,3 +268,10 @@ HumanIntelligence json
     ownerId PersonId
     level PersonIntel
     deriving Show Read Eq
+
+Relation json
+    originatorId PersonId
+    targetId PersonId
+    type RelationType
+    visibility RelationVisibility
+    deriving Show Read Eq
