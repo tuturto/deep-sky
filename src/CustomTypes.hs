@@ -9,8 +9,8 @@ module CustomTypes
     ( SpecialEventStatus(..), SpectralType(..), LuminosityClass(..)
     , Coordinates(..), BuildingType(..), ShipType(..), Role(..)
     , PercentileChance(..), RollResult(..), PlanetaryStatus(..), Bonus(..)
-    , Boostable(..), StarDate(..), Age(..), UserIdentity(..), age
-    , buildingTypeName, roll )
+    , Boostable(..), StarDate(..), Age(..), UserIdentity(..), FactionName(..)
+    , age, buildingTypeName, roll )
     where
 
 import Data.Aeson ( ToJSON(..), withScientific, withText )
@@ -245,6 +245,39 @@ instance PersistField UserIdentity where
 
 
 instance PersistFieldSql UserIdentity where
+    sqlType _ = SqlString
+
+
+newtype FactionName = MkFactionName { unFactionName :: Text }
+    deriving (Show, Read, Eq)
+
+
+instance IsString FactionName where
+    fromString = MkFactionName . fromString
+
+
+instance ToJSON FactionName where
+    toJSON = toJSON . unFactionName
+
+
+instance FromJSON FactionName where
+    parseJSON =
+        withText "faction name"
+            (\x -> return $ MkFactionName x)
+
+
+instance PersistField FactionName where
+    toPersistValue (MkFactionName s) =
+        PersistText s
+
+    fromPersistValue (PersistText s) =
+        Right $ MkFactionName s
+
+    fromPersistValue _ =
+        Left "Failed to deserialize"
+
+
+instance PersistFieldSql FactionName where
     sqlType _ = SqlString
 
 

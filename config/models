@@ -21,7 +21,7 @@ Email json
     deriving Show Read Eq
 
 Faction json
-    name Text
+    name FactionName
     homeSystem StarSystemId
     biologicals (RawResource Biological)
     mechanicals (RawResource Mechanical)
