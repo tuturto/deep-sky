@@ -17,7 +17,7 @@ import Import.NoFoundation
 import Database.Persist.Sql (toSqlKey)
 import CustomTypes
 import Text.Printf (printf)
-import Resources (RawResources(..), ResourcesAvailable(..), RawResource(..))
+import Resources ( RawResources(..), ResourcesAvailable(..) )
 
 
 -- | Current star date of the simulation
@@ -81,7 +81,7 @@ getMaybeEntity _ =
 
 -- TODO: better name and place
 getScore :: Maybe Faction -> RawResources ResourcesAvailable
-getScore (Just faction) = RawResources (RawResource $ factionMechanicals faction) (RawResource $ factionBiologicals faction) (RawResource $ factionChemicals faction)
+getScore (Just faction) = RawResources (factionMechanicals faction) (factionBiologicals faction) (factionChemicals faction)
 getScore _ = mempty
 
 usersRoles :: (BaseBackend backend ~ SqlBackend, MonadIO m,

@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `requireFaction` returns also user avatar
 - `apiRequireFaction` returns also user avatar
 - User submitted news have player avatar as originator
+- Faction resources changed from `Int` to `RawResource a`
 ### Removed
 - `maybeFaction` function removed
 ### Fixed

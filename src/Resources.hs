@@ -9,8 +9,11 @@ module Resources ( RawResources(..), ResourceCost(..), ResourceProduction(..), C
                  , subTotalCost )
     where
 
-import Data.Aeson (object, withObject, (.=), ToJSON(..), FromJSON(..))
+import Data.Aeson ( ToJSON(..), FromJSON(..), object, withObject
+                  , withScientific, (.=) )
 import Data.Aeson.TH
+import Data.Scientific ( toBoundedInteger )
+import Database.Persist.Sql
 import ClassyPrelude.Yesod   as Import
 import Data.Monoid ()
 import CustomTypes ( Bonus(..), Boostable(..) )
@@ -60,6 +63,36 @@ newtype RawResource a = RawResource { unRawResource :: Int }
     deriving (Show, Read, Eq, Ord, Num)
 
 
+instance ToJSON (RawResource a) where
+    toJSON = toJSON . unRawResource
+
+
+instance FromJSON (RawResource a) where
+    parseJSON =
+        withScientific "raw resource"
+            (\x -> case toBoundedInteger x of
+                Nothing ->
+                    mempty
+
+                Just n ->
+                    return $ RawResource n)
+
+
+instance PersistField (RawResource a) where
+    toPersistValue (RawResource n) =
+        PersistInt64 $ fromIntegral n
+
+    fromPersistValue (PersistInt64 n) =
+        Right $ RawResource $ fromIntegral n
+
+    fromPersistValue _ =
+        Left "Failed to deserialize"
+
+
+instance PersistFieldSql (RawResource a) where
+    sqlType _ = SqlInt64
+
+
 data ResourceType =
     BiologicalResource
     | MechanicalResource
@@ -87,9 +120,9 @@ instance Boostable (RawResource t) where
 
 instance ToJSON (RawResources t) where
     toJSON (RawResources mech bio chem) =
-        object [ "mechanical" .= unRawResource mech
-               , "biological" .= unRawResource bio
-               , "chemical" .= unRawResource chem
+        object [ "mechanical" .= toJSON mech
+               , "biological" .= toJSON bio
+               , "chemical" .= toJSON chem
                ]
 
 
@@ -98,7 +131,10 @@ instance FromJSON (RawResources t) where
         mechanical <- o .: "mechanical"
         biological <- o .: "biological"
         chemical <- o .: "chemical"
-        return $ RawResources (RawResource mechanical) (RawResource biological) (RawResource chemical)
+        return $ RawResources mechanical biological chemical
 
 
 $(deriveJSON defaultOptions ''ResourceType)
+$(deriveJSON defaultOptions ''Biological)
+$(deriveJSON defaultOptions ''Mechanical)
+$(deriveJSON defaultOptions ''Chemical)

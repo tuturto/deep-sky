@@ -23,9 +23,9 @@ Email json
 Faction json
     name Text
     homeSystem StarSystemId
-    biologicals Int
-    mechanicals Int
-    chemicals Int
+    biologicals (RawResource Biological)
+    mechanicals (RawResource Mechanical)
+    chemicals (RawResource Chemical)
     deriving Show Read Eq
 
 StarSystem json

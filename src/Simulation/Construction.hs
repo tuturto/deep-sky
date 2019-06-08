@@ -43,9 +43,9 @@ handleFactionConstruction date factionE = do
     let availableResources = getScore $ Just faction
     let consSpeed = overallConstructionSpeed totalCost availableResources
     _ <- updateWhere [ FactionId ==. entityKey factionE ]
-                     [ FactionBiologicals -=. unRawResource (resourceScaledBySpeed (ccdBiologicalCost totalCost) (overallSpeedBiological consSpeed))
-                     , FactionMechanicals -=. unRawResource (resourceScaledBySpeed (ccdMechanicalCost totalCost) (overallSpeedMechanical consSpeed))
-                     , FactionChemicals -=. unRawResource (resourceScaledBySpeed (ccdChemicalCost totalCost) (overallSpeedChemical consSpeed))
+                     [ FactionBiologicals -=. resourceScaledBySpeed (ccdBiologicalCost totalCost) (overallSpeedBiological consSpeed)
+                     , FactionMechanicals -=. resourceScaledBySpeed (ccdMechanicalCost totalCost) (overallSpeedMechanical consSpeed)
+                     , FactionChemicals -=. resourceScaledBySpeed (ccdChemicalCost totalCost) (overallSpeedChemical consSpeed)
                      ]
     mapM_ (doPlanetConstruction (entityKey factionE) date consSpeed . planetAndFirstConstruction) queues
 

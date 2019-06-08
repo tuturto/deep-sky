@@ -26,7 +26,7 @@ handleFactionFood faction = do
     lProdBio <- mapM (getFoodProduction . entityKey) planets
     let prodBio = sum lProdBio
     let deltaBio = prodBio - reqBio
-    _ <- update (entityKey faction) [ FactionBiologicals +=. unRawResource deltaBio ]
+    _ <- update (entityKey faction) [ FactionBiologicals +=. deltaBio ]
     return ()
 
 

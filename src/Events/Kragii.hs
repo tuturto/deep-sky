@@ -178,7 +178,7 @@ calculateNewBio cost faction = MaybeT $ do
     let currentBio = factionBiologicals faction
     return $ if currentBio > 0
                 then Just ( cost
-                          , RawResource $ max 0 (currentBio - unRawResource cost))
+                          , max 0 (currentBio - cost))
                 else Nothing
 
 
@@ -188,7 +188,7 @@ destroyCrops :: ( MonadIO m, PersistQueryWrite backend, BaseBackend backend ~ Sq
                 -> RawResource Biological -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) ()
 destroyCrops faction cost bioLeft = MaybeT $ do
     _ <- lift $ updateWhere [ FactionId ==. entityKey faction ]
-                            [ FactionBiologicals =. unRawResource bioLeft ]
+                            [ FactionBiologicals =. bioLeft ]
     tell [ CropsDestroyed cost ]
     return $ Just ()
 
