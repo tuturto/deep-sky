@@ -30,23 +30,23 @@ data SpecialEventStatus =
     UnhandledSpecialEvent
     | HandledSpecialEvent
     | NoSpecialEvent
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Enum, Bounded)
 derivePersistField "SpecialEventStatus"
 
 
 data SpectralType = O | B | A | F | G | K | M | L | T
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Enum, Bounded)
 derivePersistField "SpectralType"
 
 
 data LuminosityClass = Iap | Ia | Iab | Ib | II | III | IV | V | VI | VII
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Enum, Bounded)
 derivePersistField "LuminosityClass"
 
 
 
 data Coordinates = Coordinates Double Double
-    deriving (Show, Eq)
+    deriving (Show, Read, Eq)
 
 
 data BuildingType = SensorStation
@@ -56,7 +56,7 @@ data BuildingType = SensorStation
     | NeutronDetector
     | BlackMatterScanner
     | GravityWaveSensor
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Enum, Bounded)
 derivePersistField "BuildingType"
 
 
@@ -94,13 +94,13 @@ data ShipType =
     | MobileBase
     | Station
     | Satellite
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Enum, Bounded)
 derivePersistField "ShipType"
 
 
 data Role = RoleUser
           | RoleAdministrator
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Enum, Bounded)
 derivePersistField "Role"
 
 
@@ -112,7 +112,7 @@ newtype PercentileChance =
 data RollResult =
     Success
     | Failure
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Enum, Bounded)
 
 
 roll :: PercentileChance -> IO RollResult

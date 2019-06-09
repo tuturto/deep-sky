@@ -14,46 +14,21 @@ import QC.Generators.Common
 import QC.Generators.Database
 
 
-newtype ArbLuminosityClass = ArbLuminosityClass
-    { unArbLuminosityClass :: LuminosityClass }
+anyLuminosityClass :: Gen LuminosityClass
+anyLuminosityClass = elements [minBound..]
 
 
-instance Arbitrary ArbLuminosityClass where
-    arbitrary = oneof [ return $ ArbLuminosityClass Iap
-                      , return $ ArbLuminosityClass Ia
-                      , return $ ArbLuminosityClass Iab
-                      , return $ ArbLuminosityClass Ib
-                      , return $ ArbLuminosityClass II
-                      , return $ ArbLuminosityClass III
-                      , return $ ArbLuminosityClass IV
-                      , return $ ArbLuminosityClass V
-                      , return $ ArbLuminosityClass VI
-                      , return $ ArbLuminosityClass VII ]
-
-
-newtype ArbSpectralType = ArbSpectralType
-    { unArbSpectralType :: SpectralType }
-
-
-instance Arbitrary ArbSpectralType where
-    arbitrary = oneof [ return $ ArbSpectralType O
-                      , return $ ArbSpectralType B
-                      , return $ ArbSpectralType A
-                      , return $ ArbSpectralType F
-                      , return $ ArbSpectralType G
-                      , return $ ArbSpectralType K
-                      , return $ ArbSpectralType M
-                      , return $ ArbSpectralType L
-                      , return $ ArbSpectralType T ]
+anySpectralType :: Gen SpectralType
+anySpectralType = elements [minBound..]
 
 
 singleStar :: Gen Star
 singleStar = do
     aName <- arbitrary
     aStarSystemId <- randomStarSystemKey
-    aSpectralType <- arbitrary
-    aLuminosityClass <- arbitrary
-    return $ Star aName aStarSystemId (unArbSpectralType aSpectralType) (unArbLuminosityClass aLuminosityClass)
+    aSpectralType <- anySpectralType
+    aLuminosityClass <- anyLuminosityClass
+    return $ Star aName aStarSystemId aSpectralType aLuminosityClass
 
 
 singleStarEntity :: Gen (Entity Star)
@@ -68,11 +43,11 @@ singleStarReport = do
     aStarId <- randomStarKey
     aStarSystemId <- randomStarSystemKey
     aName <- perhaps arbitrary
-    aSpectralType <- perhaps arbitrary
-    aLuminosityClass <- perhaps arbitrary
+    aSpectralType <- perhaps anySpectralType
+    aLuminosityClass <- perhaps anyLuminosityClass
     aDate <- arbitrary `suchThat` \x -> x > 0
-    return $ CollatedStarReport aStarId aStarSystemId aName (fmap unArbSpectralType aSpectralType)
-                                (fmap unArbLuminosityClass aLuminosityClass) (unArbStarDate aDate)
+    return $ CollatedStarReport aStarId aStarSystemId aName aSpectralType
+                                aLuminosityClass (unArbStarDate aDate)
 
 
 allStars :: Gen [Star]
