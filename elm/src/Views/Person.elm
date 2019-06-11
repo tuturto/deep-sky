@@ -24,6 +24,9 @@ import Data.Accessors
         , personA
         , personDetailsStatusA
         , personRA
+        , relationsA
+        , relationsCurrentPageA
+        , relationsStatusA
         , sexA
         , shortTitleA
         , statsA
@@ -37,6 +40,7 @@ import Data.Common
         , Route(..)
         , error
         , joinMaybe
+        , listOrdering
         , maxPage
         , unDemesneName
         , unPlanetName
@@ -48,17 +52,26 @@ import Data.People
         ( DemesneShortInfo(..)
         , Gender(..)
         , Person
-        , PersonName
+        , PersonName(..)
+        , RelationLink
+        , RelationType(..)
         , Sex(..)
+        , ShortTitle
         , displayName
         , formalName
+        , personNameOrdering
+        , relationTypeOrdering
+        , relationTypeToString
         , unAge
+        , unFamilyName
+        , unFirstName
         , unShortTitle
         , unStatValue
         )
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Maybe
+import Ordering exposing (Ordering)
 import ViewModels.Person exposing (PersonRMsg(..), PersonViewModel)
 import Views.Helpers
     exposing
@@ -92,6 +105,7 @@ leftPanel : Model -> List (Html Msg)
 leftPanel model =
     personDetailsPanel model
         ++ demesnePanel model
+        ++ relationsPanel model
 
 
 {-| Render right side of the screen
@@ -117,28 +131,30 @@ personDetailsPanel model =
         model
 
 
+personName : PersonName -> Maybe ShortTitle -> String
+personName name shortTitle =
+    case Maybe.map unShortTitle shortTitle of
+        Nothing ->
+            displayName name
+
+        Just title ->
+            title ++ " " ++ displayName name
+
+
 {-| Render panel showing details of the person
 -}
 personDetailsContent : Model -> List (Html Msg)
 personDetailsContent model =
     let
-        name =
+        aName =
             get (personRA << personA << try << nameA) model
-                |> Maybe.map displayName
-                |> Maybe.withDefault "-"
 
-        title =
+        aTitle =
             get (personRA << personA << try << shortTitleA) model
-                |> joinMaybe
-                |> Maybe.map unShortTitle
 
         fullName =
-            case title of
-                Nothing ->
-                    name
-
-                Just s ->
-                    s ++ " " ++ name
+            Maybe.map2 personName aName aTitle
+                |> Maybe.withDefault "-"
 
         age =
             get (personRA << personA << try << ageA) model
@@ -282,6 +298,66 @@ statsContent model =
         , div [ class "col-lg-6" ] [ learning ]
         ]
     ]
+
+
+{-| Panel showing relations
+-}
+relationsPanel : Model -> List (Html Msg)
+relationsPanel model =
+    infoPanel
+        { title = "Relations"
+        , currentStatus = model.personR.relationsStatus
+        , openingMessage = PersonMessage <| RelationsStatusChanged InfoPanelOpen
+        , closingMessage = PersonMessage <| RelationsStatusChanged InfoPanelClosed
+        , refreshMessage = Just <| PersonMessage PersonDetailsRefreshRequested
+        }
+        (Just
+            { pageSize = model.personR.relationsPageSize
+            , currentPage = model.personR.relationsCurrentPage
+            , maxPage =
+                get (personRA << personA << try << relationsA) model
+                    |> Maybe.withDefault []
+                    |> maxPage model.personR.relationsPageSize
+            , pageChangedMessage = PersonMessage << RelationsPageChanged
+            }
+        )
+        relationsContent
+        model
+
+
+{-| Content of relations panel
+-}
+relationsContent : Model -> List (Html Msg)
+relationsContent model =
+    [ div [ class "row panel-table-heading" ]
+        [ div [ class "col-lg-7" ] [ text "Name" ]
+        , div [ class "col-lg-5" ] [ text "Type" ]
+        ]
+    ]
+        ++ (get (personRA << personA << try << relationsA) model
+                |> Maybe.withDefault []
+                |> List.sortWith relationOrdering
+                |> List.map relationEntry
+           )
+
+
+relationOrdering : Ordering RelationLink
+relationOrdering a b =
+    listOrdering relationTypeOrdering a.types b.types
+        |> Ordering.ifStillTiedThen (personNameOrdering a.name b.name)
+
+
+relationEntry : RelationLink -> Html Msg
+relationEntry link =
+    div [ class "row" ]
+        [ div [ class "col-lg-7" ]
+            [ a [ href (PersonR link.id) ] [ text <| personName link.name link.shortTitle ] ]
+        , div [ class "col-lg-5" ]
+            [ List.map relationTypeToString link.types
+                |> String.join ", "
+                |> text
+            ]
+        ]
 
 
 {-| Panel showing demesne
@@ -462,5 +538,31 @@ update msg model =
                         target
             in
             ( over (personRA << demesneCurrentPageA) (setPage pageNumber) model
+            , Cmd.none
+            )
+
+        RelationsStatusChanged status ->
+            ( set (personRA << relationsStatusA) status model
+            , Cmd.none
+            )
+
+        RelationsPageChanged pageNumber ->
+            let
+                lastPgNumber =
+                    get (personRA << personA << try << relationsA) model
+                        |> Maybe.withDefault []
+                        |> maxPage model.personR.relationsPageSize
+
+                setPage target _ =
+                    if target < 0 then
+                        0
+
+                    else if target > lastPgNumber then
+                        lastPgNumber
+
+                    else
+                        target
+            in
+            ( over (personRA << relationsCurrentPageA) (setPage pageNumber) model
             , Cmd.none
             )

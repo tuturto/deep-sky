@@ -18,6 +18,8 @@ type PersonRMsg
     | DemesneStatusChanged InfoPanelStatus
     | DemesneRefreshRequested
     | DemesnePageChanged Int
+    | RelationsStatusChanged InfoPanelStatus
+    | RelationsPageChanged Int
 
 
 type alias PersonViewModel =
@@ -28,6 +30,9 @@ type alias PersonViewModel =
     , demesneStatus : InfoPanelStatus
     , demesnePageSize : Int
     , demesneCurrentPage : Int
+    , relationsStatus : InfoPanelStatus
+    , relationsPageSize : Int
+    , relationsCurrentPage : Int
     }
 
 
@@ -40,4 +45,7 @@ init =
     , demesneStatus = InfoPanelOpen
     , demesnePageSize = 10
     , demesneCurrentPage = 0
+    , relationsStatus = InfoPanelOpen
+    , relationsPageSize = 10
+    , relationsCurrentPage = 0
     }

@@ -32,6 +32,8 @@ import Data.People
         , PersonName(..)
         , PlanetDemesneReportShort
         , RegnalNumber(..)
+        , RelationLink
+        , RelationType(..)
         , Sex(..)
         , ShortTitle(..)
         , StarSystemDemesneReportShort
@@ -145,6 +147,7 @@ personDecoder =
         |> andMap (field "Sex" sexDecoder)
         |> andMap (field "Gender" genderDecoder)
         |> andMap (field "Age" ageDecoder)
+        |> andMap (field "Relations" (list relationLinkDecoder))
 
 
 statDecoder : Decode.Decoder StatValue
@@ -274,3 +277,61 @@ longTitleDecoder : Decode.Decoder LongTitle
 longTitleDecoder =
     succeed LongTitle
         |> andMap string
+
+
+relationLinkDecoder : Decode.Decoder RelationLink
+relationLinkDecoder =
+    succeed RelationLink
+        |> andMap (field "Id" personIdDecoder)
+        |> andMap (field "Name" personNameDecoder)
+        |> andMap (field "ShortTitle" (maybe shortTitleDecoder))
+        |> andMap (field "LongTitle" (maybe longTitleDecoder))
+        |> andMap (field "Types" (list relationTypeDecoder))
+
+
+relationTypeDecoder : Decode.Decoder RelationType
+relationTypeDecoder =
+    string |> andThen stringToRelationType
+
+
+stringToRelationType : String -> Decode.Decoder RelationType
+stringToRelationType s =
+    case s of
+        "Parent" ->
+            succeed Parent
+
+        "Child" ->
+            succeed Child
+
+        "Sibling" ->
+            succeed Sibling
+
+        "StepParent" ->
+            succeed StepParent
+
+        "StepChild" ->
+            succeed StepChild
+
+        "StepSibling" ->
+            succeed StepSibling
+
+        "Spouse" ->
+            succeed Spouse
+
+        "ExSpouse" ->
+            succeed ExSpouse
+
+        "Lover" ->
+            succeed Lover
+
+        "ExLover" ->
+            succeed ExLover
+
+        "Friend" ->
+            succeed Friend
+
+        "Rival" ->
+            succeed Rival
+
+        _ ->
+            fail "unknown type"

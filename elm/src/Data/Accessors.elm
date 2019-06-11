@@ -63,6 +63,9 @@ module Data.Accessors exposing
     , populationStatusA
     , populationsA
     , productionStatusA
+    , relationsA
+    , relationsCurrentPageA
+    , relationsStatusA
     , researchFieldStatusA
     , researchProductionA
     , researchRA
@@ -88,6 +91,27 @@ module Data.Accessors exposing
 
 import Accessors exposing (Relation, makeOneToN, makeOneToOne)
 import Accessors.Library exposing (onEach)
+
+
+relationsCurrentPageA : Relation field sub wrap -> Relation { rec | relationsCurrentPage : field } sub wrap
+relationsCurrentPageA =
+    makeOneToOne
+        .relationsCurrentPage
+        (\change rec -> { rec | relationsCurrentPage = change rec.relationsCurrentPage })
+
+
+relationsStatusA : Relation field sub wrap -> Relation { rec | relationsStatus : field } sub wrap
+relationsStatusA =
+    makeOneToOne
+        .relationsStatus
+        (\change rec -> { rec | relationsStatus = change rec.relationsStatus })
+
+
+relationsA : Relation field sub wrap -> Relation { rec | relations : field } sub wrap
+relationsA =
+    makeOneToOne
+        .relations
+        (\change rec -> { rec | relations = change rec.relations })
 
 
 shortTitleA : Relation field sub wrap -> Relation { rec | shortTitle : field } sub wrap

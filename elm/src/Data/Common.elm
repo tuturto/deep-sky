@@ -30,9 +30,11 @@ module Data.Common exposing
     , error
     , findFirst
     , joinMaybe
+    , listOrdering
     , locationToString
     , maxPage
     , messageIdToString
+    , perhapsOrdering
     , personIdToString
     , planetIdToString
     , routeToString
@@ -61,6 +63,7 @@ module Data.Common exposing
     )
 
 import Http exposing (Error(..))
+import Ordering exposing (Ordering)
 
 
 type StarDate
@@ -481,3 +484,50 @@ type DemesneName
 unDemesneName : DemesneName -> String
 unDemesneName (DemesneName s) =
     s
+
+
+{-| Ordering of two lists of orderable items
+-}
+listOrdering : Ordering a -> List a -> List a -> Order
+listOrdering ord a b =
+    let
+        aOrd =
+            List.sortWith ord a
+
+        bOrd =
+            List.sortWith ord b
+    in
+    List.map2 ord aOrd bOrd
+        |> List.foldl
+            (\acc new ->
+                case acc of
+                    EQ ->
+                        new
+
+                    curr ->
+                        curr
+            )
+            EQ
+        |> Ordering.ifStillTiedThen (compare (List.length aOrd) (List.length bOrd))
+
+
+{-| Ordering of two orderable Maybes
+-}
+perhapsOrdering : Ordering a -> Ordering (Maybe a)
+perhapsOrdering ord a b =
+    case a of
+        Just ja ->
+            case b of
+                Nothing ->
+                    LT
+
+                Just jb ->
+                    ord ja jb
+
+        Nothing ->
+            case b of
+                Nothing ->
+                    EQ
+
+                Just jb ->
+                    GT
