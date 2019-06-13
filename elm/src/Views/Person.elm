@@ -28,7 +28,6 @@ import Data.Accessors
         , relationsA
         , relationsCurrentPageA
         , relationsStatusA
-        , sexA
         , shortTitleA
         , statsA
         , statsStatusA
@@ -56,7 +55,6 @@ import Data.People
         , PersonName(..)
         , RelationLink
         , RelationType(..)
-        , Sex(..)
         , ShortTitle
         , displayName
         , formalName
@@ -163,11 +161,6 @@ personDetailsContent model =
                 |> Maybe.map (String.fromInt << unAge)
                 |> Maybe.withDefault "-"
 
-        sex =
-            get (personRA << personA << try << sexA) model
-                |> Maybe.map displaySex
-                |> Maybe.withDefault (text "-")
-
         gender =
             get (personRA << personA << try << genderA) model
                 |> Maybe.map displayGender
@@ -189,10 +182,6 @@ personDetailsContent model =
         , div [ class "col-lg-8" ] [ text age ]
         ]
     , div [ class "row" ]
-        [ div [ class "col-lg-4 panel-table-heading" ] [ text "Sex" ]
-        , div [ class "col-lg-8" ] [ sex ]
-        ]
-    , div [ class "row" ]
         [ div [ class "col-lg-4 panel-table-heading" ] [ text "Gender" ]
         , div [ class "col-lg-8" ] [ gender ]
         ]
@@ -201,21 +190,6 @@ personDetailsContent model =
         , div [ class "col-lg-8" ] [ intel ]
         ]
     ]
-
-
-{-| Map Sex into displayable text
--}
-displaySex : Sex -> Html msg
-displaySex s =
-    case s of
-        Male ->
-            text "Male"
-
-        Female ->
-            text "Female"
-
-        Intersex ->
-            text "Intersex"
 
 
 {-| Map Gender into displayable tex
