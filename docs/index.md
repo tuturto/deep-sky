@@ -10,6 +10,7 @@ Contents
   * [What are reports?](reports)
   * [Viewing star systems](starsystem)
   * [Managing planets](planet)
+  * [Examining people](person)
   * [Doing research](research)
   * [Designing vehicles](designer)
   * [News archive](messages)
