@@ -7,6 +7,7 @@ module Data.People exposing
     , Gender(..)
     , LongTitle(..)
     , Person
+    , PersonIntel(..)
     , PersonName(..)
     , PlanetDemesneReportShort
     , RegnalNumber(..)
@@ -20,6 +21,7 @@ module Data.People exposing
     , displayName
     , formalName
     , nameWithTitle
+    , personIntelToString
     , personNameOrdering
     , relationTypeOrdering
     , relationTypeToString
@@ -304,6 +306,7 @@ type alias Person =
     , gender : Gender
     , age : Age
     , relations : List RelationLink
+    , intelTypes : List PersonIntel
     }
 
 
@@ -481,3 +484,26 @@ relationTypeToString r =
 
         Rival ->
             "Rival"
+
+
+type PersonIntel
+    = Stats
+    | Demesne
+    | FamilyRelations
+    | SecretRelations
+
+
+personIntelToString : PersonIntel -> String
+personIntelToString intel =
+    case intel of
+        Stats ->
+            "Stats"
+
+        Demesne ->
+            "Demesne"
+
+        FamilyRelations ->
+            "Family relations"
+
+        SecretRelations ->
+            "Secret relations"

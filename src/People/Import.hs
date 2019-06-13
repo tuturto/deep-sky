@@ -30,6 +30,7 @@ data PersonReport = PersonReport
     , personReportAge :: Age
     , personReportStats :: Maybe StatReport
     , personReportRelations :: [RelationLink]
+    , personReportIntelTypes :: [PersonIntel]
     } deriving (Show, Read, Eq)
 
 
@@ -165,6 +166,7 @@ personReport today personE intel relations related =
                  , personReportAge = age (personDateOfBirth person) today
                  , personReportStats = statReport person intel
                  , personReportRelations = relationsReport relations related intel
+                 , personReportIntelTypes = intel
                  }
     where
         person = entityVal personE

@@ -29,6 +29,7 @@ import Data.People
         , Gender(..)
         , LongTitle(..)
         , Person
+        , PersonIntel(..)
         , PersonName(..)
         , PlanetDemesneReportShort
         , RegnalNumber(..)
@@ -148,6 +149,7 @@ personDecoder =
         |> andMap (field "Gender" genderDecoder)
         |> andMap (field "Age" ageDecoder)
         |> andMap (field "Relations" (list relationLinkDecoder))
+        |> andMap (field "IntelTypes" (list personIntelDecoder))
 
 
 statDecoder : Decode.Decoder StatValue
@@ -332,6 +334,31 @@ stringToRelationType s =
 
         "Rival" ->
             succeed Rival
+
+        _ ->
+            fail "unknown type"
+
+
+personIntelDecoder : Decode.Decoder PersonIntel
+personIntelDecoder =
+    string
+        |> andThen stringToPersonIntel
+
+
+stringToPersonIntel : String -> Decode.Decoder PersonIntel
+stringToPersonIntel s =
+    case s of
+        "Stats" ->
+            succeed Stats
+
+        "Demesne" ->
+            succeed Demesne
+
+        "FamilyRelations" ->
+            succeed FamilyRelations
+
+        "SecretRelations" ->
+            succeed SecretRelations
 
         _ ->
             fail "unknown type"

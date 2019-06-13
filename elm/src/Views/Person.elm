@@ -17,6 +17,7 @@ import Data.Accessors
         , errorsA
         , genderA
         , idA
+        , intelTypesA
         , intriqueA
         , learningA
         , martialA
@@ -59,6 +60,7 @@ import Data.People
         , ShortTitle
         , displayName
         , formalName
+        , personIntelToString
         , personNameOrdering
         , relationTypeOrdering
         , relationTypeToString
@@ -170,6 +172,13 @@ personDetailsContent model =
             get (personRA << personA << try << genderA) model
                 |> Maybe.map displayGender
                 |> Maybe.withDefault (text "-")
+
+        intel =
+            get (personRA << personA << try << intelTypesA) model
+                |> Maybe.withDefault []
+                |> List.map personIntelToString
+                |> String.join ", "
+                |> text
     in
     [ div [ class "row" ]
         [ div [ class "col-lg-4 panel-table-heading" ] [ text "Name" ]
@@ -186,6 +195,10 @@ personDetailsContent model =
     , div [ class "row" ]
         [ div [ class "col-lg-4 panel-table-heading" ] [ text "Gender" ]
         , div [ class "col-lg-8" ] [ gender ]
+        ]
+    , div [ class "row" ]
+        [ div [ class "col-lg-4 panel-table-heading" ] [ text "Intel" ]
+        , div [ class "col-lg-8" ] [ intel ]
         ]
     ]
 

@@ -38,6 +38,7 @@ module Data.Accessors exposing
     , iconsA
     , idA
     , indexA
+    , intelTypesA
     , intriqueA
     , landedShipsStatusA
     , learningA
@@ -91,6 +92,13 @@ module Data.Accessors exposing
 
 import Accessors exposing (Relation, makeOneToN, makeOneToOne)
 import Accessors.Library exposing (onEach)
+
+
+intelTypesA : Relation field sub wrap -> Relation { rec | intelTypes : field } sub wrap
+intelTypesA =
+    makeOneToOne
+        .intelTypes
+        (\change rec -> { rec | intelTypes = change rec.intelTypes })
 
 
 relationsCurrentPageA : Relation field sub wrap -> Relation { rec | relationsCurrentPage : field } sub wrap
