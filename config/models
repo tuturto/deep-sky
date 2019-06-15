@@ -259,6 +259,7 @@ Person json
     factionId FactionId Maybe
     planetTitle PlanetId Maybe
     starSystemTitle StarSystemId Maybe
+    dynastyId DynastyId Maybe
     UniquePlanetTitle planetTitle !force
     UniqueStarSystemTitle starSystemTitle !force
     deriving Show Read Eq
@@ -274,4 +275,9 @@ Relation json
     targetId PersonId
     type RelationType
     visibility RelationVisibility
+    deriving Show Read Eq
+
+Dynasty json
+    name DynastyName
+    founderId PersonId
     deriving Show Read Eq

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `StatScore` to represent basic skills of a person
 - `PersonFactionIntel` to represent level of person intel
 - `Relation` to represent relations between people
+- `Dynasty` to represent dynasties
 ### Changed
 - planet can have ruler
 - planet report JSON result has all keys starting with uppercase

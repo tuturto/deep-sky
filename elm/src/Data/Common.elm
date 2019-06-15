@@ -5,6 +5,8 @@ module Data.Common exposing
     , ConstructionId(..)
     , DemesneName(..)
     , DesignId(..)
+    , DynastyId(..)
+    , DynastyName(..)
     , ErrorMessage(..)
     , FactionId(..)
     , InfoPanelStatus(..)
@@ -46,6 +48,8 @@ module Data.Common exposing
     , unConstructionId
     , unDemesneName
     , unDesignId
+    , unDynastyId
+    , unDynastyName
     , unFactionId
     , unMech
     , unMessageId
@@ -531,3 +535,21 @@ perhapsOrdering ord a b =
 
                 Just jb ->
                     GT
+
+
+type DynastyId
+    = DynastyId Int
+
+
+unDynastyId : DynastyId -> Int
+unDynastyId (DynastyId n) =
+    n
+
+
+type DynastyName
+    = DynastyName String
+
+
+unDynastyName : DynastyName -> String
+unDynastyName (DynastyName s) =
+    s

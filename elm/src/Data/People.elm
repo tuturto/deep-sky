@@ -2,6 +2,7 @@ module Data.People exposing
     ( Age(..)
     , Cognomen(..)
     , DemesneShortInfo(..)
+    , DynastyLink
     , FamilyName(..)
     , FirstName(..)
     , Gender(..)
@@ -38,6 +39,8 @@ module Data.People exposing
 import Data.Common
     exposing
         ( DemesneName
+        , DynastyId
+        , DynastyName
         , PersonId
         , PlanetId
         , PlanetName
@@ -307,6 +310,7 @@ type alias Person =
     , age : Age
     , relations : List RelationLink
     , intelTypes : List PersonIntel
+    , dynasty : Maybe DynastyLink
     }
 
 
@@ -507,3 +511,9 @@ personIntelToString intel =
 
         SecretRelations ->
             "Secret relations"
+
+
+type alias DynastyLink =
+    { id : DynastyId
+    , name : DynastyName
+    }

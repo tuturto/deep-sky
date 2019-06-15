@@ -14,6 +14,7 @@ import Common ( apiRequireFaction, apiNotFound )
 import MenuHelpers ( starDate )
 import People.Import ( personReport, demesneReport )
 import Handler.Home ( getNewHomeR )
+import Queries ( personAndDynasty )
 
 
 -- | serve client program and have it started showing person details
@@ -31,8 +32,8 @@ getApiPersonR :: Key Person -> HandlerFor App Value
 getApiPersonR pId = do
     (_, _, avatar, _) <- apiRequireFaction
     today <- runDB $ starDate
-    person <- runDB $ selectFirst [ PersonId ==. pId ] []
-    when (isNothing person) (apiNotFound)
+    person <- runDB $ personAndDynasty pId
+    when (isNothing person) apiNotFound
     intel <- runDB $ selectList [ HumanIntelligencePersonId ==. pId
                                 , HumanIntelligenceOwnerId ==. entityKey avatar
                                 ] []

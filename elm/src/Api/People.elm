@@ -8,7 +8,9 @@ module Api.People exposing
 
 import Api.Common
     exposing
-        ( get
+        ( dynastyIdDecoder
+        , dynastyNameDecoder
+        , get
         , is
         , planetIdDecoder
         , planetNameDecoder
@@ -24,6 +26,7 @@ import Data.People
         ( Age(..)
         , Cognomen(..)
         , DemesneShortInfo(..)
+        , DynastyLink
         , FamilyName(..)
         , FirstName(..)
         , Gender(..)
@@ -150,6 +153,7 @@ personDecoder =
         |> andMap (field "Age" ageDecoder)
         |> andMap (field "Relations" (list relationLinkDecoder))
         |> andMap (field "IntelTypes" (list personIntelDecoder))
+        |> andMap (field "Dynasty" (maybe dynastyLinkDecoder))
 
 
 statDecoder : Decode.Decoder StatValue
@@ -362,3 +366,10 @@ stringToPersonIntel s =
 
         _ ->
             fail "unknown type"
+
+
+dynastyLinkDecoder : Decode.Decoder DynastyLink
+dynastyLinkDecoder =
+    succeed DynastyLink
+        |> andMap (field "Id" dynastyIdDecoder)
+        |> andMap (field "Name" dynastyNameDecoder)

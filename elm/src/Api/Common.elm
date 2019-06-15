@@ -1,5 +1,8 @@
 module Api.Common exposing
     ( delete
+    , dynastyIdDecoder
+    , dynastyIdEncoder
+    , dynastyNameDecoder
     , encodeMaybe
     , get
     , getResourcesCmd
@@ -36,6 +39,8 @@ import Data.Common
     exposing
         ( BioResource(..)
         , ChemResource(..)
+        , DynastyId(..)
+        , DynastyName(..)
         , Location(..)
         , MechResource(..)
         , PlanetId(..)
@@ -346,3 +351,20 @@ starSystemIdDecoder =
 starSystemIdEncoder : StarSystemId -> Encode.Value
 starSystemIdEncoder (StarSystemId x) =
     Encode.int x
+
+
+dynastyIdDecoder : Decode.Decoder DynastyId
+dynastyIdDecoder =
+    succeed DynastyId
+        |> andMap int
+
+
+dynastyIdEncoder : DynastyId -> Encode.Value
+dynastyIdEncoder (DynastyId n) =
+    Encode.int n
+
+
+dynastyNameDecoder : Decode.Decoder DynastyName
+dynastyNameDecoder =
+    succeed DynastyName
+        |> andMap string

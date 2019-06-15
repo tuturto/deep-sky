@@ -14,6 +14,7 @@ import Data.Accessors
         , demesneCurrentPageA
         , demesneStatusA
         , diplomacyA
+        , dynastyA
         , errorsA
         , genderA
         , idA
@@ -43,6 +44,7 @@ import Data.Common
         , listOrdering
         , maxPage
         , unDemesneName
+        , unDynastyName
         , unPlanetName
         , unStarSystemName
         )
@@ -149,6 +151,22 @@ personDetailsContent model =
         aName =
             get (personRA << personA << try << nameA) model
 
+        aDynasty =
+            joinMaybe <| get (personRA << personA << try << dynastyA << try << nameA) model
+
+        dynastyText =
+            case get (personRA << personA) model of
+                Nothing ->
+                    "-"
+
+                Just _ ->
+                    case aDynasty of
+                        Nothing ->
+                            "lowborn"
+
+                        Just s ->
+                            unDynastyName s
+
         aTitle =
             get (personRA << personA << try << shortTitleA) model
 
@@ -176,6 +194,10 @@ personDetailsContent model =
     [ div [ class "row" ]
         [ div [ class "col-lg-4 panel-table-heading" ] [ text "Name" ]
         , div [ class "col-lg-8" ] [ text fullName ]
+        ]
+    , div [ class "row" ]
+        [ div [ class "col-lg-4 panel-table-heading" ] [ text "Dynasty" ]
+        , div [ class "col-lg-8" ] [ text dynastyText ]
         ]
     , div [ class "row" ]
         [ div [ class "col-lg-4 panel-table-heading" ] [ text "Age" ]

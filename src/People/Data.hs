@@ -14,7 +14,7 @@ module People.Data
     , RegnalNumber(..), Sex(..), Gender(..), PersonIntel(..), StatScore(..)
     , Diplomacy(..), Martial(..), Stewardship(..), Intrique(..), Learning(..)
     , DemesneName(..), ShortTitle(..), LongTitle(..), RelationType(..)
-    , RelationVisibility(..) )
+    , RelationVisibility(..), DynastyName(..) )
     where
 
 import Data.Aeson ( ToJSON(..), Object, withScientific, withText, withObject )
@@ -297,6 +297,39 @@ data RelationVisibility =
     | FamilyRelation
     | PublicRelation
     deriving (Show, Read, Eq, Enum, Bounded)
+
+
+newtype DynastyName = MkDynastyName { unDynastyName :: Text }
+    deriving (Show, Read, Eq)
+
+
+instance IsString DynastyName where
+    fromString = MkDynastyName . fromString
+
+
+instance ToJSON DynastyName where
+    toJSON = toJSON . unDynastyName
+
+
+instance FromJSON DynastyName where
+    parseJSON =
+        withText "dynasty name"
+            (\x -> return $ MkDynastyName x)
+
+
+instance PersistField DynastyName where
+    toPersistValue (MkDynastyName s) =
+        PersistText s
+
+    fromPersistValue (PersistText s) =
+        Right $ MkDynastyName s
+
+    fromPersistValue _ =
+        Left "Failed to deserialize"
+
+
+instance PersistFieldSql DynastyName where
+    sqlType _ = SqlString
 
 
 derivePersistField "PersonName"

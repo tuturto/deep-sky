@@ -16,7 +16,7 @@ import CustomTypes ( StarDate, Age, age )
 import People.Data ( PersonIntel(..), Diplomacy, Martial, Stewardship
                    , Intrique, Learning, StatScore, PersonName, Sex
                    , Gender, DemesneName(..), ShortTitle(..), LongTitle(..)
-                   , RelationVisibility(..), RelationType(..)
+                   , RelationVisibility(..), RelationType(..), DynastyName(..)
                    )
 
 
@@ -31,6 +31,7 @@ data PersonReport = PersonReport
     , personReportStats :: Maybe StatReport
     , personReportRelations :: [RelationLink]
     , personReportIntelTypes :: [PersonIntel]
+    , personReportDynasty :: Maybe DynastyReport
     } deriving (Show, Read, Eq)
 
 
@@ -155,8 +156,13 @@ systemReport date system =
 
 
 -- | Person report of given person and taking HUMINT level into account
-personReport :: StarDate -> Entity Person -> [PersonIntel] -> [Relation] -> [Entity Person] -> PersonReport
-personReport today personE intel relations related =
+personReport :: StarDate
+    -> (Entity Person, Maybe (Entity Dynasty))
+    -> [PersonIntel]
+    -> [Relation]
+    -> [Entity Person]
+    -> PersonReport
+personReport today (personE, dynastyE) intel relations related =
     PersonReport { personReportId = entityKey personE
                  , personReportName = personName person
                  , personReportShortTitle = shortTitle person
@@ -167,6 +173,7 @@ personReport today personE intel relations related =
                  , personReportStats = statReport person intel
                  , personReportRelations = relationsReport relations related intel
                  , personReportIntelTypes = intel
+                 , personReportDynasty = dynastyReport <$> dynastyE
                  }
     where
         person = entityVal personE
@@ -252,6 +259,21 @@ data RelationLink = RelationLink
     } deriving (Show, Read, Eq)
 
 
+data DynastyReport = DynastyReport
+    { dynastyReportId :: Key Dynasty
+    , dynastyReportName :: DynastyName
+    } deriving (Show, Read, Eq)
+
+
+dynastyReport :: Entity Dynasty -> DynastyReport
+dynastyReport dynasty =
+    DynastyReport
+        { dynastyReportId = entityKey dynasty
+        , dynastyReportName = (dynastyName . entityVal) dynasty
+        }
+
+
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 12 } ''PersonReport)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 10 } ''StatReport)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 12 } ''RelationLink)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 13 } ''DynastyReport)

@@ -31,6 +31,7 @@ module Data.Accessors exposing
     , designsCurrentPageA
     , designsPanelStatusA
     , diplomacyA
+    , dynastyA
     , emptyPanelStatusA
     , errorsA
     , focusedTopCategoryA
@@ -92,6 +93,13 @@ module Data.Accessors exposing
 
 import Accessors exposing (Relation, makeOneToN, makeOneToOne)
 import Accessors.Library exposing (onEach)
+
+
+dynastyA : Relation field sub wrap -> Relation { rec | dynasty : field } sub wrap
+dynastyA =
+    makeOneToOne
+        .dynasty
+        (\change rec -> { rec | dynasty = change rec.dynasty })
 
 
 intelTypesA : Relation field sub wrap -> Relation { rec | intelTypes : field } sub wrap
