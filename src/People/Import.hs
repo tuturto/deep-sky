@@ -185,7 +185,7 @@ personReport today (personE, dynastyE) intel relations related =
 -- secret relations are known only if intel includes secret relations
 relationsReport :: [Relation] -> [Entity Person] -> [PersonIntel] -> [RelationLink]
 relationsReport relations related intel =
-    (relationLink known) <$> related
+    mapMaybe (relationLink known) related
     where
         known = filter (knownRelation intel) relations
 
@@ -204,15 +204,19 @@ knownRelation intel Relation { relationVisibility = SecretRelation } =
 
 
 -- | Collect all relations of given person and report them
-relationLink :: [Relation] -> Entity Person -> RelationLink
+relationLink :: [Relation] -> Entity Person -> Maybe RelationLink
 relationLink relations personE =
-    RelationLink
-        { relationLinkName = personName person
-        , relationLinkShortTitle = shortTitle person
-        , relationLinkLongTitle = longTitle person
-        , relationLinkTypes = relationType <$> relevant
-        , relationLinkId = entityKey personE
-        }
+    if null relevant
+        then
+            Nothing
+        else
+            Just $ RelationLink
+                    { relationLinkName = personName person
+                    , relationLinkShortTitle = shortTitle person
+                    , relationLinkLongTitle = longTitle person
+                    , relationLinkTypes = relationType <$> relevant
+                    , relationLinkId = entityKey personE
+                    }
     where
         person = entityVal personE
         relevant = filter (\x -> relationOriginatorId x == entityKey personE) relations
