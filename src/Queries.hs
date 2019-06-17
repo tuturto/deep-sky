@@ -4,10 +4,11 @@
 {-# LANGUAGE FlexibleContexts           #-}
 
 module Queries
-    ( ShipLandingStatus(..), planetPopulationReports, shipsAtPlanet
-    , planetConstructionQueue, kragiiTargetPlanets, farmingChangeTargetPlanets
-    , factionBuildings, chassisList, planetReports, starSystemReports
-    , personAndDynasty )
+    ( ShipLandingStatus(..), PersonData(..), PersonDataLink(..)
+    , planetPopulationReports, shipsAtPlanet, planetConstructionQueue
+    , kragiiTargetPlanets, farmingChangeTargetPlanets, factionBuildings
+    , chassisList, planetReports, starSystemReports, personAndDynasty
+    , personInfo )
     where
 
 import Import
@@ -229,3 +230,73 @@ personAndDynasty pId = do
             E.where_ (person E.^. PersonId E.==. (E.val pId))
             return (person, dynasty)
     return $ safeHead pairs
+
+
+-- | Load person information
+-- returned data is structured as
+-- target of query as Entity Person
+-- possible dynasty of target as Maybe (Entity Person)
+-- intelligence targeting target as Entity HumanIntelligence
+-- relation targeting the target as Entity Relation
+-- originator of relation as Entity Person
+-- intelligence targeting originator as Entity HumanIntelligence
+personInfo :: (MonadIO m, BackendCompatible SqlBackend backend,
+    PersistQueryRead backend, PersistUniqueRead backend) =>
+    Key Person -> Key Person -> ReaderT backend m (Maybe PersonData)
+personInfo pId ownerId = do
+    info <- E.select $
+        E.from $ \(person1 `E.LeftOuterJoin` relation `E.LeftOuterJoin` person2
+                    `E.LeftOuterJoin` intel1 `E.LeftOuterJoin` intel2
+                    `E.LeftOuterJoin` dynasty) -> do
+            E.on (dynasty E.?. DynastyId E.==. ( person1 E.^. PersonDynastyId))
+            E.on (person2 E.^. PersonId E.==. ( intel2 E.^. HumanIntelligencePersonId))
+            E.on (person1 E.^. PersonId E.==. ( intel1 E.^. HumanIntelligencePersonId))
+            E.on (person2 E.^. PersonId E.==. ( relation E.^. RelationOriginatorId))
+            E.on (person1 E.^. PersonId E.==. ( relation E.^. RelationTargetId))
+            E.where_ (person1 E.^. PersonId E.==. (E.val pId)
+                      E.&&. intel1 E.^. HumanIntelligenceOwnerId E.==. (E.val ownerId)
+                      E.&&. intel2 E.^. HumanIntelligenceOwnerId E.==. (E.val ownerId))
+            return (person1, dynasty, intel1, relation, person2, intel2)
+    return $ mapPersonInfo info
+
+
+data PersonData = PersonData
+    { personDataPerson :: Entity Person
+    , personDataDynasty :: Maybe (Entity Dynasty)
+    , personDataLinks :: [PersonDataLink]
+    } deriving (Show, Read, Eq)
+
+
+data PersonDataLink = PersonDataLink
+    { personDataLinkTargetIntelligence :: HumanIntelligence
+    , personDataLinkRelation :: Relation
+    , personDataLinkPerson :: Entity Person
+    , personDataLinkOriginatorIntelligence :: HumanIntelligence
+    } deriving (Show, Read, Eq)
+
+
+mapPersonInfo :: [(Entity Person, Maybe (Entity Dynasty), Entity HumanIntelligence
+                 ,Entity Relation, Entity Person, Entity HumanIntelligence)]
+                 -> Maybe PersonData
+mapPersonInfo [] =
+    Nothing
+
+mapPersonInfo info =
+    Just $ PersonData { personDataPerson = (target . P.head) info
+                      , personDataDynasty = (dynasty . P.head) info
+                      , personDataLinks = linker <$> info
+                      }
+    where
+        linker = \x ->
+                    PersonDataLink
+                    { personDataLinkTargetIntelligence = (entityVal . targetIntel) x
+                    , personDataLinkRelation = (entityVal . relation) x
+                    , personDataLinkPerson = originator x
+                    , personDataLinkOriginatorIntelligence = (entityVal . originatorIntel) x
+                    }
+        target = \(x, _, _, _, _, _) -> x
+        dynasty = \(_, x, _, _, _, _) -> x
+        targetIntel = \(_, _, x, _, _, _) -> x
+        relation = \(_, _, _, x, _, _) -> x
+        originator = \(_, _, _, _, x, _) -> x
+        originatorIntel = \(_, _, _, _, _, x) -> x

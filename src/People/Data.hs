@@ -164,7 +164,7 @@ data Sex =
     Male
     | Female
     | Intersex
-    deriving (Show, Read, Eq, Enum, Bounded)
+    deriving (Show, Read, Eq, Enum, Bounded, Ord)
 
 
 data Gender =
@@ -172,7 +172,7 @@ data Gender =
     | Woman
     | Agender
     | Nonbinary
-    deriving (Show, Read, Eq, Enum, Bounded)
+    deriving (Show, Read, Eq, Enum, Bounded, Ord)
 
 
 data PersonIntel =
@@ -180,7 +180,7 @@ data PersonIntel =
     | Demesne
     | FamilyRelations
     | SecretRelations
-    deriving (Show, Read, Eq, Enum, Bounded)
+    deriving (Show, Read, Eq, Enum, Bounded, Ord)
 
 
 newtype StatScore a = StatScore { unStatScore :: Int }
@@ -289,14 +289,14 @@ data RelationType =
     | ExLover
     | Friend
     | Rival
-    deriving (Show, Read, Eq, Enum, Bounded)
+    deriving (Show, Read, Eq, Enum, Bounded, Ord)
 
 
 data RelationVisibility =
     SecretRelation
     | FamilyRelation
     | PublicRelation
-    deriving (Show, Read, Eq, Enum, Bounded)
+    deriving (Show, Read, Eq, Enum, Bounded, Ord)
 
 
 newtype DynastyName = MkDynastyName { unDynastyName :: Text }

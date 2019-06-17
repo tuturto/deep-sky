@@ -6,18 +6,21 @@
 
 module People.Import
     ( PersonReport(..), StatReport(..), RelationLink(..), personReport
-    , demesneReport, shortTitle, longTitle, knownRelation, relationsReport
+    , demesneReport, shortTitle, longTitle, relationsReport, knownLink
     )
     where
 
 import Import
+import qualified Prelude as P
 import Data.Aeson.TH ( deriveJSON, defaultOptions, fieldLabelModifier )
+import Common ( mkUniq )
 import CustomTypes ( StarDate, Age, age )
 import People.Data ( PersonIntel(..), Diplomacy, Martial, Stewardship
                    , Intrique, Learning, StatScore, PersonName, Sex
                    , Gender, DemesneName(..), ShortTitle(..), LongTitle(..)
                    , RelationVisibility(..), RelationType(..), DynastyName(..)
                    )
+import Queries ( PersonData(..), PersonDataLink(..) )
 
 
 data PersonReport = PersonReport
@@ -156,70 +159,72 @@ systemReport date system =
 
 
 -- | Person report of given person and taking HUMINT level into account
-personReport :: StarDate
-    -> (Entity Person, Maybe (Entity Dynasty))
-    -> [PersonIntel]
-    -> [Relation]
-    -> [Entity Person]
-    -> PersonReport
-personReport today (personE, dynastyE) intel relations related =
-    PersonReport { personReportId = entityKey personE
+personReport :: StarDate -> PersonData -> PersonReport
+personReport today info =
+    PersonReport { personReportId = (entityKey . personDataPerson) info
                  , personReportName = personName person
                  , personReportShortTitle = shortTitle person
                  , personReportLongTitle = longTitle person
                  , personReportSex = personSex person
                  , personReportGender = personGender person
                  , personReportAge = age (personDateOfBirth person) today
-                 , personReportStats = statReport person intel
-                 , personReportRelations = relationsReport relations related intel
-                 , personReportIntelTypes = intel
-                 , personReportDynasty = dynastyReport <$> dynastyE
+                 , personReportStats = statReport person targetIntelTypes
+                 , personReportRelations = relationsReport $ personDataLinks info
+                 , personReportIntelTypes = targetIntelTypes
+                 , personReportDynasty =  dynastyReport <$> personDataDynasty info
                  }
     where
-        person = entityVal personE
+        person = (entityVal . personDataPerson) info
+        targetIntelTypes = mkUniq $ fmap (humanIntelligenceLevel . personDataLinkTargetIntelligence) (personDataLinks info)
 
 
 -- | Relations of a specific person
 -- public relations are always known
 -- family relations are known if intel includes family relations or secret relations
 -- secret relations are known only if intel includes secret relations
-relationsReport :: [Relation] -> [Entity Person] -> [PersonIntel] -> [RelationLink]
-relationsReport relations related intel =
-    mapMaybe (relationLink known) related
+relationsReport :: [PersonDataLink] -> [RelationLink]
+relationsReport links =
+    mapMaybe relationLink grouped
     where
-        known = filter (knownRelation intel) relations
+        known = filter knownLink links
+        grouped = groupBy (\x y -> (entityKey . personDataLinkPerson) x == (entityKey . personDataLinkPerson) y) known
 
 
--- | Is relation known with given level of intel
-knownRelation :: [PersonIntel] -> Relation -> Bool
-knownRelation _ Relation { relationVisibility = PublicRelation } =
-    True
+-- | Is this link known based on available human intelligence
+knownLink :: PersonDataLink -> Bool
+knownLink item =
+    case (relationVisibility . personDataLinkRelation) item of
+        PublicRelation ->
+            True
 
-knownRelation intel Relation { relationVisibility = FamilyRelation } =
-    FamilyRelations `elem` intel
-    || SecretRelations `elem` intel
+        FamilyRelation ->
+            FamilyRelations `elem` intel
+            || SecretRelations `elem` intel
 
-knownRelation intel Relation { relationVisibility = SecretRelation } =
-    SecretRelations `elem` intel
+        SecretRelation ->
+            SecretRelations `elem` intel
+    where
+        intel = [ (humanIntelligenceLevel . personDataLinkTargetIntelligence) item
+                , (humanIntelligenceLevel . personDataLinkOriginatorIntelligence) item
+                ]
 
 
 -- | Collect all relations of given person and report them
-relationLink :: [Relation] -> Entity Person -> Maybe RelationLink
-relationLink relations personE =
-    if null relevant
-        then
-            Nothing
-        else
-            Just $ RelationLink
-                    { relationLinkName = personName person
-                    , relationLinkShortTitle = shortTitle person
-                    , relationLinkLongTitle = longTitle person
-                    , relationLinkTypes = relationType <$> relevant
-                    , relationLinkId = entityKey personE
-                    }
+relationLink :: [PersonDataLink] -> Maybe RelationLink
+relationLink [] =
+    Nothing
+
+relationLink links =
+    Just $ RelationLink
+            { relationLinkName = personName person
+            , relationLinkShortTitle = shortTitle person
+            , relationLinkLongTitle = longTitle person
+            , relationLinkTypes = types
+            , relationLinkId = (entityKey . personDataLinkPerson . P.head) links
+            }
     where
-        person = entityVal personE
-        relevant = filter (\x -> relationOriginatorId x == entityKey personE) relations
+        person = (entityVal . personDataLinkPerson . P.head) links
+        types = mkUniq $ fmap (relationType . personDataLinkRelation) links
 
 
 shortTitle :: Person -> Maybe ShortTitle
@@ -231,6 +236,7 @@ shortTitle Person { personStarSystemTitle = Just _ } =
 
 shortTitle _ =
     Nothing
+
 
 longTitle :: Person -> Maybe LongTitle
 longTitle _ =

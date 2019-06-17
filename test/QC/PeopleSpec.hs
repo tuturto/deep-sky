@@ -9,35 +9,60 @@ import Test.Hspec
 import QC.Generators.Import
 
 import TestImport
-import People.Import ( knownRelation )
+import People.Data ( RelationVisibility(..) )
+import People.Import ( knownLink )
 
--- knownRelation :: [PersonIntel] -> Relation -> Bool
 
 spec :: Spec
 spec = do
     describe "people" $ do
         describe "relations" $ do
             it "public relations are always known" $ do
-                forAll publicRelation $
-                    \(intel, relation) ->
-                        knownRelation intel relation
+                forAll (anyPersonDataLink PublicRelation
+                                          anyPersonIntel
+                                          anyPersonIntel) $
+                    \item ->
+                        knownLink item
 
             it "family relations are not known if intel doesn't include family or secret relations" $ do
-                forAll familyRelationsWithoutFamilyOrSecretIntel $
-                    \(intel, relation) ->
-                        not $ knownRelation intel relation
+                forAll (anyPersonDataLink FamilyRelation
+                                          intelWithoutFamilyOrSecretMatters
+                                          intelWithoutFamilyOrSecretMatters) $
+                    \item ->
+                        not $ knownLink item
 
-            it "family relations are known if intel includes family or secret relations" $ do
-                forAll familyRelationsWithFamilyOrSecretIntel $
-                    \(intel, relation) ->
-                        knownRelation intel relation
+            it "family relations are known if intel of target person includes family or secret relations" $ do
+                forAll (anyPersonDataLink FamilyRelation
+                                          intelWithFamilyOrSecretMatters
+                                          intelWithoutFamilyOrSecretMatters) $
+                    \item ->
+                        knownLink item
+
+            it "family relations are known if intel of originator person includes family or secret relations" $ do
+                forAll (anyPersonDataLink FamilyRelation
+                                          intelWithoutFamilyOrSecretMatters
+                                          intelWithFamilyOrSecretMatters) $
+                    \item ->
+                        knownLink item
+
 
             it "secret relations are not known if intel doesn't include secret relations" $ do
-                forAll secretRelationsWithoutSecretIntel $
-                    \(intel, relation) ->
-                        not $ knownRelation intel relation
+                forAll (anyPersonDataLink SecretRelation
+                                          intelWithoutSecretMatters
+                                          intelWithoutSecretMatters) $
+                    \item ->
+                        not $ knownLink item
 
-            it "secret relations are known if intel includes secret relations" $ do
-                forAll secretRelationsWithSecretIntel $
-                    \(intel, relation) ->
-                        knownRelation intel relation
+            it "secret relations are known if intel of target person includes secret relations" $ do
+                forAll (anyPersonDataLink SecretRelation
+                                          intelWithSecretMatters
+                                          intelWithoutSecretMatters) $
+                    \item ->
+                        knownLink item
+
+            it "secret relations are known if intel of originator person includes secret relations" $ do
+                forAll (anyPersonDataLink SecretRelation
+                                          intelWithoutSecretMatters
+                                          intelWithSecretMatters) $
+                    \item ->
+                        knownLink item

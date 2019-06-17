@@ -39,11 +39,11 @@ singleUserWrittenNewsDto :: Gen UserWrittenNewsDto
 singleUserWrittenNewsDto = do
     aMessage <- arbitrary
     aDate <- arbitrary
-    aUserName <- arbitrary
+    aUserName <- anyPersonName
     aIcon <- arbitrary
     return $ UserWrittenNewsDto { userWrittenNewsDtoContent = aMessage
                                 , userWrittenNewsDtoDate = unArbStarDate aDate
-                                , userWrittenNewsDtoUser = unArbPersonName aUserName
+                                , userWrittenNewsDtoUser = aUserName
                                 , userWrittenNewsDtoIcon = unArbUserNewsIconDto aIcon
                                 }
 
