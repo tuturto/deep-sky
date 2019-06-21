@@ -14,7 +14,7 @@ module People.Data
     , RegnalNumber(..), Sex(..), Gender(..), PersonIntel(..), StatScore(..)
     , Diplomacy(..), Martial(..), Stewardship(..), Intrique(..), Learning(..)
     , DemesneName(..), ShortTitle(..), LongTitle(..), RelationType(..)
-    , RelationVisibility(..), DynastyName(..) )
+    , RelationVisibility(..), DynastyName(..), MarriageStatus(..) )
     where
 
 import Data.Aeson ( ToJSON(..), Object, withScientific, withText, withObject )
@@ -283,6 +283,7 @@ data RelationType =
     | StepParent
     | StepChild
     | StepSibling
+    | Betrothed
     | Spouse
     | ExSpouse
     | Lover
@@ -332,15 +333,23 @@ instance PersistFieldSql DynastyName where
     sqlType _ = SqlString
 
 
+data MarriageStatus =
+    Engaged
+    | Married
+    deriving (Show, Read, Eq, Ord, Enum, Bounded)
+
+
 derivePersistField "PersonName"
 derivePersistField "Sex"
 derivePersistField "Gender"
 derivePersistField "PersonIntel"
 derivePersistField "RelationType"
 derivePersistField "RelationVisibility"
+derivePersistField "MarriageStatus"
 
 $(deriveJSON defaultOptions ''Sex)
 $(deriveJSON defaultOptions ''Gender)
 $(deriveJSON defaultOptions ''PersonIntel)
 $(deriveJSON defaultOptions ''RelationType)
 $(deriveJSON defaultOptions ''RelationVisibility)
+$(deriveJSON defaultOptions ''MarriageStatus)

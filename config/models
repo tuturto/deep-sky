@@ -281,3 +281,11 @@ Dynasty json
     name DynastyName
     founderId PersonId
     deriving Show Read Eq
+
+Marriage json
+    person1Id PersonId
+    person2Id PersonId
+    offspringDynasty PersonId
+    status MarriageStatus
+    UniqueMarriagePair person1Id person2Id
+    deriving Show Read Eq

@@ -8,10 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Players have avatar that they're playing as
 - `Person` to represent people in detailed way
-- `StatScore` to represent basic skills of a person
-- `PersonFactionIntel` to represent level of person intel
+- `HumanIntelligence` to represent level of person intel
 - `Relation` to represent relations between people
 - `Dynasty` to represent dynasties
+- `Marriage` to represent engagements and marriages
 ### Changed
 - planet can have ruler
 - planet report JSON result has all keys starting with uppercase
