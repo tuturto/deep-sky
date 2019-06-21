@@ -31,6 +31,11 @@ import Data.People
         , FirstName(..)
         , Gender(..)
         , LongTitle(..)
+        , OpinionFeeling(..)
+        , OpinionIntel(..)
+        , OpinionReason(..)
+        , OpinionReport(..)
+        , OpinionScore(..)
         , Person
         , PersonIntel(..)
         , PersonName(..)
@@ -38,16 +43,22 @@ import Data.People
         , RegnalNumber(..)
         , RelationLink
         , RelationType(..)
+        , RelationVisibility(..)
         , Sex(..)
         , ShortTitle(..)
         , StarSystemDemesneReportShort
         , StatValue(..)
         , StatValues
+        , Trait
+        , TraitDescription(..)
+        , TraitName(..)
+        , TraitType(..)
         )
 import Http
 import Json.Decode as Decode
     exposing
         ( andThen
+        , bool
         , fail
         , field
         , int
@@ -144,6 +155,7 @@ personDecoder : Decode.Decoder Person
 personDecoder =
     succeed Person
         |> andMap (field "Id" personIdDecoder)
+        |> andMap (field "Avatar" bool)
         |> andMap (field "Name" personNameDecoder)
         |> andMap (field "ShortTitle" (maybe shortTitleDecoder))
         |> andMap (field "LongTitle" (maybe longTitleDecoder))
@@ -154,6 +166,9 @@ personDecoder =
         |> andMap (field "Relations" (list relationLinkDecoder))
         |> andMap (field "IntelTypes" (list personIntelDecoder))
         |> andMap (field "Dynasty" (maybe dynastyLinkDecoder))
+        |> andMap (field "Traits" (maybe (list traitDecoder)))
+        |> andMap (field "AvatarOpinion" opinionReportDecoder)
+        |> andMap (field "OpinionOfAvatar" opinionReportDecoder)
 
 
 statDecoder : Decode.Decoder StatValue
@@ -293,6 +308,7 @@ relationLinkDecoder =
         |> andMap (field "ShortTitle" (maybe shortTitleDecoder))
         |> andMap (field "LongTitle" (maybe longTitleDecoder))
         |> andMap (field "Types" (list relationTypeDecoder))
+        |> andMap (field "Opinion" opinionReportDecoder)
 
 
 relationTypeDecoder : Decode.Decoder RelationType
@@ -345,27 +361,23 @@ stringToRelationType s =
 
 personIntelDecoder : Decode.Decoder PersonIntel
 personIntelDecoder =
-    string
-        |> andThen stringToPersonIntel
+    oneOf
+        [ when tagType (is "Stats") (succeed Stats)
+        , when tagType (is "Demesne") (succeed Demesne)
+        , when tagType (is "FamilyRelations") (succeed FamilyRelations)
+        , when tagType (is "SecretRelations") (succeed SecretRelations)
+        , when tagType (is "Traits") (succeed Traits)
+        , when tagType
+            (is "Opinions")
+            (succeed Opinions
+                |> andMap (field "contents" opinionIntelDecoder)
+            )
+        ]
 
 
-stringToPersonIntel : String -> Decode.Decoder PersonIntel
-stringToPersonIntel s =
-    case s of
-        "Stats" ->
-            succeed Stats
-
-        "Demesne" ->
-            succeed Demesne
-
-        "FamilyRelations" ->
-            succeed FamilyRelations
-
-        "SecretRelations" ->
-            succeed SecretRelations
-
-        _ ->
-            fail "unknown type"
+tagType : Decode.Decoder String
+tagType =
+    field "tag" string
 
 
 dynastyLinkDecoder : Decode.Decoder DynastyLink
@@ -373,3 +385,133 @@ dynastyLinkDecoder =
     succeed DynastyLink
         |> andMap (field "Id" dynastyIdDecoder)
         |> andMap (field "Name" dynastyNameDecoder)
+
+
+opinionIntelDecoder : Decode.Decoder OpinionIntel
+opinionIntelDecoder =
+    oneOf
+        [ when tagType
+            (is "BaseOpinionIntel")
+            (succeed BaseOpinionIntel
+                |> andMap (field "contents" relationVisibilityDecoder)
+            )
+        , when tagType
+            (is "ReasonsForOpinions")
+            (succeed ReasonsForOpinions
+                |> andMap (field "contents" relationVisibilityDecoder)
+            )
+        , when tagType
+            (is "DetailedOpinions")
+            (succeed DetailedOpinions
+                |> andMap (field "contents" relationVisibilityDecoder)
+            )
+        ]
+
+
+relationVisibilityDecoder : Decode.Decoder RelationVisibility
+relationVisibilityDecoder =
+    string |> andThen stringToRelationVisibility
+
+
+stringToRelationVisibility : String -> Decode.Decoder RelationVisibility
+stringToRelationVisibility s =
+    case s of
+        "PublicRelation" ->
+            succeed PublicRelation
+
+        "FamilyRelation" ->
+            succeed FamilyRelation
+
+        "SecretRelation" ->
+            succeed SecretRelation
+
+        _ ->
+            fail "failed to decode"
+
+
+traitDecoder : Decode.Decoder Trait
+traitDecoder =
+    succeed Trait
+        |> andMap (field "Name" traitNameDecoder)
+        |> andMap (field "Type" traitTypeDecoder)
+        |> andMap (field "Description" traitDescriptionDecoder)
+        |> andMap (field "ValidUntil" (maybe starDateDecoder))
+
+
+traitNameDecoder : Decode.Decoder TraitName
+traitNameDecoder =
+    succeed TraitName
+        |> andMap string
+
+
+traitTypeDecoder : Decode.Decoder TraitType
+traitTypeDecoder =
+    succeed TraitType
+        |> andMap string
+
+
+traitDescriptionDecoder : Decode.Decoder TraitDescription
+traitDescriptionDecoder =
+    succeed TraitDescription
+        |> andMap string
+
+
+opinionFeelingDecoder : Decode.Decoder OpinionFeeling
+opinionFeelingDecoder =
+    string |> andThen stringToOpinionFeeling
+
+
+stringToOpinionFeeling : String -> Decode.Decoder OpinionFeeling
+stringToOpinionFeeling s =
+    case s of
+        "PositiveFeeling" ->
+            succeed PositiveFeeling
+
+        "NeutralFeeling" ->
+            succeed NeutralFeeling
+
+        "NegativeFeeling" ->
+            succeed NegativeFeeling
+
+        _ ->
+            fail "failed to deserialize"
+
+
+opinionReasonDecoder : Decode.Decoder OpinionReason
+opinionReasonDecoder =
+    succeed OpinionReason
+        |> andMap string
+
+
+opinionScoreDecoder : Decode.Decoder OpinionScore
+opinionScoreDecoder =
+    succeed OpinionScore
+        |> andMap int
+
+
+opinionReportDecoder : Decode.Decoder OpinionReport
+opinionReportDecoder =
+    oneOf
+        [ when opinionReportType
+            (is "BaseOpinionReport")
+            (succeed BaseOpinionReport
+                |> andMap (field "Feeling" opinionFeelingDecoder)
+            )
+        , when opinionReportType
+            (is "OpinionReasonReport")
+            (succeed OpinionReasonReport
+                |> andMap (field "Feeling" opinionFeelingDecoder)
+                |> andMap (field "Reasons" (list opinionReasonDecoder))
+            )
+        , when opinionReportType
+            (is "DetailedOpinionReport")
+            (succeed DetailedOpinionReport
+                |> andMap (field "Score" opinionScoreDecoder)
+                |> andMap (field "Reasons" (list opinionReasonDecoder))
+            )
+        ]
+
+
+opinionReportType : Decode.Decoder String
+opinionReportType =
+    field "Tag" string

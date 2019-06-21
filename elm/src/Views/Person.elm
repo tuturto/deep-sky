@@ -10,6 +10,8 @@ import Api.People exposing (getDemesne, getPersonDetails)
 import Data.Accessors
     exposing
         ( ageA
+        , avatarA
+        , avatarOpinionA
         , demesneA
         , demesneCurrentPageA
         , demesneStatusA
@@ -23,6 +25,7 @@ import Data.Accessors
         , learningA
         , martialA
         , nameA
+        , opinionOfAvatarA
         , personA
         , personDetailsStatusA
         , personRA
@@ -33,6 +36,9 @@ import Data.Accessors
         , statsA
         , statsStatusA
         , stewardshipA
+        , traitsA
+        , traitsCurrentPageA
+        , traitsStatusA
         )
 import Data.Common
     exposing
@@ -53,33 +59,43 @@ import Data.People
     exposing
         ( DemesneShortInfo(..)
         , Gender(..)
+        , OpinionFeeling(..)
+        , OpinionReport(..)
+        , OpinionScore(..)
         , Person
         , PersonName(..)
         , RelationLink
         , RelationType(..)
         , ShortTitle
+        , Trait
         , displayName
         , formalName
         , personIntelToString
         , personNameOrdering
         , relationTypeOrdering
         , relationTypeToString
+        , traitOrdering
         , unAge
         , unFamilyName
         , unFirstName
+        , unOpinionScore
         , unShortTitle
         , unStatValue
+        , unTraitDescription
+        , unTraitName
         )
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Maybe
 import Ordering exposing (Ordering)
+import Set
 import ViewModels.Person exposing (PersonRMsg(..), PersonViewModel)
 import Views.Helpers
     exposing
         ( PanelSizing(..)
         , href
         , infoPanel
+        , triplePanels
         , twinPanels
         )
 
@@ -115,6 +131,7 @@ leftPanel model =
 rightPanel : Model -> List (Html Msg)
 rightPanel model =
     statsPanel model
+        ++ traitsPanel model
 
 
 {-| Panel showing basic details of the person
@@ -174,6 +191,10 @@ personDetailsContent model =
             Maybe.map2 personName aName aTitle
                 |> Maybe.withDefault "-"
 
+        isPlayerAvatar =
+            get (personRA << personA << try << avatarA) model
+                |> Maybe.withDefault False
+
         age =
             get (personRA << personA << try << ageA) model
                 |> Maybe.map (String.fromInt << unAge)
@@ -188,12 +209,30 @@ personDetailsContent model =
             get (personRA << personA << try << intelTypesA) model
                 |> Maybe.withDefault []
                 |> List.map personIntelToString
+                |> Set.fromList
+                |> Set.toList
                 |> String.join ", "
                 |> text
+
+        avatarOpinion =
+            get (personRA << personA << try << avatarOpinionA) model
+                |> Maybe.map displayOpinion
+                |> Maybe.withDefault (text "-")
+
+        opinionOfAvatar =
+            get (personRA << personA << try << opinionOfAvatarA) model
+                |> Maybe.map displayOpinion
+                |> Maybe.withDefault (text "-")
     in
     [ div [ class "row" ]
         [ div [ class "col-lg-4 panel-table-heading" ] [ text "Name" ]
-        , div [ class "col-lg-8" ] [ text fullName ]
+        , div [ class "col-lg-8" ]
+            [ if isPlayerAvatar then
+                text <| fullName ++ " (you)"
+
+              else
+                text fullName
+            ]
         ]
     , div [ class "row" ]
         [ div [ class "col-lg-4 panel-table-heading" ] [ text "Dynasty" ]
@@ -207,11 +246,56 @@ personDetailsContent model =
         [ div [ class "col-lg-4 panel-table-heading" ] [ text "Gender" ]
         , div [ class "col-lg-8" ] [ gender ]
         ]
+    , if isPlayerAvatar then
+        div [] []
+
+      else
+        div [ class "row" ]
+            [ div [ class "col-lg-4 panel-table-heading" ] [ text "Opinion" ]
+            , div [ class "col-lg-8" ]
+                [ avatarOpinion
+                , text " / "
+                , opinionOfAvatar
+                ]
+            ]
     , div [ class "row" ]
         [ div [ class "col-lg-4 panel-table-heading" ] [ text "Intel" ]
         , div [ class "col-lg-8" ] [ intel ]
         ]
     ]
+
+
+displayOpinion : OpinionReport -> Html Msg
+displayOpinion report =
+    case report of
+        BaseOpinionReport feeling ->
+            displayOpinionFeeling feeling
+
+        OpinionReasonReport feeling _ ->
+            displayOpinionFeeling feeling
+
+        DetailedOpinionReport score _ ->
+            displayOpinionScore score
+
+
+displayOpinionFeeling : OpinionFeeling -> Html Msg
+displayOpinionFeeling feeling =
+    case feeling of
+        PositiveFeeling ->
+            text "positive"
+
+        NeutralFeeling ->
+            text "neutral"
+
+        NegativeFeeling ->
+            text "negative"
+
+
+displayOpinionScore : OpinionScore -> Html Msg
+displayOpinionScore score =
+    unOpinionScore score
+        |> String.fromInt
+        |> text
 
 
 {-| Map Gender into displayable tex
@@ -339,8 +423,9 @@ relationsPanel model =
 relationsContent : Model -> List (Html Msg)
 relationsContent model =
     [ div [ class "row panel-table-heading" ]
-        [ div [ class "col-lg-7" ] [ text "Name" ]
-        , div [ class "col-lg-5" ] [ text "Type" ]
+        [ div [ class "col-lg-6" ] [ text "Name" ]
+        , div [ class "col-lg-3" ] [ text "Type" ]
+        , div [ class "col-lg-3" ] [ text "Opinion" ]
         ]
     ]
         ++ (get (personRA << personA << try << relationsA) model
@@ -359,13 +444,15 @@ relationOrdering a b =
 relationEntry : RelationLink -> Html Msg
 relationEntry link =
     div [ class "row" ]
-        [ div [ class "col-lg-7" ]
+        [ div [ class "col-lg-6" ]
             [ a [ href (PersonR link.id) ] [ text <| personName link.name link.shortTitle ] ]
-        , div [ class "col-lg-5" ]
+        , div [ class "col-lg-3" ]
             [ List.map relationTypeToString link.types
                 |> String.join ", "
                 |> text
             ]
+        , div [ class "col-lg-3" ]
+            [ displayOpinion link.opinion ]
         ]
 
 
@@ -465,6 +552,99 @@ demesneType info =
 
         StarSystemDemesneShort _ ->
             "Star system"
+
+
+{-| Panel showing traits
+-}
+traitsPanel : Model -> List (Html Msg)
+traitsPanel model =
+    infoPanel
+        { title = "Traits"
+        , currentStatus = model.personR.traitsStatus
+        , openingMessage = PersonMessage <| TraitsStatusChanged InfoPanelOpen
+        , closingMessage = PersonMessage <| TraitsStatusChanged InfoPanelClosed
+        , refreshMessage = Just <| PersonMessage <| PersonDetailsRefreshRequested
+        }
+        (Just
+            { pageSize = model.personR.traitsPageSize
+            , currentPage = model.personR.traitsCurrentPage
+            , maxPage =
+                get (personRA << personA << try << traitsA) model
+                    |> joinMaybe
+                    |> Maybe.withDefault []
+                    |> maxPage model.personR.traitsPageSize
+            , pageChangedMessage = PersonMessage << TraitsPageChanged
+            }
+        )
+        traitsContent
+        model
+
+
+traitsContent : Model -> List (Html Msg)
+traitsContent model =
+    let
+        traits =
+            get (personRA << personA << try << traitsA) model
+                |> joinMaybe
+                |> Maybe.withDefault []
+                |> List.sortWith traitOrdering
+
+        blockSize =
+            List.length traits // 3
+
+        blockLeftOvers =
+            remainderBy 3 (List.length traits)
+
+        leftCount =
+            if blockLeftOvers > 0 then
+                blockSize + 1
+
+            else
+                blockSize
+
+        leftTraits =
+            List.take leftCount traits
+
+        middleCount =
+            if blockLeftOvers > 1 then
+                blockSize + 1
+
+            else
+                blockSize
+
+        middleTraits =
+            List.drop leftCount traits
+                |> List.take middleCount
+
+        rightTraits =
+            List.drop (leftCount + middleCount) traits
+
+        leftColumn =
+            traitList leftTraits
+
+        middleColumn =
+            traitList middleTraits
+
+        rightColumn =
+            traitList rightTraits
+    in
+    triplePanels leftColumn middleColumn rightColumn <| model
+
+
+traitList : List Trait -> ( Model -> List (Html Msg), String )
+traitList traits =
+    ( \_ -> List.map traitEntry traits, "col-lg-4" )
+
+
+traitEntry : Trait -> Html Msg
+traitEntry trait =
+    div [ class "row" ]
+        [ div
+            [ class "col-lg-12"
+            , title <| unTraitDescription trait.description
+            ]
+            [ text <| unTraitName trait.name ]
+        ]
 
 
 {-| Handle messages specific to this page
@@ -573,5 +753,32 @@ update msg model =
                         target
             in
             ( over (personRA << relationsCurrentPageA) (setPage pageNumber) model
+            , Cmd.none
+            )
+
+        TraitsStatusChanged status ->
+            ( set (personRA << traitsStatusA) status model
+            , Cmd.none
+            )
+
+        TraitsPageChanged pageNumber ->
+            let
+                lastPgNumber =
+                    get (personRA << personA << try << traitsA) model
+                        |> joinMaybe
+                        |> Maybe.withDefault []
+                        |> maxPage model.personR.traitsPageSize
+
+                setPage target _ =
+                    if target < 0 then
+                        0
+
+                    else if target > lastPgNumber then
+                        lastPgNumber
+
+                    else
+                        target
+            in
+            ( over (personRA << traitsCurrentPageA) (setPage pageNumber) model
             , Cmd.none
             )

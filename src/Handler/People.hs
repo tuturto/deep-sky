@@ -10,11 +10,11 @@ module Handler.People
 
 import Import
 import Data.Maybe ( fromJust )
-import Common ( apiRequireFaction, apiNotFound )
+import Common ( apiRequireFaction, apiNotFound, mkUniq )
 import MenuHelpers ( starDate )
 import People.Import ( personReport, demesneReport )
 import Handler.Home ( getNewHomeR )
-import Queries ( personInfo )
+import Queries ( personRelations, PersonRelationData(..) )
 
 
 -- | serve client program and have it started showing person details
@@ -31,11 +31,29 @@ getPeopleR = getNewHomeR
 getApiPersonR :: Key Person -> HandlerFor App Value
 getApiPersonR pId = do
     (_, _, avatar, _) <- apiRequireFaction
+    let avatarId = entityKey avatar
     today <- runDB $ starDate
-    info <- runDB $ personInfo pId (entityKey avatar)
+    info <- runDB $ personRelations pId (entityKey avatar)
     when (isNothing info) apiNotFound
-    let report = personReport <$> Just today
-                              <*> info
+    let dId = join $ (personDynastyId . entityVal . personRelationDataPerson) <$> info
+    dynasty <- runDB $ mapM getEntity dId
+    intel <- runDB $ selectList [ HumanIntelligencePersonId ==. pId
+                                , HumanIntelligenceOwnerId ==. avatarId ] []
+    let intelTypes = mkUniq $ (humanIntelligenceLevel . entityVal) <$> intel
+    targetRelations <- runDB $ selectList [ RelationOriginatorId ==. pId ] []
+    let pIds = pId : avatarId : (mkUniq $ fmap (relationTargetId . entityVal) targetRelations)
+    allTraits <- runDB $ selectList ( [PersonTraitPersonId <-. pIds] ++
+                                      ( [PersonTraitValidUntil <=. (Just today)]
+                                        ||. [PersonTraitValidUntil ==. Nothing])
+                                    ) []
+
+    let report = personReport today
+                              (fromJust info)
+                              (join dynasty)
+                              (entityVal <$> allTraits)
+                              intelTypes
+                              (entityVal <$> targetRelations)
+                              avatarId
     return $ toJSON report
 
 

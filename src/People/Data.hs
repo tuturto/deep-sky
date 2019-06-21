@@ -8,13 +8,16 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE LambdaCase                 #-}
 
 module People.Data
     ( PersonName(..), FirstName(..), FamilyName(..), Cognomen(..)
     , RegnalNumber(..), Sex(..), Gender(..), PersonIntel(..), StatScore(..)
     , Diplomacy(..), Martial(..), Stewardship(..), Intrique(..), Learning(..)
     , DemesneName(..), ShortTitle(..), LongTitle(..), RelationType(..)
-    , RelationVisibility(..), DynastyName(..), MarriageStatus(..) )
+    , RelationVisibility(..), DynastyName(..), MarriageStatus(..), TraitType(..)
+    , OpinionIntel(..), opinionIntelVisibility
+    )
     where
 
 import Data.Aeson ( ToJSON(..), Object, withScientific, withText, withObject )
@@ -180,7 +183,91 @@ data PersonIntel =
     | Demesne
     | FamilyRelations
     | SecretRelations
-    deriving (Show, Read, Eq, Enum, Bounded, Ord)
+    | Opinions OpinionIntel
+    | Traits
+    deriving (Show, Read, Eq)
+
+
+instance Ord PersonIntel where
+    a <= b = fromEnum a <= fromEnum b
+
+
+instance Bounded PersonIntel where
+    minBound =
+        Stats
+
+    maxBound =
+        Traits
+
+
+instance Enum PersonIntel where
+    enumFrom x =
+        enumFromTo x maxBound
+
+    enumFromThen x y =
+        enumFromThenTo x y bound
+        where
+            bound | fromEnum y >= fromEnum x = maxBound
+                  | otherwise = minBound
+
+    fromEnum Stats = 0
+    fromEnum Demesne = 1
+    fromEnum FamilyRelations = 2
+    fromEnum SecretRelations = 3
+    fromEnum (Opinions (BaseOpinionIntel PublicRelation)) = 4
+    fromEnum (Opinions (BaseOpinionIntel FamilyRelation)) = 5
+    fromEnum (Opinions (BaseOpinionIntel SecretRelation)) = 6
+    fromEnum (Opinions (ReasonsForOpinions PublicRelation)) = 7
+    fromEnum (Opinions (ReasonsForOpinions FamilyRelation)) = 8
+    fromEnum (Opinions (ReasonsForOpinions SecretRelation)) = 9
+    fromEnum (Opinions (DetailedOpinions PublicRelation)) = 10
+    fromEnum (Opinions (DetailedOpinions FamilyRelation)) = 11
+    fromEnum (Opinions (DetailedOpinions SecretRelation)) = 12
+    fromEnum Traits = 13
+
+    toEnum 0 = Stats
+    toEnum 1 = Demesne
+    toEnum 2 = FamilyRelations
+    toEnum 3 = SecretRelations
+    toEnum 4 = Opinions $ BaseOpinionIntel PublicRelation
+    toEnum 5 = Opinions $ BaseOpinionIntel FamilyRelation
+    toEnum 6 = Opinions $ BaseOpinionIntel SecretRelation
+    toEnum 7 = Opinions $ ReasonsForOpinions PublicRelation
+    toEnum 8 = Opinions $ ReasonsForOpinions FamilyRelation
+    toEnum 9 = Opinions $ ReasonsForOpinions SecretRelation
+    toEnum 10 = Opinions $ DetailedOpinions PublicRelation
+    toEnum 11 = Opinions $ DetailedOpinions FamilyRelation
+    toEnum 12 = Opinions $ DetailedOpinions SecretRelation
+    toEnum 13 = Traits
+    toEnum n = error $ "failed to map: " ++ show n
+
+
+data OpinionIntel =
+    BaseOpinionIntel RelationVisibility
+    | ReasonsForOpinions RelationVisibility
+    | DetailedOpinions RelationVisibility
+    deriving (Show, Read, Eq, Ord)
+
+
+opinionIntelVisibility :: OpinionIntel -> RelationVisibility
+opinionIntelVisibility =
+    \case
+        BaseOpinionIntel x ->
+            x
+
+        ReasonsForOpinions x ->
+            x
+
+        DetailedOpinions x ->
+            x
+
+
+instance Bounded OpinionIntel where
+    minBound =
+        BaseOpinionIntel PublicRelation
+
+    maxBound =
+        DetailedOpinions SecretRelation
 
 
 newtype StatScore a = StatScore { unStatScore :: Int }
@@ -339,6 +426,33 @@ data MarriageStatus =
     deriving (Show, Read, Eq, Ord, Enum, Bounded)
 
 
+data TraitType =
+    Brave
+    | Coward
+    | Chaste
+    | Temperate
+    | Charitable
+    | Diligent
+    | Patient
+    | Kind
+    | Humble
+    | Lustful
+    | Gluttonous
+    | Greedy
+    | Slothful
+    | Wroth
+    | Envious
+    | Proud
+    | Ambitious
+    | Content
+    | Cruel
+    | Cynical
+    | Deceitful
+    | Honest
+    | Shy
+    deriving (Show, Read, Eq, Ord, Enum, Bounded)
+
+
 derivePersistField "PersonName"
 derivePersistField "Sex"
 derivePersistField "Gender"
@@ -346,10 +460,13 @@ derivePersistField "PersonIntel"
 derivePersistField "RelationType"
 derivePersistField "RelationVisibility"
 derivePersistField "MarriageStatus"
+derivePersistField "TraitType"
 
 $(deriveJSON defaultOptions ''Sex)
 $(deriveJSON defaultOptions ''Gender)
-$(deriveJSON defaultOptions ''PersonIntel)
+$(deriveJSON defaultOptions ''PersonIntel) -- TODO: hand written instance?
 $(deriveJSON defaultOptions ''RelationType)
 $(deriveJSON defaultOptions ''RelationVisibility)
 $(deriveJSON defaultOptions ''MarriageStatus)
+$(deriveJSON defaultOptions ''OpinionIntel) -- TODO: hand written instance?
+$(deriveJSON defaultOptions ''TraitType)

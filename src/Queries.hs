@@ -4,15 +4,18 @@
 {-# LANGUAGE FlexibleContexts           #-}
 
 module Queries
-    ( ShipLandingStatus(..), PersonData(..), PersonDataLink(..)
+    ( ShipLandingStatus(..), PersonRelationData(..), PersonDataLink(..)
     , planetPopulationReports, shipsAtPlanet, planetConstructionQueue
     , kragiiTargetPlanets, farmingChangeTargetPlanets, factionBuildings
     , chassisList, planetReports, starSystemReports, personAndDynasty
-    , personInfo )
+    , personRelations, personDataLinkPersonL, personDataLinkRelationL
+    , personDataLinkTargetIntelligenceL, personDataLinkOriginatorIntelligenceL
+    )
     where
 
 import Import
 import qualified Prelude as P
+import Control.Lens ( Lens', lens )
 import qualified Database.Esqueleto as E
 import Data.List ( nub )
 import Common ( safeHead )
@@ -232,71 +235,102 @@ personAndDynasty pId = do
     return $ safeHead pairs
 
 
--- | Load person information
+-- | Load person relation information
 -- returned data is structured as
 -- target of query as Entity Person
--- possible dynasty of target as Maybe (Entity Person)
 -- intelligence targeting target as Entity HumanIntelligence
 -- relation targeting the target as Entity Relation
 -- originator of relation as Entity Person
 -- intelligence targeting originator as Entity HumanIntelligence
-personInfo :: (MonadIO m, BackendCompatible SqlBackend backend,
+personRelations :: (MonadIO m, BackendCompatible SqlBackend backend,
     PersistQueryRead backend, PersistUniqueRead backend) =>
-    Key Person -> Key Person -> ReaderT backend m (Maybe PersonData)
-personInfo pId ownerId = do
+    Key Person -> Key Person -> ReaderT backend m (Maybe PersonRelationData)
+personRelations pId ownerId = do
     info <- E.select $
-        E.from $ \(person1 `E.LeftOuterJoin` relation `E.LeftOuterJoin` person2
-                    `E.LeftOuterJoin` intel1 `E.LeftOuterJoin` intel2
-                    `E.LeftOuterJoin` dynasty) -> do
-            E.on (dynasty E.?. DynastyId E.==. ( person1 E.^. PersonDynastyId))
-            E.on (person2 E.^. PersonId E.==. ( intel2 E.^. HumanIntelligencePersonId))
-            E.on (person1 E.^. PersonId E.==. ( intel1 E.^. HumanIntelligencePersonId))
-            E.on (person2 E.^. PersonId E.==. ( relation E.^. RelationOriginatorId))
-            E.on (person1 E.^. PersonId E.==. ( relation E.^. RelationTargetId))
+        E.from $ \(person1
+                    `E.LeftOuterJoin` relation
+                    `E.LeftOuterJoin` person2
+                    `E.LeftOuterJoin` intel1
+                    `E.LeftOuterJoin` intel2) -> do
+            E.on (person2 E.?. PersonId E.==. ( intel2 E.?. HumanIntelligencePersonId))
+            E.on (E.just (person1 E.^. PersonId) E.==. ( intel1 E.?. HumanIntelligencePersonId))
+            E.on (person2 E.?. PersonId E.==. ( relation E.?. RelationOriginatorId))
+            E.on (E.just (person1 E.^. PersonId) E.==. ( relation E.?. RelationTargetId))
             E.where_ (person1 E.^. PersonId E.==. (E.val pId)
-                      E.&&. intel1 E.^. HumanIntelligenceOwnerId E.==. (E.val ownerId)
-                      E.&&. intel2 E.^. HumanIntelligenceOwnerId E.==. (E.val ownerId))
-            return (person1, dynasty, intel1, relation, person2, intel2)
+                      E.&&. (intel1 E.?. HumanIntelligenceOwnerId E.==. (E.just (E.val ownerId))
+                             E.||. intel2 E.?. HumanIntelligenceOwnerId E.==. (E.just (E.val ownerId))))
+            return (person1, intel1, relation, person2, intel2)
     return $ mapPersonInfo info
 
 
-data PersonData = PersonData
-    { personDataPerson :: Entity Person
-    , personDataDynasty :: Maybe (Entity Dynasty)
-    , personDataLinks :: [PersonDataLink]
+data PersonRelationData = PersonRelationData
+    { personRelationDataPerson :: !(Entity Person)
+    , personRelationDataLinks :: ![PersonDataLink]
     } deriving (Show, Read, Eq)
 
 
 data PersonDataLink = PersonDataLink
-    { personDataLinkTargetIntelligence :: HumanIntelligence
-    , personDataLinkRelation :: Relation
-    , personDataLinkPerson :: Entity Person
-    , personDataLinkOriginatorIntelligence :: HumanIntelligence
+    { personDataLinkTargetIntelligence :: !(Maybe HumanIntelligence)
+    , personDataLinkRelation :: !Relation
+    , personDataLinkPerson :: !(Entity Person)
+    , personDataLinkOriginatorIntelligence :: !(Maybe HumanIntelligence)
     } deriving (Show, Read, Eq)
 
 
-mapPersonInfo :: [(Entity Person, Maybe (Entity Dynasty), Entity HumanIntelligence
-                 ,Entity Relation, Entity Person, Entity HumanIntelligence)]
-                 -> Maybe PersonData
+-- | post process data fetched by personRelations query
+mapPersonInfo :: [(Entity Person, Maybe (Entity HumanIntelligence)
+                 ,Maybe (Entity Relation), Maybe (Entity Person), Maybe (Entity HumanIntelligence))]
+                 -> Maybe PersonRelationData
 mapPersonInfo [] =
     Nothing
 
 mapPersonInfo info =
-    Just $ PersonData { personDataPerson = (target . P.head) info
-                      , personDataDynasty = (dynasty . P.head) info
-                      , personDataLinks = linker <$> info
-                      }
+    Just $ PersonRelationData { personRelationDataPerson = (target . P.head) info
+                              , personRelationDataLinks = mapMaybe linker info
+                              }
     where
-        linker = \x ->
-                    PersonDataLink
-                    { personDataLinkTargetIntelligence = (entityVal . targetIntel) x
-                    , personDataLinkRelation = (entityVal . relation) x
-                    , personDataLinkPerson = originator x
-                    , personDataLinkOriginatorIntelligence = (entityVal . originatorIntel) x
-                    }
-        target = \(x, _, _, _, _, _) -> x
-        dynasty = \(_, x, _, _, _, _) -> x
-        targetIntel = \(_, _, x, _, _, _) -> x
-        relation = \(_, _, _, x, _, _) -> x
-        originator = \(_, _, _, _, x, _) -> x
-        originatorIntel = \(_, _, _, _, _, x) -> x
+        target = \(x, _, _, _, _) -> x
+
+
+-- | build person data link from data fetched by personRelations query
+linker :: (Entity Person, Maybe (Entity HumanIntelligence),Maybe (Entity Relation)
+          , Maybe (Entity Person), Maybe (Entity HumanIntelligence)) -> Maybe PersonDataLink
+linker (_, Nothing, _, _, Nothing) =
+    -- if there's no intel at all, there's nothing we can report
+    Nothing
+
+linker (_, _, Nothing, _, _) =
+    -- if relation isn't known, there's nothing we can report
+    Nothing
+
+linker (_, _, _, Nothing, _) =
+    -- if related person isn't known, there's nothing we can report
+    Nothing
+
+linker (_, meTargetIntel, Just (eRelation), Just (eOriginator), meOriginatorIntel) =
+    Just $ PersonDataLink
+        { personDataLinkTargetIntelligence = entityVal <$> meTargetIntel
+        , personDataLinkRelation = entityVal eRelation
+        , personDataLinkPerson = eOriginator
+        , personDataLinkOriginatorIntelligence = entityVal <$> meOriginatorIntel
+        }
+
+
+personDataLinkOriginatorIntelligenceL :: Lens' PersonDataLink (Maybe HumanIntelligence)
+personDataLinkOriginatorIntelligenceL = lens personDataLinkOriginatorIntelligence
+                                             (\r v -> r { personDataLinkOriginatorIntelligence = v})
+
+
+personDataLinkTargetIntelligenceL :: Lens' PersonDataLink (Maybe HumanIntelligence)
+personDataLinkTargetIntelligenceL = lens personDataLinkTargetIntelligence
+                                         (\r v -> r { personDataLinkTargetIntelligence = v})
+
+
+personDataLinkRelationL :: Lens' PersonDataLink Relation
+personDataLinkRelationL = lens personDataLinkRelation
+                               (\r v -> r { personDataLinkRelation = v})
+
+
+personDataLinkPersonL :: Lens' PersonDataLink (Entity Person)
+personDataLinkPersonL = lens personDataLinkPerson
+                             (\r v -> r { personDataLinkPerson = v})

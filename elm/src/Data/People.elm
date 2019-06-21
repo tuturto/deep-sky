@@ -7,6 +7,11 @@ module Data.People exposing
     , FirstName(..)
     , Gender(..)
     , LongTitle(..)
+    , OpinionFeeling(..)
+    , OpinionIntel(..)
+    , OpinionReason(..)
+    , OpinionReport(..)
+    , OpinionScore(..)
     , Person
     , PersonIntel(..)
     , PersonName(..)
@@ -14,11 +19,16 @@ module Data.People exposing
     , RegnalNumber(..)
     , RelationLink
     , RelationType(..)
+    , RelationVisibility(..)
     , Sex(..)
     , ShortTitle(..)
     , StarSystemDemesneReportShort
     , StatValue(..)
     , StatValues
+    , Trait
+    , TraitDescription(..)
+    , TraitName(..)
+    , TraitType(..)
     , displayName
     , formalName
     , nameWithTitle
@@ -26,14 +36,21 @@ module Data.People exposing
     , personNameOrdering
     , relationTypeOrdering
     , relationTypeToString
+    , traitNameOrdering
+    , traitOrdering
     , unAge
     , unCognomen
     , unFamilyName
     , unFirstName
     , unLongTitle
+    , unOpinionReason
+    , unOpinionScore
     , unRegnalNumber
     , unShortTitle
     , unStatValue
+    , unTraitDescription
+    , unTraitName
+    , unTraitType
     )
 
 import Data.Common
@@ -301,6 +318,7 @@ numerals =
 
 type alias Person =
     { id : PersonId
+    , avatar : Bool
     , name : PersonName
     , shortTitle : Maybe ShortTitle
     , longTitle : Maybe LongTitle
@@ -311,6 +329,9 @@ type alias Person =
     , relations : List RelationLink
     , intelTypes : List PersonIntel
     , dynasty : Maybe DynastyLink
+    , traits : Maybe (List Trait)
+    , avatarOpinion : OpinionReport
+    , opinionOfAvatar : OpinionReport
     }
 
 
@@ -412,6 +433,7 @@ type alias RelationLink =
     , shortTitle : Maybe ShortTitle
     , longTitle : Maybe LongTitle
     , types : List RelationType
+    , opinion : OpinionReport
     }
 
 
@@ -495,6 +517,20 @@ type PersonIntel
     | Demesne
     | FamilyRelations
     | SecretRelations
+    | Opinions OpinionIntel
+    | Traits
+
+
+type OpinionIntel
+    = BaseOpinionIntel RelationVisibility
+    | ReasonsForOpinions RelationVisibility
+    | DetailedOpinions RelationVisibility
+
+
+type RelationVisibility
+    = SecretRelation
+    | FamilyRelation
+    | PublicRelation
 
 
 personIntelToString : PersonIntel -> String
@@ -512,8 +548,89 @@ personIntelToString intel =
         SecretRelations ->
             "Secret relations"
 
+        Opinions _ ->
+            "Opinions"
+
+        Traits ->
+            "Traits"
+
 
 type alias DynastyLink =
     { id : DynastyId
     , name : DynastyName
     }
+
+
+type alias Trait =
+    { name : TraitName
+    , traitType : TraitType
+    , description : TraitDescription
+    , validUntil : Maybe StarDate
+    }
+
+
+type TraitName
+    = TraitName String
+
+
+unTraitName : TraitName -> String
+unTraitName (TraitName s) =
+    s
+
+
+type TraitType
+    = TraitType String
+
+
+unTraitType : TraitType -> String
+unTraitType (TraitType t) =
+    t
+
+
+type TraitDescription
+    = TraitDescription String
+
+
+unTraitDescription : TraitDescription -> String
+unTraitDescription (TraitDescription s) =
+    s
+
+
+traitNameOrdering : Ordering TraitName
+traitNameOrdering =
+    Ordering.byField unTraitName
+
+
+traitOrdering : Ordering Trait
+traitOrdering =
+    Ordering.byFieldWith traitNameOrdering .name
+
+
+type OpinionReport
+    = BaseOpinionReport OpinionFeeling
+    | OpinionReasonReport OpinionFeeling (List OpinionReason)
+    | DetailedOpinionReport OpinionScore (List OpinionReason)
+
+
+type OpinionFeeling
+    = PositiveFeeling
+    | NeutralFeeling
+    | NegativeFeeling
+
+
+type OpinionReason
+    = OpinionReason String
+
+
+unOpinionReason : OpinionReason -> String
+unOpinionReason (OpinionReason s) =
+    s
+
+
+type OpinionScore
+    = OpinionScore Int
+
+
+unOpinionScore : OpinionScore -> Int
+unOpinionScore (OpinionScore n) =
+    n

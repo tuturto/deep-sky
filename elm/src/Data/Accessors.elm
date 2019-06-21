@@ -6,6 +6,8 @@ module Data.Accessors exposing
     , availableChassisA
     , availableComponentsA
     , availableResearchA
+    , avatarA
+    , avatarOpinionA
     , buildingSearchTextA
     , buildingsA
     , buildingsStatusA
@@ -49,6 +51,7 @@ module Data.Accessors exposing
     , nameA
     , newsA
     , newsPanelStatusA
+    , opinionOfAvatarA
     , orbitingShipsStatusA
     , pageSizeA
     , personA
@@ -86,6 +89,9 @@ module Data.Accessors exposing
     , statsStatusA
     , stewardshipA
     , systemDetailsStatusA
+    , traitsA
+    , traitsCurrentPageA
+    , traitsStatusA
     , userEntryA
     , userEntryStatusA
     , validatationMessagesA
@@ -93,6 +99,48 @@ module Data.Accessors exposing
 
 import Accessors exposing (Relation, makeOneToN, makeOneToOne)
 import Accessors.Library exposing (onEach)
+
+
+avatarA : Relation field sub wrap -> Relation { rec | avatar : field } sub wrap
+avatarA =
+    makeOneToOne
+        .avatar
+        (\change rec -> { rec | avatar = change rec.avatar })
+
+
+opinionOfAvatarA : Relation field sub wrap -> Relation { rec | opinionOfAvatar : field } sub wrap
+opinionOfAvatarA =
+    makeOneToOne
+        .opinionOfAvatar
+        (\change rec -> { rec | opinionOfAvatar = change rec.opinionOfAvatar })
+
+
+avatarOpinionA : Relation field sub wrap -> Relation { rec | avatarOpinion : field } sub wrap
+avatarOpinionA =
+    makeOneToOne
+        .avatarOpinion
+        (\change rec -> { rec | avatarOpinion = change rec.avatarOpinion })
+
+
+traitsCurrentPageA : Relation field sub wrap -> Relation { rec | traitsCurrentPage : field } sub wrap
+traitsCurrentPageA =
+    makeOneToOne
+        .traitsCurrentPage
+        (\change rec -> { rec | traitsCurrentPage = change rec.traitsCurrentPage })
+
+
+traitsStatusA : Relation field sub wrap -> Relation { rec | traitsStatus : field } sub wrap
+traitsStatusA =
+    makeOneToOne
+        .traitsStatus
+        (\change rec -> { rec | traitsStatus = change rec.traitsStatus })
+
+
+traitsA : Relation field sub wrap -> Relation { rec | traits : field } sub wrap
+traitsA =
+    makeOneToOne
+        .traits
+        (\change rec -> { rec | traits = change rec.traits })
 
 
 dynastyA : Relation field sub wrap -> Relation { rec | dynasty : field } sub wrap

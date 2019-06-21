@@ -1,49 +1,64 @@
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module People.Import
-    ( PersonReport(..), StatReport(..), RelationLink(..), personReport
-    , demesneReport, shortTitle, longTitle, relationsReport, knownLink
+    ( PersonReport(..), StatReport(..), RelationLink(..), TraitReport(..)
+    , TraitDescription(..), TraitName(..), personReport, demesneReport
+    , shortTitle, longTitle, relationsReport, knownLink, traitName
+    , traitDescription, relationOriginatorIdL, relationTargetIdL, relationTypeL
+    , flipRelation, flipRelationType, humanIntelligenceLevelL
     )
     where
 
 import Import
 import qualified Prelude as P
+import Control.Lens ( Lens', lens, (&), (.~), (%~), traverse, _Just, (^..) )
+import Data.Aeson ( withText )
 import Data.Aeson.TH ( deriveJSON, defaultOptions, fieldLabelModifier )
+import Data.List ( nub )
 import Common ( mkUniq )
 import CustomTypes ( StarDate, Age, age )
 import People.Data ( PersonIntel(..), Diplomacy, Martial, Stewardship
                    , Intrique, Learning, StatScore, PersonName, Sex
                    , Gender, DemesneName(..), ShortTitle(..), LongTitle(..)
                    , RelationVisibility(..), RelationType(..), DynastyName(..)
+                   , TraitType(..)
                    )
-import Queries ( PersonData(..), PersonDataLink(..) )
+import People.Opinion ( OpinionReport, opinionReport )
+import Queries ( PersonRelationData(..), PersonDataLink(..)
+               , personDataLinkOriginatorIntelligenceL
+               , personDataLinkTargetIntelligenceL )
 
 
 data PersonReport = PersonReport
-    { personReportId :: Key Person
-    , personReportName :: PersonName
-    , personReportShortTitle :: Maybe ShortTitle
-    , personReportLongTitle :: Maybe LongTitle
-    , personReportSex :: Sex
-    , personReportGender :: Gender
-    , personReportAge :: Age
-    , personReportStats :: Maybe StatReport
-    , personReportRelations :: [RelationLink]
-    , personReportIntelTypes :: [PersonIntel]
-    , personReportDynasty :: Maybe DynastyReport
+    { personReportId :: !(Key Person)
+    , personReportName :: !PersonName
+    , personReportShortTitle :: !(Maybe ShortTitle)
+    , personReportLongTitle :: !(Maybe LongTitle)
+    , personReportSex :: !Sex
+    , personReportGender :: !Gender
+    , personReportAge :: !Age
+    , personReportStats :: !(Maybe StatReport)
+    , personReportRelations :: ![RelationLink]
+    , personReportIntelTypes :: ![PersonIntel]
+    , personReportDynasty :: !(Maybe DynastyReport)
+    , personReportAvatarOpinion :: !OpinionReport
+    , personReportOpinionOfAvatar :: !OpinionReport
+    , personReportTraits :: !(Maybe [TraitReport])
+    , personReportAvatar :: Bool
     } deriving (Show, Read, Eq)
 
 
 data StatReport = StatReport
-    { statReportDiplomacy :: StatScore Diplomacy
-    , statReportMartial :: StatScore Martial
-    , statReportStewardship :: StatScore Stewardship
-    , statReportIntrique :: StatScore Intrique
-    , statReportLearning :: StatScore Learning
+    { statReportDiplomacy :: !(StatScore Diplomacy)
+    , statReportMartial :: !(StatScore Martial)
+    , statReportStewardship :: !(StatScore Stewardship)
+    , statReportIntrique :: !(StatScore Intrique)
+    , statReportLearning :: !(StatScore Learning)
     } deriving (Show, Read, Eq)
 
 
@@ -54,19 +69,19 @@ data DemesneReport =
 
 
 data PlanetDemesneReport = PlanetDemesneReport
-    { planetDemesneReportPlanetId :: Key Planet
-    , planetDemesneReportStarSystemId :: Key StarSystem
-    , planetDemesneReportName :: Text
-    , planetDemesneReportFormalName :: DemesneName
-    , planetDemesneReport :: StarDate
+    { planetDemesneReportPlanetId :: !(Key Planet)
+    , planetDemesneReportStarSystemId :: !(Key StarSystem)
+    , planetDemesneReportName :: !Text
+    , planetDemesneReportFormalName :: !DemesneName
+    , planetDemesneReport :: !StarDate
     } deriving (Show, Read, Eq)
 
 
 data StarSystemDemesneReport = StarSystemDemesneReport
-    { starSystemDemesneReportStarSystemId :: Key StarSystem
-    , starSystemDemesneReportName :: Text
-    , starSystemDemesneReportFormalName :: DemesneName
-    , starSystemDemesneReportDate :: StarDate
+    { starSystemDemesneReportStarSystemId :: !(Key StarSystem)
+    , starSystemDemesneReportName :: !Text
+    , starSystemDemesneReportFormalName :: !DemesneName
+    , starSystemDemesneReportDate :: !StarDate
     } deriving (Show, Read, Eq)
 
 
@@ -159,9 +174,17 @@ systemReport date system =
 
 
 -- | Person report of given person and taking HUMINT level into account
-personReport :: StarDate -> PersonData -> PersonReport
-personReport today info =
-    PersonReport { personReportId = (entityKey . personDataPerson) info
+personReport :: StarDate
+    -> PersonRelationData
+    -> Maybe (Entity Dynasty)
+    -> [PersonTrait]
+    -> [PersonIntel]
+    -> [Relation]
+    -> Key Person
+    -> PersonReport
+personReport today info dynasty allTraits targetIntel relations avatarId =
+    PersonReport { personReportId = pId
+                 , personReportAvatar = pId == avatarId
                  , personReportName = personName person
                  , personReportShortTitle = shortTitle person
                  , personReportLongTitle = longTitle person
@@ -169,22 +192,46 @@ personReport today info =
                  , personReportGender = personGender person
                  , personReportAge = age (personDateOfBirth person) today
                  , personReportStats = statReport person targetIntelTypes
-                 , personReportRelations = relationsReport $ personDataLinks info
+                 , personReportRelations = (relationsReport targetTraitTypes allTraits) $ personRelationDataLinks info
                  , personReportIntelTypes = targetIntelTypes
-                 , personReportDynasty =  dynastyReport <$> personDataDynasty info
+                 , personReportDynasty =  dynastyReport <$> dynasty
+                 , personReportTraits = if Traits `elem` targetIntel
+                                            then Just $ traitReport <$> targetTraits
+                                            else Nothing
+                 , personReportAvatarOpinion = opinionReport
+                                                (mkUniq $ personTraitType <$> avatarTraits)
+                                                [minBound..]
+                                                targetTraitTypes
+                                                targetIntelTypes
+                                                targetRelations
+                 , personReportOpinionOfAvatar = opinionReport
+                                                    targetTraitTypes
+                                                    targetIntelTypes
+                                                    (mkUniq $ personTraitType <$> avatarTraits)
+                                                    [minBound..]
+                                                    avatarRelations
                  }
-    where
-        person = (entityVal . personDataPerson) info
-        targetIntelTypes = mkUniq $ fmap (humanIntelligenceLevel . personDataLinkTargetIntelligence) (personDataLinks info)
+                 where
+                    person = (entityVal . personRelationDataPerson) info
+                    pId = (entityKey . personRelationDataPerson) info
+                    targetIntelTypes = mkUniq $
+                                            fmap humanIntelligenceLevel
+                                                 (mapMaybe personDataLinkTargetIntelligence $
+                                                           personRelationDataLinks info)
+                    avatarRelations = flipRelation <$> targetRelations
+                    targetRelations = filter (\x -> relationTargetId x == avatarId) relations
+                    avatarTraits = filter (\x -> personTraitPersonId x == avatarId) allTraits
+                    targetTraits = filter (\x -> personTraitPersonId x == pId) allTraits
+                    targetTraitTypes = mkUniq $ fmap personTraitType targetTraits
 
 
 -- | Relations of a specific person
 -- public relations are always known
 -- family relations are known if intel includes family relations or secret relations
 -- secret relations are known only if intel includes secret relations
-relationsReport :: [PersonDataLink] -> [RelationLink]
-relationsReport links =
-    mapMaybe relationLink grouped
+relationsReport :: [TraitType] -> [PersonTrait] -> [PersonDataLink] -> [RelationLink]
+relationsReport originatorTraits allTraits links =
+    mapMaybe (relationLink originatorTraits allTraits) grouped
     where
         known = filter knownLink links
         grouped = groupBy (\x y -> (entityKey . personDataLinkPerson) x == (entityKey . personDataLinkPerson) y) known
@@ -204,27 +251,36 @@ knownLink item =
         SecretRelation ->
             SecretRelations `elem` intel
     where
-        intel = [ (humanIntelligenceLevel . personDataLinkTargetIntelligence) item
-                , (humanIntelligenceLevel . personDataLinkOriginatorIntelligence) item
-                ]
+        intel = catMaybes [ humanIntelligenceLevel <$> personDataLinkTargetIntelligence item
+                          , humanIntelligenceLevel <$> personDataLinkOriginatorIntelligence item
+                          ]
 
 
 -- | Collect all relations of given person and report them
-relationLink :: [PersonDataLink] -> Maybe RelationLink
-relationLink [] =
+relationLink :: [TraitType] -> [PersonTrait] -> [PersonDataLink] -> Maybe RelationLink
+relationLink _ _ [] =
     Nothing
 
-relationLink links =
+relationLink originatorTraits allTraits links =
     Just $ RelationLink
             { relationLinkName = personName person
             , relationLinkShortTitle = shortTitle person
             , relationLinkLongTitle = longTitle person
             , relationLinkTypes = types
             , relationLinkId = (entityKey . personDataLinkPerson . P.head) links
+            , relationLinkOpinion = opinionReport originatorTraits originatorIntel targetTraits targetIntel targetRelations
             }
     where
         person = (entityVal . personDataLinkPerson . P.head) links
+        pId = (entityKey . personDataLinkPerson . P.head) links
         types = mkUniq $ fmap (relationType . personDataLinkRelation) links
+        targetTraits = mkUniq $ mapMaybe (\x -> if personTraitPersonId x == pId
+                                                    then Just $ personTraitType x
+                                                    else Nothing)
+                                         allTraits
+        originatorIntel = mkUniq $ links ^.. traverse . personDataLinkOriginatorIntelligenceL . _Just . humanIntelligenceLevelL
+        targetIntel = mkUniq $ links ^.. traverse . personDataLinkTargetIntelligenceL . _Just . humanIntelligenceLevelL
+        targetRelations = nub $ personDataLinkRelation <$> links
 
 
 shortTitle :: Person -> Maybe ShortTitle
@@ -261,17 +317,18 @@ statReport person intel =
 
 
 data RelationLink = RelationLink
-    { relationLinkName :: PersonName
-    , relationLinkShortTitle :: Maybe ShortTitle
-    , relationLinkLongTitle :: Maybe LongTitle
-    , relationLinkTypes :: [RelationType]
-    , relationLinkId :: Key Person
+    { relationLinkName :: !PersonName
+    , relationLinkShortTitle :: !(Maybe ShortTitle)
+    , relationLinkLongTitle :: !(Maybe LongTitle)
+    , relationLinkTypes :: ![RelationType]
+    , relationLinkId :: !(Key Person)
+    , relationLinkOpinion :: !OpinionReport
     } deriving (Show, Read, Eq)
 
 
 data DynastyReport = DynastyReport
-    { dynastyReportId :: Key Dynasty
-    , dynastyReportName :: DynastyName
+    { dynastyReportId :: !(Key Dynasty)
+    , dynastyReportName :: !DynastyName
     } deriving (Show, Read, Eq)
 
 
@@ -283,7 +340,158 @@ dynastyReport dynasty =
         }
 
 
+data TraitReport = TraitReport
+    { traitReportName :: !TraitName
+    , traitReportDescription :: !TraitDescription
+    , traitReportType :: !TraitType
+    , traitReportValidUntil :: !(Maybe StarDate)
+    } deriving (Show, Read, Eq)
+
+
+newtype TraitName = TraitName { unTraitName :: Text }
+    deriving (Show, Read, Eq)
+
+
+instance IsString TraitName where
+    fromString = TraitName . fromString
+
+
+instance ToJSON TraitName where
+    toJSON = toJSON . unTraitName
+
+
+instance FromJSON TraitName where
+    parseJSON =
+        withText "trait name"
+            (\x -> return $ TraitName x)
+
+
+newtype TraitDescription = TraitDescription { unTraitDescription :: Text }
+    deriving (Show, Read, Eq)
+
+
+instance IsString TraitDescription where
+    fromString = TraitDescription . fromString
+
+
+instance ToJSON TraitDescription where
+    toJSON = toJSON . unTraitDescription
+
+
+instance FromJSON TraitDescription where
+    parseJSON =
+        withText "trait description"
+            (\x -> return $ TraitDescription x)
+
+
+traitReport :: PersonTrait -> TraitReport
+traitReport trait =
+    TraitReport
+        { traitReportName = (traitName . personTraitType) trait
+        , traitReportDescription = (traitDescription . personTraitType) trait
+        , traitReportType = personTraitType trait
+        , traitReportValidUntil = personTraitValidUntil trait
+        }
+
+
+traitName :: TraitType -> TraitName
+traitName Brave = "Brave"
+traitName Coward = "Coward"
+traitName Chaste = "Chaste"
+traitName Temperate = "Temperate"
+traitName Charitable = "Charitable"
+traitName Diligent = "Diligent"
+traitName Patient = "Patient"
+traitName Kind = "Kind"
+traitName Humble = "Humble"
+traitName Lustful = "Lustful"
+traitName Gluttonous = "Gluttonous"
+traitName Greedy = "Greedy"
+traitName Slothful = "Slothful"
+traitName Wroth = "Wroth"
+traitName Envious = "Envious"
+traitName Proud = "Proud"
+traitName Ambitious = "Ambitious"
+traitName Content = "Content"
+traitName Cruel = "Cruel"
+traitName Cynical = "Cynical"
+traitName Deceitful = "Deceitful"
+traitName Honest = "Honest"
+traitName Shy = "Shy"
+
+
+traitDescription :: TraitType -> TraitDescription
+traitDescription Brave = "Brave person doesn't shy away from confrontation"
+traitDescription Coward = "Cowardly person shyes away from confrontation"
+traitDescription Chaste = "Virtuous or pure person refrains from unlawful sexual activity"
+traitDescription Temperate = "Temperate person avoids extremeties in all matters"
+traitDescription Charitable = "Charitable person willingly gives to those in need"
+traitDescription Diligent = "Work in itself is good and sufficient rewards for one's efforts"
+traitDescription Patient = "Steadfast can face long term difficulties and not lose their will"
+traitDescription Kind = "Benevolent person treating others with respect"
+traitDescription Humble = "Although we are all special, nobody is truly special"
+traitDescription Lustful = "Lustful person chases carnal pleasures in excess"
+traitDescription Gluttonous = "Lack of moderation in regards to food and drink"
+traitDescription Greedy = "Person showing selfish desire for wealth and fortune"
+traitDescription Slothful = "Laziness and lack of work has made this character indifferent"
+traitDescription Wroth = "Uncontrolled feeling of anger, rage and hathred"
+traitDescription Envious = "Coveting what's not yours"
+traitDescription Proud = "Placing oneself above others"
+traitDescription Ambitious = "Ambitious person has set their goals high"
+traitDescription Content = "Content person is happy how things are currently"
+traitDescription Cruel = "Indifference of suffering of others"
+traitDescription Cynical = "This person has strong distrust on motives of others"
+traitDescription Deceitful = "For this person, cheating and deceiving has become second nature"
+traitDescription Honest = "Free from fraud and deception"
+traitDescription Shy = "This person is nervous or uncomfortable with other people"
+
+
+-- Lens for accessing originator id of relation
+relationOriginatorIdL :: Lens' Relation (Key Person)
+relationOriginatorIdL = lens relationOriginatorId (\r v -> r { relationOriginatorId = v})
+
+
+-- Lens for accessing target id of relation
+relationTargetIdL :: Lens' Relation (Key Person)
+relationTargetIdL = lens relationTargetId (\r v -> r { relationTargetId = v})
+
+
+relationTypeL :: Lens' Relation RelationType
+relationTypeL = lens relationType (\r v -> r { relationType = v})
+
+
+humanIntelligenceLevelL :: Lens' HumanIntelligence PersonIntel
+humanIntelligenceLevelL = lens humanIntelligenceLevel (\r v -> r { humanIntelligenceLevel = v})
+
+
+-- | Flipped relation where originator and target id has been swapped
+-- and relation type flipped
+flipRelation :: Relation -> Relation
+flipRelation relation =
+    relation & relationOriginatorIdL .~ (relationTargetId relation)
+             & relationTargetIdL .~ (relationOriginatorId relation)
+             & relationTypeL %~ flipRelationType
+
+
+-- | Inverse of relation type (Parent -> Child)
+flipRelationType :: RelationType -> RelationType
+flipRelationType Parent = Child
+flipRelationType Child = Parent
+flipRelationType Sibling = Sibling
+flipRelationType StepParent = StepChild
+flipRelationType StepChild = StepParent
+flipRelationType StepSibling = StepSibling
+flipRelationType Betrothed = Betrothed
+flipRelationType Spouse = Spouse
+flipRelationType ExSpouse = ExSpouse
+flipRelationType Lover = Lover
+flipRelationType ExLover = ExLover
+flipRelationType Friend = Friend
+flipRelationType Rival = Rival
+
+
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 12 } ''PersonReport)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 10 } ''StatReport)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 12 } ''RelationLink)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 13 } ''DynastyReport)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 11 } ''TraitReport)

@@ -9,7 +9,16 @@ Details
 -------
 
 Details section shows general information of the character, including name,
-age and gender. It also displays list of intel types that are available about
+age and gender.
+
+Opinion is given as a pair, where first element is player character's opinion
+of the viewed character and second one is viewed character's estimated opinion
+of the player. When there's sufficient amount of intel, these are given in
+numeric formation, ranging from -100 (worst) to 100 (best). If sufficient
+information is missing, only estimate with three levels (negative, neutral,
+positive) is given.
+
+This section also displays list of intel types that are available about
 this person. The more intel types are available, the more other information is
 available in other sections of the view.
 
@@ -30,6 +39,13 @@ divided in three groups: public relations, relations only known by family
 and secret relations. Public relations are always known, but other two depend
 on intel types family relations and secret relations. Note that having
 access to secret relations info is enough to also display family relations.
+
+For each relation, estimation on opinion of that person is shown. This estimate
+is based on the knowledge that player character has about people of the
+relation. Generally, the better the intel, the better the estimation reflects
+reality. However, it's possible that the player character has access to
+information that one of the parties doesn't have and thus result might be
+incorrect.
 
 Stats
 -----

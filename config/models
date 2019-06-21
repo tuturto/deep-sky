@@ -289,3 +289,9 @@ Marriage json
     status MarriageStatus
     UniqueMarriagePair person1Id person2Id
     deriving Show Read Eq
+
+PersonTrait json
+    personId PersonId
+    validUntil StarDate Maybe
+    type TraitType
+    deriving Show Read Eq

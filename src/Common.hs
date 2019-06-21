@@ -8,7 +8,7 @@
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
               , FromDto(..), ToDto(..), apiNotFound, apiInvalidArgs, apiInternalError, apiOk
               , safeHead, apiForbidden, mkUniq, choose, getR, apiError, entityValL, entityKeyL
-              , Frequency(..) )
+              , Frequency(..), clamp )
     where
 
 import Import
@@ -237,3 +237,10 @@ entityValL = lens entityVal (\(Entity key _) value -> Entity key value)
 -- | Lens for accessing entity key in Entity
 entityKeyL :: Lens' (Entity a) (Key a)
 entityKeyL = lens entityKey (\(Entity _ value) key -> Entity key value)
+
+
+-- | Clamp value within a given parameters
+-- note that if start > end, this function will have odd value
+clamp :: Ord a => a -> a -> a -> a
+clamp start end val =
+        max start $ min end val

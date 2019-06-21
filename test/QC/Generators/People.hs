@@ -19,6 +19,7 @@ import People.Data ( PersonName(..), FirstName(..), FamilyName(..)
                    , Stewardship(..), Intrique(..), Learning(..), Gender(..)
                    , Sex(..)
                    )
+import People.Opinion ( OpinionReason(..), ReportResult(..), OpinionScore(..) )
 import Queries ( PersonDataLink(..) )
 
 
@@ -122,6 +123,23 @@ anyRelationVisibility :: Gen RelationVisibility
 anyRelationVisibility = elements [minBound..]
 
 
+constRelationVisibility :: RelationVisibility -> Gen RelationVisibility
+constRelationVisibility visibility = do
+    return visibility
+
+
+secretRelation :: Gen RelationVisibility
+secretRelation = constRelationVisibility SecretRelation
+
+
+familyRelation :: Gen RelationVisibility
+familyRelation = constRelationVisibility FamilyRelation
+
+
+publicRelation :: Gen RelationVisibility
+publicRelation = constRelationVisibility PublicRelation
+
+
 -- | Arbitrary relation with given visibility
 relationWithVisibility :: RelationVisibility -> Gen Relation
 relationWithVisibility visibility = do
@@ -136,7 +154,7 @@ relationWithVisibility visibility = do
                 }
 
 
-anyPersonDataLink :: RelationVisibility -> Gen PersonIntel -> Gen PersonIntel -> Gen PersonDataLink
+anyPersonDataLink :: Gen RelationVisibility -> Gen PersonIntel -> Gen PersonIntel -> Gen PersonDataLink
 anyPersonDataLink linkVisibility targetIntel originatorIntel = do
     targetPerson <- anyPersonEntity []
     ownerId <- randomPersonKey `suchThat` (\x -> x /= entityKey targetPerson)
@@ -144,12 +162,13 @@ anyPersonDataLink linkVisibility targetIntel originatorIntel = do
                                                              && x /= ownerId)
     tIntel <- anyHumanIntelligence ownerId (entityKey targetPerson) targetIntel
     oIntel <- anyHumanIntelligence ownerId originatorPersonKey originatorIntel
-    relation <- anyRelation (entityKey targetPerson) originatorPersonKey linkVisibility
+    vis <- linkVisibility
+    relation <- anyRelation (entityKey targetPerson) originatorPersonKey vis
     return $ PersonDataLink
-        { personDataLinkTargetIntelligence = tIntel
+        { personDataLinkTargetIntelligence = Just tIntel
         , personDataLinkRelation = relation
         , personDataLinkPerson = targetPerson
-        , personDataLinkOriginatorIntelligence = oIntel
+        , personDataLinkOriginatorIntelligence = Just oIntel
         }
 
 
@@ -273,3 +292,25 @@ getPersonId params =
                             _ ->
                                 Nothing)
                         params
+
+
+anyReportResult :: Gen ReportResult
+anyReportResult = do
+    n <- arbitrary
+    let score = OpinionScore n
+    k <- arbitrary `suchThat` \x -> x >= 0
+    reasons <- vectorOf k anyOpinionReason
+    oneof
+        [ do
+            return $ FeelingLevel score
+        , do
+            return $ ReasonsLevel score reasons
+        , do
+            return $ DetailedLevel score reasons
+        ]
+
+
+anyOpinionReason :: Gen OpinionReason
+anyOpinionReason = do
+    s <- arbitrary
+    return $ OpinionReason s
