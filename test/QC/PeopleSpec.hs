@@ -71,6 +71,7 @@ spec = do
                     \item ->
                         knownLink item
 
+        describe "opinions" $ do
             it "reported opinion score is always within -100 and 100 " $ do
                 forAll anyReportResult $
                     \report ->
