@@ -14,6 +14,7 @@ module Data.Common exposing
     , MechResource(..)
     , MessageId(..)
     , PersonId(..)
+    , PetId(..)
     , PlanetId(..)
     , PlanetName(..)
     , ResourceType(..)
@@ -54,6 +55,7 @@ module Data.Common exposing
     , unMech
     , unMessageId
     , unPersonId
+    , unPetId
     , unPlanetId
     , unPlanetName
     , unShipId
@@ -553,3 +555,12 @@ type DynastyName
 unDynastyName : DynastyName -> String
 unDynastyName (DynastyName s) =
     s
+
+
+type PetId
+    = PetId Int
+
+
+unPetId : PetId -> Int
+unPetId (PetId n) =
+    n

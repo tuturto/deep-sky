@@ -2,7 +2,12 @@ module Api.People exposing
     ( getDemesne
     , getPersonDetails
     , personIdDecoder
+    , personIdEncoder
     , personNameDecoder
+    , petIdDecoder
+    , petIdEncoder
+    , petTypeDecoder
+    , petTypeEncoder
     , shortTitleDecoder
     )
 
@@ -19,7 +24,12 @@ import Api.Common
         , starSystemNameDecoder
         )
 import Api.Endpoints exposing (Endpoint(..))
-import Data.Common exposing (DemesneName(..), PersonId(..))
+import Data.Common
+    exposing
+        ( DemesneName(..)
+        , PersonId(..)
+        , PetId(..)
+        )
 import Data.Model exposing (Msg(..))
 import Data.People
     exposing
@@ -39,6 +49,7 @@ import Data.People
         , Person
         , PersonIntel(..)
         , PersonName(..)
+        , PetType(..)
         , PlanetDemesneReportShort
         , RegnalNumber(..)
         , RelationLink
@@ -69,6 +80,7 @@ import Json.Decode as Decode
         , succeed
         )
 import Json.Decode.Extra exposing (andMap, when)
+import Json.Encode as Encode
 
 
 getPersonDetails : (Result Http.Error Person -> Msg) -> PersonId -> Cmd Msg
@@ -125,6 +137,11 @@ personIdDecoder : Decode.Decoder PersonId
 personIdDecoder =
     succeed PersonId
         |> andMap int
+
+
+personIdEncoder : PersonId -> Encode.Value
+personIdEncoder (PersonId n) =
+    Encode.int n
 
 
 firstNameDecoder : Decode.Decoder FirstName
@@ -515,3 +532,42 @@ opinionReportDecoder =
 opinionReportType : Decode.Decoder String
 opinionReportType =
     field "Tag" string
+
+
+petIdDecoder : Decode.Decoder PetId
+petIdDecoder =
+    succeed PetId
+        |> andMap int
+
+
+petIdEncoder : PetId -> Encode.Value
+petIdEncoder (PetId n) =
+    Encode.int n
+
+
+petTypeDecoder : Decode.Decoder PetType
+petTypeDecoder =
+    string |> andThen stringToPetType
+
+
+stringToPetType : String -> Decode.Decoder PetType
+stringToPetType s =
+    case s of
+        "Cat" ->
+            succeed Cat
+
+        "Rat" ->
+            succeed Rat
+
+        _ ->
+            fail "failed to deserialize"
+
+
+petTypeEncoder : PetType -> Encode.Value
+petTypeEncoder t =
+    case t of
+        Cat ->
+            Encode.string "Cat"
+
+        Rat ->
+            Encode.string "Rat"

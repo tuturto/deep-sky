@@ -15,6 +15,7 @@ module Data.People exposing
     , Person
     , PersonIntel(..)
     , PersonName(..)
+    , PetType(..)
     , PlanetDemesneReportShort
     , RegnalNumber(..)
     , RelationLink
@@ -34,6 +35,7 @@ module Data.People exposing
     , nameWithTitle
     , personIntelToString
     , personNameOrdering
+    , petTypeToString
     , relationTypeOrdering
     , relationTypeToString
     , traitNameOrdering
@@ -634,3 +636,18 @@ type OpinionScore
 unOpinionScore : OpinionScore -> Int
 unOpinionScore (OpinionScore n) =
     n
+
+
+type PetType
+    = Cat
+    | Rat
+
+
+petTypeToString : PetType -> String
+petTypeToString pType =
+    case pType of
+        Cat ->
+            "cat"
+
+        Rat ->
+            "rat"

@@ -12,7 +12,8 @@ module Simulation.Main (processTurn)
 import Import
 import CustomTypes ( StarDate )
 import Simulation.Construction ( handleFactionConstruction )
-import Simulation.Events ( handleFactionEvents, addSpecialEvents )
+import Simulation.Events ( handleFactionEvents, addSpecialEvents
+                         , handlePersonalEvent )
 import Simulation.Food ( handleFactionFood )
 import Simulation.Observations ( handleFactionObservations )
 import Simulation.Research ( handleFactionResearch )
@@ -35,6 +36,7 @@ processTurn = do
     mapM_ (handleFactionConstruction newTime) factions
     mapM_ (handleFactionResearch newTime) factions
     mapM_ (addSpecialEvents newTime) factions
+    _ <- handlePersonalEvent newTime
     -- Doing observations should always be done last to ensure players have
     -- recent reports of property they have full control, ie. planets.
     -- Otherwise it's possible that they'll receive reports that are one

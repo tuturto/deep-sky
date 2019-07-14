@@ -31,7 +31,16 @@ import Api.Common
         )
 import Api.Designer exposing (designIdDecoder, designNameDecoder)
 import Api.Endpoints exposing (Endpoint(..))
-import Api.People exposing (personNameDecoder)
+import Api.People
+    exposing
+        ( personIdDecoder
+        , personIdEncoder
+        , personNameDecoder
+        , petIdDecoder
+        , petIdEncoder
+        , petTypeDecoder
+        , petTypeEncoder
+        )
 import Api.StarSystem exposing (buildingIdDecoder)
 import Api.User
     exposing
@@ -45,20 +54,24 @@ import Data.Messages
     exposing
         ( BuildingFinishedNews
         , DesignCreatedNews
+        , EventResolveType(..)
         , KragiiResolution
         , KragiiSpecialEvent
+        , NamingPetResolution
+        , NamingPetSpecialEvent
         , NewsArticle
         , NewsContent(..)
         , PlanetFoundNews
         , ProductionChangeNews
         , ResearchCompletedNews
+        , ScurryingSoundsResolution
+        , ScurryingSoundsSpecialEvent
         , ShipFinishedNews
         , SpecialEventChoice(..)
         , SpecialEventOption
         , StarFoundNews
         , UserIcon(..)
         , UserWrittenNews
-        , unSpecialEventChoice
         )
 import Data.Model exposing (ApiMsg(..), Model, Msg(..))
 import Data.People exposing (FirstName(..), PersonName(..))
@@ -123,6 +136,7 @@ postNews message icon =
             , content = content
             , options = [] -- Filled in by server
             , choice = Nothing -- Not used in user written entries
+            , resolveType = Nothing -- Not used in user written entries
             }
     in
     Http.send (ApiMsgCompleted << NewsReceived) (post ApiMessageList (newsEncoder news) (list newsDecoder))
@@ -143,6 +157,14 @@ newsEncoder article =
         , ( "tag", Encode.string <| newsTag article )
         , ( "icon", Encode.string article.icon )
         , ( "starDate", starDateEncoder article.starDate )
+        , ( "resolveType"
+          , case article.resolveType of
+                Nothing ->
+                    Encode.null
+
+                Just rt ->
+                    eventResolveTypeEncoder rt
+          )
         ]
 
 
@@ -190,16 +212,28 @@ newsTag article =
         KragiiResolved _ ->
             "KragiiResolution"
 
+        ScurryingSoundsEvent _ ->
+            "ScurryingSoundsEvent"
+
+        ScurryingSoundsResolved _ ->
+            "ScurryingSoundsResolution"
+
+        NamingPetEvent _ ->
+            "NamingPetEvent"
+
+        PetNamingResolved _ ->
+            "NamingPetResolution"
+
 
 newsContentEncoder : NewsArticle -> Encode.Value
 newsContentEncoder newsArticle =
     case newsArticle.content of
         UserWritten article ->
             Encode.object
-                [ ( "content", Encode.string article.message )
-                , ( "starDate", starDateEncoder newsArticle.starDate )
-                , ( "userName", Encode.null ) -- filled in by server
-                , ( "icon", userIconEncoder article.icon )
+                [ ( "Content", Encode.string article.message )
+                , ( "Date", starDateEncoder newsArticle.starDate )
+                , ( "UserName", Encode.null ) -- filled in by server
+                , ( "Icon", userIconEncoder article.icon )
                 ]
 
         KragiiEvent article ->
@@ -209,19 +243,45 @@ newsContentEncoder newsArticle =
                 , ( "PlanetName", planetNameEncoder article.planetName )
                 , ( "SystemName", starSystemNameEncoder article.systemName )
                 , ( "Date", starDateEncoder newsArticle.starDate )
+                , ( "FactionId", factionIdEncoder article.factionId )
                 , ( "Options", Encode.list Encode.string [] ) -- not used by server
-                , ( "Choice"
-                  , case newsArticle.choice of
-                        Just x ->
-                            specialEventChoiceEncoder x
+                , choiceEncoder newsArticle
+                ]
 
-                        Nothing ->
-                            Encode.null
-                  )
+        ScurryingSoundsEvent article ->
+            Encode.object
+                [ ( "PersonId", personIdEncoder article.personId )
+                , ( "Date", starDateEncoder newsArticle.starDate )
+                , ( "Options", Encode.list Encode.string [] ) -- not used by server
+                , choiceEncoder newsArticle
+                ]
+
+        NamingPetEvent article ->
+            Encode.object
+                [ ( "PersonId", personIdEncoder article.personId )
+                , ( "PetId", petIdEncoder article.petId )
+                , ( "PetType", petTypeEncoder article.petType )
+                , ( "Date", starDateEncoder newsArticle.starDate )
+                , ( "Options", Encode.list Encode.string [] ) -- not used by server
+                , choiceEncoder newsArticle
                 ]
 
         _ ->
             Debug.todo "not implemented"
+
+
+{-| Internal helper for encoding user choice in special events
+-}
+choiceEncoder : NewsArticle -> ( String, Encode.Value )
+choiceEncoder article =
+    ( "Choice"
+    , case article.choice of
+        Just x ->
+            specialEventChoiceEncoder x
+
+        Nothing ->
+            Encode.null
+    )
 
 
 {-| Retrieve user news icons and links to corresponding images
@@ -254,6 +314,7 @@ newsDecoder =
                 , content = content
                 , options = header.options
                 , choice = header.choice
+                , resolveType = header.resolveType
                 }
     in
     newsHeader
@@ -278,6 +339,10 @@ newsContentDecoder =
         , when newsType (is "ProductionBoostEnded") (field "contents" productionBoostEnded)
         , when newsType (is "ProductionSlowdownEnded") (field "contents" productionSlowdownEnded)
         , when newsType (is "ResearchCompleted") (field "contents" researchCompleted)
+        , when newsType (is "ScurryingSoundsEvent") (field "contents" scurryingSoundsEventNewsArticle)
+        , when newsType (is "ScurryingSoundsResolution") (field "contents" scurryingSoundsResolutionNewsArticle)
+        , when newsType (is "NamingPetEvent") (field "contents" namingPetEventNewsArticle)
+        , when newsType (is "NamingPetResolution") (field "contents" namingPetResolutionNewsArticle)
         ]
 
 
@@ -295,9 +360,9 @@ starFoundNewsArticle =
     let
         decoder =
             succeed StarFoundNews
-                |> andMap (field "starName" starNameDecoder)
-                |> andMap (field "systemName" starSystemNameDecoder)
-                |> andMap (field "systemId" starSystemIdDecoder)
+                |> andMap (field "StarName" starNameDecoder)
+                |> andMap (field "SystemName" starSystemNameDecoder)
+                |> andMap (field "SystemId" starSystemIdDecoder)
     in
     succeed StarFound
         |> andMap decoder
@@ -310,10 +375,10 @@ planetFoundNewsArticle =
     let
         decoder =
             succeed PlanetFoundNews
-                |> andMap (field "planetName" planetNameDecoder)
-                |> andMap (field "systemName" starSystemNameDecoder)
-                |> andMap (field "systemId" starSystemIdDecoder)
-                |> andMap (field "planetId" planetIdDecoder)
+                |> andMap (field "PlanetName" planetNameDecoder)
+                |> andMap (field "SystemName" starSystemNameDecoder)
+                |> andMap (field "SystemId" starSystemIdDecoder)
+                |> andMap (field "PlanetId" planetIdDecoder)
     in
     succeed PlanetFound
         |> andMap decoder
@@ -327,8 +392,8 @@ userWrittenNewsArticle =
         decoder =
             succeed UserWrittenNews
                 |> andMap (field "content" string)
-                |> andMap (field "userName" personNameDecoder)
-                |> andMap (field "icon" userIconDecoder)
+                |> andMap (field "UserName" personNameDecoder)
+                |> andMap (field "Icon" userIconDecoder)
     in
     succeed UserWritten
         |> andMap decoder
@@ -344,6 +409,7 @@ newsHeader =
         |> andMap (field "starDate" starDateDecoder)
         |> andMap (field "contents" (field "Options" (list specialEventOptionDecoder)) |> withDefault [])
         |> andMap (field "contents" (field "Choice" (maybe specialEventChoiceDecoder)) |> withDefault Nothing)
+        |> andMap (field "contents" (field "ResolveType" (maybe resolveType)) |> withDefault Nothing)
 
 
 type alias NewsHeader =
@@ -352,6 +418,7 @@ type alias NewsHeader =
     , starDate : StarDate
     , options : List SpecialEventOption
     , choice : Maybe SpecialEventChoice
+    , resolveType : Maybe EventResolveType
     }
 
 
@@ -370,6 +437,36 @@ messageIdEncoder (MessageId x) =
     Encode.int x
 
 
+{-| Decoder for resolve type
+-}
+resolveType : Decode.Decoder EventResolveType
+resolveType =
+    string |> andThen stringToEventResolveType
+
+
+stringToEventResolveType : String -> Decode.Decoder EventResolveType
+stringToEventResolveType s =
+    case s of
+        "ImmediateEvent" ->
+            succeed ImmediateEvent
+
+        "DelayedEvent" ->
+            succeed DelayedEvent
+
+        _ ->
+            fail "Couldn't parse"
+
+
+eventResolveTypeEncoder : EventResolveType -> Encode.Value
+eventResolveTypeEncoder n =
+    case n of
+        ImmediateEvent ->
+            Encode.string "ImmediateEvent"
+
+        DelayedEvent ->
+            Encode.string "DelayedEvent"
+
+
 {-| Decoder for design created news article
 -}
 designCreatedNewsArticle : Decode.Decoder NewsContent
@@ -377,8 +474,8 @@ designCreatedNewsArticle =
     let
         decoder =
             succeed DesignCreatedNews
-                |> andMap (field "designId" designIdDecoder)
-                |> andMap (field "name" designNameDecoder)
+                |> andMap (field "DesignId" designIdDecoder)
+                |> andMap (field "Name" designNameDecoder)
     in
     succeed DesignCreated
         |> andMap decoder
@@ -391,12 +488,12 @@ buildingFinishedNewsArticle =
     let
         decoder =
             succeed BuildingFinishedNews
-                |> andMap (field "planetName" planetNameDecoder)
-                |> andMap (field "planetId" planetIdDecoder)
-                |> andMap (field "systemName" starSystemNameDecoder)
-                |> andMap (field "systemId" starSystemIdDecoder)
-                |> andMap (field "constructionName" string)
-                |> andMap (field "buildingId" buildingIdDecoder)
+                |> andMap (field "PlanetName" planetNameDecoder)
+                |> andMap (field "PlanetId" planetIdDecoder)
+                |> andMap (field "SystemName" starSystemNameDecoder)
+                |> andMap (field "SystemId" starSystemIdDecoder)
+                |> andMap (field "ConstructionName" string)
+                |> andMap (field "BuildingId" buildingIdDecoder)
     in
     succeed BuildingFinished
         |> andMap decoder
@@ -411,8 +508,7 @@ kragiiEventNewsArticle =
                 |> andMap (field "PlanetId" planetIdDecoder)
                 |> andMap (field "SystemName" starSystemNameDecoder)
                 |> andMap (field "SystemId" starSystemIdDecoder)
-
-        -- |> andMap (field "Options" (list specialEventOptionDecoder))
+                |> andMap (field "FactionId" factionIdDecoder)
     in
     succeed KragiiEvent
         |> andMap decoder
@@ -495,13 +591,33 @@ specialEventOptionDecoder =
 
 specialEventChoiceDecoder : Decode.Decoder SpecialEventChoice
 specialEventChoiceDecoder =
-    succeed SpecialEventChoice
-        |> andMap string
+    oneOf
+        [ succeed TagAndContents
+            |> andMap (field "tag" string)
+            |> andMap (field "contents" string)
+        , succeed TagOnly
+            |> andMap (field "tag" string)
+        , succeed EnumOnly
+            |> andMap string
+        ]
 
 
 specialEventChoiceEncoder : SpecialEventChoice -> Encode.Value
 specialEventChoiceEncoder choice =
-    Encode.string (unSpecialEventChoice choice)
+    case choice of
+        EnumOnly s ->
+            Encode.string s
+
+        TagAndContents tag contents ->
+            Encode.object
+                [ ( "tag", Encode.string tag )
+                , ( "contents", Encode.string contents )
+                ]
+
+        TagOnly tag ->
+            Encode.object
+                [ ( "tag", Encode.string tag )
+                ]
 
 
 productionChangeDecoder : Decode.Decoder ProductionChangeNews
@@ -546,4 +662,54 @@ researchCompleted =
                 |> andMap (field "Name" string)
     in
     succeed ResearchCompleted
+        |> andMap decoder
+
+
+scurryingSoundsEventNewsArticle : Decode.Decoder NewsContent
+scurryingSoundsEventNewsArticle =
+    let
+        decoder =
+            succeed ScurryingSoundsSpecialEvent
+                |> andMap (field "PersonId" personIdDecoder)
+    in
+    succeed ScurryingSoundsEvent
+        |> andMap decoder
+
+
+scurryingSoundsResolutionNewsArticle : Decode.Decoder NewsContent
+scurryingSoundsResolutionNewsArticle =
+    let
+        decoder =
+            succeed ScurryingSoundsResolution
+                |> andMap (field "PetId" (maybe petIdDecoder))
+                |> andMap (field "PetType" (maybe petTypeDecoder))
+                |> andMap (field "Explanation" string)
+    in
+    succeed ScurryingSoundsResolved
+        |> andMap decoder
+
+
+namingPetEventNewsArticle : Decode.Decoder NewsContent
+namingPetEventNewsArticle =
+    let
+        decoder =
+            succeed NamingPetSpecialEvent
+                |> andMap (field "PersonId" personIdDecoder)
+                |> andMap (field "PetId" petIdDecoder)
+                |> andMap (field "PetType" petTypeDecoder)
+    in
+    succeed NamingPetEvent
+        |> andMap decoder
+
+
+namingPetResolutionNewsArticle : Decode.Decoder NewsContent
+namingPetResolutionNewsArticle =
+    let
+        decoder =
+            succeed NamingPetResolution
+                |> andMap (field "PetId" petIdDecoder)
+                |> andMap (field "PetType" petTypeDecoder)
+                |> andMap (field "Explanation" string)
+    in
+    succeed PetNamingResolved
         |> andMap decoder

@@ -5,19 +5,24 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
-module Dto.News ( NewsDto(..), NewsArticleDto(..), StarFoundNewsDto(..), PlanetFoundNewsDto(..)
-                , UserWrittenNewsDto(..), DesignCreatedNewsDto(..)
-                , ConstructionFinishedNewsDto(..), UserNewsIconDto(..), SpecialNewsDto(..)
-                , KragiiWormsEventDto(..), UserOptionDto(..), KragiiWormsChoiceDto(..), KragiiNewsDto(..)
-                , ProductionChangedNewsDto(..), ResearchCompletedNewsDto(..)
-                ) where
+module Dto.News
+    ( NewsDto(..), NewsArticleDto(..), StarFoundNewsDto(..)
+    , PlanetFoundNewsDto(..), UserWrittenNewsDto(..), DesignCreatedNewsDto(..)
+    , ConstructionFinishedNewsDto(..), UserNewsIconDto(..), SpecialNewsDto(..)
+    , KragiiWormsEventDto(..), UserOptionDto(..), KragiiWormsChoiceDto(..)
+    , KragiiNewsDto(..), ProductionChangedNewsDto(..)
+    , ResearchCompletedNewsDto(..), ScurryingSoundsNewsDto(..)
+    , ScurryingSoundsEventDto(..), ScurryingSoundsChoiceDto(..)
+    , NamingPetNewsDto(..), NamingPetChoiceDto(..), NamingPetEventDto(..)
+    ) where
 
 import Import
 import Data.Aeson ( object, (.=), (.!=), (.:?), withObject )
 import Data.Aeson.TH ( deriveJSON, defaultOptions, constructorTagModifier, fieldLabelModifier )
+import Events.Import ( EventResolveType(..) )
 import CustomTypes ( StarDate )
 import Research.Data ( Technology )
-import People.Data ( PersonName(..) )
+import People.Data ( PersonName(..), PetType(..), PetName(..) )
 import Resources ( ResourceType(..) )
 
 
@@ -26,8 +31,7 @@ data NewsDto = NewsDto
     { newsDtoId :: Key News
     , newsContents :: NewsArticleDto
     , newsIcon :: Text
-    }
-    deriving (Show, Read, Eq)
+    } deriving (Show, Read, Eq)
 
 
 -- | data transfer object for various types of news
@@ -43,6 +47,8 @@ data NewsArticleDto =
     | ProductionSlowdownEndedDto ProductionChangedNewsDto
     | ResearchCompletedDto ResearchCompletedNewsDto
     | KragiiDto KragiiNewsDto
+    | ScurryingSoundsDto ScurryingSoundsNewsDto
+    | NamingPetDto NamingPetNewsDto
     | SpecialDto SpecialNewsDto
     deriving (Show, Read, Eq)
 
@@ -50,48 +56,101 @@ data NewsArticleDto =
 -- | data transfer object for all kinds of special news
 data SpecialNewsDto =
     KragiiEventDto KragiiWormsEventDto
+    | MkScurryingSoundsEventDto ScurryingSoundsEventDto
+    | MkNamingPetEventDto NamingPetEventDto
     deriving (Show, Read, Eq)
 
 
 -- | Data transfer object for kragii attack special event
 data KragiiWormsEventDto = KragiiWormsEventDto
-    { kragiiWormsDtoPlanetId :: Key Planet
-    , kragiiWormsDtoPlanetName :: Text
-    , kragiiWormsDtoSystemId :: Key StarSystem
-    , kragiiWormsDtoSystemName :: Text
-    , kragiiWormsDtoOptions :: [UserOptionDto KragiiWormsChoiceDto]
-    , kragiiWormsDtoChoice :: Maybe KragiiWormsChoiceDto
-    , kragiiWormsDtoDate :: StarDate
-    }
-    deriving (Show, Read, Eq)
+    { kragiiWormsDtoPlanetId :: !(Key Planet)
+    , kragiiWormsDtoPlanetName :: !Text
+    , kragiiWormsDtoSystemId :: !(Key StarSystem)
+    , kragiiWormsDtoSystemName :: !Text
+    , kragiiWormsDtoOptions :: ![UserOptionDto KragiiWormsChoiceDto]
+    , kragiiWormsDtoChoice :: !(Maybe KragiiWormsChoiceDto)
+    , kragiiWormsDtoFactionId :: !(Key Faction)
+    , kragiiWormsDtoDate :: !StarDate
+    , kragiiWormsDtoResolveType :: !(Maybe EventResolveType)
+    } deriving (Show, Read, Eq)
+
+
+-- | Data transfer object for scurrying sounds special event
+data ScurryingSoundsEventDto = ScurryingSoundsEventDto
+    { scurryingSoundsEventDtoDate :: !StarDate
+    , scurryingSoundsEventDtoPersonId :: !(Key Person)
+    , scurryingSoundsEventDtoOptions :: ![UserOptionDto ScurryingSoundsChoiceDto]
+    , scurryingSoundsEventDtoChoice :: !(Maybe ScurryingSoundsChoiceDto)
+    , scurryingSoundsEventDtoResolveType :: !(Maybe EventResolveType)
+    } deriving (Show, Read, Eq)
 
 
 -- | data transfer object for user choice regarding kragii attack
-data KragiiWormsChoiceDto = EvadeWormsDto
+data KragiiWormsChoiceDto =
+    EvadeWormsDto
     | AttackWormsDto
     | TameWormsDto
     deriving (Show, Read, Eq)
 
 
--- | data transfer option for general user choice regarding special event
-data UserOptionDto a =
-    UserOptionDto { userOptionDtoTitle :: Text
-                  , userOptionDtoExplanation :: [Text]
-                  , userOptionDtoChoice :: a
-                  }
+data ScurryingSoundsChoiceDto =
+    GetCatDto
+    | TameRatDto
+    | GetRidSomehowElseDto
     deriving (Show, Read, Eq)
+
+
+data NamingPetEventDto = NamingPetEventDto
+    { namingPetEventDtoPersonId :: !(Key Person)
+    , namingPetEventDtoPetId :: !(Key Pet)
+    , namingPetEventDtoPetType :: !PetType
+    , namingPetEventDtoDate :: !StarDate
+    , namingPetEventDtoOptions :: ![UserOptionDto NamingPetChoiceDto]
+    , namingPetEventDtoChoice :: !(Maybe NamingPetChoiceDto)
+    , namingPetEventDtoResolveType :: !(Maybe EventResolveType)
+    } deriving (Show, Read, Eq)
+
+
+data NamingPetChoiceDto =
+    GiveNameDto PetName
+    | LetSomeoneElseDecideDto
+    deriving (Show, Read, Eq)
+
+
+-- | data transfer option for general user choice regarding special event
+data UserOptionDto a = UserOptionDto
+    { userOptionDtoTitle :: Text
+    , userOptionDtoExplanation :: [Text]
+    , userOptionDtoChoice :: a
+    } deriving (Show, Read, Eq)
 
 
 -- | data transfer object for news that tell resolution of kragii attack
 data KragiiNewsDto = KragiiNewsDto
-    { kragiiNewsDtoPlanetId :: Key Planet
-    , kragiiNewsDtoPlanetName :: Text
-    , kragiiNewsDtoSystemId :: Key StarSystem
-    , kragiiNewsDtoSystemName :: Text
-    , kragiiNewsDtoResolution :: Text
-    , kragiiNewsDtoDate :: StarDate
-    }
-    deriving (Show, Read, Eq)
+    { kragiiNewsDtoPlanetId :: !(Key Planet)
+    , kragiiNewsDtoPlanetName :: !Text
+    , kragiiNewsDtoSystemId :: !(Key StarSystem)
+    , kragiiNewsDtoSystemName :: !Text
+    , kragiiNewsDtoResolution :: !Text
+    , kragiiNewsDtoFactionId :: !(Key Faction)
+    , kragiiNewsDtoDate :: !StarDate
+    } deriving (Show, Read, Eq)
+
+
+data ScurryingSoundsNewsDto = ScurryingSoundsNewsDto
+    { scurryingSoundsNewsDtoExplanation :: !Text
+    , scurryingSoundsNewsDtoPetId :: !(Maybe (Key Pet))
+    , scurryingSoundsNewsDtoPetType :: !(Maybe PetType)
+    , scurryingSoundsNewsDtoDate :: !StarDate
+    } deriving (Show, Read, Eq)
+
+
+data NamingPetNewsDto = NamingPetNewsDto
+    { namingPetNewsDtoExplanation :: !Text
+    , namingPetNewsDtoPetId :: !(Key Pet)
+    , namingPetNewsDtoPetType :: !PetType
+    , namingPetNewsDtoDate :: !StarDate
+    } deriving (Show, Read, Eq)
 
 
 -- | data transfer object for star found news
@@ -100,8 +159,7 @@ data StarFoundNewsDto = StarFoundNewsDto
     , starFoundNewsDtoSystemName :: Text
     , starFoundNewsDtoSystemId :: Key StarSystem
     , starFoundNewsDtoDate :: StarDate
-    }
-    deriving (Show, Read, Eq)
+    } deriving (Show, Read, Eq)
 
 
 -- | data transfer object for planet found news
@@ -111,8 +169,7 @@ data PlanetFoundNewsDto = PlanetFoundNewsDto
     , planetFoundNewsDtoSystemId :: Key StarSystem
     , planetFoundNewsDtoPlanetId :: Key Planet
     , planetFoundNewsDtoDate :: StarDate
-    }
-    deriving (Show, Read, Eq)
+    } deriving (Show, Read, Eq)
 
 
 -- | data transfer object for user written news
@@ -121,8 +178,7 @@ data UserWrittenNewsDto = UserWrittenNewsDto
     , userWrittenNewsDtoDate :: StarDate
     , userWrittenNewsDtoUser :: PersonName
     , userWrittenNewsDtoIcon :: UserNewsIconDto
-    }
-    deriving (Show, Read, Eq)
+    } deriving (Show, Read, Eq)
 
 
 -- | Icon displayed on user written news
@@ -138,8 +194,7 @@ data DesignCreatedNewsDto = DesignCreatedNewsDto
     { designCreatedNewsDtoDesignId :: Key Design
     , designCreatedNewsDtoName :: Text
     , designCreatedNewsDtoDate :: StarDate
-    }
-    deriving (Show, Read, Eq)
+    } deriving (Show, Read, Eq)
 
 
 -- | data transfer object for construction finished news
@@ -152,8 +207,7 @@ data ConstructionFinishedNewsDto = ConstructionFinishedNewsDto
     , constructionFinishedNewsDtoBuildingId :: Maybe (Key Building)
     , constructionFinishedNewsDtoShipId :: Maybe (Key Ship)
     , constructionFinishedNewsDtoDate :: StarDate
-    }
-    deriving (Show, Read, Eq)
+    } deriving (Show, Read, Eq)
 
 
 -- | Turn NewsDto into JSON
@@ -214,8 +268,20 @@ jsonTag news =
         SpecialDto (KragiiEventDto _) ->
             "KragiiEvent"
 
+        SpecialDto (MkScurryingSoundsEventDto _) ->
+            "ScurryingSoundsEvent"
+
         KragiiDto _ ->
             "KragiiResolution"
+
+        ScurryingSoundsDto _ ->
+            "ScurryingSoundsResolution"
+
+        NamingPetDto _ ->
+            "NamingPetResolution"
+
+        SpecialDto (MkNamingPetEventDto _) ->
+            "NamingPetEvent"
 
 
 instance ToJSON NewsArticleDto where
@@ -232,7 +298,11 @@ instance ToJSON NewsArticleDto where
             ProductionSlowdownEndedDto dto -> toJSON dto
             ResearchCompletedDto dto -> toJSON dto
             KragiiDto dto -> toJSON dto
+            ScurryingSoundsDto dto -> toJSON dto
+            NamingPetDto dto -> toJSON dto
             SpecialDto (KragiiEventDto dto) -> toJSON dto
+            SpecialDto (MkScurryingSoundsEventDto dto) -> toJSON dto
+            SpecialDto (MkNamingPetEventDto dto) -> toJSON dto
 
 
 instance FromJSON NewsArticleDto where
@@ -279,58 +349,30 @@ instance FromJSON NewsArticleDto where
                 guard (tag == ("KragiiEvent" :: String))
                 contents <- o .: "contents"
                 return $ SpecialDto (KragiiEventDto contents)
+            , do
+                guard (tag == ("ScurryingSoundsEvent" :: String))
+                contents <- o .: "contents"
+                return $ SpecialDto (MkScurryingSoundsEventDto contents)
+            , do
+                guard (tag == ("NamingPetEvent" :: String))
+                contents <- o .: "contents"
+                return $ SpecialDto (MkNamingPetEventDto contents)
              ]
 
 
 instance ToJSON SpecialNewsDto where
     toJSON dto =
         case dto of
-            KragiiEventDto x -> toJSON x
+            KragiiEventDto x ->
+                toJSON x
+
+            MkScurryingSoundsEventDto x ->
+                toJSON x
+
+            MkNamingPetEventDto x ->
+                toJSON x
 
 
--- | map planet found news into JSON
-instance ToJSON PlanetFoundNewsDto where
-    toJSON PlanetFoundNewsDto { planetFoundNewsDtoPlanetName = pName
-                              , planetFoundNewsDtoSystemId = sId
-                              , planetFoundNewsDtoPlanetId = pId
-                              , planetFoundNewsDtoSystemName = sName
-                              } =
-        object [ "planetName" .= pName
-               , "systemName" .= sName
-               , "planetId" .= pId
-               , "systemId" .= sId
-               ]
-
-
-instance FromJSON PlanetFoundNewsDto where
-    parseJSON (Object b) =
-        PlanetFoundNewsDto <$> b .: "planetName"
-                           <*> b .: "systemName"
-                           <*> b .: "systemId"
-                           <*> b .: "planetId"
-                           <*> b .: "starDate"
-    parseJSON _ = mzero
-
-
--- | map star found news into JSON
-instance ToJSON StarFoundNewsDto where
-    toJSON StarFoundNewsDto { starFoundNewsDtoStarName = sName
-                            , starFoundNewsDtoSystemName = sysName
-                            , starFoundNewsDtoSystemId = sId
-                            } =
-        object [ "starName" .= sName
-               , "systemName" .= sysName
-               , "systemId" .= sId
-               ]
-
-
-instance FromJSON StarFoundNewsDto where
-    parseJSON (Object b) =
-        StarFoundNewsDto <$> b .: "starName"
-                         <*> b .: "systemName"
-                         <*> b .: "systemId"
-                         <*> b .: "starDate"
-    parseJSON _ = mzero
 
 
 instance ToJSON UserWrittenNewsDto where
@@ -355,25 +397,6 @@ instance FromJSON UserWrittenNewsDto where
     parseJSON _ = mzero
 
 
-instance ToJSON DesignCreatedNewsDto where
-    toJSON DesignCreatedNewsDto { designCreatedNewsDtoDesignId = dId
-                                , designCreatedNewsDtoName = dName
-                                , designCreatedNewsDtoDate = sDate
-                                } =
-        object [ "designId" .= dId
-               , "name" .= dName
-               , "starDate" .= sDate
-               ]
-
-
-instance FromJSON DesignCreatedNewsDto where
-    parseJSON (Object b) =
-        DesignCreatedNewsDto <$> b .: "designId"
-                             <*> b .: "name"
-                             <*> b .: "starDate"
-    parseJSON _ = mzero
-
-
 instance ToJSON ConstructionFinishedNewsDto where
     toJSON ConstructionFinishedNewsDto { constructionFinishedNewsDtoPlanetName = mpName
                                        , constructionFinishedNewsDtoPlanetId = mpId
@@ -385,34 +408,34 @@ instance ToJSON ConstructionFinishedNewsDto where
                                        } =
         case mbId of
             Just _ ->
-                object [ "planetName" .= mpName
-                       , "planetId" .= mpId
-                       , "systemName" .= sName
-                       , "systemId" .= sId
-                       , "constructionName" .= cName
-                       , "buildingId" .= mbId
+                object [ "PlanetName" .= mpName
+                       , "PlanetId" .= mpId
+                       , "SystemName" .= sName
+                       , "SystemId" .= sId
+                       , "ConstructionName" .= cName
+                       , "BuildingId" .= mbId
                        ]
 
             Nothing ->
-                object [ "planetName" .= mpName
+                object [ "PlanetName" .= mpName
                        , "planetId" .= mpId
-                       , "systemName" .= sName
-                       , "systemId" .= sId
-                       , "constructionName" .= cName
-                       , "shipId" .= msId
+                       , "SystemName" .= sName
+                       , "SystemId" .= sId
+                       , "ConstructionName" .= cName
+                       , "ShipId" .= msId
                        ]
 
 
 instance FromJSON ConstructionFinishedNewsDto where
     parseJSON (Object b) =
-        ConstructionFinishedNewsDto <$> b .:? "planetName"
-                                    <*> b .:? "planetId"
-                                    <*> b .: "systemName"
-                                    <*> b .: "systemId"
-                                    <*> b .: "constructionName"
-                                    <*> b .:? "buildingId"
-                                    <*> b .:? "shipId"
-                                    <*> b .: "starDate"
+        ConstructionFinishedNewsDto <$> b .:? "PlanetName"
+                                    <*> b .:? "PlanetId"
+                                    <*> b .: "SystemName"
+                                    <*> b .: "SystemId"
+                                    <*> b .: "ConstructionName"
+                                    <*> b .:? "BuildingId"
+                                    <*> b .:? "ShipId"
+                                    <*> b .: "StarDate"
     parseJSON _ = mzero
 
 
@@ -473,8 +496,20 @@ newsStarDate article =
         KragiiDto details ->
             kragiiNewsDtoDate details
 
+        ScurryingSoundsDto details ->
+            scurryingSoundsNewsDtoDate details
+
+        NamingPetDto details ->
+            namingPetNewsDtoDate details
+
         SpecialDto (KragiiEventDto details) ->
             kragiiWormsDtoDate details
+
+        SpecialDto (MkScurryingSoundsEventDto details) ->
+            scurryingSoundsEventDtoDate details
+
+        SpecialDto (MkNamingPetEventDto details) ->
+            namingPetEventDtoDate details
 
 
 $(deriveJSON defaultOptions { constructorTagModifier = \x -> take (length x - 3) x } ''UserNewsIconDto)
@@ -484,3 +519,12 @@ $(deriveJSON defaultOptions { constructorTagModifier = \x -> take (length x - 3)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 13 } ''KragiiNewsDto)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 24 } ''ProductionChangedNewsDto)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 24 } ''ResearchCompletedNewsDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 22 } ''ScurryingSoundsNewsDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 23 } ''ScurryingSoundsEventDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 16 } ''NamingPetNewsDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 17 } ''NamingPetEventDto)
+$(deriveJSON defaultOptions { constructorTagModifier = \x -> take (length x - 3) x } ''ScurryingSoundsChoiceDto)
+$(deriveJSON defaultOptions { constructorTagModifier = \x -> take (length x - 3) x } ''NamingPetChoiceDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 20 } ''DesignCreatedNewsDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 18 } ''PlanetFoundNewsDto)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 16 } ''StarFoundNewsDto)

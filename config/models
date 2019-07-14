@@ -154,7 +154,8 @@ BuildingConstruction json
 
 News json
     content Text
-    factionId FactionId
+    factionId FactionId Maybe
+    personId PersonId Maybe
     date StarDate
     dismissed Bool
     specialEvent SpecialEventStatus
@@ -294,4 +295,12 @@ PersonTrait json
     personId PersonId
     validUntil StarDate Maybe
     type TraitType
+    deriving Show Read Eq
+
+Pet json
+    name PetName
+    type PetType
+    dateOfBirth StarDate
+    dateOfDeath StarDate Maybe
+    ownerId PersonId
     deriving Show Read Eq

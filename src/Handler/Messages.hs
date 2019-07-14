@@ -1,61 +1,158 @@
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies          #-}
-{-# LANGUAGE TupleSections         #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TupleSections              #-}
 
-module Handler.Messages ( getApiMessageR, getMessageR, deleteApiMessageIdR
-                        , postApiMessageR, getApiMessageIconsR, putApiMessageIdR )
+module Handler.Messages
+    ( getApiMessageR, getMessageR, deleteApiMessageIdR, postApiMessageR
+    , getApiMessageIconsR, putApiMessageIdR )
+
     where
 
 import Import
-import Data.Aeson.Text (encodeToLazyText)
+import Data.Aeson.Text ( encodeToLazyText )
+import Data.Either.Validation ( Validation(..), _Failure, _Success )
 
 import Common ( apiRequireFaction, toDto, fromDto, apiNotFound, apiForbidden )
+import Control.Lens ( (#) )
+import Control.Monad.Trans.Writer ( WriterT, runWriterT, tell )
 import CustomTypes ( SpecialEventStatus(..), StarDate )
+import Events.Import ( EventResolveType(..) )
+import Errors ( ErrorCode(..), raiseIfErrors )
 import Handler.Home ( getNewHomeR )
 import MenuHelpers ( starDate )
-import News.Data ( NewsArticle(..), UserWrittenNews(..) )
+import News.Data ( NewsArticle(..), UserWrittenNews(..)
+                 , resolveType )
 import News.Import ( parseNewsEntities, iconMapper, iconInfo, userNewsIconMapper
-                   , productionChangeEndedIconMapper )
+                   , productionChangeEndedIconMapper, parseNews )
+import Simulation.Events ( extractSpecialNews, handleSpecialEvent )
 
 
 -- | Api method to retrieve all pending messages
 getApiMessageR :: Handler Value
 getApiMessageR = do
-    (_, _, _, fId) <- apiRequireFaction
-    loadAllMessages fId
+    (_, _, avatar, fId) <- apiRequireFaction
+    loadAllMessages fId (entityKey avatar)
 
 
 -- | Api method to mark message deleted. Marking already deleted message doesn't have
 -- any effect.
 deleteApiMessageIdR :: Key News -> Handler Value
 deleteApiMessageIdR mId = do
-    (_, _, _, fId) <- apiRequireFaction
+    (_, _, avatar, fId) <- apiRequireFaction
     loadedMessages <- runDB $ selectList [ NewsId ==. mId
-                                         , NewsFactionId ==. fId ] [ Asc NewsDate ]
+                                         , NewsFactionId ==. (Just fId) ] [ Asc NewsDate ]
     _ <- if null loadedMessages
             then apiNotFound
             else runDB $ update mId [ NewsDismissed =. True ]
-    loadAllMessages fId
+    loadAllMessages fId (entityKey avatar)
 
 
 -- | Api method for updated specific message. Used to make user choice for interactive
 -- event
 putApiMessageIdR :: Key News -> Handler Value
 putApiMessageIdR mId = do
-    (_, _, _, fId) <- apiRequireFaction
+    (_, _, avatarE, fId) <- apiRequireFaction
     msg <- requireJsonBody
-    let article = fromDto msg
-    _ <- if isSpecialEvent article
-            then do
-                loadedMessages <- runDB $ selectList [ NewsId ==. mId
-                                                     , NewsFactionId ==. fId ] [ Asc NewsDate ]
-                if null loadedMessages
-                    then apiNotFound
-                    else runDB $ update mId [ NewsContent =. toStrict (encodeToLazyText article) ]
-            else apiForbidden "unsupported article type"
-    loadAllMessages fId
+    (_, errs) <- runDB . runWriterT $ updateEventWithChoice mId avatarE $ fromDto msg
+    raiseIfErrors errs
+    loadAllMessages fId (entityKey avatarE)
+
+
+-- | Handles case where user has made choice on interactive event
+-- there are two major cases: simpler one is delayed event where event is just
+-- updated with the choice. More complex case is immediate event where user
+-- made choice immediately triggers resolving of the event
+updateEventWithChoice :: (MonadIO m, PersistQueryWrite backend, PersistUniqueRead backend,
+    BaseBackend backend ~ SqlBackend) =>
+    Key News
+    -> Entity Person
+    -> NewsArticle
+    -> WriterT [ErrorCode] (ReaderT backend m) ()
+updateEventWithChoice mId avatarE msgArticle = do
+    loadedMessage <- lift $ get mId
+    case loadedMessage of
+        Nothing ->
+            tell [ ResourceNotFound ]
+
+        Just dbNews -> do
+            case parseNews dbNews of
+                Nothing ->
+                    tell [ FailedToParseDataInDatabase ]
+
+                Just dbArticle -> do
+                    --TODO: validate possible faction id (in case of kragii for example)
+                    let vRes = pure dbArticle <*
+                                    newsIsUnresolved dbNews <*
+                                    userHasRightToChoose avatarE dbNews :: Validation [ErrorCode] NewsArticle
+
+                    case vRes of
+                        Failure err ->
+                            tell err
+
+                        Success article ->
+                            case resolveType article of
+                                Just ImmediateEvent -> do
+                                    _ <- handleWithChoice mId msgArticle
+                                    return ()
+
+                                Just DelayedEvent -> do
+                                    lift $ updateWithChoice mId msgArticle
+
+                                Nothing ->
+                                    tell [ FailedToParseDataInDatabase ]
+
+
+-- | Validation ensuring that the news article hasn't be already resolved
+newsIsUnresolved :: News -> Validation [ErrorCode] News
+newsIsUnresolved news =
+    case newsSpecialEvent news of
+        UnhandledSpecialEvent ->
+            _Success # news
+
+        HandledSpecialEvent ->
+            _Failure # [ SpecialEventHasAlreadyBeenResolved ]
+
+        NoSpecialEvent ->
+            _Failure # [ TriedToMakeChoiceForRegularArticle ]
+
+
+-- | Validation that user has rights to choose action for given article
+userHasRightToChoose :: Entity Person -> News -> Validation [ErrorCode] News
+userHasRightToChoose personE news =
+    if ((personFactionId . entityVal) personE == newsFactionId news
+        || (Just $ entityKey personE) == newsPersonId news)
+        then _Success # news
+        else _Failure # [ InsufficientRights ]
+
+
+-- | Update news article content
+updateWithChoice :: (MonadIO m, PersistStoreWrite backend,
+    BaseBackend backend ~ SqlBackend) =>
+    Key News -> NewsArticle -> ReaderT backend m ()
+updateWithChoice mId article =
+    update mId [ NewsContent =. toStrict (encodeToLazyText article) ]
+
+
+-- | Update news article content and in case of immediate events, trigger
+-- resolution for special event
+handleWithChoice :: (MonadIO m, PersistQueryWrite backend, PersistUniqueRead backend,
+    BaseBackend backend ~ SqlBackend) =>
+    Key News
+    -> NewsArticle
+    -> WriterT [ErrorCode] (ReaderT backend m) (Maybe (Key News))
+handleWithChoice mId article = do
+    date <- lift starDate
+    _ <- lift $ updateWithChoice mId article
+    case extractSpecialNews (mId, article) of
+        Nothing -> do
+            tell [ SpecialNewsExtractionFailed ]
+            return Nothing
+
+        Just sNews -> do
+            res <- lift $ handleSpecialEvent date sNews
+            return $ Just res
 
 
 -- | Api method to add new user submitted news article
@@ -68,13 +165,14 @@ postApiMessageR = do
     let article = (setUser (entityVal avatar) . setStarDate currentDate . fromDto) msg
     _ <- if isUserSupplied article
             then runDB $ insert News { newsContent = toStrict $ encodeToLazyText article
-                                     , newsFactionId = fId
+                                     , newsFactionId = Just fId
+                                     , newsPersonId = Nothing
                                      , newsDate = currentDate
                                      , newsDismissed = False
                                      , newsSpecialEvent = NoSpecialEvent
                                      }
             else apiForbidden "unsupported article type"
-    loadAllMessages fId
+    loadAllMessages fId (entityKey avatar)
 
 
 -- | Api method for retrieving list of all icons used for user submitted news and
@@ -93,12 +191,6 @@ getMessageR = getNewHomeR
 isUserSupplied :: NewsArticle -> Bool
 isUserSupplied (UserWritten _) = True
 isUserSupplied _ = False
-
-
--- | True if article is special event
-isSpecialEvent :: NewsArticle -> Bool
-isSpecialEvent (Special _) = True
-isSpecialEvent _ = False
 
 
 -- | Update news article to have specific star date
@@ -123,10 +215,13 @@ setUser _ article =
 
 -- | Load all messages of a faction that have not yet been dismissed and return them as JSON
 -- Message icons are returned as links to respective server resources
-loadAllMessages :: Key Faction -> HandlerFor App Value
-loadAllMessages fId = do
-    loadedMessages <- runDB $ selectList [ NewsFactionId ==. fId
-                                         , NewsDismissed ==. False ] [ Desc NewsDate ]
+loadAllMessages :: Key Faction -> Key Person -> HandlerFor App Value
+loadAllMessages fId pId = do
+    loadedMessages <- runDB $ selectList ( [ NewsFactionId ==. Just fId
+                                           , NewsDismissed ==. False ]
+                                           ||. [ NewsPersonId ==. Just pId
+                                               , NewsDismissed ==. False ] )
+                                         [ Desc NewsDate ]
     let parsedMessages = parseNewsEntities loadedMessages
     render <- getUrlRender
     let userIcons = userNewsIconMapper render

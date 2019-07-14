@@ -8,7 +8,7 @@ module Simulation.Status ( removeExpiredStatuses )
 
 import Import
 import CustomTypes ( PlanetaryStatus(..), StarDate )
-import News.Data ( ProductionChangedNews(..), NewsArticle(..), mkNews )
+import News.Data ( ProductionChangedNews(..), NewsArticle(..), mkFactionNews )
 import Resources ( ResourceType(..) )
 
 
@@ -74,13 +74,13 @@ boostEnded :: (SemiSequence seq1, SemiSequence seq2,
     Element seq1 ~ Entity Planet, Element seq2 ~ Entity StarSystem) =>
     seq1 -> seq2 -> StarDate -> Key Planet -> ResourceType -> StatusType -> Maybe News
 boostEnded planets systems date pId resource sType =
-        mkNews <$> fId
-               <*> Just date
-               <*> case sType of
-                        Boost ->
-                            ProductionBoostEnded <$> content
-                        Slowdown ->
-                            ProductionSlowdownEnded <$> content
+        mkFactionNews <$> fId
+                      <*> Just date
+                      <*> case sType of
+                            Boost ->
+                                ProductionBoostEnded <$> content
+                            Slowdown ->
+                                ProductionSlowdownEnded <$> content
     where
         content =  ProductionChangedNews
                         <$> fmap entityKey planet

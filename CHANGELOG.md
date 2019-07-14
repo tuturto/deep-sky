@@ -12,7 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Relation` to represent relations between people
 - `Dynasty` to represent dynasties
 - `Marriage` to represent engagements and marriages
+- `Errors` module for common error codes and returning them to client
+- Started using `Data.Either.Validation` for message validation
+- People can have pets
+- Added immediate events that are resolved as soon as choice has been made
+- Added `Markov` module for working with markov chains
+- Added `Names` module for generating names with markov chains
 ### Changed
+- `News` can now be targeted to faction or specific person
 - planet can have ruler
 - planet report JSON result has all keys starting with uppercase
 - star system can have ruler

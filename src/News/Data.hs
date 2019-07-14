@@ -5,11 +5,13 @@
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE LambdaCase             #-}
 
 module News.Data ( NewsArticle(..), UserNewsIcon(..), StarFoundNews(..)
                  , PlanetFoundNews(..), UserWrittenNews(..), DesignCreatedNews(..)
                  , ConstructionFinishedNews(..), SpecialNews(..), ProductionChangedNews(..)
-                 , ResearchCompletedNews(..), mkNews, mkSpecialNews
+                 , ResearchCompletedNews(..), mkFactionNews, mkFactionSpecialNews
+                 , mkPersonalNews, mkPersonalSpecialNews, resolveType
                  )
     where
 
@@ -23,10 +25,16 @@ import Dto.News ( NewsDto(..), NewsArticleDto(..), StarFoundNewsDto(..), PlanetF
                 , UserWrittenNewsDto(..), DesignCreatedNewsDto(..), ConstructionFinishedNewsDto(..)
                 , UserNewsIconDto(..), SpecialNewsDto(..), KragiiWormsEventDto(..)
                 , ProductionChangedNewsDto(..), ResearchCompletedNewsDto(..)
+                , ScurryingSoundsEventDto(..), NamingPetEventDto(..), UserOptionDto(..)
+                , NamingPetChoiceDto(..)
                 )
-import Events.Import ( UserOption(..) )
+import Events.Import ( UserOption(..), EventResolveType(..) )
+import qualified Events.Import as EI ( resolveType )
 import Events.Kragii ( KragiiWormsEvent(..), KragiiWormsChoice(..), KragiiNews(..) )
-import People.Data ( PersonName )
+import Events.Pets ( ScurryingSoundsEvent(..), ScurryingSoundsChoice(..), ScurryingSoundsNews(..)
+                   , NamingPetEvent(..), NamingPetChoice(..), NamingPetNews(..)
+                   )
+import People.Data ( PersonName, PetName )
 import Research.Data ( Technology, Research(..) )
 import Research.Tree ( techMap )
 import Resources ( ResourceType )
@@ -45,6 +53,8 @@ data NewsArticle =
     | ProductionSlowdownEnded ProductionChangedNews
     | ResearchCompleted ResearchCompletedNews
     | KragiiResolution KragiiNews
+    | ScurryingSoundsResolution ScurryingSoundsNews
+    | NamingPetResolution NamingPetNews
     | Special SpecialNews
 
 
@@ -296,6 +306,12 @@ instance FromDto NewsArticle NewsArticleDto where
             KragiiDto content ->
                 KragiiResolution $ fromDto content
 
+            ScurryingSoundsDto content ->
+                ScurryingSoundsResolution $ fromDto content
+
+            NamingPetDto content ->
+                NamingPetResolution $ fromDto content
+
             SpecialDto content ->
                 Special $ fromDto content
 
@@ -314,12 +330,34 @@ instance ToDto NewsArticle NewsArticleDto where
             (ProductionSlowdownEnded x) -> ProductionSlowdownEndedDto $ toDto x
             (ResearchCompleted x) -> ResearchCompletedDto $ toDto x
             (KragiiResolution x) -> KragiiDto $ toDto x
+            (ScurryingSoundsResolution x) -> ScurryingSoundsDto $ toDto x
+            (NamingPetResolution x) -> NamingPetDto $ toDto x
             (Special x) -> SpecialDto $ toDto x
 
 
 -- | Special news that require player interaction
-data SpecialNews = KragiiWorms KragiiWormsEvent [UserOption KragiiWormsChoice] (Maybe KragiiWormsChoice)
+data SpecialNews
+    = KragiiWorms KragiiWormsEvent [UserOption KragiiWormsChoice] (Maybe KragiiWormsChoice)
+    | ScurryingSounds ScurryingSoundsEvent [(UserOption ScurryingSoundsChoice)] (Maybe ScurryingSoundsChoice)
+    | NamingPet NamingPetEvent [(UserOption NamingPetChoice)] (Maybe NamingPetChoice)
     deriving (Show, Read, Eq)
+
+
+-- | How event in special news is resolved
+resolveType :: NewsArticle -> Maybe EventResolveType
+resolveType (Special article) =
+    case article of
+        (KragiiWorms event _ _) ->
+            Just $ EI.resolveType event
+
+        (ScurryingSounds event _ _) ->
+            Just $ EI.resolveType event
+
+        (NamingPet event _ _) ->
+            Just $ EI.resolveType event
+
+resolveType _ =
+    Nothing
 
 
 instance ToDto SpecialNews SpecialNewsDto where
@@ -331,7 +369,29 @@ instance ToDto SpecialNews SpecialNewsDto where
             , kragiiWormsDtoSystemName = kragiiWormsSystemName event
             , kragiiWormsDtoOptions = fmap toDto options
             , kragiiWormsDtoChoice = fmap toDto choice
+            , kragiiWormsDtoFactionId = kragiiWormsFactionId event
             , kragiiWormsDtoDate = kragiiWormsDate event
+            , kragiiWormsDtoResolveType = Just $ EI.resolveType event
+            }
+
+    toDto (ScurryingSounds event options choice) =
+        MkScurryingSoundsEventDto $ ScurryingSoundsEventDto
+            { scurryingSoundsEventDtoPersonId = scurryingSoundsEventPersonId event
+            , scurryingSoundsEventDtoDate = scurryingSoundsEventDate event
+            , scurryingSoundsEventDtoOptions = toDto <$> options
+            , scurryingSoundsEventDtoChoice = toDto <$> choice
+            , scurryingSoundsEventDtoResolveType = Just $ EI.resolveType event
+            }
+
+    toDto (NamingPet event options choice) =
+        MkNamingPetEventDto $ NamingPetEventDto
+            { namingPetEventDtoPersonId = namingPetEventPersonId event
+            , namingPetEventDtoPetId = namingPetEventPetId event
+            , namingPetEventDtoPetType = namingPetEventPetType event
+            , namingPetEventDtoDate = namingPetEventDate event
+            , namingPetEventDtoOptions = toDto <$> options
+            , namingPetEventDtoChoice = toDto <$> choice
+            , namingPetEventDtoResolveType = Just $ EI.resolveType event
             }
 
 
@@ -342,10 +402,39 @@ instance FromDto SpecialNews SpecialNewsDto where
                         , kragiiWormsPlanetName = kragiiWormsDtoPlanetName dto
                         , kragiiWormsSystemId = kragiiWormsDtoSystemId dto
                         , kragiiWormsSystemName = kragiiWormsDtoSystemName dto
+                        , kragiiWormsFactionId = kragiiWormsDtoFactionId dto
                         , kragiiWormsDate = kragiiWormsDtoDate dto
                         } )
                     []
                     (fromDto <$> kragiiWormsDtoChoice dto)
+
+    fromDto (MkScurryingSoundsEventDto dto) =
+        ScurryingSounds ( ScurryingSoundsEvent
+                            { scurryingSoundsEventPersonId = scurryingSoundsEventDtoPersonId dto
+                            , scurryingSoundsEventDate = scurryingSoundsEventDtoDate dto } )
+                        []
+                        (fromDto <$> scurryingSoundsEventDtoChoice dto)
+
+    fromDto (MkNamingPetEventDto dto) =
+        NamingPet ( NamingPetEvent
+                    { namingPetEventPersonId = namingPetEventDtoPersonId dto
+                    , namingPetEventPetId = namingPetEventDtoPetId dto
+                    , namingPetEventPetType = namingPetEventDtoPetType dto
+                    , namingPetEventDate = namingPetEventDtoDate dto
+                    , namingPetNameOptions =  mapMaybe foo (namingPetEventDtoOptions dto)
+                    } )
+                  []
+                  (fromDto <$> namingPetEventDtoChoice dto)
+
+
+foo :: UserOptionDto NamingPetChoiceDto -> Maybe PetName
+foo dto =
+    case userOptionDtoChoice dto of
+        GiveNameDto name ->
+            Just name
+
+        LetSomeoneElseDecideDto ->
+            Nothing
 
 
 -- | Icon for user created news
@@ -383,10 +472,23 @@ instance FromDto UserNewsIcon UserNewsIconDto where
 
 
 -- | Helper function for creating News that aren't special events and haven't been dismissed
-mkNews :: Key Faction -> StarDate -> NewsArticle -> News
-mkNews fId date content =
+mkFactionNews :: Key Faction -> StarDate -> NewsArticle -> News
+mkFactionNews fId date content =
     News { newsContent = toStrict $ encodeToLazyText content
-         , newsFactionId = fId
+         , newsFactionId = Just fId
+         , newsPersonId = Nothing
+         , newsDate = date
+         , newsDismissed = False
+         , newsSpecialEvent = NoSpecialEvent
+         }
+
+
+-- | Helper function for creating News that aren't special events and haven't been dismissed
+mkPersonalNews :: Key Person -> StarDate -> NewsArticle -> News
+mkPersonalNews pId date content =
+    News { newsContent = toStrict $ encodeToLazyText content
+         , newsFactionId = Nothing
+         , newsPersonId = Just pId
          , newsDate = date
          , newsDismissed = False
          , newsSpecialEvent = NoSpecialEvent
@@ -394,10 +496,23 @@ mkNews fId date content =
 
 
 -- | Helper function for creating News that are special events and haven't been handled
-mkSpecialNews :: StarDate -> Key Faction -> SpecialNews -> News
-mkSpecialNews date fId content =
+mkFactionSpecialNews :: StarDate -> Key Faction -> SpecialNews -> News
+mkFactionSpecialNews date fId content =
     News { newsContent = toStrict $ encodeToLazyText $ Special content
-         , newsFactionId = fId
+         , newsFactionId = Just fId
+         , newsPersonId = Nothing
+         , newsDate = date
+         , newsDismissed = False
+         , newsSpecialEvent = UnhandledSpecialEvent
+         }
+
+
+-- | Helper function for creating News that are special events and haven't been handled
+mkPersonalSpecialNews :: StarDate -> Key Person -> SpecialNews -> News
+mkPersonalSpecialNews date pId content =
+    News { newsContent = toStrict $ encodeToLazyText $ Special content
+         , newsFactionId = Nothing
+         , newsPersonId = Just pId
          , newsDate = date
          , newsDismissed = False
          , newsSpecialEvent = UnhandledSpecialEvent

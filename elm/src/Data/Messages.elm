@@ -1,20 +1,24 @@
 module Data.Messages exposing
     ( BuildingFinishedNews
     , DesignCreatedNews
+    , EventResolveType(..)
     , KragiiResolution
     , KragiiSpecialEvent
+    , NamingPetResolution
+    , NamingPetSpecialEvent
     , NewsArticle
     , NewsContent(..)
     , PlanetFoundNews
     , ProductionChangeNews
     , ResearchCompletedNews
+    , ScurryingSoundsResolution
+    , ScurryingSoundsSpecialEvent
     , ShipFinishedNews
     , SpecialEventChoice(..)
     , SpecialEventOption
     , StarFoundNews
     , UserIcon(..)
     , UserWrittenNews
-    , unSpecialEventChoice
     )
 
 import Data.Common
@@ -23,6 +27,8 @@ import Data.Common
         , DesignId
         , FactionId
         , MessageId
+        , PersonId
+        , PetId
         , PlanetId
         , PlanetName
         , ResourceType
@@ -33,7 +39,7 @@ import Data.Common
         , StarSystemName
         , UserId
         )
-import Data.People exposing (PersonName)
+import Data.People exposing (PersonName, PetType)
 import Data.User exposing (UserName)
 import Data.Vehicles exposing (DesignName)
 
@@ -45,6 +51,7 @@ type alias NewsArticle =
     , content : NewsContent
     , options : List SpecialEventOption
     , choice : Maybe SpecialEventChoice
+    , resolveType : Maybe EventResolveType
     }
 
 
@@ -62,6 +69,10 @@ type NewsContent
     | ResearchCompleted ResearchCompletedNews
     | KragiiEvent KragiiSpecialEvent
     | KragiiResolved KragiiResolution
+    | ScurryingSoundsEvent ScurryingSoundsSpecialEvent
+    | ScurryingSoundsResolved ScurryingSoundsResolution
+    | NamingPetEvent NamingPetSpecialEvent
+    | PetNamingResolved NamingPetResolution
 
 
 type alias StarFoundNews =
@@ -131,6 +142,7 @@ type alias KragiiSpecialEvent =
     , planetId : PlanetId
     , systemName : StarSystemName
     , systemId : StarSystemId
+    , factionId : FactionId
     }
 
 
@@ -143,6 +155,32 @@ type alias KragiiResolution =
     }
 
 
+type alias ScurryingSoundsSpecialEvent =
+    { personId : PersonId
+    }
+
+
+type alias ScurryingSoundsResolution =
+    { petId : Maybe PetId
+    , petType : Maybe PetType
+    , report : String
+    }
+
+
+type alias NamingPetSpecialEvent =
+    { personId : PersonId
+    , petId : PetId
+    , petType : PetType
+    }
+
+
+type alias NamingPetResolution =
+    { petId : PetId
+    , petType : PetType
+    , report : String
+    }
+
+
 type alias SpecialEventOption =
     { title : String
     , explanation : List String
@@ -150,16 +188,28 @@ type alias SpecialEventOption =
     }
 
 
+{-| There are three different structures of data for special event choice
+Simplest one is just string that is used when data in server is enumeration
+Tag only is used when there's value constructors present with parameters, but this one doesn't
+Tag and contents is for value constructor with parameters
+-}
 type SpecialEventChoice
-    = SpecialEventChoice String
-
-
-unSpecialEventChoice : SpecialEventChoice -> String
-unSpecialEventChoice (SpecialEventChoice x) =
-    x
+    = EnumOnly String
+    | TagOnly String
+    | TagAndContents String String
 
 
 type UserIcon
     = GenericUserNewsIcon
     | JubilationUserNewsIcon
     | CatUserNewsIcon
+
+
+{-| How soon after making choice a special event is resolved.
+Immediate events are resolved as soon as person has made a choice. In case
+person never makes a choice, event is resolved during turn simulation. Deferred
+events are always resolved during turn simulation.
+-}
+type EventResolveType
+    = ImmediateEvent
+    | DelayedEvent

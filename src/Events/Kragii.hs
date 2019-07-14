@@ -6,8 +6,10 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE FlexibleInstances          #-}
 
-module Events.Kragii ( KragiiWormsEvent(..), KragiiWormsChoice(..), KragiiResults(..)
-                     , KragiiNews(..) )
+module Events.Kragii
+    ( KragiiWormsEvent(..), KragiiWormsChoice(..), KragiiResults(..)
+    , KragiiNews(..) )
+
     where
 
 
@@ -20,17 +22,20 @@ import Common ( ToDto(..), FromDto(..) )
 import CustomTypes ( PercentileChance(..), RollResult(..), PlanetaryStatus(..)
                    , StarDate, roll )
 import Dto.News ( KragiiWormsChoiceDto(..), UserOptionDto(..), KragiiNewsDto(..) )
-import Events.Import ( SpecialEvent(..), EventRemoval(..), UserOption(..) )
+import Events.Creation ( EventCreation(..) )
+import Events.Import ( SpecialEvent(..), EventRemoval(..), UserOption(..)
+                     , EventResolveType(..) )
 import Resources ( RawResource(..), Biological(..) )
 
 
 -- | Data for kragii worms attack
 data KragiiWormsEvent = KragiiWormsEvent
-    { kragiiWormsPlanetId :: Key Planet
-    , kragiiWormsPlanetName :: Text
-    , kragiiWormsSystemId :: Key StarSystem
-    , kragiiWormsSystemName :: Text
-    , kragiiWormsDate :: StarDate
+    { kragiiWormsPlanetId :: !(Key Planet)
+    , kragiiWormsPlanetName :: !Text
+    , kragiiWormsSystemId :: !(Key StarSystem)
+    , kragiiWormsSystemName :: !Text
+    , kragiiWormsFactionId :: !(Key Faction)
+    , kragiiWormsDate :: !StarDate
     }
     deriving (Show, Read, Eq)
 
@@ -39,7 +44,7 @@ data KragiiWormsEvent = KragiiWormsEvent
 data KragiiWormsChoice = EvadeWorms
     | AttackWorms
     | TameWorms
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Enum, Bounded)
 
 
 -- | Results of resolving kragii attack
@@ -54,12 +59,13 @@ data KragiiResults =
 
 -- | data for kragii attack resolution
 data KragiiNews = KragiiNews
-    { kragiiNewsPlanetId :: Key Planet
-    , kragiiNewsPlanetName :: Text
-    , kragiiNewsSystemId :: Key StarSystem
-    , kragiiNewsSystemName :: Text
-    , kragiiNewsExplanation :: Text
-    , kragiiNewsDate :: StarDate
+    { kragiiNewsPlanetId :: !(Key Planet)
+    , kragiiNewsPlanetName :: !Text
+    , kragiiNewsSystemId :: !(Key StarSystem)
+    , kragiiNewsSystemName :: !Text
+    , kragiiNewsExplanation :: !Text
+    , kragiiNewsFactionId :: !(Key Faction)
+    , kragiiNewsDate :: !StarDate
     }
     deriving (Show, Read, Eq)
 
@@ -89,6 +95,9 @@ instance SpecialEvent KragiiWormsEvent KragiiWormsChoice KragiiResults where
                                   }
                      ]
 
+    resolveType _ =
+        DelayedEvent
+
     resolveEvent keyEventPair (Just choice) =
         runWriterT . runMaybeT $
             case choice of
@@ -110,7 +119,8 @@ instance SpecialEvent KragiiWormsEvent KragiiWormsChoice KragiiResults where
 -- involved and will lead to somewhat smaller crop output while worms are present.
 -- Given enough time, they should naturally move on.
 chooseToAvoid :: (MonadIO m, PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
-                 (Key News, KragiiWormsEvent) -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) EventRemoval
+                 (Key News, KragiiWormsEvent)
+                 -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) (EventRemoval, [EventCreation])
 chooseToAvoid (_, event) = do
     faction <- getFaction event
     (cost, bioLeft) <- calculateNewBio (RawResource 50) (entityVal faction)
@@ -123,7 +133,8 @@ chooseToAvoid (_, event) = do
 -- rid of them. Some of the crops might be destroyed as a result of chemicals used
 -- in the attack.
 chooseToAttack :: (MonadIO m, PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
-                  (Key News, KragiiWormsEvent) -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) EventRemoval
+                  (Key News, KragiiWormsEvent)
+                  -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) (EventRemoval, [EventCreation])
 chooseToAttack (_, event) = do
     faction <- getFaction event
     (cost, bioLeft) <- calculateNewBio (RawResource 20) (entityVal faction)
@@ -137,7 +148,8 @@ chooseToAttack (_, event) = do
 -- attacked. While this is potentially dangerous to people involved, it can
 -- yield much more nutrient soil and thus higher crop output
 chooseToTame :: (MonadIO m, PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
-                (Key News, KragiiWormsEvent) -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) EventRemoval
+                (Key News, KragiiWormsEvent)
+                -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) (EventRemoval, [EventCreation])
 chooseToTame (_, event) = do
     -- TODO: proper implementation
     faction <- getFaction event
@@ -152,7 +164,8 @@ chooseToTame (_, event) = do
 -- use up 100 units of biological resources. There's chance that worms
 -- will eventually leave all by themselves.
 noChoice :: (MonadIO m, PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
-            (Key News, KragiiWormsEvent) -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) EventRemoval
+            (Key News, KragiiWormsEvent)
+            -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) (EventRemoval, [EventCreation])
 noChoice (_, event) = do
     faction <- getFaction event
     (cost, bioLeft) <- calculateNewBio (RawResource 100) (entityVal faction)
@@ -162,7 +175,8 @@ noChoice (_, event) = do
 
 -- | retrieve current owner (faction) of planet where kragii attack is in progress
 getFaction :: ( MonadIO m, PersistStoreRead backend, BaseBackend backend ~ SqlBackend ) =>
-              KragiiWormsEvent -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) (Entity Faction)
+              KragiiWormsEvent
+              -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) (Entity Faction)
 getFaction event = MaybeT $ do
     planet <- lift $ get $ kragiiWormsPlanetId event
     let owner = planet >>= planetOwnerId
@@ -173,7 +187,9 @@ getFaction event = MaybeT $ do
 -- | Amount of biological resources left after consuming given amount
 -- first element of the tuple is cost and second one amount left after applying cost
 calculateNewBio :: Monad m =>
-                   RawResource Biological -> Faction -> MaybeT (WriterT [KragiiResults] m) (RawResource Biological, RawResource Biological)
+                   RawResource Biological
+                   -> Faction
+                   -> MaybeT (WriterT [KragiiResults] m) (RawResource Biological, RawResource Biological)
 calculateNewBio cost faction = MaybeT $ do
     let currentBio = factionBiologicals faction
     return $ if currentBio > 0
@@ -185,7 +201,8 @@ calculateNewBio cost faction = MaybeT $ do
 -- | Update biologicals stockpile of the faction that is target of kragii attack
 destroyCrops :: ( MonadIO m, PersistQueryWrite backend, BaseBackend backend ~ SqlBackend ) =>
                 Entity Faction -> RawResource Biological
-                -> RawResource Biological -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) ()
+                -> RawResource Biological
+                -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) ()
 destroyCrops faction cost bioLeft = MaybeT $ do
     _ <- lift $ updateWhere [ FactionId ==. entityKey faction ]
                             [ FactionBiologicals =. bioLeft ]
@@ -196,7 +213,9 @@ destroyCrops faction cost bioLeft = MaybeT $ do
 -- | Roll a die and see if kragii worms are removed from play
 removeNews :: ( PersistStoreWrite backend, PersistQueryWrite backend, MonadIO m
               , BaseBackend backend ~ SqlBackend ) =>
-              KragiiWormsEvent -> PercentileChance -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) EventRemoval
+              KragiiWormsEvent
+              -> PercentileChance
+              -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) (EventRemoval, [EventCreation])
 removeNews event odds = MaybeT $ do
     res <- liftIO $ roll odds
     case res of
@@ -205,10 +224,10 @@ removeNews event odds = MaybeT $ do
                                     , PlanetStatusStatus ==. KragiiAttack
                                     ]
             _ <- tell [ WormsRemoved ]
-            return $ Just RemoveOriginalEvent
+            return $ Just (RemoveOriginalEvent, [])
         Failure -> do
             _ <- tell [ WormsStillPresent ]
-            return $ Just KeepOriginalEvent
+            return $ Just (KeepOriginalEvent, [])
 
 
 instance ToDto KragiiWormsChoice KragiiWormsChoiceDto where
@@ -244,6 +263,7 @@ instance ToDto KragiiNews KragiiNewsDto where
             , kragiiNewsDtoSystemId = kragiiNewsSystemId event
             , kragiiNewsDtoSystemName = kragiiNewsSystemName event
             , kragiiNewsDtoResolution = kragiiNewsExplanation event
+            , kragiiNewsDtoFactionId = kragiiNewsFactionId event
             , kragiiNewsDtoDate = kragiiNewsDate event
             }
 
@@ -256,6 +276,7 @@ instance FromDto KragiiNews KragiiNewsDto where
         , kragiiNewsSystemId = kragiiNewsDtoSystemId dto
         , kragiiNewsSystemName = kragiiNewsDtoSystemName dto
         , kragiiNewsExplanation = kragiiNewsDtoResolution dto
+        , kragiiNewsFactionId = kragiiNewsDtoFactionId dto
         , kragiiNewsDate = kragiiNewsDtoDate dto
         }
 

@@ -4,13 +4,17 @@
 {-# LANGUAGE FunctionalDependencies     #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE LambdaCase                 #-}
 
+module Events.Import
+    ( UserOption(..), SpecialEvent(..), EventRemoval(..), EventResolveType(..) )
 
-module Events.Import ( UserOption(..), SpecialEvent(..), EventRemoval(..) )
     where
 
 import Import
 import Data.Aeson.TH
+
+import Events.Creation
 
 
 -- | General user option regarding a special event
@@ -32,11 +36,16 @@ class SpecialEvent a b c | a -> b, a-> c where
     -- | Options available for user when this special event occurs
     eventOptions :: a -> [UserOption b]
 
+    -- | Is event resolved as soon as choice is made or when simulation is run
+    resolveType :: a -> EventResolveType
+
     -- | Resolve special event according to choice the user made
     -- Function returns a list describing end result of resolution
     resolveEvent :: ( PersistQueryRead backend, PersistQueryWrite backend
                     , MonadIO m, BaseBackend backend ~ SqlBackend ) =>
-                    (Key News, a) -> Maybe b -> ReaderT backend m (Maybe EventRemoval, [c])
+                    (Key News, a)
+                    -> Maybe b
+                    -> ReaderT backend m (Maybe (EventRemoval, [EventCreation]), [c])
 
 
 -- | Should event which is currently being handled removed from database
@@ -46,4 +55,12 @@ data EventRemoval =
     deriving (Show, Read, Eq)
 
 
+-- | Is event resolved as soon as choice has been made
+data EventResolveType =
+    ImmediateEvent
+    | DelayedEvent
+    deriving (Show, Read, Eq)
+
+
+$(deriveJSON defaultOptions ''EventResolveType)
 $(deriveJSON defaultOptions ''UserOption)

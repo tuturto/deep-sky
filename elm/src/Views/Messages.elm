@@ -36,15 +36,15 @@ import Data.Common
         )
 import Data.Messages
     exposing
-        ( NewsArticle
+        ( EventResolveType(..)
+        , NewsArticle
         , NewsContent(..)
-        , SpecialEventChoice
+        , SpecialEventChoice(..)
         , SpecialEventOption
         , UserIcon(..)
-        , unSpecialEventChoice
         )
 import Data.Model exposing (Model, Msg(..))
-import Data.People exposing (displayName)
+import Data.People exposing (displayName, petTypeToString)
 import Data.User exposing (Role(..), unUserName)
 import Data.Vehicles exposing (unDesignName)
 import Html
@@ -155,9 +155,20 @@ newsEntry article =
             [ div [ class "row" ]
                 [ div [ class "col-lg-11" ]
                     [ ul [ class "news-title" ]
-                        [ li [] [ starDateToText <| Just article.starDate ]
-                        , li [] [ newsTitle article ]
-                        ]
+                        ([ li [] [ starDateToText <| Just article.starDate ]
+                         , li [] [ newsTitle article ]
+                         ]
+                            ++ (case article.resolveType of
+                                    Just ImmediateEvent ->
+                                        [ li [] [ i [ class "fas fa-exclamation-triangle" ] [] ] ]
+
+                                    Just DelayedEvent ->
+                                        []
+
+                                    Nothing ->
+                                        []
+                               )
+                        )
                     ]
                 , div [ class "col-lg-1" ]
                     [ i [ class "fas fa-trash-alt news-title-button", onClick (NewsMessage <| NewsEntryDismissed article) ] [] ]
@@ -194,8 +205,29 @@ optionSelection article option =
     let
         currentlySelected =
             case article.choice of
-                Just x ->
-                    unSpecialEventChoice x == unSpecialEventChoice option.choice
+                Just (EnumOnly s) ->
+                    case option.choice of
+                        EnumOnly x ->
+                            s == x
+
+                        _ ->
+                            False
+
+                Just (TagOnly s) ->
+                    case option.choice of
+                        TagOnly x ->
+                            s == x
+
+                        _ ->
+                            False
+
+                Just (TagAndContents _ s) ->
+                    case option.choice of
+                        TagAndContents _ x ->
+                            s == x
+
+                        _ ->
+                            False
 
                 Nothing ->
                     False
@@ -274,6 +306,18 @@ newsTitle article =
 
         ResearchCompleted _ ->
             text "Research completed"
+
+        ScurryingSoundsEvent _ ->
+            text "Scurrying sounds inside walls"
+
+        ScurryingSoundsResolved _ ->
+            text "What's going on with those scurrying sounds?"
+
+        NamingPetEvent details ->
+            text ("Giving a name to your " ++ petTypeToString details.petType)
+
+        PetNamingResolved details ->
+            text ("Giving a name to your " ++ petTypeToString details.petType)
 
 
 {-| Create body of news article
@@ -410,6 +454,19 @@ newsBody article =
 
         ResearchCompleted details ->
             [ text <| "Research of " ++ details.name ++ " has been completed." ]
+
+        ScurryingSoundsEvent _ ->
+            [ text "Recently you have been hearing scurrying sounds inside walls of your living quarters. Seems that there might be rats there." ]
+
+        -- TODO: link to pet
+        ScurryingSoundsResolved details ->
+            [ text details.report ]
+
+        NamingPetEvent details ->
+            [ text <| "You have been thinking that maybe your " ++ petTypeToString details.petType ++ " needs a name." ]
+
+        PetNamingResolved details ->
+            [ text details.report ]
 
 
 {-| Render right side of the page

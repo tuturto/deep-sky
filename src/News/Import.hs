@@ -1,7 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE RecordWildCards       #-}
 
-module News.Import ( parseNewsEntities, userWrittenNews
+module News.Import ( parseNewsEntities, userWrittenNews, parseNews
                    , planetFoundNews, starFoundNews, designCreatedNews
                    , buildingConstructionFinishedNews, iconMapper, userNewsIconMapper
                    , productionChangeEndedIconMapper, iconInfo, productionBoostStartedNews
@@ -18,13 +19,16 @@ import CustomTypes ( StarDate )
 import Dto.Icons ( IconMapper(..) )
 import Dto.News ( NewsArticleDto(..), UserWrittenNewsDto(..), UserNewsIconDto(..)
                 , SpecialNewsDto(..), ProductionChangedNewsDto(..)
+                , ScurryingSoundsNewsDto(..), NamingPetEventDto(..)
+                , NamingPetNewsDto(..)
                 )
 import Events.Import ( eventOptions )
 import News.Data ( NewsArticle(..), ConstructionFinishedNews(..), DesignCreatedNews(..)
                  , PlanetFoundNews(..), StarFoundNews(..), UserWrittenNews(..)
                  , UserNewsIcon(..), SpecialNews(..), ProductionChangedNews(..)
-                 , ResearchCompletedNews(..), mkNews
+                 , ResearchCompletedNews(..), mkFactionNews
                  )
+import People.Data ( PetType(..) )
 import Research.Data ( Technology )
 import Resources ( ResourceType(..) )
 
@@ -68,6 +72,12 @@ availableOptions x =
     case x of
         KragiiWorms event _ choice ->
             KragiiWorms event (eventOptions event) choice
+
+        ScurryingSounds event _ choice ->
+            ScurryingSounds event (eventOptions event) choice
+
+        NamingPet event _ choice ->
+            NamingPet event (eventOptions event) choice
 
 
 -- | Use passed url render function to return link to news article's icon
@@ -130,6 +140,34 @@ iconMapper render userIconMapper changeIconMapper =
             KragiiDto _ ->
                 render $ StaticR images_news_hydra_png
 
+            ScurryingSoundsDto (ScurryingSoundsNewsDto {..}) ->
+                case scurryingSoundsNewsDtoPetType of
+                    Just pType ->
+                        (render . petTypeToIconRoute) pType
+
+                    Nothing ->
+                        render $ StaticR images_news_box_trap_png
+
+            NamingPetDto (NamingPetNewsDto {..}) ->
+                render $ petTypeToIconRoute namingPetNewsDtoPetType
+
+            SpecialDto (MkScurryingSoundsEventDto _) ->
+                render $ StaticR images_news_human_ear_png
+
+            SpecialDto (MkNamingPetEventDto event) ->
+                (render . petTypeToIconRoute . namingPetEventDtoPetType) event
+
+
+-- | Map pet type to route to respective news icon
+petTypeToIconRoute :: PetType -> Route App
+petTypeToIconRoute =
+    \case
+        Cat ->
+            StaticR images_news_cat_png
+
+        Rat ->
+            StaticR images_news_rat_png
+
 
 -- | Get url to image corresponding to icon selection in user news
 userNewsIconMapper :: (Route App -> Text) -> IconMapper UserNewsIconDto
@@ -172,7 +210,7 @@ userWrittenNews msg icon date person =
     let
         content = UserWritten $ UserWrittenNews msg icon date (personName person)
     in
-        mkNews (fromJust $ Nothing) date content
+        mkFactionNews (fromJust $ Nothing) date content
 
 
 -- | Construct news entry for discovery of new planet
@@ -183,7 +221,7 @@ planetFoundNews planetEnt system date fId =
         planetKey = entityKey planetEnt
         content = PlanetFound $ PlanetFoundNews (planetName planet) (starSystemName system) (planetStarSystemId planet) planetKey date
     in
-        mkNews fId date content
+        mkFactionNews fId date content
 
 
 -- | Construct news entry for discovery of new star
@@ -194,7 +232,7 @@ starFoundNews star systemEnt date fId =
         systemId = entityKey systemEnt
         content = StarFound $ StarFoundNews (starName star) (starSystemName system) systemId date
     in
-        mkNews fId date content
+        mkFactionNews fId date content
 
 
 -- | Construct news entry for creation of new space ship desgin
@@ -205,7 +243,7 @@ designCreatedNews design date fId =
         name = designName $ entityVal design
         content = DesignCreated $ DesignCreatedNews dId name date
     in
-        mkNews fId date content
+        mkFactionNews fId date content
 
 
 -- | Construct news entry for a finished building construction
@@ -224,7 +262,7 @@ buildingConstructionFinishedNews planetE starSystemE buildingE date fId =
                     , constructionFinishedDate = date
                     }
     in
-        mkNews fId date content
+        mkFactionNews fId date content
 
 
 productionBoostStartedNews :: Entity Planet -> Entity StarSystem -> ResourceType -> StarDate -> Key Faction -> News
@@ -232,7 +270,7 @@ productionBoostStartedNews planet system rType date fId =
     let
         content = ProductionBoostStarted $ productionChanged planet system rType date
     in
-        mkNews fId date content
+        mkFactionNews fId date content
 
 
 productionSlowdownStartedNews :: Entity Planet -> Entity StarSystem -> ResourceType -> StarDate -> Key Faction -> News
@@ -240,7 +278,7 @@ productionSlowdownStartedNews planet system rType date fId =
     let
         content = ProductionSlowdownStarted $ productionChanged planet system rType date
     in
-        mkNews fId date content
+        mkFactionNews fId date content
 
 
 productionChanged :: Entity Planet -> Entity StarSystem -> ResourceType -> StarDate -> ProductionChangedNews
@@ -254,6 +292,7 @@ productionChanged planet system rType date =
         , productionChangedNewsDate = date
         }
 
+
 researchCompleted :: StarDate -> Key Faction -> Technology -> News
 researchCompleted date fId tech =
     let
@@ -262,4 +301,4 @@ researchCompleted date fId tech =
                     , researchCompletedNewsData = date
                     }
     in
-        mkNews fId date content
+        mkFactionNews fId date content

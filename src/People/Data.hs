@@ -16,7 +16,8 @@ module People.Data
     , Diplomacy(..), Martial(..), Stewardship(..), Intrique(..), Learning(..)
     , DemesneName(..), ShortTitle(..), LongTitle(..), RelationType(..)
     , RelationVisibility(..), DynastyName(..), MarriageStatus(..), TraitType(..)
-    , OpinionIntel(..), opinionIntelVisibility
+    , OpinionIntel(..), PetType(..), PetName(..), opinionIntelVisibility
+    , displayPetType
     )
     where
 
@@ -453,6 +454,53 @@ data TraitType =
     deriving (Show, Read, Eq, Ord, Enum, Bounded)
 
 
+data PetType =
+    Cat
+    | Rat
+    deriving (Show, Read, Eq, Ord, Enum, Bounded)
+
+
+displayPetType :: PetType -> Text
+displayPetType = \case
+    Cat ->
+        "cat"
+
+    Rat ->
+        "rat"
+
+
+newtype PetName = MkPetName { unPetName :: Text }
+    deriving (Show, Read, Eq)
+
+
+instance IsString PetName where
+    fromString = MkPetName . fromString
+
+
+instance ToJSON PetName where
+    toJSON = toJSON . unPetName
+
+
+instance FromJSON PetName where
+    parseJSON =
+        withText "pet name"
+            (\x -> return $ MkPetName x)
+
+instance PersistField PetName where
+    toPersistValue (MkPetName s) =
+        PersistText s
+
+    fromPersistValue (PersistText s) =
+        Right $ MkPetName s
+
+    fromPersistValue _ =
+        Left "Failed to deserialize"
+
+
+instance PersistFieldSql PetName where
+    sqlType _ = SqlString
+
+
 derivePersistField "PersonName"
 derivePersistField "Sex"
 derivePersistField "Gender"
@@ -461,6 +509,7 @@ derivePersistField "RelationType"
 derivePersistField "RelationVisibility"
 derivePersistField "MarriageStatus"
 derivePersistField "TraitType"
+derivePersistField "PetType"
 
 $(deriveJSON defaultOptions ''Sex)
 $(deriveJSON defaultOptions ''Gender)
@@ -470,3 +519,4 @@ $(deriveJSON defaultOptions ''RelationVisibility)
 $(deriveJSON defaultOptions ''MarriageStatus)
 $(deriveJSON defaultOptions ''OpinionIntel) -- TODO: hand written instance?
 $(deriveJSON defaultOptions ''TraitType)
+$(deriveJSON defaultOptions ''PetType)

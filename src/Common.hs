@@ -8,12 +8,13 @@
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
               , FromDto(..), ToDto(..), apiNotFound, apiInvalidArgs, apiInternalError, apiOk
               , safeHead, apiForbidden, mkUniq, choose, getR, apiError, entityValL, entityKeyL
-              , Frequency(..), clamp )
+              , Frequency(..), clamp, safeTail, chooseM )
     where
 
 import Import
 import qualified Prelude as P ( (!!), length )
 import Control.Lens ( Lens', lens )
+import Control.Monad.Random ( Rand, getRandomR, runRand )
 import Data.Set
 import qualified Data.List as List
 import System.Random
@@ -32,6 +33,12 @@ maybeGet i col
 safeHead :: [a] -> Maybe a
 safeHead (x:_) = Just x
 safeHead _ = Nothing
+
+
+-- | Get tail of a list, if list is empty, return empty list
+safeTail :: [a] -> [a]
+safeTail [] = []
+safeTail (_:xs) = xs
 
 
 chooseOne :: a -> a -> IO a
@@ -200,18 +207,30 @@ data Frequency a = Frequency Int a
 
  -- | Randomly choose item from weighted list
  -- In case of empty list, Nothing is returned
-choose :: [Frequency a] -> IO (Maybe a)
-choose [] =
+chooseM :: RandomGen g => [Frequency a] -> Rand g (Maybe a)
+chooseM [] =
     return Nothing
 
-choose items =
-    pick items <$> randomRIO (1, total)
-    where
-        total = sum $ fmap (\(Frequency x _) -> x) items
-        pick [] _ = Nothing
-        pick (Frequency x item:xs) n
-            | n <= x = Just item
-            | otherwise = pick xs (n - x)
+chooseM items = do
+    let total = sum $ fmap (\(Frequency x _) -> x) items
+    n <- getRandomR (1, total)
+    return $ pick items n
+
+
+-- | Randomly choose item from weighted list
+ -- In case of empty list, Nothing is returned
+choose :: RandomGen g => [Frequency a] -> g -> (Maybe a, g)
+choose s g =
+    runRand (chooseM s) g
+
+
+-- | Helper function to pick item from weighted list
+pick :: [Frequency a] -> Int -> Maybe a
+pick [] _ = Nothing
+
+pick (Frequency x item:xs) i
+    | i <= x = Just item
+    | otherwise = pick xs (i - x)
 
 
 -- | get n unique entries from given list in random order
