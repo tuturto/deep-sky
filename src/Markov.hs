@@ -148,12 +148,7 @@ chains config g =
 -- Empty list denotes end of chain
 candidates :: (Ord a) => Config a -> a -> [Frequency (Maybe a)]
 candidates config x =
-    case (fmap . fmap) itemToFreq items of
-        Nothing ->
-            []
-
-        Just freqs ->
-            freqs
+    concat $ (fmap . fmap) itemToFreq items
     where
         items = M.lookup x (configContinuations config)
 
