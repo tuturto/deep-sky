@@ -141,7 +141,7 @@ chains :: (Ord a, RandomGen g) => Config a -> g -> [[a]]
 chains config g =
         c : chains config g'
     where
-        (c, g') = runRand (chainM config) g
+        (c, g') = chain config g
 
 
 -- | All possible continuations of given chain
