@@ -106,6 +106,7 @@ tests:
     - QuickCheck
     - test-invariant >=0.4.5.0 && < 0.4.6.0
     - quickcheck-instances
+    - lens-aeson >=1.0.2 && < 1.1.0
 
 # Define flags used by "yesod devel" to make compilation faster
 flags:

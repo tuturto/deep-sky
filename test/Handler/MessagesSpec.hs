@@ -5,7 +5,11 @@ module Handler.MessagesSpec (spec)
     where
 
 import TestImport
+import Control.Lens ( (^?), _Just, _head )
+import Data.Aeson ( Value(..), decode )
+import Data.Aeson.Lens ( _Array, _String, _Integer, key )
 import Database.Persist.Sql (toSqlKey)
+import Network.Wai.Test ( SResponse(..) )
 
 import Handler.Helpers ( delete_, setupPerson )
 import News.Import ( researchCompleted )
@@ -25,7 +29,19 @@ spec = withApp $ do
             user <- createUser "Pete" (Just pId)
             authenticateAs user
             _ <- get ApiMessageR
-            bodyContains "ResearchCompleted"
+            resp <- getResponse
+            let jsonM = join (decode <$> simpleBody <$> resp) :: Maybe Value
+
+            assertEq "message tag"
+                     (jsonM ^? (_Just . _Array . _head . key "tag" . _String))
+                     (Just "ResearchCompleted")
+            assertEq "star date"
+                     (jsonM ^? (_Just . _Array . _head . key "starDate" . _Integer))
+                     (Just 25250)
+            assertEq "technology"
+                     (jsonM ^? (_Just . _Array . _head . key "contents" . key "Technology" . _String))
+                     (Just "HighSensitivitySensors")
+
             statusIs 200
 
         it "message marked deleted isn't loaded" $ do

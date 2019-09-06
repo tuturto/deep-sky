@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added immediate events that are resolved as soon as choice has been made
 - Added `Markov` module for working with markov chains
 - Added `Names` module for generating names with markov chains
+- Added `Data.Aeson.Lens` as a dependency
 ### Changed
 - `News` can now be targeted to faction or specific person
 - planet can have ruler
