@@ -13,6 +13,7 @@ import CustomTypes
 import QC.Generators.Common
 import QC.Generators.Database
 
+import Space.Data ( PlanetName(..) )
 
 singlePlanet :: Gen Planet
 singlePlanet = do
@@ -21,7 +22,7 @@ singlePlanet = do
     aStarSystemId <- randomStarSystemKey
     aOwnerId <- perhaps randomFactionKey
     aGravity <- arbitrary `suchThat` \x -> x > 0
-    return $ Planet aName aPosition aStarSystemId aOwnerId aGravity Nothing
+    return $ Planet (MkPlanetName aName) aPosition aStarSystemId aOwnerId aGravity Nothing
 
 singlePlanetEntity :: Gen (Entity Planet)
 singlePlanetEntity = do
@@ -42,7 +43,7 @@ singlePlanetReport = do
                 { cprId = aPlanetId
                 , cprSystemId = aStarSystemId
                 , cprOwnerId = aOwnerId
-                , cprName = aName
+                , cprName = MkPlanetName <$> aName
                 , cprPosition = aPosition
                 , cprGravity = aGravity
                 , cprDate = (unArbStarDate aDate)

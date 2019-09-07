@@ -38,6 +38,7 @@ import People.Data ( PersonName, PetName )
 import Research.Data ( Technology, Research(..) )
 import Research.Tree ( techMap )
 import Resources ( ResourceType )
+import Space.Data ( PlanetName(..), StarName(..), StarSystemName(..) )
 
 
 -- | All possible news articles
@@ -60,10 +61,10 @@ data NewsArticle =
 
 -- | News announcing discovery of a new star
 data StarFoundNews = StarFoundNews
-    { starFoundNewsStarName :: Text
-    , starFoundNewsSystemName :: Text
-    , starFoundNewsSystemId :: Key StarSystem
-    , starFoundNewsDate :: StarDate
+    { starFoundNewsStarName :: !StarName
+    , starFoundNewsSystemName :: !StarSystemName
+    , starFoundNewsSystemId :: !(Key StarSystem)
+    , starFoundNewsDate :: !StarDate
     }
 
 
@@ -87,11 +88,11 @@ instance FromDto StarFoundNews StarFoundNewsDto where
 
 -- | News announcing discovery of a new planet
 data PlanetFoundNews = PlanetFoundNews
-    { planetFoundNewsPlanetName :: Text
-    , planetFoundNewsSystemName :: Text
-    , planetFoundNewsSystemId :: Key StarSystem
-    , planetFoundNewsPlanetId :: Key Planet
-    , planetFoundNewsDate :: StarDate
+    { planetFoundNewsPlanetName :: !PlanetName
+    , planetFoundNewsSystemName :: !StarSystemName
+    , planetFoundNewsSystemId :: !(Key StarSystem)
+    , planetFoundNewsPlanetId :: !(Key Planet)
+    , planetFoundNewsDate :: !StarDate
     }
 
 
@@ -117,10 +118,10 @@ instance FromDto PlanetFoundNews PlanetFoundNewsDto where
 
 -- | User supplied news
 data UserWrittenNews = UserWrittenNews
-    { userWrittenNewsContent :: Text
-    , userWrittenNewsIcon :: UserNewsIcon
-    , userWrittenNewsDate :: StarDate
-    , userWrittenNewsUser :: PersonName
+    { userWrittenNewsContent :: !Text
+    , userWrittenNewsIcon :: !UserNewsIcon
+    , userWrittenNewsDate :: !StarDate
+    , userWrittenNewsUser :: !PersonName
     }
 
 
@@ -144,9 +145,9 @@ instance FromDto UserWrittenNews UserWrittenNewsDto where
 
 -- | News announcing creation of a new design
 data DesignCreatedNews = DesignCreatedNews
-    { designCreatedNewsDesignId :: Key Design
-    , designCreatedNewsName :: Text
-    , designCreatedDate :: StarDate
+    { designCreatedNewsDesignId :: !(Key Design)
+    , designCreatedNewsName :: !Text
+    , designCreatedDate :: !StarDate
     }
 
 
@@ -167,14 +168,14 @@ instance FromDto DesignCreatedNews DesignCreatedNewsDto where
 
 
 data ConstructionFinishedNews = ConstructionFinishedNews
-    { constructionFinishedNewsPlanetName :: Maybe Text
-    , constructionFinishedNewsPlanetId :: Maybe (Key Planet)
-    , constructionFinishedNewsSystemName :: Text
-    , constructionFinishedNewsSystemId :: Key StarSystem
-    , constructionFinishedConstructionName :: Text
-    , constructionFinishedBuildingId :: Maybe (Key Building)
-    , constructionFinishedShipId :: Maybe (Key Ship)
-    , constructionFinishedDate :: StarDate
+    { constructionFinishedNewsPlanetName :: !(Maybe PlanetName)
+    , constructionFinishedNewsPlanetId :: !(Maybe (Key Planet))
+    , constructionFinishedNewsSystemName :: !StarSystemName
+    , constructionFinishedNewsSystemId :: !(Key StarSystem)
+    , constructionFinishedConstructionName :: !Text
+    , constructionFinishedBuildingId :: !(Maybe (Key Building))
+    , constructionFinishedShipId :: !(Maybe (Key Ship))
+    , constructionFinishedDate :: !StarDate
     }
 
 
@@ -205,12 +206,12 @@ instance FromDto ConstructionFinishedNews ConstructionFinishedNewsDto where
 
 
 data ProductionChangedNews = ProductionChangedNews
-    { productionChangedNewsPlanetId :: Key Planet
-    , productionChangedNewsPlanetName :: Text
-    , productionChangedNewsSystemId :: Key StarSystem
-    , productionChangedNewsSystemName :: Text
-    , productionChangedNewsType :: ResourceType
-    , productionChangedNewsDate :: StarDate
+    { productionChangedNewsPlanetId :: !(Key Planet)
+    , productionChangedNewsPlanetName :: !PlanetName
+    , productionChangedNewsSystemId :: !(Key StarSystem)
+    , productionChangedNewsSystemName :: !StarSystemName
+    , productionChangedNewsType :: !ResourceType
+    , productionChangedNewsDate :: !StarDate
     }
 
 
@@ -237,8 +238,8 @@ instance FromDto ProductionChangedNews ProductionChangedNewsDto where
 
 
 data ResearchCompletedNews = ResearchCompletedNews
-    { researchCompletedNewsTechnology :: Technology
-    , researchCompletedNewsData :: StarDate
+    { researchCompletedNewsTechnology :: !Technology
+    , researchCompletedNewsData :: !StarDate
     }
 
 

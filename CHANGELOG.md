@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `Markov` module for working with markov chains
 - Added `Names` module for generating names with markov chains
 - Added `Data.Aeson.Lens` as a dependency
+- `PlanetName`, `StarName` and `StarSystemName` taken into use
 ### Changed
 - `News` can now be targeted to faction or specific person
 - planet can have ruler

@@ -15,6 +15,8 @@ spec = withApp $ do
     describe "Status handling"  $ do
         describe "Planet statuses"  $ do
             it "Expired planet statuses are removed and news created" $ do
+
+
                 sId <- runDB $ insert $ StarSystem
                         { starSystemName = "Aldebaraan"
                         , starSystemCoordX = 10

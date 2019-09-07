@@ -26,14 +26,15 @@ import Events.Creation ( EventCreation(..) )
 import Events.Import ( SpecialEvent(..), EventRemoval(..), UserOption(..)
                      , EventResolveType(..) )
 import Resources ( RawResource(..), Biological(..) )
+import Space.Data ( PlanetName(..), StarSystemName(..) )
 
 
 -- | Data for kragii worms attack
 data KragiiWormsEvent = KragiiWormsEvent
     { kragiiWormsPlanetId :: !(Key Planet)
-    , kragiiWormsPlanetName :: !Text
+    , kragiiWormsPlanetName :: !PlanetName
     , kragiiWormsSystemId :: !(Key StarSystem)
-    , kragiiWormsSystemName :: !Text
+    , kragiiWormsSystemName :: !StarSystemName
     , kragiiWormsFactionId :: !(Key Faction)
     , kragiiWormsDate :: !StarDate
     }
@@ -60,9 +61,9 @@ data KragiiResults =
 -- | data for kragii attack resolution
 data KragiiNews = KragiiNews
     { kragiiNewsPlanetId :: !(Key Planet)
-    , kragiiNewsPlanetName :: !Text
+    , kragiiNewsPlanetName :: !PlanetName
     , kragiiNewsSystemId :: !(Key StarSystem)
-    , kragiiNewsSystemName :: !Text
+    , kragiiNewsSystemName :: !StarSystemName
     , kragiiNewsExplanation :: !Text
     , kragiiNewsFactionId :: !(Key Faction)
     , kragiiNewsDate :: !StarDate

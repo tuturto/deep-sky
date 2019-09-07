@@ -21,7 +21,7 @@ getBasesR = do
                                                                                      , Asc PlanetReportDate ]
 
     let planetReports = filter (\x -> Just factionId == cprOwnerId x) $ collateReports $ map entityVal loadedPlanetReports
-    baseReports <- mapM addBaseDetails planetReports
+    _ <- mapM addBaseDetails planetReports
 
     defaultLayout $ do
         setTitle "Deep Sky - Bases"

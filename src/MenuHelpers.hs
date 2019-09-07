@@ -18,6 +18,7 @@ import Database.Persist.Sql (toSqlKey)
 import CustomTypes
 import Text.Printf (printf)
 import Resources ( RawResources(..), ResourcesAvailable(..) )
+import Space.Data ( PlanetName, StarSystemName )
 
 
 -- | Current star date of the simulation
@@ -31,7 +32,7 @@ starDate = do
 
 systemNameById :: (BaseBackend backend ~ SqlBackend,
     PersistStoreRead backend, MonadIO m) =>
-    Key StarSystem -> ReaderT backend m Text
+    Key StarSystem -> ReaderT backend m StarSystemName
 systemNameById systemId = do
     system <- get systemId
     let name = case system of
@@ -41,7 +42,7 @@ systemNameById systemId = do
 
 planetNameById :: (BaseBackend backend ~ SqlBackend,
     PersistStoreRead backend, MonadIO m) =>
-    Key Planet -> ReaderT backend m Text
+    Key Planet -> ReaderT backend m PlanetName
 planetNameById planetId = do
     planet <- get planetId
     let name = case planet of

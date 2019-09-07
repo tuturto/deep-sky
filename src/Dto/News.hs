@@ -24,13 +24,14 @@ import CustomTypes ( StarDate )
 import Research.Data ( Technology )
 import People.Data ( PersonName(..), PetType(..), PetName(..) )
 import Resources ( ResourceType(..) )
+import Space.Data ( PlanetName(..), StarName(..), StarSystemName(..) )
 
 
 -- | Data transfer object for news that mainly just wraps id and contents together
 data NewsDto = NewsDto
-    { newsDtoId :: Key News
-    , newsContents :: NewsArticleDto
-    , newsIcon :: Text
+    { newsDtoId :: !(Key News)
+    , newsContents :: !NewsArticleDto
+    , newsIcon :: !Text
     } deriving (Show, Read, Eq)
 
 
@@ -64,9 +65,9 @@ data SpecialNewsDto =
 -- | Data transfer object for kragii attack special event
 data KragiiWormsEventDto = KragiiWormsEventDto
     { kragiiWormsDtoPlanetId :: !(Key Planet)
-    , kragiiWormsDtoPlanetName :: !Text
+    , kragiiWormsDtoPlanetName :: !PlanetName
     , kragiiWormsDtoSystemId :: !(Key StarSystem)
-    , kragiiWormsDtoSystemName :: !Text
+    , kragiiWormsDtoSystemName :: !StarSystemName
     , kragiiWormsDtoOptions :: ![UserOptionDto KragiiWormsChoiceDto]
     , kragiiWormsDtoChoice :: !(Maybe KragiiWormsChoiceDto)
     , kragiiWormsDtoFactionId :: !(Key Faction)
@@ -128,9 +129,9 @@ data UserOptionDto a = UserOptionDto
 -- | data transfer object for news that tell resolution of kragii attack
 data KragiiNewsDto = KragiiNewsDto
     { kragiiNewsDtoPlanetId :: !(Key Planet)
-    , kragiiNewsDtoPlanetName :: !Text
+    , kragiiNewsDtoPlanetName :: !PlanetName
     , kragiiNewsDtoSystemId :: !(Key StarSystem)
-    , kragiiNewsDtoSystemName :: !Text
+    , kragiiNewsDtoSystemName :: !StarSystemName
     , kragiiNewsDtoResolution :: !Text
     , kragiiNewsDtoFactionId :: !(Key Faction)
     , kragiiNewsDtoDate :: !StarDate
@@ -155,29 +156,29 @@ data NamingPetNewsDto = NamingPetNewsDto
 
 -- | data transfer object for star found news
 data StarFoundNewsDto = StarFoundNewsDto
-    { starFoundNewsDtoStarName :: Text
-    , starFoundNewsDtoSystemName :: Text
-    , starFoundNewsDtoSystemId :: Key StarSystem
-    , starFoundNewsDtoDate :: StarDate
+    { starFoundNewsDtoStarName :: !StarName
+    , starFoundNewsDtoSystemName :: !StarSystemName
+    , starFoundNewsDtoSystemId :: !(Key StarSystem)
+    , starFoundNewsDtoDate :: !StarDate
     } deriving (Show, Read, Eq)
 
 
 -- | data transfer object for planet found news
 data PlanetFoundNewsDto = PlanetFoundNewsDto
-    { planetFoundNewsDtoPlanetName :: Text
-    , planetFoundNewsDtoSystemName :: Text
-    , planetFoundNewsDtoSystemId :: Key StarSystem
-    , planetFoundNewsDtoPlanetId :: Key Planet
-    , planetFoundNewsDtoDate :: StarDate
+    { planetFoundNewsDtoPlanetName :: !PlanetName
+    , planetFoundNewsDtoSystemName :: !StarSystemName
+    , planetFoundNewsDtoSystemId :: !(Key StarSystem)
+    , planetFoundNewsDtoPlanetId :: !(Key Planet)
+    , planetFoundNewsDtoDate :: !StarDate
     } deriving (Show, Read, Eq)
 
 
 -- | data transfer object for user written news
 data UserWrittenNewsDto = UserWrittenNewsDto
-    { userWrittenNewsDtoContent :: Text
-    , userWrittenNewsDtoDate :: StarDate
-    , userWrittenNewsDtoUser :: PersonName
-    , userWrittenNewsDtoIcon :: UserNewsIconDto
+    { userWrittenNewsDtoContent :: !Text
+    , userWrittenNewsDtoDate :: !StarDate
+    , userWrittenNewsDtoUser :: !PersonName
+    , userWrittenNewsDtoIcon :: !UserNewsIconDto
     } deriving (Show, Read, Eq)
 
 
@@ -191,22 +192,22 @@ data UserNewsIconDto =
 
 -- | data transfer object for design created news
 data DesignCreatedNewsDto = DesignCreatedNewsDto
-    { designCreatedNewsDtoDesignId :: Key Design
-    , designCreatedNewsDtoName :: Text
-    , designCreatedNewsDtoDate :: StarDate
+    { designCreatedNewsDtoDesignId :: !(Key Design)
+    , designCreatedNewsDtoName :: !Text
+    , designCreatedNewsDtoDate :: !StarDate
     } deriving (Show, Read, Eq)
 
 
 -- | data transfer object for construction finished news
 data ConstructionFinishedNewsDto = ConstructionFinishedNewsDto
-    { constructionFinishedNewsDtoPlanetName :: Maybe Text
-    , constructionFinishedNewsDtoPlanetId :: Maybe (Key Planet)
-    , constructionFinishedNewsDtoSystemName :: Text
-    , constructionFinishedNewsDtoSystemId :: Key StarSystem
-    , constructionFinishedNewsDtoConstructionName :: Text
-    , constructionFinishedNewsDtoBuildingId :: Maybe (Key Building)
-    , constructionFinishedNewsDtoShipId :: Maybe (Key Ship)
-    , constructionFinishedNewsDtoDate :: StarDate
+    { constructionFinishedNewsDtoPlanetName :: !(Maybe PlanetName)
+    , constructionFinishedNewsDtoPlanetId :: !(Maybe (Key Planet))
+    , constructionFinishedNewsDtoSystemName :: !StarSystemName
+    , constructionFinishedNewsDtoSystemId :: !(Key StarSystem)
+    , constructionFinishedNewsDtoConstructionName :: !Text
+    , constructionFinishedNewsDtoBuildingId :: !(Maybe (Key Building))
+    , constructionFinishedNewsDtoShipId :: !(Maybe (Key Ship))
+    , constructionFinishedNewsDtoDate :: !StarDate
     } deriving (Show, Read, Eq)
 
 
@@ -440,20 +441,20 @@ instance FromJSON ConstructionFinishedNewsDto where
 
 
 data ProductionChangedNewsDto = ProductionChangedNewsDto
-    { productionChangedNewsDtoPlanetId :: Key Planet
-    , productionChangedNewsDtoPlanetName :: Text
-    , productionChangedNewsDtoSystemId :: Key StarSystem
-    , productionChangedNewsDtoSystemName :: Text
-    , productionChangedNewsDtoType :: ResourceType
-    , productionChangedNewsDtoDate :: StarDate
+    { productionChangedNewsDtoPlanetId :: !(Key Planet)
+    , productionChangedNewsDtoPlanetName :: !PlanetName
+    , productionChangedNewsDtoSystemId :: !(Key StarSystem)
+    , productionChangedNewsDtoSystemName :: !StarSystemName
+    , productionChangedNewsDtoType :: !ResourceType
+    , productionChangedNewsDtoDate :: !StarDate
     }
     deriving (Show, Read, Eq)
 
 
 data ResearchCompletedNewsDto = ResearchCompletedNewsDto
-    { researchCompletedNewsDtoTechnology :: Technology
-    , researchCompletedNewsDtoName :: Text
-    , researchCompletedNewsDtoDate :: StarDate
+    { researchCompletedNewsDtoTechnology :: !Technology
+    , researchCompletedNewsDtoName :: !Text
+    , researchCompletedNewsDtoDate :: !StarDate
     }
     deriving (Show, Read, Eq)
 

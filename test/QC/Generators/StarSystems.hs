@@ -12,6 +12,7 @@ import Report
 import CustomTypes
 import QC.Generators.Common
 import QC.Generators.Database
+import Space.Data ( StarName(..), StarSystemName(..) )
 
 
 anyLuminosityClass :: Gen LuminosityClass
@@ -28,7 +29,7 @@ singleStar = do
     aStarSystemId <- randomStarSystemKey
     aSpectralType <- anySpectralType
     aLuminosityClass <- anyLuminosityClass
-    return $ Star aName aStarSystemId aSpectralType aLuminosityClass
+    return $ Star (MkStarName aName) aStarSystemId aSpectralType aLuminosityClass
 
 
 singleStarEntity :: Gen (Entity Star)
@@ -46,8 +47,9 @@ singleStarReport = do
     aSpectralType <- perhaps anySpectralType
     aLuminosityClass <- perhaps anyLuminosityClass
     aDate <- arbitrary `suchThat` \x -> x > 0
-    return $ CollatedStarReport aStarId aStarSystemId aName aSpectralType
-                                aLuminosityClass (unArbStarDate aDate)
+    return $ CollatedStarReport aStarId aStarSystemId (MkStarName <$> aName)
+                                aSpectralType aLuminosityClass
+                                (unArbStarDate aDate)
 
 
 allStars :: Gen [Star]
@@ -97,7 +99,10 @@ singleStarLaneReport = do
     aSystemName1 <- perhaps arbitrary
     aSystemName2 <- perhaps arbitrary
     aDate <- arbitrary `suchThat` \x -> x > 0
-    return $ CollatedStarLaneReport aLaneId aSystem1 aSystem2 aSystemName1 aSystemName2 (unArbStarDate aDate)
+    return $ CollatedStarLaneReport aLaneId aSystem1 aSystem2
+                                    (MkStarSystemName <$> aSystemName1)
+                                    (MkStarSystemName <$> aSystemName2)
+                                    (unArbStarDate aDate)
 
 
 starLaneEntities :: Gen [(Entity StarLane)]

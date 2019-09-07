@@ -2,24 +2,4 @@
     <div .row>
         <div .infotitle>
             Bases
-            <div .container>
-                <div .row>
-                    <div .col-lg-2>
-                        Name
-                    <div .col-lg-2>
-                        System
-                    <div .col-lg-2>
-                        Space
-                    <div .col-lg-4>
-                        Construction queue
-                $forall base <- baseReports
-                    <div .row>
-                        <div .col-lg-2>
-                            $maybe name <- cprName $ cbsPlanetReport base
-                                <a href=@{BaseR (cprSystemId (cbsPlanetReport base)) (cprId (cbsPlanetReport base))}>
-                                    #{name}
-                            $nothing
-                                Unknown
-                        <div .col-lg-2>
-                            <a href=@{StarSystemR (cprSystemId (cbsPlanetReport base))}>
-                                #{cbsStarSystemName base}
+

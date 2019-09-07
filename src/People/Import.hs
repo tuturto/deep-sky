@@ -32,6 +32,7 @@ import People.Opinion ( OpinionReport, opinionReport )
 import Queries ( PersonRelationData(..), PersonDataLink(..)
                , personDataLinkOriginatorIntelligenceL
                , personDataLinkTargetIntelligenceL )
+import Space.Data ( PlanetName(..), StarSystemName(..) )
 
 
 data PersonReport = PersonReport
@@ -71,7 +72,7 @@ data DemesneReport =
 data PlanetDemesneReport = PlanetDemesneReport
     { planetDemesneReportPlanetId :: !(Key Planet)
     , planetDemesneReportStarSystemId :: !(Key StarSystem)
-    , planetDemesneReportName :: !Text
+    , planetDemesneReportName :: !PlanetName
     , planetDemesneReportFormalName :: !DemesneName
     , planetDemesneReport :: !StarDate
     } deriving (Show, Read, Eq)
@@ -79,7 +80,7 @@ data PlanetDemesneReport = PlanetDemesneReport
 
 data StarSystemDemesneReport = StarSystemDemesneReport
     { starSystemDemesneReportStarSystemId :: !(Key StarSystem)
-    , starSystemDemesneReportName :: !Text
+    , starSystemDemesneReportName :: !StarSystemName
     , starSystemDemesneReportFormalName :: !DemesneName
     , starSystemDemesneReportDate :: !StarDate
     } deriving (Show, Read, Eq)
@@ -153,7 +154,7 @@ planetReport date planet =
                         { planetDemesneReportPlanetId = entityKey planet
                         , planetDemesneReportStarSystemId = (planetStarSystemId . entityVal) planet
                         , planetDemesneReportName = name
-                        , planetDemesneReportFormalName = DemesneName ("Colony of " ++ name)
+                        , planetDemesneReportFormalName = DemesneName ("Colony of " ++ unPlanetName name)
                         , planetDemesneReport = date
                         }
     where
@@ -166,7 +167,7 @@ systemReport date system =
     StarSystemDemesne $ StarSystemDemesneReport
                             { starSystemDemesneReportStarSystemId = entityKey system
                             , starSystemDemesneReportName = name
-                            , starSystemDemesneReportFormalName = DemesneName ("Province of " ++ name)
+                            , starSystemDemesneReportFormalName = DemesneName ("Province of " ++ unStarSystemName name)
                             , starSystemDemesneReportDate = date
                             }
     where

@@ -28,6 +28,7 @@ import qualified Yesod.Core.Unsafe as Unsafe
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Text.Encoding as TE
 import CustomTypes ( UserIdentity(..) )
+import Space.Data ( PlanetName(..), StarSystemName(..) )
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -338,10 +339,10 @@ instance YesodBreadcrumbs App where
     breadcrumb StarSystemsR = return ("Star systems", Just HomeR)
     breadcrumb (StarSystemR systemId) = do
         systemName <- runDB $ systemNameById systemId
-        return (systemName, Just StarSystemsR)
+        return (unStarSystemName systemName, Just StarSystemsR)
     breadcrumb (PlanetR systemId planetId) = do
         name <- runDB $ planetNameById planetId
-        return (name, Just (StarSystemR systemId))
+        return (unPlanetName name, Just (StarSystemR systemId))
     breadcrumb FleetR = return ("Fleet", Just HomeR)
     breadcrumb DesignerR = return ("Designer", Just HomeR)
     breadcrumb ResearchR = return ("Research", Just HomeR)
@@ -349,7 +350,7 @@ instance YesodBreadcrumbs App where
     breadcrumb BasesR = return ("Bases", Just HomeR)
     breadcrumb (BaseR _ planetId) = do
         name <- runDB $ planetNameById planetId
-        return (name, Just BasesR)
+        return (unPlanetName name, Just BasesR)
     breadcrumb AdminPanelR = return ("Admin", Just HomeR)
     breadcrumb AdminAdvanceTimeR = return ("Time management", Just AdminPanelR)
     breadcrumb _ = return ("home", Nothing)

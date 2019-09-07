@@ -25,6 +25,7 @@ import CustomTypes
 import Dto.Icons ( IconMapper(..) )
 import People.Data ( PersonName(..), ShortTitle )
 import People.Import ( shortTitle )
+import Space.Data ( PlanetName(..), StarName(..), StarSystemName(..) )
 
 
 -- | Class to transform a report stored in db to respective collated report
@@ -39,7 +40,7 @@ class Grouped a where
 
 data CollatedStarSystemReport = CollatedStarSystemReport
     { cssrId :: Key StarSystem
-    , cssrName :: Maybe Text
+    , cssrName :: Maybe StarSystemName
     , cssrLocation :: Coordinates
     , cssrRulerId :: Maybe (Key Person)
     , cssrRulerName :: Maybe PersonName
@@ -106,7 +107,7 @@ instance Grouped StarSystemReport where
 data CollatedStarReport = CollatedStarReport
     { csrStarId          :: Key Star
     , csrSystemId        :: Key StarSystem
-    , csrName            :: Maybe Text
+    , csrName            :: Maybe StarName
     , csrSpectralType    :: Maybe SpectralType
     , csrLuminosityClass :: Maybe LuminosityClass
     , csrDate            :: StarDate
@@ -160,7 +161,7 @@ data CollatedPlanetReport = CollatedPlanetReport
     { cprId :: Key Planet
     , cprSystemId :: Key StarSystem
     , cprOwnerId :: Maybe (Key Faction)
-    , cprName :: Maybe Text
+    , cprName :: Maybe PlanetName
     , cprPosition :: Maybe Int
     , cprGravity :: Maybe Double
     , cprDate :: StarDate
@@ -288,9 +289,9 @@ instance Grouped (PlanetPopulationReport, Maybe Race) where
 
 
 data CollatedPlanetStatusReport = CollatedPlanetStatusReport
-    { collatedPlanetStatusReportPlanetId :: Key Planet
-    , collatedPlanetStatusReportStatus :: [PlanetaryStatusInfo]
-    , collatedPlanetStatusReportDate :: StarDate
+    { collatedPlanetStatusReportPlanetId :: !(Key Planet)
+    , collatedPlanetStatusReportStatus :: ![PlanetaryStatusInfo]
+    , collatedPlanetStatusReportDate :: !StarDate
     }
     deriving (Show, Read, Eq)
 
@@ -331,9 +332,9 @@ statusToInfo icons status =
 
 
 data PlanetaryStatusInfo = PlanetaryStatusInfo
-    { planetaryStatusInfoStatus :: PlanetaryStatus
-    , planetaryStatusInfoDescription :: Text
-    , planetaryStatusInfoIcon :: Text
+    { planetaryStatusInfoStatus :: !(PlanetaryStatus)
+    , planetaryStatusInfoDescription :: !Text
+    , planetaryStatusInfoIcon :: !Text
     }
     deriving (Show, Read, Eq)
 
@@ -342,8 +343,8 @@ data CollatedStarLaneReport = CollatedStarLaneReport
     { cslStarLaneId      :: Key StarLane
     , cslSystemId1       :: Key StarSystem
     , cslSystemId2       :: Key StarSystem
-    , cslStarSystemName1 :: Maybe Text
-    , cslStarSystemName2 :: Maybe Text
+    , cslStarSystemName1 :: Maybe StarSystemName
+    , cslStarSystemName2 :: Maybe StarSystemName
     , cslDate            :: StarDate
     } deriving Show
 
@@ -389,7 +390,7 @@ instance Grouped StarLaneReport where
 
 data CollatedBaseReport = CollatedBaseReport {
       cbsPlanetReport   :: CollatedPlanetReport
-    , cbsStarSystemName :: Text
+    , cbsStarSystemName :: StarSystemName
 } deriving Show
 
 

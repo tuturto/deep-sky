@@ -29,21 +29,21 @@ Faction json
     deriving Show Read Eq
 
 StarSystem json
-    name Text
+    name StarSystemName
     coordX Double
     coordY Double
     rulerId PersonId Maybe
     deriving Show Read Eq
 
 Star json
-    name Text
+    name StarName
     starSystemId StarSystemId
     spectralType SpectralType
     luminosityClass LuminosityClass
     deriving Show Read Eq
 
 Planet json
-    name Text
+    name PlanetName
     position Int
     starSystemId StarSystemId
     ownerId FactionId Maybe
@@ -182,7 +182,7 @@ CompletedResearch json
 
 StarSystemReport json
     starSystemId StarSystemId
-    name Text Maybe
+    name StarSystemName Maybe
     coordX Double
     coordY Double
     factionId FactionId
@@ -193,7 +193,7 @@ StarSystemReport json
 StarReport json
     starId StarId
     starSystemId StarSystemId
-    name Text Maybe
+    name StarName Maybe
     spectralType SpectralType Maybe
     luminosityClass LuminosityClass Maybe
     factionId FactionId
@@ -204,7 +204,7 @@ PlanetReport json
     planetId PlanetId
     ownerId  FactionId Maybe
     starSystemId StarSystemId
-    name Text Maybe
+    name PlanetName Maybe
     position Int Maybe
     gravity Double Maybe
     factionId FactionId
@@ -216,8 +216,8 @@ StarLaneReport json
     starLaneId StarLaneId
     starSystem1 StarSystemId
     starSystem2 StarSystemId
-    starSystemName1 Text Maybe
-    starSystemName2 Text Maybe
+    starSystemName1 StarSystemName Maybe
+    starSystemName2 StarSystemName Maybe
     factionId FactionId
     date StarDate
     deriving Show Read Eq
