@@ -5,8 +5,9 @@ module Integration.FoodSpec ( spec )
     where
 
 import TestImport
-import CustomTypes ( PlanetaryStatus(..), BuildingType(..) )
+import CustomTypes ( BuildingType(..) )
 import Simulation.Food ( getFoodProduction )
+import Space.Data ( PlanetaryStatus(..) )
 
 
 spec :: Spec

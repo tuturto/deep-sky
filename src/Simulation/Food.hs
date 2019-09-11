@@ -11,8 +11,9 @@ module Simulation.Food ( handleFactionFood, getFoodRequirement, getFoodProductio
     where
 
 import Import
-import CustomTypes ( BuildingType(..), Bonus(..), PlanetaryStatus(..), applyBonus )
+import CustomTypes ( BuildingType(..), Bonus(..), applyBonus )
 import Resources ( Biological(..), RawResource(..) )
+import Space.Data ( PlanetaryStatus(..) )
 
 
 -- | handle production and consumption of food for given faction

@@ -17,6 +17,8 @@ import Data.Accessors
         , buildingsA
         , constructionsA
         , currentResearchA
+        , designStatsA
+        , designerRA
         , designsA
         , errorsA
         , iconsA
@@ -400,6 +402,17 @@ handleApiMsg msg model =
 
         DesignSaved (Err err) ->
             ( Views.Designer.desginSaveFailure model err
+            , Cmd.none
+            )
+
+        DesignEstimated (Ok stats) ->
+            ( set (designerRA << designStatsA) (Just stats) model
+            , Cmd.none
+            )
+
+        DesignEstimated (Err err) ->
+            ( set (designerRA << designStatsA) Nothing model
+                |> over errorsA (\errors -> error err "Failed to estimate effectivity of design" :: errors)
             , Cmd.none
             )
 

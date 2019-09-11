@@ -6,10 +6,9 @@
 
 -- | Catch all module for things that don't yet belong to anywhere else
 module CustomTypes
-    ( SpecialEventStatus(..), SpectralType(..), LuminosityClass(..)
-    , Coordinates(..), BuildingType(..), ShipType(..), Role(..)
-    , PercentileChance(..), RollResult(..), PlanetaryStatus(..), Bonus(..)
-    , Boostable(..), StarDate(..), Age(..), UserIdentity(..), FactionName(..)
+    ( SpecialEventStatus(..), BuildingType(..), Role(..)
+    , PercentileChance(..), RollResult(..), Bonus(..), Boostable(..)
+    , StarDate(..), Age(..), UserIdentity(..), FactionName(..)
     , age, buildingTypeName, roll )
     where
 
@@ -32,21 +31,6 @@ data SpecialEventStatus =
     | NoSpecialEvent
     deriving (Show, Read, Eq, Enum, Bounded)
 derivePersistField "SpecialEventStatus"
-
-
-data SpectralType = O | B | A | F | G | K | M | L | T
-    deriving (Show, Read, Eq, Enum, Bounded)
-derivePersistField "SpectralType"
-
-
-data LuminosityClass = Iap | Ia | Iab | Ib | II | III | IV | V | VI | VII
-    deriving (Show, Read, Eq, Enum, Bounded)
-derivePersistField "LuminosityClass"
-
-
-
-data Coordinates = Coordinates Double Double
-    deriving (Show, Read, Eq)
 
 
 data BuildingType = SensorStation
@@ -72,32 +56,6 @@ buildingTypeName bt =
         GravityWaveSensor -> "Gravity Wave Sensor"
 
 
-data ShipType =
-    Bawley
-    | Bilander
-    | BlackwallFrigate
-    | Brigantine
-    | Caravel
-    | Clipper
-    | Cog
-    | Corvette
-    | CraneShip
-    | CruiseLiner
-    | Freighter
-    | Flyboat
-    | Frigate
-    | Galleon
-    | ManOfWar
-    | SatelliteLayer
-    | Schooner
-    | Yawl
-    | MobileBase
-    | Station
-    | Satellite
-    deriving (Show, Read, Eq, Enum, Bounded)
-derivePersistField "ShipType"
-
-
 data Role = RoleUser
           | RoleAdministrator
     deriving (Show, Read, Eq, Enum, Bounded)
@@ -121,19 +79,6 @@ roll odds = do
     return $ if result <= unPercentileChance odds
         then Success
         else Failure
-
-
--- | Status codes for various events that might affect a planet
-data PlanetaryStatus =
-    GoodHarvest
-    | PoorHarvest
-    | GoodMechanicals
-    | PoorMechanicals
-    | GoodChemicals
-    | PoorChemicals
-    | KragiiAttack
-    deriving (Show, Read, Eq, Enum, Bounded, Ord)
-derivePersistField "PlanetaryStatus"
 
 
 data Bonus = Bonus Int Double
@@ -283,9 +228,4 @@ instance PersistFieldSql FactionName where
 
 $(deriveJSON defaultOptions ''SpecialEventStatus)
 $(deriveJSON defaultOptions ''Role)
-$(deriveJSON defaultOptions ''Coordinates)
-$(deriveJSON defaultOptions ''SpectralType)
-$(deriveJSON defaultOptions ''LuminosityClass)
 $(deriveJSON defaultOptions ''BuildingType)
-$(deriveJSON defaultOptions ''ShipType)
-$(deriveJSON defaultOptions ''PlanetaryStatus)

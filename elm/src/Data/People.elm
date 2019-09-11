@@ -7,6 +7,8 @@ module Data.People exposing
     , FirstName(..)
     , Gender(..)
     , LongTitle(..)
+    , OnPlanetData
+    , OnUnitData
     , OpinionFeeling(..)
     , OpinionIntel(..)
     , OpinionReason(..)
@@ -14,6 +16,7 @@ module Data.People exposing
     , OpinionScore(..)
     , Person
     , PersonIntel(..)
+    , PersonLocation(..)
     , PersonName(..)
     , PetType(..)
     , PlanetDemesneReportShort
@@ -66,9 +69,11 @@ import Data.Common
         , StarDate
         , StarSystemId
         , StarSystemName
+        , UnitId
         , findFirst
         , perhapsOrdering
         )
+import Data.Vehicles exposing (CrewPosition(..))
 import List exposing (repeat)
 import Maybe exposing (map, withDefault)
 import Ordering exposing (Ordering)
@@ -334,6 +339,7 @@ type alias Person =
     , traits : Maybe (List Trait)
     , avatarOpinion : OpinionReport
     , opinionOfAvatar : OpinionReport
+    , location : PersonLocation
     }
 
 
@@ -521,6 +527,8 @@ type PersonIntel
     | SecretRelations
     | Opinions OpinionIntel
     | Traits
+    | Location
+    | Activity
 
 
 type OpinionIntel
@@ -555,6 +563,12 @@ personIntelToString intel =
 
         Traits ->
             "Traits"
+
+        Location ->
+            "Location"
+
+        Activity ->
+            "Activity"
 
 
 type alias DynastyLink =
@@ -651,3 +665,24 @@ petTypeToString pType =
 
         Rat ->
             "rat"
+
+
+type PersonLocation
+    = OnPlanet OnPlanetData
+    | OnUnit OnUnitData
+    | UnknownLocation
+
+
+type alias OnPlanetData =
+    { personId : PersonId
+    , planetId : PlanetId
+    , starSystemId : StarSystemId
+    , planetName : PlanetName
+    }
+
+
+type alias OnUnitData =
+    { personId : PersonId
+    , unitId : UnitId
+    , position : CrewPosition
+    }

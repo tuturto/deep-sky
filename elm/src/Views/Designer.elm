@@ -14,6 +14,7 @@ import Api.Designer
         , availableComponentsCmd
         , availableDesignsCmd
         , deleteDesignCmd
+        , estimateDesign
         , saveDesignCmd
         )
 import Data.Accessors
@@ -27,6 +28,7 @@ import Data.Accessors
         , componentsCurrentPageA
         , currentDesignA
         , designPanelStatusA
+        , designStatsA
         , designerRA
         , designsA
         , designsCurrentPageA
@@ -35,6 +37,7 @@ import Data.Accessors
         , idA
         , messagesStatusA
         , nameA
+        , statsStatusA
         , validatationMessagesA
         )
 import Data.Common
@@ -56,15 +59,18 @@ import Data.Vehicles
         , ComponentAmount(..)
         , ComponentId
         , ComponentSlot(..)
+        , CrewSpaceReq(..)
         , Design
         , DesignName(..)
         , PlannedChassis
         , PlannedComponent
         , SlotAmount(..)
+        , UnitStats
         , ValidationMessage(..)
         , Weight(..)
         , chassisTypeToString
         , componentSlotToString
+        , crewCount
         , installPlan
         , slotToIndex
         , totalCost
@@ -74,6 +80,8 @@ import Data.Vehicles
         , unComponentAmount
         , unComponentDescription
         , unComponentName
+        , unCrewAmount
+        , unCrewSpace
         , unDesignName
         , unSlotAmount
         , unWeight
@@ -230,8 +238,7 @@ componentList model =
             { pageSize = model.designerR.componentsPageSize
             , currentPage = model.designerR.componentsCurrentPage
             , maxPage =
-                model.availableChassis
-                    |> withDefault []
+                applicableComponents model
                     |> maxPage model.designerR.componentsPageSize
             , pageChangedMessage = DesignerMessage << ComponentListPageChanged
             }
@@ -696,8 +703,8 @@ designPanelContent model =
                     ]
                 ]
             , div [ class "row" ]
-                [ div [ class "col-lg-3 panel-sub-title" ] [ text "Tonnage:" ]
-                , div [ class "col-lg-3" ]
+                [ div [ class "col-lg-2 panel-sub-title" ] [ text "Tonnage:" ]
+                , div [ class "col-lg-4" ]
                     [ text tonnage
                     , text " / "
                     , text maxTonnage
@@ -874,6 +881,7 @@ rightPanel : Model -> List (Html Msg)
 rightPanel model =
     commands model
         ++ messages model
+        ++ briefStats model
 
 
 {-| Display commands section
@@ -916,6 +924,7 @@ commandsContent model =
                             Maybe.map
                                 (validateDesign (withDefault [] model.availableComponents)
                                     (withDefault [] model.availableChassis)
+                                    model.designerR.designStats
                                 )
                                 model.designerR.currentDesign
                                 |> withDefault []
@@ -964,6 +973,7 @@ messagesContent model =
                     Maybe.map
                         (validateDesign (withDefault [] model.availableComponents)
                             (withDefault [] model.availableChassis)
+                            model.designerR.designStats
                         )
                         model.designerR.currentDesign
                         |> withDefault []
@@ -986,6 +996,105 @@ messageEntry : ValidationMessage -> Html Msg
 messageEntry (ValidationMessage message) =
     div [ class "row" ]
         [ div [ class "col-lg-12" ] [ text message ] ]
+
+
+{-| Display short summary of design's expected or known stats
+-}
+briefStats : Model -> List (Html Msg)
+briefStats model =
+    infoPanel
+        { title = "Stats"
+        , currentStatus = model.designerR.statsStatus
+        , openingMessage = DesignerMessage <| StatsStatusChanged InfoPanelOpen
+        , closingMessage = DesignerMessage <| StatsStatusChanged InfoPanelClosed
+        , refreshMessage = Nothing
+        }
+        Nothing
+        briefStatsContent
+        model
+
+
+{-| Content of stats panel
+-}
+briefStatsContent : Model -> List (Html Msg)
+briefStatsContent model =
+    [ div []
+        [ div [ class "row" ]
+            [ div [ class "col-lg-3 panel-sub-title" ] [ text "Crew:" ]
+            , div [ class "col-lg-9" ]
+                [ Maybe.map displayCrew model.designerR.designStats
+                    |> Maybe.withDefault "0 / 0"
+                    |> text
+                ]
+            ]
+        ]
+    , div [ class "row" ]
+        [ div [ class "col-lg-3 panel-sub-title" ] [ text "Quarters:" ]
+        , div [ class "col-lg-9" ]
+            [ Maybe.map displayCrewQuarters model.designerR.designStats
+                |> Maybe.withDefault "0 / 0 / 0"
+                |> text
+            ]
+        ]
+    , div [ class "row" ]
+        [ div [ class "col-lg-3" ] [ text " " ]
+        , div [ class "col-lg-9" ]
+            [ Maybe.map displayQuartersRequirement model.designerR.designStats
+                |> Maybe.withDefault "-"
+                |> text
+            ]
+        ]
+    ]
+
+
+{-| Block of text displaying crew space of unit stats
+-}
+displayCrewQuarters : UnitStats -> String
+displayCrewQuarters stats =
+    let
+        steerage =
+            unCrewSpace stats.crewSpace.steerageSpace
+                |> String.fromInt
+
+        standard =
+            unCrewSpace stats.crewSpace.standardSpace
+                |> String.fromInt
+
+        luxury =
+            unCrewSpace stats.crewSpace.luxurySpace
+                |> String.fromInt
+    in
+    steerage ++ " / " ++ standard ++ " / " ++ luxury
+
+
+{-| Text block for info if quarters are mandatory or not
+-}
+displayQuartersRequirement : UnitStats -> String
+displayQuartersRequirement stats =
+    case stats.crewSpaceRequired of
+        CrewSpaceRequired ->
+            "Quarters are mandatory"
+
+        CrewSpaceOptional ->
+            "Quarters are optional"
+
+
+{-| Block of text displaying crew space
+-}
+displayCrew : UnitStats -> String
+displayCrew stats =
+    let
+        minimum =
+            crewCount stats.minimumCrew
+                |> unCrewAmount
+                |> String.fromInt
+
+        nominal =
+            crewCount stats.nominalCrew
+                |> unCrewAmount
+                |> String.fromInt
+    in
+    minimum ++ " / " ++ nominal
 
 
 {-| Request data needed by designer page from server
@@ -1060,8 +1169,8 @@ update message model =
             )
 
         ChassisSelected chassis ->
-            ( set (designerRA << currentDesignA)
-                (Just
+            let
+                newDesign =
                     { id = Nothing
                     , chassis =
                         { id = chassis.id
@@ -1070,19 +1179,37 @@ update message model =
                     , name = DesignName ""
                     , components = []
                     }
-                )
-                model
-            , Cmd.none
+            in
+            ( set (designerRA << currentDesignA) (Just newDesign) model
+            , estimateDesign newDesign
             )
 
         ComponentAdded component ->
-            ( over (designerRA << currentDesignA) (addComponent component model.availableComponents) model
-            , Cmd.none
+            let
+                newDesign =
+                    addComponent component model.availableComponents model.designerR.currentDesign
+            in
+            ( set (designerRA << currentDesignA) newDesign model
+            , case newDesign of
+                Just design ->
+                    estimateDesign design
+
+                Nothing ->
+                    Cmd.none
             )
 
         ComponentRemoved component ->
-            ( over (designerRA << currentDesignA << try << componentsA << onEach) (removeComponent component.id) model
-            , Cmd.none
+            let
+                newDesign =
+                    over (try << componentsA << onEach) (removeComponent component.id) model.designerR.currentDesign
+            in
+            ( set (designerRA << currentDesignA) newDesign model
+            , case newDesign of
+                Just design ->
+                    estimateDesign design
+
+                Nothing ->
+                    Cmd.none
             )
 
         DesignPanelStatusChanged status ->
@@ -1097,6 +1224,7 @@ update message model =
 
         NewDesignStarted ->
             ( set (designerRA << currentDesignA) Nothing model
+                |> set (designerRA << designStatsA) Nothing
             , Cmd.none
             )
 
@@ -1107,19 +1235,26 @@ update message model =
 
         DesignSelected design ->
             ( set (designerRA << currentDesignA) (Just design) model
-            , Cmd.none
+            , estimateDesign design
+              -- TODO: here we should be loading pre-existing stats
             )
 
         DesignCopied design ->
             ( set (designerRA << currentDesignA) (Just design) model
                 |> set (designerRA << currentDesignA << try << idA) Nothing
                 |> set (designerRA << currentDesignA << try << nameA) (DesignName "")
-            , Cmd.none
+            , estimateDesign design
+              -- TODO: here we should be loading pre-existing stats
             )
 
         DesignDeleted design ->
             ( model
             , deleteDesignCmd design
+            )
+
+        StatsStatusChanged status ->
+            ( set (designerRA << statsStatusA) status model
+            , Cmd.none
             )
 
 

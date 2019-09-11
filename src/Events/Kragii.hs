@@ -19,14 +19,13 @@ import Control.Monad.Trans.Writer ( WriterT, runWriterT, tell )
 import Data.Aeson.TH
 
 import Common ( ToDto(..), FromDto(..) )
-import CustomTypes ( PercentileChance(..), RollResult(..), PlanetaryStatus(..)
-                   , StarDate, roll )
+import CustomTypes ( PercentileChance(..), RollResult(..), StarDate(..), roll )
 import Dto.News ( KragiiWormsChoiceDto(..), UserOptionDto(..), KragiiNewsDto(..) )
 import Events.Creation ( EventCreation(..) )
 import Events.Import ( SpecialEvent(..), EventRemoval(..), UserOption(..)
                      , EventResolveType(..) )
 import Resources ( RawResource(..), Biological(..) )
-import Space.Data ( PlanetName(..), StarSystemName(..) )
+import Space.Data ( PlanetName(..), StarSystemName(..), PlanetaryStatus(..) )
 
 
 -- | Data for kragii worms attack

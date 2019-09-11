@@ -23,6 +23,7 @@ import Report ( createPlanetReports, createStarLaneReports, createStarReports
               , CollatedPlanetReport(..), CollatedStarLaneReport(..)
               , CollatedStarReport(..), CollatedStarSystemReport(..)
               )
+import Space.Data ( Coordinates(..) )
 
 
 -- | Generate reports for all kinds of things faction can currently observe

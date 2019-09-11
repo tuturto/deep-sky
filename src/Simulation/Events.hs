@@ -15,7 +15,7 @@ import qualified Prelude as P
 import System.Random
 import Common ( maybeGet )
 import CustomTypes ( SpecialEventStatus(..), PercentileChance(..), RollResult(..)
-                   , PlanetaryStatus(..), StarDate, roll )
+                   , StarDate, roll )
 import qualified Events.Creation as EC
 import Events.Import ( resolveEvent, EventRemoval(..) )
 import Events.News ( report, kragiiWormsEvent, scurryingSoundsEvent, namingPetEvent )
@@ -23,6 +23,7 @@ import News.Data ( SpecialNews(..), NewsArticle(..) )
 import News.Import ( parseNewsEntities, productionBoostStartedNews, productionSlowdownStartedNews )
 import Queries ( kragiiTargetPlanets, farmingChangeTargetPlanets )
 import Resources ( ResourceType(..) )
+import Space.Data ( PlanetaryStatus(..) )
 
 
 -- | Handle all special events for given faction

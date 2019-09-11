@@ -26,6 +26,7 @@ module Data.Common exposing
     , StarName(..)
     , StarSystemId(..)
     , StarSystemName(..)
+    , UnitId(..)
     , UserId(..)
     , capitalize
     , constructionIdToString
@@ -64,6 +65,7 @@ module Data.Common exposing
     , unStarName
     , unStarSystemId
     , unStarSystemName
+    , unUnitId
     , unUserId
     , writtenNumber
     )
@@ -563,4 +565,13 @@ type PetId
 
 unPetId : PetId -> Int
 unPetId (PetId n) =
+    n
+
+
+type UnitId
+    = UnitId Int
+
+
+unUnitId : UnitId -> Int
+unUnitId (UnitId n) =
     n

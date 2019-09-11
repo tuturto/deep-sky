@@ -186,11 +186,16 @@ data PersonIntel =
     | SecretRelations
     | Opinions OpinionIntel
     | Traits
+    | Location
+    | Activity
     deriving (Show, Read, Eq)
 
 
 instance Ord PersonIntel where
+    a < b = fromEnum a < fromEnum b
     a <= b = fromEnum a <= fromEnum b
+    a > b = fromEnum a > fromEnum b
+    a >= b = fromEnum a >= fromEnum b
 
 
 instance Bounded PersonIntel where
@@ -198,7 +203,7 @@ instance Bounded PersonIntel where
         Stats
 
     maxBound =
-        Traits
+        Activity
 
 
 instance Enum PersonIntel where
@@ -225,6 +230,8 @@ instance Enum PersonIntel where
     fromEnum (Opinions (DetailedOpinions FamilyRelation)) = 11
     fromEnum (Opinions (DetailedOpinions SecretRelation)) = 12
     fromEnum Traits = 13
+    fromEnum Location = 14
+    fromEnum Activity = 15
 
     toEnum 0 = Stats
     toEnum 1 = Demesne
@@ -240,6 +247,8 @@ instance Enum PersonIntel where
     toEnum 11 = Opinions $ DetailedOpinions FamilyRelation
     toEnum 12 = Opinions $ DetailedOpinions SecretRelation
     toEnum 13 = Traits
+    toEnum 14 = Location
+    toEnum 15 = Activity
     toEnum n = error $ "failed to map: " ++ show n
 
 

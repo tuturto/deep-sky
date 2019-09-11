@@ -11,6 +11,7 @@ import Data.Vehicles
         , Component
         , Design
         , PlannedComponent
+        , UnitStats
         , ValidationMessage
         )
 
@@ -39,6 +40,7 @@ type DesignerRMsg
     | DesignSelected Design
     | DesignDeleted Design
     | DesignCopied Design
+    | StatsStatusChanged InfoPanelStatus
 
 
 {-| State of the designer view
@@ -57,6 +59,8 @@ type alias DesignerViewModel =
     , messagesStatus : InfoPanelStatus
     , designPanelStatus : InfoPanelStatus
     , currentDesign : Maybe Design
+    , designStats : Maybe UnitStats
+    , statsStatus : InfoPanelStatus
     }
 
 
@@ -77,4 +81,6 @@ init =
     , messagesStatus = InfoPanelOpen
     , designPanelStatus = InfoPanelOpen
     , currentDesign = Nothing
+    , designStats = Nothing
+    , statsStatus = InfoPanelOpen
     }

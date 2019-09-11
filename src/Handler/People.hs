@@ -13,6 +13,7 @@ import Data.Maybe ( fromJust )
 import Common ( apiRequireFaction, apiNotFound, mkUniq )
 import MenuHelpers ( starDate )
 import People.Import ( personReport, demesneReport )
+import People.Queries ( getPersonLocation, PersonLocationSum(..))
 import Handler.Home ( getNewHomeR )
 import Queries ( personRelations, PersonRelationData(..) )
 
@@ -30,7 +31,7 @@ getPeopleR = getNewHomeR
 -- | Information of single person, taking intel level into account
 getApiPersonR :: Key Person -> HandlerFor App Value
 getApiPersonR pId = do
-    (_, _, avatar, _) <- apiRequireFaction
+    (_, _, avatar, fId) <- apiRequireFaction
     let avatarId = entityKey avatar
     today <- runDB $ starDate
     info <- runDB $ personRelations pId (entityKey avatar)
@@ -46,6 +47,13 @@ getApiPersonR pId = do
                                       ( [PersonTraitValidUntil <=. (Just today)]
                                         ||. [PersonTraitValidUntil ==. Nothing])
                                     ) []
+    locationDb <- runDB $ getPersonLocation fId pId
+    let location = case locationDb of
+                    Nothing ->
+                        UnknownLocation
+
+                    Just l ->
+                        l
 
     let report = personReport today
                               (fromJust info)
@@ -53,6 +61,7 @@ getApiPersonR pId = do
                               (entityVal <$> allTraits)
                               intelTypes
                               (entityVal <$> targetRelations)
+                              location
                               avatarId
     return $ toJSON report
 

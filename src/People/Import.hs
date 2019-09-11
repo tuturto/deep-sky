@@ -8,9 +8,9 @@
 module People.Import
     ( PersonReport(..), StatReport(..), RelationLink(..), TraitReport(..)
     , TraitDescription(..), TraitName(..), personReport, demesneReport
-    , shortTitle, longTitle, relationsReport, knownLink, traitName
-    , traitDescription, relationOriginatorIdL, relationTargetIdL, relationTypeL
-    , flipRelation, flipRelationType, humanIntelligenceLevelL
+    , relationsReport, knownLink, traitName, traitDescription
+    , relationOriginatorIdL, relationTargetIdL, relationTypeL
+    , flipRelation, flipRelationType, humanIntelligenceLevelL, locationReport
     )
     where
 
@@ -28,7 +28,9 @@ import People.Data ( PersonIntel(..), Diplomacy, Martial, Stewardship
                    , RelationVisibility(..), RelationType(..), DynastyName(..)
                    , TraitType(..)
                    )
+import People.Titles ( shortTitle, longTitle )
 import People.Opinion ( OpinionReport, opinionReport )
+import People.Queries ( PersonLocationSum(..) )
 import Queries ( PersonRelationData(..), PersonDataLink(..)
                , personDataLinkOriginatorIntelligenceL
                , personDataLinkTargetIntelligenceL )
@@ -50,7 +52,8 @@ data PersonReport = PersonReport
     , personReportAvatarOpinion :: !OpinionReport
     , personReportOpinionOfAvatar :: !OpinionReport
     , personReportTraits :: !(Maybe [TraitReport])
-    , personReportAvatar :: Bool
+    , personReportAvatar :: !Bool
+    , personReportLocation :: !PersonLocationSum
     } deriving (Show, Read, Eq)
 
 
@@ -181,9 +184,10 @@ personReport :: StarDate
     -> [PersonTrait]
     -> [PersonIntel]
     -> [Relation]
+    -> PersonLocationSum
     -> Key Person
     -> PersonReport
-personReport today info dynasty allTraits targetIntel relations avatarId =
+personReport today info dynasty allTraits targetIntel relations location avatarId =
     PersonReport { personReportId = pId
                  , personReportAvatar = pId == avatarId
                  , personReportName = personName person
@@ -211,6 +215,7 @@ personReport today info dynasty allTraits targetIntel relations avatarId =
                                                     (mkUniq $ personTraitType <$> avatarTraits)
                                                     [minBound..]
                                                     avatarRelations
+                 , personReportLocation = locationReport targetIntelTypes location
                  }
                  where
                     person = (entityVal . personRelationDataPerson) info
@@ -224,6 +229,16 @@ personReport today info dynasty allTraits targetIntel relations avatarId =
                     avatarTraits = filter (\x -> personTraitPersonId x == avatarId) allTraits
                     targetTraits = filter (\x -> personTraitPersonId x == pId) allTraits
                     targetTraitTypes = mkUniq $ fmap personTraitType targetTraits
+
+
+-- | Location of person
+locationReport :: [PersonIntel] -> PersonLocationSum -> PersonLocationSum
+locationReport intel location =
+    if Location `elem` intel
+        then
+            location
+        else
+            UnknownLocation
 
 
 -- | Relations of a specific person
@@ -282,22 +297,6 @@ relationLink originatorTraits allTraits links =
         originatorIntel = mkUniq $ links ^.. traverse . personDataLinkOriginatorIntelligenceL . _Just . humanIntelligenceLevelL
         targetIntel = mkUniq $ links ^.. traverse . personDataLinkTargetIntelligenceL . _Just . humanIntelligenceLevelL
         targetRelations = nub $ personDataLinkRelation <$> links
-
-
-shortTitle :: Person -> Maybe ShortTitle
-shortTitle Person { personPlanetTitle = Just _ } =
-    Just "Praetor"
-
-shortTitle Person { personStarSystemTitle = Just _ } =
-    Just "Procurator"
-
-shortTitle _ =
-    Nothing
-
-
-longTitle :: Person -> Maybe LongTitle
-longTitle _ =
-    Just "unimplemented"
 
 
 -- | Stat report of given person and taking HUMINT level into account

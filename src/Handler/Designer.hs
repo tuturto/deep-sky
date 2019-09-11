@@ -5,23 +5,28 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE FlexibleContexts      #-}
 
-module Handler.Designer ( getDesignerR, getApiComponentsR, getApiChassisR, getApiDesignR
-                        , postApiDesignR, putApiDesignIdR, deleteApiDesignIdR )
+module Handler.Designer ( getDesignerR, getApiComponentsR, getApiChassisR
+                        , getApiDesignR, postApiDesignR, putApiDesignIdR
+                        , deleteApiDesignIdR, postApiDoDesignEstimateR )
     where
 
 import Import
+import Control.Monad.Random ( evalRand, getStdGen )
+import Database.Persist.Sql (toSqlKey)
+
 import Data.Maybe ( fromJust, maybe )
 import Common ( apiRequireFaction, mkUniq )
 import CustomTypes ( StarDate )
-import Vehicles.Components ( ComponentPower(..), ComponentLevel(..), ComponentId(..), Component
-                           , components, requirements )
-import Dto.Ship ( DesignDto(..), ChassisDto(..), RequiredComponentDto(..), designToDesignDto
+import Dto.Ship ( DesignDto(..), designToDesignDto, toChassisDto
                 , componentDtoToPlannedComponent )
 import Handler.Home ( getNewHomeR )
 import MenuHelpers ( starDate )
 import News.Import ( designCreatedNews )
-import Research.Data ( Technology )
 import Queries ( chassisList )
+import Research.Data ( Technology )
+import Vehicles.Components ( ComponentLevel(..), ComponentId(..), Component
+                           , components, requirements )
+import Vehicles.Stats ( estimateDesign )
 
 
 getDesignerR :: Handler Html
@@ -60,38 +65,6 @@ getApiChassisR = do
     (_, _, _, fId) <- apiRequireFaction
     chassisRequirements <- runDB $ chassisList fId
     return $ toJSON $ toChassisDto <$> chassisRequirements
-
-
--- | Map chassis and required component information into chassis dto
-toChassisDto :: (Entity Chassis, [Entity RequiredComponent]) -> ChassisDto
-toChassisDto (chassis, reqs) =
-    ChassisDto
-        { chassisDtoId = entityKey chassis
-        , chassisDtoName = chassisName . entityVal $ chassis
-        , chassisDtoType = chassisType . entityVal $ chassis
-        , chassisDtoMaxTonnage = chassisTonnage . entityVal $ chassis
-        , chassisDtoRequiredTypes = toRequirement . entityVal <$> reqs
-        , chassisDtoArmourSlots = chassisArmourSlots . entityVal $ chassis
-        , chassisDtoInnerSlots = chassisInnerSlots . entityVal $ chassis
-        , chassisDtoOuterSlots = chassisOuterSlots . entityVal $ chassis
-        , chassisDtoSensorSlots = chassisSensorSlots . entityVal $ chassis
-        , chassisDtoWeaponSlots = chassisWeaponSlots . entityVal $ chassis
-        , chassisDtoEngineSlots = chassisEngineSlots . entityVal $ chassis
-        , chassisDtoMotiveSlots = chassisMotiveSlots . entityVal $ chassis
-        , chassisDtoSailSlots = chassisSailSlots . entityVal $ chassis
-        }
-
-
--- | Map required component to requirement
-toRequirement :: RequiredComponent -> RequiredComponentDto
-toRequirement comp =
-    RequiredComponentDto
-        { requiredComponentDtoPower = ComponentPower
-                                        { componentPowerLevel = requiredComponentLevel comp
-                                        , componentPowerType = requiredComponentComponentType comp
-                                        }
-        , requiredComponentDtoAmount = requiredComponentAmount comp
-        }
 
 
 -- | Get details of all designs that currently logged in user has access to
@@ -185,3 +158,30 @@ deleteDesign :: (MonadIO m, PersistQueryWrite backend,
 deleteDesign dId = do
     deleteWhere [ PlannedComponentDesignId ==. dId ]
     delete dId
+
+
+-- | Estimate stats of a design being worked
+postApiDoDesignEstimateR :: Handler Value
+postApiDoDesignEstimateR = do
+    (_, _, _, _) <- apiRequireFaction
+    msg <- requireJsonBody
+    let dId = case designDtoId msg of
+                Nothing ->
+                    toSqlKey 0
+
+                Just n ->
+                    n
+
+    dbChassis <- runDB $ get $ designDtoChassisId msg
+    chassis <- case dbChassis of
+                Nothing ->
+                    sendStatusJSON status400 ("Chassis not found" :: Text)
+
+                Just x ->
+                    return x
+
+    let comps = fmap (componentDtoToPlannedComponent dId) $ designDtoComponents msg
+    g <- liftIO getStdGen
+    let estimate = evalRand (estimateDesign chassis comps) g
+
+    return $ toJSON estimate

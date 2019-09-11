@@ -5,6 +5,7 @@ module Api.Designer exposing
     , deleteDesignCmd
     , designIdDecoder
     , designNameDecoder
+    , estimateDesign
     , saveDesignCmd
     )
 
@@ -43,11 +44,19 @@ import Data.Vehicles
         , ComponentPower
         , ComponentSlot(..)
         , ComponentType(..)
+        , CrewAmount(..)
+        , CrewPosition(..)
+        , CrewRank(..)
+        , CrewRequirement
+        , CrewSpace(..)
+        , CrewSpaceReq(..)
         , Design
         , DesignName(..)
         , PlannedChassis
         , PlannedComponent
         , SlotAmount(..)
+        , TotalCrewSpace
+        , UnitStats
         , Weight(..)
         )
 import Http
@@ -56,6 +65,7 @@ import Json.Decode as Decode
         ( andThen
         , fail
         , field
+        , index
         , int
         , list
         , maybe
@@ -100,6 +110,11 @@ deleteDesignCmd design =
 
         Nothing ->
             Cmd.none
+
+
+estimateDesign : Design -> Cmd Msg
+estimateDesign design =
+    Http.send (ApiMsgCompleted << DesignEstimated) (post ApiDesignEstimate (designEncoder design) unitStatsDecoder)
 
 
 componentDecoder : Decode.Decoder Component
@@ -218,6 +233,12 @@ stringToComponentType s =
 
         "StarSailComponent" ->
             succeed StarSailComponent
+
+        "QuartersComponent" ->
+            succeed QuartersComponent
+
+        "InfantryBayComponent" ->
+            succeed InfantryBayComponent
 
         "SupplyComponent" ->
             succeed SupplyComponent
@@ -395,3 +416,130 @@ slotAmountDecoder : Decode.Decoder SlotAmount
 slotAmountDecoder =
     succeed SlotAmount
         |> andMap int
+
+
+unitStatsDecoder : Decode.Decoder UnitStats
+unitStatsDecoder =
+    succeed UnitStats
+        |> andMap (field "MinimumCrew" (list crewRequirementDecoder))
+        |> andMap (field "NominalCrew" (list crewRequirementDecoder))
+        |> andMap (field "CrewSpace" totalCrewSpaceDecoder)
+        |> andMap (field "CrewSpaceRequired" crewSpaceReqDecoder)
+
+
+crewRequirementDecoder : Decode.Decoder CrewRequirement
+crewRequirementDecoder =
+    succeed CrewRequirement
+        |> andMap (index 0 crewPositionDecoder)
+        |> andMap (index 1 crewRankDecoder)
+        |> andMap (index 2 crewAmountDecoder)
+
+
+crewPositionDecoder : Decode.Decoder CrewPosition
+crewPositionDecoder =
+    string |> andThen stringToCrewPosition
+
+
+stringToCrewPosition : String -> Decode.Decoder CrewPosition
+stringToCrewPosition s =
+    case s of
+        "Commander" ->
+            succeed Commander
+
+        "Navigator" ->
+            succeed Navigator
+
+        "Signaler" ->
+            succeed Signaler
+
+        "SensorOperator" ->
+            succeed SensorOperator
+
+        "Gunner" ->
+            succeed Gunner
+
+        "Doctor" ->
+            succeed Doctor
+
+        "Nurse" ->
+            succeed Nurse
+
+        "Driver" ->
+            succeed Driver
+
+        "Helmsman" ->
+            succeed Helmsman
+
+        "Artificer" ->
+            succeed Artificer
+
+        "Crew" ->
+            succeed Crew
+
+        "Passenger" ->
+            succeed Passenger
+
+        _ ->
+            fail "unknown value"
+
+
+crewRankDecoder : Decode.Decoder CrewRank
+crewRankDecoder =
+    string |> andThen stringToCrewRank
+
+
+stringToCrewRank : String -> Decode.Decoder CrewRank
+stringToCrewRank s =
+    case s of
+        "SecondClass" ->
+            succeed SecondClass
+
+        "FirstClass" ->
+            succeed FirstClass
+
+        "Senior" ->
+            succeed Senior
+
+        "Chief" ->
+            succeed Chief
+
+        _ ->
+            fail "unknown value"
+
+
+crewAmountDecoder : Decode.Decoder CrewAmount
+crewAmountDecoder =
+    succeed CrewAmount
+        |> andMap int
+
+
+totalCrewSpaceDecoder : Decode.Decoder TotalCrewSpace
+totalCrewSpaceDecoder =
+    succeed TotalCrewSpace
+        |> andMap (field "Steerage" crewSpaceDecoder)
+        |> andMap (field "Standard" crewSpaceDecoder)
+        |> andMap (field "Luxury" crewSpaceDecoder)
+
+
+crewSpaceDecoder : Decode.Decoder CrewSpace
+crewSpaceDecoder =
+    succeed CrewSpace
+        |> andMap int
+
+
+crewSpaceReqDecoder : Decode.Decoder CrewSpaceReq
+crewSpaceReqDecoder =
+    string |> andThen stringToCrewSpaceReq
+
+
+stringToCrewSpaceReq : String -> Decode.Decoder CrewSpaceReq
+stringToCrewSpaceReq s =
+    case s of
+        "CrewSpaceRequired" ->
+            succeed CrewSpaceRequired
+
+        "CrewSpaceOptional" ->
+            succeed CrewSpaceOptional
+
+        _ ->
+            fail "Unknown value"

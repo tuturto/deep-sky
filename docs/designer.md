@@ -45,6 +45,30 @@ can be installed. Flyboat on the other hand always requires two star sails.
 These requirements are shown on the right side of the screen, inside panel
 titled to "Messages".
 
+Crew and Quarters
+-----------------
+
+All vehicles require crew to operate them. Exact type and amount of crew
+required depend on type of vehicle and installed components (if you have
+sophisticated sensor array, you're going to need sensor operator to use it and
+artificer to keep it running). On the right hand stats panel, you can see
+amount of crew required indicated by two numbers. First number is absolute
+minimum amount of crew that can keep vehicle barely operating, while the
+second number indicates optimal crew for it.
+
+Some vehicles, like star ships, are designed to operate more or less
+independently for long periods of time. There needs to be enough quarters
+installed on these vehicles for all the crew to rest (we aren't simulating
+hot bunking, so each and every crew members needs to have their own quarters).
+Currently available crew space is shown in right hand stats panel as three
+numbers. First indicates amount of steerage quarters, second standard quarters
+and third one luxury quarters. Steerage quarters pack maximum amount of people
+in minimum amount of space, while luxury quarters offer much higher standards
+of living, but take up considerably more space. Standard quarters strike
+a balance between these two extremities.
+
+![mini stats](img/ministats.png)
+
 Completing design
 -----------------
 

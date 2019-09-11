@@ -28,6 +28,7 @@ module Data.Accessors exposing
     , demesneCurrentPageA
     , demesneStatusA
     , designPanelStatusA
+    , designStatsA
     , designerRA
     , designsA
     , designsCurrentPageA
@@ -45,6 +46,7 @@ module Data.Accessors exposing
     , intriqueA
     , landedShipsStatusA
     , learningA
+    , locationA
     , martialA
     , messagesRA
     , messagesStatusA
@@ -60,6 +62,7 @@ module Data.Accessors exposing
     , planetA
     , planetDetailsStatusA
     , planetIdA
+    , planetNameA
     , planetRA
     , planetStatusA
     , planetStatusesStatusA
@@ -99,6 +102,27 @@ module Data.Accessors exposing
 
 import Accessors exposing (Relation, makeOneToN, makeOneToOne)
 import Accessors.Library exposing (onEach)
+
+
+planetNameA : Relation field sub wrap -> Relation { rec | planetName : field } sub wrap
+planetNameA =
+    makeOneToOne
+        .planetName
+        (\change rec -> { rec | planetName = change rec.planetName })
+
+
+locationA : Relation field sub wrap -> Relation { rec | location : field } sub wrap
+locationA =
+    makeOneToOne
+        .location
+        (\change rec -> { rec | location = change rec.location })
+
+
+designStatsA : Relation field sub wrap -> Relation { rec | designStats : field } sub wrap
+designStatsA =
+    makeOneToOne
+        .designStats
+        (\change rec -> { rec | designStats = change rec.designStats })
 
 
 avatarA : Relation field sub wrap -> Relation { rec | avatar : field } sub wrap

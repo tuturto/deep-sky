@@ -9,11 +9,13 @@ module Dto.Construction
   , constructionIndex )
   where
 
-import CustomTypes (buildingTypeName, ShipType(..), BuildingType(..))
-import Resources (RawResources(..), RawResource(..), ConstructionLeft)
-import Buildings (building, BLevel(..), buildingInfoCost)
-import Data.Aeson (object, (.=))
 import Import
+import Data.Aeson (object, (.=))
+
+import Buildings (building, BLevel(..), buildingInfoCost)
+import CustomTypes (buildingTypeName, BuildingType(..))
+import Resources (RawResources(..), RawResource(..), ConstructionLeft)
+import Vehicles.Data ( ShipType(..) )
 
 data ConstructionDto = BuildingConstructionDto
     { bcdtoId :: Key BuildingConstruction

@@ -24,8 +24,11 @@ import Database.Persist.Sql (toSqlKey)
 import CustomTypes
 import Dto.Icons ( IconMapper(..) )
 import People.Data ( PersonName(..), ShortTitle )
-import People.Import ( shortTitle )
-import Space.Data ( PlanetName(..), StarName(..), StarSystemName(..) )
+import People.Titles ( shortTitle )
+import Space.Data ( PlanetName(..), StarName(..), StarSystemName(..)
+                  , PlanetaryStatus(..), LuminosityClass(..), SpectralType(..)
+                  , Coordinates(..)
+                  )
 
 
 -- | Class to transform a report stored in db to respective collated report

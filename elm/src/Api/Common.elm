@@ -29,6 +29,7 @@ module Api.Common exposing
     , starSystemIdEncoder
     , starSystemNameDecoder
     , starSystemNameEncoder
+    , unitIdDecoder
     )
 
 {-| Basic building blocs for accessing server API
@@ -51,6 +52,7 @@ import Data.Common
         , StarName(..)
         , StarSystemId(..)
         , StarSystemName(..)
+        , UnitId(..)
         )
 import Data.Model exposing (ApiMsg(..), Model, Msg(..))
 import Http
@@ -368,3 +370,9 @@ dynastyNameDecoder : Decode.Decoder DynastyName
 dynastyNameDecoder =
     succeed DynastyName
         |> andMap string
+
+
+unitIdDecoder : Decode.Decoder UnitId
+unitIdDecoder =
+    succeed UnitId
+        |> andMap int

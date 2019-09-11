@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 
 module Queries
-    ( ShipLandingStatus(..), PersonRelationData(..), PersonDataLink(..)
+    ( PersonRelationData(..), PersonDataLink(..)
     , planetPopulationReports, shipsAtPlanet, planetConstructionQueue
     , kragiiTargetPlanets, farmingChangeTargetPlanets, factionBuildings
     , chassisList, planetReports, starSystemReports, personAndDynasty
@@ -18,8 +18,11 @@ import qualified Prelude as P
 import Control.Lens ( Lens', lens )
 import qualified Database.Esqueleto as E
 import Data.List ( nub )
+
 import Common ( safeHead )
-import CustomTypes ( BuildingType(..), PlanetaryStatus(..) )
+import CustomTypes ( BuildingType(..) )
+import Space.Data ( PlanetaryStatus(..) )
+import Vehicles.Data ( LandingStatus(..) )
 
 
 -- | Load population reports of a planet and respective races
@@ -42,19 +45,14 @@ planetPopulationReports pId fId =
 -- | Load ships that are on or around a given planet and their faction info
 shipsAtPlanet :: (MonadIO m, BackendCompatible SqlBackend backend,
                     PersistQueryRead backend, PersistUniqueRead backend) =>
-                   Key Planet -> ShipLandingStatus -> ReaderT backend m [(Entity Ship, Entity Faction)]
+                   Key Planet -> LandingStatus -> ReaderT backend m [(Entity Ship, Entity Faction)]
 shipsAtPlanet pId landingStatus = do
-    let landed = case landingStatus of
-                    ShipOnPlanet -> True
-                    ShipInOrbit -> False
     E.select $
         E.from $ \(ship `E.InnerJoin` faction) -> do
-                E.on (ship E.^. ShipOwnerId E.==. faction E.^. FactionId)
+                E.on (ship E.^. ShipOwnerFactionId E.==. E.just (faction E.^. FactionId))
                 E.where_ (ship E.^. ShipPlanetId E.==. E.val (Just pId)
-                          E.&&. ship E.^. ShipLanded E.==. E.val landed)
+                          E.&&. ship E.^. ShipLanded E.==. E.val landingStatus)
                 return (ship, faction)
-
-data ShipLandingStatus = ShipOnPlanet | ShipInOrbit
 
 
 -- | Load planet with construction queue

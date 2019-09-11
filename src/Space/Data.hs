@@ -11,11 +11,13 @@
 {-# LANGUAGE LambdaCase                 #-}
 
 module Space.Data
-    ( StarName(..), PlanetName(..), StarSystemName(..)
+    ( StarName(..), PlanetName(..), StarSystemName(..), SpectralType(..)
+    , LuminosityClass(..), Coordinates(..), PlanetaryStatus(..)
     )
     where
 
 import Data.Aeson ( ToJSON(..), withText )
+import Data.Aeson.TH
 import Database.Persist.Sql
 import ClassyPrelude.Yesod   as Import
 
@@ -117,3 +119,36 @@ instance PersistField StarSystemName where
 
 instance PersistFieldSql StarSystemName where
     sqlType _ = SqlString
+
+
+data SpectralType = O | B | A | F | G | K | M | L | T
+    deriving (Show, Read, Eq, Enum, Bounded)
+derivePersistField "SpectralType"
+
+
+data LuminosityClass = Iap | Ia | Iab | Ib | II | III | IV | V | VI | VII
+    deriving (Show, Read, Eq, Enum, Bounded)
+derivePersistField "LuminosityClass"
+
+
+data Coordinates = Coordinates Double Double
+    deriving (Show, Read, Eq)
+
+
+-- | Status codes for various events that might affect a planet
+data PlanetaryStatus =
+    GoodHarvest
+    | PoorHarvest
+    | GoodMechanicals
+    | PoorMechanicals
+    | GoodChemicals
+    | PoorChemicals
+    | KragiiAttack
+    deriving (Show, Read, Eq, Enum, Bounded, Ord)
+derivePersistField "PlanetaryStatus"
+
+
+$(deriveJSON defaultOptions ''Coordinates)
+$(deriveJSON defaultOptions ''SpectralType)
+$(deriveJSON defaultOptions ''LuminosityClass)
+$(deriveJSON defaultOptions ''PlanetaryStatus)

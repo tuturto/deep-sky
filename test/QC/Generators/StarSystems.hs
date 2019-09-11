@@ -9,10 +9,10 @@ import Test.QuickCheck.Instances()
 import Database.Persist.Sql
 import Model
 import Report
-import CustomTypes
 import QC.Generators.Common
 import QC.Generators.Database
-import Space.Data ( StarName(..), StarSystemName(..) )
+import Space.Data ( StarName(..), StarSystemName(..), LuminosityClass(..)
+                  , SpectralType(..) )
 
 
 anyLuminosityClass :: Gen LuminosityClass

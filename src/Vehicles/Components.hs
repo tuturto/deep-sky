@@ -12,9 +12,10 @@ module Vehicles.Components
     ( Component(..), ComponentSlot(..), ComponentId(..), ComponentType(..), ComponentLevel(..)
     , ComponentPower(..), Weight(..), ChassisType(..), SlotAmount(..), ChassisName(..)
     , ComponentAmount(..), ComponentName(..), ComponentDescription(..), ComponentDamage(..)
-    , scaleLevel, components, requirements, componentRequirements )
+    , scaleLevel, components, requirements, componentRequirements, unComponentAmountL )
     where
 
+import Control.Lens.TH
 import Data.Aeson ( ToJSON(..), withScientific, withText )
 import Data.Aeson.TH
     ( deriveJSON, defaultOptions, fieldLabelModifier  )
@@ -130,7 +131,6 @@ instance PersistFieldSql ComponentLevel where
 newtype ComponentAmount = ComponentAmount { unComponentAmount :: Int }
     deriving (Show, Read, Eq, Ord, Num)
 
-
 instance ToJSON ComponentAmount where
     toJSON = toJSON . unComponentAmount
 
@@ -202,6 +202,8 @@ data ComponentType =
     | SensorComponent
     | EngineComponent
     | StarSailComponent
+    | QuartersComponent
+    | InfantryBayComponent
     | SupplyComponent
     | MotiveComponent
     deriving (Show, Read, Eq, Ord)
@@ -224,6 +226,10 @@ data ComponentId = ShipLongRangeSensors
     | ShipBridge
     | ShipSupplyPod
     | ShipStarSail
+    | ShipSteerageQuarters
+    | ShipStandardQuarters
+    | ShipLuxuryQuarters
+    | ShipInfantryBay
     | VehicleWheeledMotiveSystem
     | VehicleTrackedMotiveSystem
     | VehicleHoverMotiveSystem
@@ -260,6 +266,10 @@ instance PersistFieldSql ChassisName where
     sqlType _ = SqlString
 
 
+instance IsString ChassisName where
+    fromString = MkChassisName . fromString
+
+
 -- | List defining what kind of technology is required to unlock a specific component
 requirements :: [(Maybe Technology, ComponentId)]
 requirements =
@@ -275,6 +285,10 @@ componentRequirements ShipHeavyArmour = Just HighTensileMaterials
 componentRequirements ShipBridge = Nothing
 componentRequirements ShipSupplyPod = Nothing
 componentRequirements ShipStarSail = Nothing
+componentRequirements ShipSteerageQuarters = Nothing
+componentRequirements ShipStandardQuarters = Nothing
+componentRequirements ShipLuxuryQuarters = Nothing
+componentRequirements ShipInfantryBay = Nothing
 componentRequirements VehicleWheeledMotiveSystem = Nothing
 componentRequirements VehicleTrackedMotiveSystem = Nothing
 componentRequirements VehicleHoverMotiveSystem = Just HoverCrafts
@@ -292,6 +306,61 @@ components level ShipStarSail =
         , componentSlot = SailSlot
         , componentType = [ ComponentPower level StarSailComponent ]
         , componentCost = RawResources (RawResource 10) (RawResource 0) (RawResource 10)
+        , componentChassisType = SpaceShip
+        }
+
+components level ShipSteerageQuarters =
+    Component
+        { componentId = ShipSteerageQuarters
+        , componentLevel = level
+        , componentName = "Steerage quarters"
+        , componentDescription = "Tightly packed quarters and associated ameneties"
+        , componentWeight = Weight 5
+        , componentSlot = InnerSlot
+        , componentType = [ ComponentPower (scaleLevel level 10) QuartersComponent ]
+        , componentCost = RawResources (RawResource 10) (RawResource 0) (RawResource 0)
+        , componentChassisType = SpaceShip
+        }
+
+components level ShipStandardQuarters =
+    Component
+        { componentId = ShipStandardQuarters
+        , componentLevel = level
+        , componentName = "Standard quarters"
+        , componentDescription = "Regular quarters and associated ameneties"
+        , componentWeight = Weight 5
+        , componentSlot = InnerSlot
+        , componentType = [ ComponentPower (scaleLevel level 5) QuartersComponent
+                          , ComponentPower (scaleLevel level 2) SupplyComponent ]
+        , componentCost = RawResources (RawResource 12) (RawResource 10) (RawResource 0)
+        , componentChassisType = SpaceShip
+        }
+
+components level ShipLuxuryQuarters =
+    Component
+        { componentId = ShipLuxuryQuarters
+        , componentLevel = level
+        , componentName = "Luxury quarters"
+        , componentDescription = "Very fine quarters and associated ameneties"
+        , componentWeight = Weight 5
+        , componentSlot = InnerSlot
+        , componentType = [ ComponentPower level QuartersComponent
+                          , ComponentPower level SupplyComponent ]
+        , componentCost = RawResources (RawResource 15) (RawResource 5) (RawResource 5)
+        , componentChassisType = SpaceShip
+        }
+
+components level ShipInfantryBay =
+    Component
+        { componentId = ShipInfantryBay
+        , componentLevel = level
+        , componentName = "Infantry bay"
+        , componentDescription = "Quarters and amenities for combat troops and their gear"
+        , componentWeight = Weight 5
+        , componentSlot = InnerSlot
+        , componentType = [ ComponentPower level InfantryBayComponent
+                          , ComponentPower (scaleLevel level 2) SupplyComponent ]
+        , componentCost = RawResources (RawResource 20) (RawResource 10) (RawResource 10)
         , componentChassisType = SpaceShip
         }
 
@@ -502,3 +571,5 @@ $(deriveJSON defaultOptions { fieldLabelModifier = drop 14 } ''ComponentPower)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 9 } ''Component)
 $(deriveJSON defaultOptions ''ComponentSlot)
 $(deriveJSON defaultOptions ''ChassisType)
+
+makeLensesFor [ ("unComponentAmount", "unComponentAmountL")] ''ComponentAmount

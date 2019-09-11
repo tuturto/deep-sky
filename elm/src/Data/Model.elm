@@ -18,16 +18,16 @@ import Data.StarSystem
         , Star
         , StarSystem
         )
-import Data.Vehicles exposing (Chassis, Component, Design)
+import Data.Vehicles exposing (Chassis, Component, Design, UnitStats)
 import Dict exposing (Dict)
 import Http
 import Url exposing (Url)
 import ViewModels.Designer exposing (DesignerRMsg, DesignerViewModel)
 import ViewModels.Messages exposing (MessagesRMsg, MessagesViewModel)
+import ViewModels.Person exposing (PersonRMsg, PersonViewModel)
 import ViewModels.Planet exposing (PlanetRMsg(..), PlanetViewModel)
 import ViewModels.Research exposing (ResearchRMsg(..), ResearchViewModel)
 import ViewModels.StarSystem exposing (StarSystemRMsg, StarSystemViewModel)
-import ViewModels.Person exposing (PersonRMsg, PersonViewModel)
 
 
 type alias Model =
@@ -94,3 +94,4 @@ type ApiMsg
     | ChassisReceived (Result Http.Error (List Chassis))
     | DesignsReceived (Result Http.Error (List Design))
     | DesignSaved (Result Http.Error Design)
+    | DesignEstimated (Result Http.Error UnitStats)

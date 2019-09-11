@@ -20,6 +20,7 @@ Email json
     UniqueEmail email
     deriving Show Read Eq
 
+-- Faction represents group of people, that is lead by ruler and has certain amount of resources
 Faction json
     name FactionName
     homeSystem StarSystemId
@@ -28,6 +29,7 @@ Faction json
     chemicals (RawResource Chemical)
     deriving Show Read Eq
 
+-- Star system is region in space, that usually holds one or more stars and some planets
 StarSystem json
     name StarSystemName
     coordX Double
@@ -35,6 +37,7 @@ StarSystem json
     rulerId PersonId Maybe
     deriving Show Read Eq
 
+-- Stars are located in center of star systems
 Star json
     name StarName
     starSystemId StarSystemId
@@ -42,6 +45,7 @@ Star json
     luminosityClass LuminosityClass
     deriving Show Read Eq
 
+-- Planets orbit stars. They can be claimed by factions.
 Planet json
     name PlanetName
     position Int
@@ -52,27 +56,33 @@ Planet json
     SystemPosition starSystemId position
     deriving Show Read Eq
 
+-- People can be of different races
 Race json
     name Text
     deriving Show Read Eq
 
+-- Population of planet consists of multiple races and their amounts
 PlanetPopulation json
     planetId PlanetId
     raceId RaceId
     population Int
     deriving Show Read Eq
 
+-- Planet status are used to track some special events, like particularly good
+-- harvest or booming industry.
 PlanetStatus json
     planetId PlanetId
     status PlanetaryStatus
     expiration StarDate Maybe
     deriving Show Read Eq
 
+-- Star lanes connect star systems. They are the only way traveling between them
 StarLane json
     starSystem1 StarSystemId
     starSystem2 StarSystemId
     deriving Show Read Eq
 
+-- Buildings are located on surface of planets and are used to produce resources
 Building json
     planetId PlanetId
     type BuildingType
@@ -80,19 +90,13 @@ Building json
     damage Double
     deriving Show Read Eq
 
+-- Overall status of simulation
 Simulation json
     currentTime StarDate
     deriving Show Read Eq
 
-Ship json
-    name Text
-    type ShipType
-    starSystemId StarSystemId
-    planetId PlanetId Maybe
-    landed Bool
-    ownerId FactionId
-    deriving Show Read Eq
-
+-- Designs are blueprints for different kinds of vehicles. Each faction have their
+-- own designs.
 Design json
     name Text
     ownerId FactionId
@@ -119,6 +123,7 @@ Chassis json
     engineSlots SlotAmount
     motiveSlots SlotAmount
     sailSlots SlotAmount
+    crewSpaceRequired CrewSpaceReq
     deriving Show Read Eq
 
 RequiredComponent json
@@ -129,11 +134,37 @@ RequiredComponent json
     deriving Show Read Eq
 
 InstalledComponent json
-    shipId ShipId
+    unitId UnitId
     componentId ComponentId
     level ComponentLevel
     damage ComponentDamage
     deriving Show Read Eq
+
+Ship json
+    name ShipName
+    chassisId ChassisId
+    starSystemId StarSystemId
+    planetId PlanetId Maybe
+    landed LandingStatus
+    ownerFactionId FactionId Maybe
+    ownerPersonId PersonId Maybe
+    deriving Show Read Eq
+
+Vehicle json
+    chassisId ChassisId
+    planetId PlanetId Maybe
+    ownerId FactionId
+    deriving Show Read Eq
+
++Unit
+    shipId ShipId
+    vehicleId VehicleId
+
+CrewAssignment json
+    unitId UnitId
+    personId PersonId
+    position CrewPosition
+    UniqueCrewAssignment personId
 
 ShipConstruction json
     shipId ShipId Maybe
@@ -304,3 +335,19 @@ Pet json
     dateOfDeath StarDate Maybe
     ownerId PersonId
     deriving Show Read Eq
+
+-- location data of person who is stationed on an unit
+PersonOnUnit
+    personId PersonId
+    unitId UnitId
+    position CrewPosition
+
+-- location data of person who is stationed on a planet
+PersonOnPlanet
+    personId PersonId
+    planetId PlanetId
+
+-- general person location data
++PersonLocation
+    onUnit PersonOnUnitId
+    onPlanet PersonOnPlanetId

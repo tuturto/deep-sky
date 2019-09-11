@@ -22,6 +22,7 @@ import Api.Common
         , starDateDecoder
         , starSystemIdDecoder
         , starSystemNameDecoder
+        , unitIdDecoder
         )
 import Api.Endpoints exposing (Endpoint(..))
 import Data.Common
@@ -41,6 +42,8 @@ import Data.People
         , FirstName(..)
         , Gender(..)
         , LongTitle(..)
+        , OnPlanetData
+        , OnUnitData
         , OpinionFeeling(..)
         , OpinionIntel(..)
         , OpinionReason(..)
@@ -48,6 +51,7 @@ import Data.People
         , OpinionScore(..)
         , Person
         , PersonIntel(..)
+        , PersonLocation(..)
         , PersonName(..)
         , PetType(..)
         , PlanetDemesneReportShort
@@ -65,6 +69,7 @@ import Data.People
         , TraitName(..)
         , TraitType(..)
         )
+import Data.Vehicles exposing (CrewPosition(..))
 import Http
 import Json.Decode as Decode
     exposing
@@ -186,6 +191,7 @@ personDecoder =
         |> andMap (field "Traits" (maybe (list traitDecoder)))
         |> andMap (field "AvatarOpinion" opinionReportDecoder)
         |> andMap (field "OpinionOfAvatar" opinionReportDecoder)
+        |> andMap (field "Location" personLocationDecoder)
 
 
 statDecoder : Decode.Decoder StatValue
@@ -389,6 +395,8 @@ personIntelDecoder =
             (succeed Opinions
                 |> andMap (field "contents" opinionIntelDecoder)
             )
+        , when tagType (is "Location") (succeed Location)
+        , when tagType (is "Activity") (succeed Activity)
         ]
 
 
@@ -571,3 +579,49 @@ petTypeEncoder t =
 
         Rat ->
             Encode.string "Rat"
+
+
+personLocationDecoder : Decode.Decoder PersonLocation
+personLocationDecoder =
+    oneOf
+        [ when opinionReportType
+            (is "OnPlanet")
+            (succeed OnPlanet
+                |> andMap (field "Contents" onPlanetDecoder)
+            )
+        , when opinionReportType
+            (is "OnUnit")
+            (succeed OnUnit
+                |> andMap (field "Contents" onUnitDecoder)
+            )
+        , when opinionReportType
+            (is "UnknownLocation")
+            (succeed UnknownLocation)
+        ]
+
+
+locationTagDecoder : Decode.Decoder String
+locationTagDecoder =
+    field "Tag" string
+
+
+onPlanetDecoder : Decode.Decoder OnPlanetData
+onPlanetDecoder =
+    succeed OnPlanetData
+        |> andMap (field "PersonId" personIdDecoder)
+        |> andMap (field "PlanetId" planetIdDecoder)
+        |> andMap (field "StarSystemId" starSystemIdDecoder)
+        |> andMap (field "PlanetName" planetNameDecoder)
+
+
+onUnitDecoder : Decode.Decoder OnUnitData
+onUnitDecoder =
+    succeed OnUnitData
+        |> andMap (field "PersonId" personIdDecoder)
+        |> andMap (field "UnitId" unitIdDecoder)
+        |> andMap (field "CrewPosition" crewPositionDecoder)
+
+
+crewPositionDecoder : Decode.Decoder CrewPosition
+crewPositionDecoder =
+    fail "ups, oho"

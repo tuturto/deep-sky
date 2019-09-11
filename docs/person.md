@@ -9,7 +9,15 @@ Details
 -------
 
 Details section shows general information of the character, including name,
-age and gender.
+age and gender to name just few.
+
+Dynasty indicates which major hourse person belongs to. Dynasties are important
+as often holdings of deceased ruler are passed forward inside their dynasty.
+Crafty people can arrange favorable marriages to their heirs and try to
+enlarge their domain by rather means of inheritance than war.
+
+Location of character is based on intel. Without suitable intel there is no
+way of knowing where somebody is.
 
 Opinion is given as a pair, where first element is player character's opinion
 of the viewed character and second one is viewed character's estimated opinion

@@ -23,12 +23,14 @@ import Data.Accessors
         , intelTypesA
         , intriqueA
         , learningA
+        , locationA
         , martialA
         , nameA
         , opinionOfAvatarA
         , personA
         , personDetailsStatusA
         , personRA
+        , planetNameA
         , relationsA
         , relationsCurrentPageA
         , relationsStatusA
@@ -63,6 +65,7 @@ import Data.People
         , OpinionReport(..)
         , OpinionScore(..)
         , Person
+        , PersonLocation(..)
         , PersonName(..)
         , RelationLink
         , RelationType(..)
@@ -223,6 +226,21 @@ personDetailsContent model =
             get (personRA << personA << try << opinionOfAvatarA) model
                 |> Maybe.map displayOpinion
                 |> Maybe.withDefault (text "-")
+
+        location =
+            case get (personRA << personA << try << locationA) model of
+                Just (OnPlanet pDetails) ->
+                    a [ href (PlanetR pDetails.starSystemId pDetails.planetId) ]
+                        [ text <| unPlanetName pDetails.planetName ]
+
+                Just (OnUnit uDetails) ->
+                    text "Unknown"
+
+                Just UnknownLocation ->
+                    text "Unknown"
+
+                Nothing ->
+                    text "Unknown"
     in
     [ div [ class "row" ]
         [ div [ class "col-lg-4 panel-table-heading" ] [ text "Name" ]
@@ -245,6 +263,10 @@ personDetailsContent model =
     , div [ class "row" ]
         [ div [ class "col-lg-4 panel-table-heading" ] [ text "Gender" ]
         , div [ class "col-lg-8" ] [ gender ]
+        ]
+    , div [ class "row" ]
+        [ div [ class "col-lg-4 panel-table-heading" ] [ text "Location" ]
+        , div [ class "col-lg-8" ] [ location ]
         ]
     , if isPlayerAvatar then
         div [] []

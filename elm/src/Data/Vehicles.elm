@@ -15,15 +15,25 @@ module Data.Vehicles exposing
     , ComponentPower
     , ComponentSlot(..)
     , ComponentType(..)
+    , CrewAmount(..)
+    , CrewPosition(..)
+    , CrewRank(..)
+    , CrewRequirement
+    , CrewSpace(..)
+    , CrewSpaceReq(..)
     , Design
     , DesignName(..)
     , PlannedChassis
     , PlannedComponent
     , SlotAmount(..)
+    , TotalCrewSpace
+    , UnitStats
     , ValidationMessage(..)
     , Weight(..)
     , chassisTypeToString
+    , combinedCrewSpace
     , componentSlotToString
+    , crewCount
     , installPlan
     , slotToIndex
     , totalCost
@@ -36,6 +46,8 @@ module Data.Vehicles exposing
     , unComponentId
     , unComponentLevel
     , unComponentName
+    , unCrewAmount
+    , unCrewSpace
     , unDesignName
     , unSlotAmount
     , unValidationMessage
@@ -181,6 +193,8 @@ type ComponentType
     | SensorComponent
     | EngineComponent
     | StarSailComponent
+    | QuartersComponent
+    | InfantryBayComponent
     | SupplyComponent
     | MotiveComponent
 
@@ -351,8 +365,8 @@ unValidationMessage (ValidationMessage x) =
 
 {-| Validate design
 -}
-validateDesign : List Component -> List Chassis -> Design -> List ValidationMessage
-validateDesign components availableChassis design =
+validateDesign : List Component -> List Chassis -> Maybe UnitStats -> Design -> List ValidationMessage
+validateDesign components availableChassis stats design =
     let
         candidate =
             findFirst (\x -> x.id == design.chassis.id) availableChassis
@@ -366,6 +380,35 @@ validateDesign components availableChassis design =
                 ++ validateWeight chassis components design
                 ++ validateChassisRequirements chassis components design
                 ++ validateSlotUsage chassis components design
+                ++ validateQuarters stats
+
+
+{-| Validate that there's enough space for crew
+-}
+validateQuarters : Maybe UnitStats -> List ValidationMessage
+validateQuarters s =
+    case s of
+        Nothing ->
+            [ ValidationMessage "Design performance has not been estimated" ]
+
+        Just stats ->
+            case stats.crewSpaceRequired of
+                CrewSpaceOptional ->
+                    []
+
+                CrewSpaceRequired ->
+                    let
+                        provided =
+                            unCrewSpace <| combinedCrewSpace stats.crewSpace
+
+                        required =
+                            unCrewAmount <| crewCount stats.nominalCrew
+                    in
+                    if provided < required then
+                        [ ValidationMessage <| String.fromInt (required - provided) ++ " more quarters are needed" ]
+
+                    else
+                        []
 
 
 {-| Validate that design has name
@@ -478,6 +521,12 @@ missingPowerMessage requirement =
                             StarSailComponent ->
                                 "star sails"
 
+                            QuartersComponent ->
+                                "quarters"
+
+                            InfantryBayComponent ->
+                                "infantry bays"
+
                             SupplyComponent ->
                                 "supply storages"
 
@@ -501,6 +550,12 @@ missingPowerMessage requirement =
 
                             StarSailComponent ->
                                 "Star sail"
+
+                            QuartersComponent ->
+                                "Quarters"
+
+                            InfantryBayComponent ->
+                                "Infantry bay"
 
                             SupplyComponent ->
                                 "Supply storage"
@@ -653,3 +708,109 @@ scaleCost res n =
     , mechanical = MechResource <| unMech res.mechanical * n
     , chemical = ChemResource <| unChem res.chemical * n
     }
+
+
+{-| Stats of a unit
+-}
+type alias UnitStats =
+    { minimumCrew : List CrewRequirement
+    , nominalCrew : List CrewRequirement
+    , crewSpace : TotalCrewSpace
+    , crewSpaceRequired : CrewSpaceReq
+    }
+
+
+{-| Crew requirements of a unit
+-}
+type alias CrewRequirement =
+    { position : CrewPosition
+    , rank : CrewRank
+    , amount : CrewAmount
+    }
+
+
+{-| Positions crew can assume
+-}
+type CrewPosition
+    = Commander
+    | Navigator
+    | Signaler
+    | SensorOperator
+    | Gunner
+    | Doctor
+    | Nurse
+    | Driver
+    | Helmsman
+    | Artificer
+    | Crew
+    | Passenger
+
+
+{-| Seniority ranks for crew
+-}
+type CrewRank
+    = SecondClass
+    | FirstClass
+    | Senior
+    | Chief
+
+
+{-| Amount of crew
+-}
+type CrewAmount
+    = CrewAmount Int
+
+
+{-| Map from crew amount to plain int
+-}
+unCrewAmount : CrewAmount -> Int
+unCrewAmount (CrewAmount n) =
+    n
+
+
+{-| Total space reserved for crew, split into various levels of comfort
+-}
+type alias TotalCrewSpace =
+    { steerageSpace : CrewSpace
+    , standardSpace : CrewSpace
+    , luxurySpace : CrewSpace
+    }
+
+
+{-| Combined crew space, regardless of type
+-}
+combinedCrewSpace : TotalCrewSpace -> CrewSpace
+combinedCrewSpace total =
+    CrewSpace <|
+        unCrewSpace total.steerageSpace
+            + unCrewSpace total.standardSpace
+            + unCrewSpace total.luxurySpace
+
+
+{-| Amount of crew that fits in certain place
+-}
+type CrewSpace
+    = CrewSpace Int
+
+
+{-| Map from crew space to plain int
+-}
+unCrewSpace : CrewSpace -> Int
+unCrewSpace (CrewSpace n) =
+    n
+
+
+{-| Is crew space required or optional
+-}
+type CrewSpaceReq
+    = CrewSpaceRequired
+    | CrewSpaceOptional
+
+
+{-| Total amount of crew in a list
+-}
+crewCount : List CrewRequirement -> CrewAmount
+crewCount reqs =
+    List.map (\req -> unCrewAmount req.amount) reqs
+        |> List.sum
+        |> CrewAmount

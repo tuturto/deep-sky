@@ -42,6 +42,7 @@ type Endpoint
     | ApiAvailableChassis
     | ApiAllDesigns
     | ApiSingleDesign DesignId
+    | ApiDesignEstimate
     | ApiSinglePerson PersonId
     | ApiDemesne PersonId
 
@@ -127,6 +128,9 @@ endpointToString endpoint =
 
         ApiSingleDesign designId ->
             "api/design/" ++ designIdToString designId
+
+        ApiDesignEstimate ->
+            "api/designestimate"
 
         ApiSinglePerson personId ->
             "/api/person/" ++ personIdToString personId

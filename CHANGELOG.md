@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `Names` module for generating names with markov chains
 - Added `Data.Aeson.Lens` as a dependency
 - `PlanetName`, `StarName` and `StarSystemName` taken into use
+- People can be in different planets or assigned to a unit
+- Designs have crew requirements displayed
 ### Changed
 - `News` can now be targeted to faction or specific person
 - planet can have ruler
@@ -37,11 +39,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User submitted news have player avatar as originator
 - Faction resources changed from `Int` to `RawResource a`
 - Faction name changed from `Text` to `FactionName`
+- `SpectralType`, `LuminosityClass`, `PlanetaryStatus` and `Coordinates` moved to `Space.Data`
+- Designs must alloce enough living quarters for their crews
 ### Removed
 - `maybeFaction` function removed
 ### Fixed
 - [Empty construction queue on a planet causes error during simulation][4]
 - [Remove widget files][5]
+- [Designer shows only 6 components][10]
+### Known bugs
+- [Old planet details are shown][6]
 
 ## [0.1.0] - 2019-05-11
 ### Added
@@ -61,3 +68,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.0]: https://github.com/tuturto/deep-sky/releases/tag/0.1.0
 [4]: https://github.com/tuturto/deep-sky/issues/4
 [5]: https://github.com/tuturto/deep-sky/issues/5
+[6]: https://github.com/tuturto/deep-sky/issues/6
+[10]: https://github.com/tuturto/deep-sky/issues/10

@@ -33,6 +33,7 @@
 /api/chassis                                        ApiChassisR                     GET
 /api/design                                         ApiDesignR                      GET POST
 /api/design/#DesignId                               ApiDesignIdR                    PUT DELETE
+/api/designestimate                                 ApiDoDesignEstimateR            POST
 /api/construction/building                          ApiBuildingConstructionR        POST
 /api/construction/building/#BuildingConstructionId  ApiBuildingConstructionIdR      GET PUT DELETE
 -- /api/construction/ship                              ApiShipConstructionR            POST

@@ -5,8 +5,8 @@ module Integration.StatusSpec ( spec )
     where
 
 import TestImport
-import CustomTypes ( PlanetaryStatus(..) )
 import Simulation.Status ( removeExpiredStatuses )
+import Space.Data ( PlanetaryStatus(..) )
 
 
 spec :: Spec

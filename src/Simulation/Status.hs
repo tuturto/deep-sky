@@ -7,9 +7,10 @@ module Simulation.Status ( removeExpiredStatuses )
     where
 
 import Import
-import CustomTypes ( PlanetaryStatus(..), StarDate )
+import CustomTypes ( StarDate )
 import News.Data ( ProductionChangedNews(..), NewsArticle(..), mkFactionNews )
 import Resources ( ResourceType(..) )
+import Space.Data ( PlanetaryStatus(..) )
 
 
 -- | Remove expired statuses from database and save respective news
