@@ -200,6 +200,11 @@
     margin-top: 0.5em;
 }
 
+.space-top-sm {
+    padding-top: 0.25em;
+    margin-top: 0.25em;
+}
+
 .selected-chassis {
     font-weight: bold
 }

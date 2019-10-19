@@ -1,5 +1,6 @@
 module Data.Accessors exposing
     ( activeUserIconA
+    , adminRA
     , ageA
     , amountA
     , availableBuildingsA
@@ -24,6 +25,7 @@ module Data.Accessors exposing
     , currentPageA
     , currentResearchA
     , currentResearchStatusA
+    , currentTimeA
     , demesneA
     , demesneCurrentPageA
     , demesneStatusA
@@ -70,6 +72,7 @@ module Data.Accessors exposing
     , planetsStatusA
     , populationStatusA
     , populationsA
+    , processTurnA
     , productionStatusA
     , relationsA
     , relationsCurrentPageA
@@ -81,6 +84,7 @@ module Data.Accessors exposing
     , selectedComponentsA
     , sexA
     , shortTitleA
+    , simulationA
     , starLanesStatusA
     , starListStatusA
     , starSystemA
@@ -92,6 +96,7 @@ module Data.Accessors exposing
     , statsStatusA
     , stewardshipA
     , systemDetailsStatusA
+    , timeA
     , traitsA
     , traitsCurrentPageA
     , traitsStatusA
@@ -102,6 +107,41 @@ module Data.Accessors exposing
 
 import Accessors exposing (Relation, makeOneToN, makeOneToOne)
 import Accessors.Library exposing (onEach)
+
+
+currentTimeA : Relation field sub wrap -> Relation { rec | currentTime : field } sub wrap
+currentTimeA =
+    makeOneToOne
+        .currentTime
+        (\change rec -> { rec | currentTime = change rec.currentTime })
+
+
+timeA : Relation field sub wrap -> Relation { rec | time : field } sub wrap
+timeA =
+    makeOneToOne
+        .time
+        (\change rec -> { rec | time = change rec.time })
+
+
+processTurnA : Relation field sub wrap -> Relation { rec | processTurn : field } sub wrap
+processTurnA =
+    makeOneToOne
+        .processTurn
+        (\change rec -> { rec | processTurn = change rec.processTurn })
+
+
+simulationA : Relation field sub wrap -> Relation { rec | simulation : field } sub wrap
+simulationA =
+    makeOneToOne
+        .simulation
+        (\change rec -> { rec | simulation = change rec.simulation })
+
+
+adminRA : Relation field sub wrap -> Relation { rec | adminR : field } sub wrap
+adminRA =
+    makeOneToOne
+        .adminR
+        (\change rec -> { rec | adminR = change rec.adminR })
 
 
 planetNameA : Relation field sub wrap -> Relation { rec | planetName : field } sub wrap

@@ -8,7 +8,7 @@
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
               , FromDto(..), ToDto(..), apiNotFound, apiInvalidArgs, apiInternalError, apiOk
               , safeHead, apiForbidden, mkUniq, choose, getR, apiError, entityValL, entityKeyL
-              , Frequency(..), clamp, safeTail, chooseM )
+              , Frequency(..), clamp, safeTail, chooseM, apiRequireAdmin )
     where
 
 import Import
@@ -18,6 +18,9 @@ import Control.Monad.Random ( Rand, getRandomR, runRand )
 import Data.Set
 import qualified Data.List as List
 import System.Random
+
+import CustomTypes ( Role(..) )
+import Errors ( ErrorCode(..), raiseIfErrors )
 
 
 -- | Get item from list with given index
@@ -121,6 +124,18 @@ apiRequireFaction = do
 
     return (authId, user, Entity pId avi, fId)
 
+
+-- | Check that current user has admin rights
+apiRequireAdmin :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User)
+apiRequireAdmin = do
+    (authId, user) <- apiRequireAuthPair
+    dbRoles <- runDB $ selectList [ UserRoleUserId ==. authId ] []
+    let roles = (userRoleRole . entityVal) <$> dbRoles
+
+    when (not $ RoleAdministrator `elem` roles) $ do
+        raiseIfErrors [ InsufficientRights ]
+
+    return (authId, user)
 
 -- | Send 404 error with json body
 apiNotFound :: HandlerFor App a

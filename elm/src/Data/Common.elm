@@ -38,6 +38,7 @@ module Data.Common exposing
     , locationToString
     , maxPage
     , messageIdToString
+    , nextStarDate
     , perhapsOrdering
     , personIdToString
     , planetIdToString
@@ -81,6 +82,11 @@ type StarDate
 unStarDate : StarDate -> Int
 unStarDate (StarDate x) =
     x
+
+
+nextStarDate : StarDate -> StarDate
+nextStarDate (StarDate x) =
+    StarDate (x + 1)
 
 
 type BioResource

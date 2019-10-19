@@ -4,13 +4,14 @@
 {-# LANGUAGE LambdaCase                 #-}
 
 module Errors
-    ( ErrorCode(..), raiseIfErrors )
+    ( ErrorCode(..), raiseIfErrors, raiseIfFailure )
 
     where
 
 import Import
 import qualified Prelude as P
 import Data.Aeson.TH ( deriveJSON, defaultOptions )
+import Data.Either.Validation ( Validation(..) )
 
 
 -- | Error codes for all errors returned by API
@@ -24,6 +25,9 @@ data ErrorCode
     | UnsupportedArticleType
     | SpecialNewsExtractionFailed
     | TriedToMakeChoiceForRegularArticle
+    -- errors specific to simulation state
+    | SimulationStatusNotFound
+    | DeltaTIsTooBig
     deriving (Show, Read, Eq)
 
 
@@ -50,6 +54,8 @@ errorCodeToStatusCode =
         UnsupportedArticleType -> 400
         SpecialNewsExtractionFailed -> 500
         TriedToMakeChoiceForRegularArticle -> 500
+        SimulationStatusNotFound -> 500
+        DeltaTIsTooBig -> 400
 
 
 -- | Map status code to message text
@@ -72,6 +78,18 @@ raiseIfErrors errors = do
         let eCodes = (\x -> ECode x $ errorCodeToText x) <$> errors
         let code = P.head $ errorCodeToStatusCode <$> errors
         sendStatusJSON (Status code (statusCodeToText code)) $ toJSON eCodes
+
+
+-- | return error message to caller if any validation errors happened
+-- http status code used is selected based on the first error code
+raiseIfFailure :: Validation [ErrorCode] a -> HandlerFor App ()
+raiseIfFailure vRes = do
+    case vRes of
+        Failure errors ->
+            raiseIfErrors errors
+
+        Success _ ->
+            return ()
 
 
 -- | Mapping between error codes and their plain text explanations
@@ -98,6 +116,12 @@ errorCodeToText =
 
         TriedToMakeChoiceForRegularArticle ->
             "Tried to make a choice for regular article"
+
+        SimulationStatusNotFound ->
+            "Simulation status seems to be missing"
+
+        DeltaTIsTooBig ->
+            "Time difference is too big"
 
 
 $(deriveJSON defaultOptions ''ErrorCode)

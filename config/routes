@@ -7,22 +7,22 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/                                    HomeR               GET
-/newhome                             NewHomeR            GET
-/profile                             ProfileR            GET
-/starsystem                          StarSystemsR        GET
-/starsystem/#StarSystemId            StarSystemR         GET
-/starsystem/#StarSystemId/#PlanetId  PlanetR             GET
-/research                            ResearchR           GET
-/fleet                               FleetR              GET
-/construction                        ConstructionR       GET
-/designer                            DesignerR           GET
-/base                                BasesR              GET
-/base/#StarSystemId/#PlanetId        BaseR               GET
-/faction                             FactionR            GET
-/message                             MessageR            GET
-/person/#PersonId                    PersonR             GET
-/person                              PeopleR             GET
+/                                                   HomeR                           GET
+/newhome                                            NewHomeR                        GET
+/profile                                            ProfileR                        GET
+/starsystem                                         StarSystemsR                    GET
+/starsystem/#StarSystemId                           StarSystemR                     GET
+/starsystem/#StarSystemId/#PlanetId                 PlanetR                         GET
+/research                                           ResearchR                       GET
+/fleet                                              FleetR                          GET
+/construction                                       ConstructionR                   GET
+/designer                                           DesignerR                       GET
+/base                                               BasesR                          GET
+/base/#StarSystemId/#PlanetId                       BaseR                           GET
+/faction                                            FactionR                        GET
+/message                                            MessageR                        GET
+/person/#PersonId                                   PersonR                         GET
+/person                                             PeopleR                         GET
 
 /api/stardate                                       ApiStarDateR                    GET
 /api/resources                                      ApiResourcesR                   GET
@@ -36,8 +36,8 @@
 /api/designestimate                                 ApiDoDesignEstimateR            POST
 /api/construction/building                          ApiBuildingConstructionR        POST
 /api/construction/building/#BuildingConstructionId  ApiBuildingConstructionIdR      GET PUT DELETE
--- /api/construction/ship                              ApiShipConstructionR            POST
--- /api/construction/ship/#ShipConstructionId          ApiShipConstructionIdR          GET PUT DELETE
+-- /api/construction/ship                           ApiShipConstructionR            POST
+-- /api/construction/ship/#ShipConstructionId       ApiShipConstructionIdR          GET PUT DELETE
 
 /api/research/available                             ApiAvailableResearchR           GET
 /api/research/current                               ApiCurrentResearchR             GET POST DELETE
@@ -55,9 +55,10 @@
 /api/planet/#PlanetId/population                    ApiPlanetPopulationR            GET
 /api/planet/#PlanetId/status                        ApiPlanetStatusR                GET
 
--- /api/person                                         ApiPeopleR                      GET
+-- /api/person                                      ApiPeopleR                      GET
 /api/person/#PersonId                               ApiPersonR                      GET
 /api/person/#PersonId/demesne                       ApiDemesneR                     GET
 
-/admin                               AdminPanelR          GET
-/admin/time                          AdminAdvanceTimeR    GET
+/api/admin/simulation                               AdminApiSimulationR             GET PUT
+
+/admin                                              AdminPanelR                     GET

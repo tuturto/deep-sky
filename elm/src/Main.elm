@@ -58,6 +58,7 @@ import List
 import Maybe.Extra exposing (isJust)
 import Navigation exposing (parseLocation)
 import Url exposing (Url)
+import ViewModels.Admin
 import ViewModels.Designer exposing (DesignerRMsg(..))
 import ViewModels.Messages exposing (MessagesRMsg(..))
 import ViewModels.Person
@@ -131,6 +132,7 @@ init flags url key =
             , designs = Nothing
             , designerR = ViewModels.Designer.init
             , personR = ViewModels.Person.init
+            , adminR = ViewModels.Admin.init
             }
     in
     ( model
@@ -185,6 +187,9 @@ update msg model =
 
         PersonMessage message ->
             Views.Person.update message model
+
+        AdminMessage message ->
+            Views.Admin.update message model
 
 
 {-| Handle messages related to API calls

@@ -245,10 +245,8 @@ instance Yesod App where
         muid <- maybeAuthId
         authorizeAdmin muid
 
-    isAuthorized AdminAdvanceTimeR _     = do
-        muid <- maybeAuthId
-        authorizeAdmin muid
-
+    -- Admin API routes
+    isAuthorized AdminApiSimulationR _              = return Authorized
 
     -- API routes
     isAuthorized ApiStarSystemsR _                  = return Authorized
@@ -353,7 +351,6 @@ instance YesodBreadcrumbs App where
         name <- runDB $ planetNameById planetId
         return (unPlanetName name, Just BasesR)
     breadcrumb AdminPanelR = return ("Admin", Just HomeR)
-    breadcrumb AdminAdvanceTimeR = return ("Time management", Just AdminPanelR)
     breadcrumb _ = return ("home", Nothing)
 
 -- How to run database actions.

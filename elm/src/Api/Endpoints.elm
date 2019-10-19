@@ -45,6 +45,7 @@ type Endpoint
     | ApiDesignEstimate
     | ApiSinglePerson PersonId
     | ApiDemesne PersonId
+    | AdminSimulationStatus
 
 
 {-| Map type safe Endpoint into String that can be used in HTTP requests
@@ -137,3 +138,6 @@ endpointToString endpoint =
 
         ApiDemesne personId ->
             "/api/person/" ++ personIdToString personId ++ "/demesne"
+
+        AdminSimulationStatus ->
+            "/api/admin/simulation"

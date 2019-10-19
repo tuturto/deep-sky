@@ -6,6 +6,7 @@ module Data.Model exposing
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
+import Data.Admin exposing (Simulation)
 import Data.Common exposing (ErrorMessage, InfoPanelStatus, Resources, StarDate)
 import Data.Construction exposing (Building, BuildingInfo, Construction)
 import Data.Messages exposing (NewsArticle, UserIcon)
@@ -22,6 +23,7 @@ import Data.Vehicles exposing (Chassis, Component, Design, UnitStats)
 import Dict exposing (Dict)
 import Http
 import Url exposing (Url)
+import ViewModels.Admin exposing (AdminRMsg, AdminViewModel)
 import ViewModels.Designer exposing (DesignerRMsg, DesignerViewModel)
 import ViewModels.Messages exposing (MessagesRMsg, MessagesViewModel)
 import ViewModels.Person exposing (PersonRMsg, PersonViewModel)
@@ -58,6 +60,7 @@ type alias Model =
     , designs : Maybe (List Design)
     , designerR : DesignerViewModel
     , personR : PersonViewModel
+    , adminR : AdminViewModel
     }
 
 
@@ -72,6 +75,7 @@ type Msg
     | ResearchMessage ResearchRMsg
     | DesignerMessage DesignerRMsg
     | PersonMessage PersonRMsg
+    | AdminMessage AdminRMsg
 
 
 type ApiMsg

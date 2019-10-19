@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 ### Changed
+- Admin interface has been rewritten in Elm
 ### Removed
 ### Fixed
 ### Known bugs
+- [Disallow dismissing special events][1]
 - [Old planet details are shown][6]
 
 ## [0.2.0] - 2019-10-19
@@ -56,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Remove widget files][5]
 - [Designer shows only 6 components][10]
 ### Known bugs
+- [Disallow dismissing special events][1]
 - [Old planet details are shown][6]
 
 ## [0.1.0] - 2019-05-11
@@ -71,10 +74,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Special events system
 - [User manual](https://tuturto.github.io/deep-sky/)
 - Vehicle designer
+### Known bugs
+- [Disallow dismissing special events][1]
 
 [Unreleased]: https://github.com/tuturto/deep-sky/compare/0.2.0...HEAD
+
 [0.1.0]: https://github.com/tuturto/deep-sky/releases/tag/0.1.0
 [0.2.0]: https://github.com/tuturto/deep-sky/releases/tag/0.2.0
+
+[1]: https://github.com/tuturto/deep-sky/issues/1
 [4]: https://github.com/tuturto/deep-sky/issues/4
 [5]: https://github.com/tuturto/deep-sky/issues/5
 [6]: https://github.com/tuturto/deep-sky/issues/6

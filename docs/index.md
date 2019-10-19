@@ -14,5 +14,6 @@ Contents
   * [Doing research](research)
   * [Designing vehicles](designer)
   * [News archive](messages)
+* [How to administer game](admin/admin)
 
 Released under MIT license
