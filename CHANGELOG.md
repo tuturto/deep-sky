@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+### Changed
+### Removed
+### Fixed
+### Known bugs
+- [Old planet details are shown][6]
+
+## [0.2.0] - 2019-10-19
+### Added
 - Players have avatar that they're playing as
 - `Person` to represent people in detailed way
 - `HumanIntelligence` to represent level of person intel
@@ -64,8 +72,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [User manual](https://tuturto.github.io/deep-sky/)
 - Vehicle designer
 
-[Unreleased]: https://github.com/tuturto/deep-sky/compare/0.1.0...HEAD
+[Unreleased]: https://github.com/tuturto/deep-sky/compare/0.2.0...HEAD
 [0.1.0]: https://github.com/tuturto/deep-sky/releases/tag/0.1.0
+[0.2.0]: https://github.com/tuturto/deep-sky/releases/tag/0.2.0
 [4]: https://github.com/tuturto/deep-sky/issues/4
 [5]: https://github.com/tuturto/deep-sky/issues/5
 [6]: https://github.com/tuturto/deep-sky/issues/6
