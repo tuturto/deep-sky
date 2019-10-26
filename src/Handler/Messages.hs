@@ -14,7 +14,8 @@ import Import
 import Data.Aeson.Text ( encodeToLazyText )
 import Data.Either.Validation ( Validation(..), _Failure, _Success )
 
-import Common ( apiRequireFaction, toDto, fromDto, apiNotFound, apiForbidden )
+import Common ( apiRequireFaction, toDto, fromDto, apiNotFound, apiForbidden
+              , apiRequireViewSimulation, apiRequireOpenSimulation )
 import Control.Lens ( (#) )
 import Control.Monad.Trans.Writer ( WriterT, runWriterT, tell )
 import CustomTypes ( SpecialEventStatus(..), StarDate )
@@ -32,7 +33,8 @@ import Simulation.Events ( extractSpecialNews, handleSpecialEvent )
 -- | Api method to retrieve all pending messages
 getApiMessageR :: Handler Value
 getApiMessageR = do
-    (_, _, avatar, fId) <- apiRequireFaction
+    (uId, _, avatar, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     loadAllMessages fId (entityKey avatar)
 
 
@@ -40,7 +42,8 @@ getApiMessageR = do
 -- any effect.
 deleteApiMessageIdR :: Key News -> Handler Value
 deleteApiMessageIdR mId = do
-    (_, _, avatar, fId) <- apiRequireFaction
+    (uId, _, avatar, fId) <- apiRequireFaction
+    _ <- apiRequireOpenSimulation uId
     loadedMessages <- runDB $ selectList [ NewsId ==. mId
                                          , NewsFactionId ==. (Just fId) ] [ Asc NewsDate ]
     _ <- if null loadedMessages
@@ -53,7 +56,8 @@ deleteApiMessageIdR mId = do
 -- event
 putApiMessageIdR :: Key News -> Handler Value
 putApiMessageIdR mId = do
-    (_, _, avatarE, fId) <- apiRequireFaction
+    (uId, _, avatarE, fId) <- apiRequireFaction
+    _ <- apiRequireOpenSimulation uId
     msg <- requireJsonBody
     (_, errs) <- runDB . runWriterT $ updateEventWithChoice mId avatarE $ fromDto msg
     raiseIfErrors errs
@@ -159,7 +163,8 @@ handleWithChoice mId article = do
 -- Trying to submit any other type of news article will return
 postApiMessageR :: Handler Value
 postApiMessageR = do
-    (_, _, avatar, fId) <- apiRequireFaction
+    (uId, _, avatar, fId) <- apiRequireFaction
+    _ <- apiRequireOpenSimulation uId
     currentDate <- runDB starDate
     msg <- requireJsonBody
     let article = (setUser (entityVal avatar) . setStarDate currentDate . fromDto) msg

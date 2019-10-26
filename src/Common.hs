@@ -8,18 +8,20 @@
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
               , FromDto(..), ToDto(..), apiNotFound, apiInvalidArgs, apiInternalError, apiOk
               , safeHead, apiForbidden, mkUniq, choose, getR, apiError, entityValL, entityKeyL
-              , Frequency(..), clamp, safeTail, chooseM, apiRequireAdmin )
+              , Frequency(..), clamp, safeTail, chooseM, apiRequireAdmin, systemStatus
+              , apiRequireOpenSimulation, apiRequireViewSimulation )
     where
 
 import Import
 import qualified Prelude as P ( (!!), length )
 import Control.Lens ( Lens', lens )
 import Control.Monad.Random ( Rand, getRandomR, runRand )
+import Database.Persist.Sql (toSqlKey)
 import Data.Set
 import qualified Data.List as List
 import System.Random
 
-import CustomTypes ( Role(..) )
+import CustomTypes ( Role(..), SystemStatus(..) )
 import Errors ( ErrorCode(..), raiseIfErrors )
 
 
@@ -136,6 +138,35 @@ apiRequireAdmin = do
         raiseIfErrors [ InsufficientRights ]
 
     return (authId, user)
+
+
+-- | Require simulation being fully open
+-- users should be able to do anything in this state
+-- users that are in administrator role are automatically granted access
+apiRequireOpenSimulation :: AuthId (HandlerSite (HandlerFor App)) -> HandlerFor App ()
+apiRequireOpenSimulation authId = do
+    status <- runDB systemStatus
+    when (status /= Online) $ do
+        dbRoles <- runDB $ selectList [ UserRoleUserId ==. authId ] []
+        let roles = (userRoleRole . entityVal) <$> dbRoles
+
+        when (not $ RoleAdministrator `elem` roles) $ do
+            raiseIfErrors [ SimulationNotOpenForCommands ]
+
+
+-- | Require simulation be available for viewing
+-- users don't need to be able edit commands in this state
+-- users that are in administrator role are automatically granted access
+apiRequireViewSimulation :: AuthId (HandlerSite (HandlerFor App)) -> HandlerFor App ()
+apiRequireViewSimulation authId = do
+    status <- runDB systemStatus
+    when (not $ status `elem` [ Online, ProcessingTurn] ) $ do
+        dbRoles <- runDB $ selectList [ UserRoleUserId ==. authId ] []
+        let roles = (userRoleRole . entityVal) <$> dbRoles
+
+        when (not $ RoleAdministrator `elem` roles) $ do
+            raiseIfErrors [ SimulationNotOpenForBrowsing ]
+
 
 -- | Send 404 error with json body
 apiNotFound :: HandlerFor App a
@@ -278,3 +309,12 @@ entityKeyL = lens entityKey (\(Entity _ value) key -> Entity key value)
 clamp :: Ord a => a -> a -> a -> a
 clamp start end val =
         max start $ min end val
+
+
+-- | System status
+systemStatus :: (BaseBackend backend ~ SqlBackend, MonadIO m,
+    PersistQueryRead backend) =>
+    ReaderT backend m SystemStatus
+systemStatus = do
+    simulation <- get (toSqlKey 1)
+    return $ maybe Offline simulationStatus simulation

@@ -93,6 +93,7 @@ Building json
 -- Overall status of simulation
 Simulation json
     currentTime StarDate
+    status SystemStatus
     deriving Show Read Eq
 
 -- Designs are blueprints for different kinds of vehicles. Each faction have their

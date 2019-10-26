@@ -9,7 +9,7 @@ module CustomTypes
     ( SpecialEventStatus(..), BuildingType(..), Role(..)
     , PercentileChance(..), RollResult(..), Bonus(..), Boostable(..)
     , StarDate(..), Age(..), UserIdentity(..), FactionName(..)
-    , age, buildingTypeName, roll )
+    , SystemStatus(..), age, buildingTypeName, roll )
     where
 
 import Data.Aeson ( ToJSON(..), withScientific, withText )
@@ -226,6 +226,17 @@ instance PersistFieldSql FactionName where
     sqlType _ = SqlString
 
 
+-- | Status of the simulation
+data SystemStatus =
+    Offline
+    | Maintenance
+    | Online
+    | ProcessingTurn
+    deriving (Show, Read, Eq)
+derivePersistField "SystemStatus"
+
+
 $(deriveJSON defaultOptions ''SpecialEventStatus)
 $(deriveJSON defaultOptions ''Role)
 $(deriveJSON defaultOptions ''BuildingType)
+$(deriveJSON defaultOptions ''SystemStatus)

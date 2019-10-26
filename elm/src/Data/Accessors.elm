@@ -94,6 +94,7 @@ module Data.Accessors exposing
     , starsA
     , statsA
     , statsStatusA
+    , statusA
     , stewardshipA
     , systemDetailsStatusA
     , timeA
@@ -107,6 +108,13 @@ module Data.Accessors exposing
 
 import Accessors exposing (Relation, makeOneToN, makeOneToOne)
 import Accessors.Library exposing (onEach)
+
+
+statusA : Relation field sub wrap -> Relation { rec | status : field } sub wrap
+statusA =
+    makeOneToOne
+        .status
+        (\change rec -> { rec | status = change rec.status })
 
 
 currentTimeA : Relation field sub wrap -> Relation { rec | currentTime : field } sub wrap

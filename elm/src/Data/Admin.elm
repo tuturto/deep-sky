@@ -1,13 +1,14 @@
-module Data.Admin exposing (Simulation, SimulationStatus(..))
+module Data.Admin exposing (Simulation, SystemStatus(..))
 
 import Data.Common exposing (StarDate(..))
 
 
 type alias Simulation =
-    { time : StarDate }
+    { time : StarDate
+    , status : SystemStatus }
 
 
-type SimulationStatus
+type SystemStatus
     = Offline
     | Maintenance
     | Online

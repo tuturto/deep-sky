@@ -1,12 +1,11 @@
 module ViewModels.Admin exposing
-    ( ActionStatus(..)
-    , AdminRMsg(..)
+    ( AdminRMsg(..)
     , AdminViewModel
     , DisplayMode(..)
     , init
     )
 
-import Data.Admin exposing (Simulation)
+import Data.Admin exposing (Simulation, SystemStatus)
 import Http
 
 
@@ -14,7 +13,7 @@ import Http
 -}
 type AdminRMsg
     = SimulationStatusReceived (Result Http.Error Simulation)
-    | ProcessTurn ActionStatus
+    | ChangeStatusRequested SystemStatus
     | DisplayPage DisplayMode
 
 
@@ -23,7 +22,6 @@ type AdminRMsg
 type alias AdminViewModel =
     { simulation : Maybe Simulation
     , currentPage : DisplayMode
-    , processTurn : ActionStatus
     }
 
 
@@ -35,19 +33,10 @@ type DisplayMode
     | PeopleMenu
 
 
-{-| Track state of UI with confirmation action
--}
-type ActionStatus
-    = Inactive
-    | Requested
-    | Confirmed
-
-
 {-| Create initial view model
 -}
 init : AdminViewModel
 init =
     { simulation = Nothing
     , currentPage = AdminMenu
-    , processTurn = Inactive
     }

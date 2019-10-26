@@ -14,6 +14,7 @@ import Data.Maybe ( isNothing )
 import Import
 
 import Common ( apiRequireAdmin )
+import CustomTypes ( SystemStatus(..) )
 import Errors ( ErrorCode(..), raiseIfErrors, raiseIfFailure )
 import Handler.Home ( getNewHomeR )
 import Simulation.Main ( processTurn )
@@ -47,8 +48,13 @@ putAdminApiSimulationR = do
     -- at later point we might want to do this in a separate process
     -- and return from server immediately
     when (fmap simulationCurrentTime status /= (Just $ simulationCurrentTime msg)) $ do
-        -- TODO: set simulation status to 'ProcessingTurn'
+        runDB $ update (toSqlKey 1) [ SimulationStatus =. ProcessingTurn ]
         _ <- runDB $ processTurn
+        runDB $ update (toSqlKey 1) [ SimulationStatus =. Online ]
+        return ()
+
+    when (fmap simulationStatus status /= (Just $ simulationStatus msg)) $ do
+        _ <- runDB $ update (toSqlKey 1) [ SimulationStatus =. (simulationStatus msg) ]
         return ()
 
     -- load and return simulation status
@@ -67,16 +73,29 @@ validateSimulationPut old new =
         Just oldStatus ->
             pure oldStatus
                 <* timeDifferenceIsNotTooBig oldStatus new
+                <* onlyTimeOrStatusChanges oldStatus new
 
 
--- | Timme difference between two steps in simulation should be exactly one
+-- | Time difference between two steps in simulation should be exactly one
 timeDifferenceIsNotTooBig :: Simulation -> Simulation -> Validation [ErrorCode] Simulation
 timeDifferenceIsNotTooBig old new =
     if dt == 0 || dt == 1
         then
-            _Success # old
+            _Success # new
         else
             _Failure # [ DeltaTIsTooBig ]
+    where
+        dt = simulationCurrentTime new - simulationCurrentTime old
+
+
+-- | I's not allowed to process turn and change system status in one go
+onlyTimeOrStatusChanges :: Simulation -> Simulation -> Validation [ErrorCode] Simulation
+onlyTimeOrStatusChanges old new =
+    if dt /= 0 && (simulationStatus old /= simulationStatus new)
+        then
+            _Failure # [ TurnProcessingAndStateChangeDisallowed ]
+        else
+            _Success # new
     where
         dt = simulationCurrentTime new - simulationCurrentTime old
 

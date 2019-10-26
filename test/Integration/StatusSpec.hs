@@ -5,6 +5,7 @@ module Integration.StatusSpec ( spec )
     where
 
 import TestImport
+import CustomTypes ( SystemStatus(..) )
 import Simulation.Status ( removeExpiredStatuses )
 import Space.Data ( PlanetaryStatus(..) )
 
@@ -47,7 +48,7 @@ spec = withApp $ do
                         , planetStatusExpiration = Just 20201
                         }
 
-                let status = Simulation 20201
+                let status = Simulation 20201 Online
                 _ <- runDB $ insert status
 
                 news <- runDB $ removeExpiredStatuses (simulationCurrentTime status)

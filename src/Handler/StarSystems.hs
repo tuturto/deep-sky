@@ -12,7 +12,7 @@ module Handler.StarSystems
 import Import
 import Report ( collateReports, collateReport, planetStatusIconMapper )
 
-import Common ( apiRequireFaction, apiNotFound )
+import Common ( apiRequireFaction, apiNotFound, apiRequireViewSimulation )
 import Queries ( planetPopulationReports, planetReports, starSystemReports )
 import Handler.Home (getNewHomeR)
 
@@ -35,7 +35,8 @@ getPlanetR _ _ = getNewHomeR
 -- | api method to retrieve single star system
 getApiStarSystemR :: Key StarSystem -> Handler Value
 getApiStarSystemR sId = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     reports <- runDB $ starSystemReports fId sId
     _ <- when (reports == mempty) apiNotFound
     return $ toJSON $ collateReport reports
@@ -44,9 +45,10 @@ getApiStarSystemR sId = do
 -- | api method to retrieve all known star systems
 getApiStarSystemsR :: Handler Value
 getApiStarSystemsR = do
-    (_, _, _, factionId) <- apiRequireFaction
-    loadedSystemReports <- runDB $ selectList [ StarSystemReportFactionId ==. factionId ] [ Asc StarSystemReportId
-                                                                                          , Asc StarSystemReportDate ]
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
+    loadedSystemReports <- runDB $ selectList [ StarSystemReportFactionId ==. fId ] [ Asc StarSystemReportId
+                                                                                    , Asc StarSystemReportDate ]
     let systemReports = collateReports $ map entityVal loadedSystemReports
     return $ toJSON systemReports
 
@@ -54,9 +56,10 @@ getApiStarSystemsR = do
 -- | api method to retrieve all known stars
 getApiStarsR :: Handler Value
 getApiStarsR = do
-    (_, _, _, factionId) <- apiRequireFaction
-    loadedReports <- runDB $ selectList [ StarReportFactionId ==. factionId ] [ Asc StarReportId
-                                                                              , Asc StarReportDate ]
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
+    loadedReports <- runDB $ selectList [ StarReportFactionId ==. fId ] [ Asc StarReportId
+                                                                        , Asc StarReportDate ]
     let reports = collateReports $ map entityVal loadedReports
     return $ toJSON reports
 
@@ -64,7 +67,8 @@ getApiStarsR = do
 -- | api method to retrieve all known planets
 getApiAllPlanetsR :: Handler Value
 getApiAllPlanetsR = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     loadedPlanetReports <- runDB $ selectList [ PlanetReportFactionId ==. fId ] [ Asc PlanetReportPlanetId
                                                                                 , Asc PlanetReportDate ]
     let planetReport = collateReports $ map entityVal loadedPlanetReports
@@ -74,7 +78,8 @@ getApiAllPlanetsR = do
 -- | api method to retrieve specific planet
 getApiPlanetR :: Key Planet -> Handler Value
 getApiPlanetR planetId = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     reports <- runDB $ planetReports fId planetId
     return $ toJSON $ collateReport reports
 
@@ -82,7 +87,8 @@ getApiPlanetR planetId = do
 -- | api method to retrieve buildings on a planet
 getApiPlanetBuildingsR :: Key Planet -> Handler Value
 getApiPlanetBuildingsR planetId = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     loadedBuildingReports <- runDB $ selectList [ BuildingReportPlanetId ==. planetId
                                                 , BuildingReportFactionId ==. fId ] [ Asc BuildingReportBuildingId
                                                                                     , Asc BuildingReportDate ]
@@ -93,7 +99,8 @@ getApiPlanetBuildingsR planetId = do
 -- | api method to retrieve population of a planet
 getApiPlanetPopulationR :: Key Planet -> Handler Value
 getApiPlanetPopulationR planetId = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     loadedPopReports <- runDB $ planetPopulationReports planetId fId
     let populationReports = collateReports $ map (\(a, b) -> (entityVal a, fmap entityVal b)) loadedPopReports
     return $ toJSON populationReports
@@ -101,7 +108,8 @@ getApiPlanetPopulationR planetId = do
 
 getApiPlanetStatusR :: Key Planet -> Handler Value
 getApiPlanetStatusR planetId = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     statuses <- runDB $ selectList [ PlanetStatusReportPlanetId ==. planetId
                                    , PlanetStatusReportFactionId ==. fId ]
                                    [ Desc PlanetStatusReportDate ]

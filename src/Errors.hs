@@ -28,6 +28,9 @@ data ErrorCode
     -- errors specific to simulation state
     | SimulationStatusNotFound
     | DeltaTIsTooBig
+    | TurnProcessingAndStateChangeDisallowed
+    | SimulationNotOpenForCommands
+    | SimulationNotOpenForBrowsing
     deriving (Show, Read, Eq)
 
 
@@ -56,6 +59,10 @@ errorCodeToStatusCode =
         TriedToMakeChoiceForRegularArticle -> 500
         SimulationStatusNotFound -> 500
         DeltaTIsTooBig -> 400
+        TurnProcessingAndStateChangeDisallowed -> 400
+        SimulationNotOpenForCommands -> 500
+        SimulationNotOpenForBrowsing -> 500
+
 
 
 -- | Map status code to message text
@@ -122,6 +129,15 @@ errorCodeToText =
 
         DeltaTIsTooBig ->
             "Time difference is too big"
+
+        TurnProcessingAndStateChangeDisallowed ->
+            "Can't change system state and process turn at the same time"
+
+        SimulationNotOpenForCommands ->
+            "Simulation not currently available for playing"
+
+        SimulationNotOpenForBrowsing ->
+            "Simulation not currently available for browsing"
 
 
 $(deriveJSON defaultOptions ''ErrorCode)

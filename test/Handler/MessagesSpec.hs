@@ -11,6 +11,7 @@ import Data.Aeson.Lens ( _Array, _String, _Integer, key )
 import Database.Persist.Sql (toSqlKey)
 import Network.Wai.Test ( SResponse(..) )
 
+import CustomTypes ( SystemStatus(..) )
 import Handler.Helpers ( delete_, setupPerson )
 import News.Import ( researchCompleted )
 import Research.Data ( Technology(..) )
@@ -26,6 +27,7 @@ spec = withApp $ do
         it "pending messages are loaded" $ do
             (pId, fId) <- setupPerson
             _ <- runDB $ insert $ researchCompleted 25250 fId HighSensitivitySensors
+            _ <- runDB $ insert $ Simulation 25250 Online
             user <- createUser "Pete" (Just pId)
             authenticateAs user
             _ <- get ApiMessageR
@@ -47,6 +49,7 @@ spec = withApp $ do
         it "message marked deleted isn't loaded" $ do
             (pId, fId) <- setupPerson
             _ <- runDB $ insert $ researchCompleted 25250 fId HighSensitivitySensors
+            _ <- runDB $ insert $ Simulation 25250 Online
             user <- createUser "Pete" (Just pId)
             authenticateAs user
             _ <- delete_ $ ApiMessageIdR (toSqlKey 1)

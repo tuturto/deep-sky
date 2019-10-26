@@ -14,7 +14,8 @@ module Handler.Construction
 
 import Import
 import qualified Prelude as P ( maximum, length )
-import Common ( apiRequireFaction, fromDto, apiNotFound, apiInvalidArgs, apiOk )
+import Common ( apiRequireFaction, fromDto, apiNotFound, apiInvalidArgs, apiOk
+              , apiRequireViewSimulation, apiRequireOpenSimulation )
 import Buildings (building, BLevel(..))
 import CustomTypes (BuildingType(..))
 import Data.Aeson (ToJSON(..))
@@ -34,7 +35,8 @@ getConstructionR =
 --   In case multiple levels of a building are available, all are reported
 getApiBuildingsR :: Handler Value
 getApiBuildingsR = do
-    _ <- apiRequireFaction
+    (uId, _, _, _) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     let json = toJSON [ building SensorStation $ BLevel 1
                       , building ResearchComplex $ BLevel 1
                       , building Farm $ BLevel 1
@@ -49,7 +51,8 @@ getApiBuildingsR = do
 -- | Retrieve construction queue of a given planet as JSON
 getApiPlanetConstQueueR :: Key Planet -> Handler Value
 getApiPlanetConstQueueR planetId = do
-    _ <- apiRequireFaction
+    (uId, _, _, _) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     constructions <- runDB $ loadPlanetConstructionQueue planetId
     return $ toJSON constructions
 
@@ -57,7 +60,8 @@ getApiPlanetConstQueueR planetId = do
 -- | Retrieve details of given building construction
 getApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
 getApiBuildingConstructionIdR cId = do
-    _ <- apiRequireFaction
+    (uId, _, _, _) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     loadedConst <- runDB $ get cId
     construction <- case loadedConst of
                         Just x -> return x
@@ -70,7 +74,8 @@ getApiBuildingConstructionIdR cId = do
 --   Returns current construction queue of the planet after the insert
 postApiBuildingConstructionR :: Handler Value
 postApiBuildingConstructionR = do
-    _ <- apiRequireFaction
+    (uId, _, _, _) <- apiRequireFaction
+    _ <- apiRequireOpenSimulation uId
     msg <- requireJsonBody
     -- TODO: validate permissions
     _ <- runDB $ createBuildingConstruction msg
@@ -82,7 +87,8 @@ postApiBuildingConstructionR = do
 --   In case this method is called to update ship construction http 400 error will be returned
 putApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
 putApiBuildingConstructionIdR cId = do
-    _ <- apiRequireFaction
+    (uId, _, _, _) <- apiRequireFaction
+    _ <- apiRequireOpenSimulation uId
     msg <- requireJsonBody
     (newIndex, oldIndex, pId) <- validatePut msg cId
     let direction = if newIndex < oldIndex
@@ -112,7 +118,8 @@ putApiBuildingConstructionIdR cId = do
 -- | Delete building construction
 deleteApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
 deleteApiBuildingConstructionIdR cId = do
-    _ <- apiRequireFaction
+    (uId, _, _, _) <- apiRequireFaction
+    _ <- apiRequireOpenSimulation uId
     loadedConst <- runDB $ get cId
     res <- runDB $ removeBuildingConstruction cId loadedConst
     return $ toJSON res

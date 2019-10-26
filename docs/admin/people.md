@@ -13,4 +13,3 @@ Creation
 --------
 
 [Back to admin](admin)
-[Back to index](../index)

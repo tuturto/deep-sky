@@ -11,8 +11,10 @@ import Data.Accessors
         , errorsA
         , processTurnA
         , simulationA
+        , statusA
         , timeA
         )
+import Data.Admin exposing (SystemStatus(..))
 import Data.Common exposing (error, nextStarDate)
 import Data.Model exposing (Model, Msg(..))
 import Data.User exposing (Role(..))
@@ -21,8 +23,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import ViewModels.Admin
     exposing
-        ( ActionStatus(..)
-        , AdminRMsg(..)
+        ( AdminRMsg(..)
         , DisplayMode(..)
         )
 
@@ -47,7 +48,8 @@ page model =
 displayMainMenu : Model -> Html Msg
 displayMainMenu model =
     div []
-        [ div [ class "row" ]
+        [ simulationStatusBlock model
+        , div [ class "row" ]
             [ div [ class "col-lg-6" ]
                 -- left column
                 [ div [ class "row" ]
@@ -85,11 +87,7 @@ displayMainMenu model =
 displaySimulationStatus : Model -> Html Msg
 displaySimulationStatus model =
     div []
-        [ div [ class "row" ]
-            [ div [ class "col-lg-2" ] (processTurnButton model)
-            , div [ class "col-lg-2" ] (confirmProcessTurnButton model)
-            , div [ class "col-lg-2" ] (cancelProcessTurnButton model)
-            ]
+        [ simulationStatusBlock model
         , div [ class "row space-top" ]
             [ div [ class "col-lg-2" ]
                 [ div
@@ -102,91 +100,53 @@ displaySimulationStatus model =
         ]
 
 
-{-| html for process turn button
--}
-processTurnButton : Model -> List (Html Msg)
-processTurnButton model =
-    let
-        buttonClass =
-            if processTurnButtonActive model then
-                "btn btn-primary btn-block command-button"
+statusButton : Maybe SystemStatus -> SystemStatus -> String -> Html Msg
+statusButton status target txt =
+    case status of
+        Just x ->
+            if x /= target then
+                div [ class "col-lg-2" ]
+                    [ div
+                        [ class "btn btn-default btn-block btn-sm command-button"
+                        , onClick (AdminMessage <| ChangeStatusRequested target)
+                        ]
+                        [ text txt ]
+                    ]
 
             else
-                "btn btn-primary btn-block command-button disabled"
-    in
-    [ div
-        [ class buttonClass
-        , onClick <| AdminMessage <| ProcessTurn Requested
-        ]
-        [ text "Process turn" ]
-    ]
-
-
-{-| html for confirmation button
--}
-confirmProcessTurnButton : Model -> List (Html Msg)
-confirmProcessTurnButton model =
-    if confirmProcessTurnButtonVisible model then
-        [ div
-            [ class "btn btn-primary btn-block command-button"
-            , onClick <| AdminMessage <| ProcessTurn Confirmed
-            ]
-            [ text "Confirm" ]
-        ]
-
-    else
-        []
-
-
-{-| html for cancel process turn button
--}
-cancelProcessTurnButton : Model -> List (Html Msg)
-cancelProcessTurnButton model =
-    if confirmProcessTurnButtonVisible model then
-        [ div
-            [ class "btn btn-primary btn-block command-button"
-            , onClick <| AdminMessage <| ProcessTurn Inactive
-            ]
-            [ text "Cancel" ]
-        ]
-
-    else
-        []
-
-
-{-| Is process turn button active
--}
-processTurnButtonActive : Model -> Bool
-processTurnButtonActive model =
-    case model.adminR.simulation of
-        Just _ ->
-            True
+                div [ class "col-lg-2" ]
+                    [ div
+                        [ class "btn btn-primary btn-block btn-sm command-button"
+                        ]
+                        [ text txt ]
+                    ]
 
         Nothing ->
-            False
+            div [] []
 
 
-{-| Is confirm turn processing button available
+{-| html div displaying current system status
 -}
-confirmProcessTurnButtonVisible : Model -> Bool
-confirmProcessTurnButtonVisible model =
-    if processTurnButtonActive model then
-        case model.adminR.processTurn of
-            Requested ->
-                True
-
-            _ ->
-                False
-
-    else
-        False
+simulationStatusBlock : Model -> Html Msg
+simulationStatusBlock model =
+    let
+        status =
+            get (adminRA << simulationA << try << statusA) model
+    in
+    div [ class "row" ]
+        [ div [ class "col-lg-2" ] [ text " " ]
+        , statusButton status Offline "Offline"
+        , statusButton status Maintenance "Maintenance"
+        , statusButton status Online "Online"
+        , statusButton status ProcessingTurn "Processing turn"
+        ]
 
 
 {-| Display people page
 -}
 displayPeople : Model -> Html Msg
 displayPeople model =
-    div [] [ text "people" ]
+    div [] [ simulationStatusBlock model ]
 
 
 {-| Initialize data retrieval from server
@@ -218,22 +178,23 @@ update message model =
             , Cmd.none
             )
 
-        ProcessTurn Inactive ->
-            ( set (adminRA << processTurnA) Inactive model
-            , Cmd.none
-            )
-
-        ProcessTurn Requested ->
-            ( set (adminRA << processTurnA) Requested model
-            , Cmd.none
-            )
-
-        ProcessTurn Confirmed ->
-            ( set (adminRA << processTurnA) Confirmed model
+        ChangeStatusRequested ProcessingTurn ->
+            ( model
             , case model.adminR.simulation of
                 Just simulation ->
                     putSimulationStatus (AdminMessage << SimulationStatusReceived)
                         (set timeA (nextStarDate simulation.time) simulation)
+
+                Nothing ->
+                    Cmd.none
+            )
+
+        ChangeStatusRequested status ->
+            ( model
+            , case model.adminR.simulation of
+                Just simulation ->
+                    putSimulationStatus (AdminMessage << SimulationStatusReceived)
+                        (set statusA status simulation)
 
                 Nothing ->
                     Cmd.none

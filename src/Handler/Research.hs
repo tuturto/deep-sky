@@ -9,7 +9,8 @@ module Handler.Research
     where
 
 import Import
-import Common ( apiRequireFaction, apiError, apiNotFound )
+import Common ( apiRequireFaction, apiError, apiNotFound, apiRequireViewSimulation
+              , apiRequireOpenSimulation )
 import Handler.Home ( getNewHomeR )
 import Queries ( factionBuildings )
 import Research.Data ( ResearchProgress(..), ResearchScore(..), Research(..)
@@ -21,7 +22,8 @@ import Research.Tree ( techMap )
 -- | Api to retrieve currently available research
 getApiAvailableResearchR :: Handler Value
 getApiAvailableResearchR = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     available <- runDB $ selectList [ AvailableResearchFactionId ==. fId ] []
     let tech = availableResearchType . entityVal <$> available
     let research = techMap <$> tech
@@ -31,7 +33,8 @@ getApiAvailableResearchR = do
 -- | Api to retrieve all research currently in progress
 getApiCurrentResearchR :: Handler Value
 getApiCurrentResearchR = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     res <- runDB $ loadCurrentResearch fId
     return $ toJSON res
 
@@ -39,7 +42,8 @@ getApiCurrentResearchR = do
 -- | Api to start new research
 postApiCurrentResearchR :: Handler Value
 postApiCurrentResearchR = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireOpenSimulation uId
     newRes <- requireJsonBody
     available <- runDB $ selectList [ AvailableResearchFactionId ==. fId ] []
     let validRes = validateNewResearch (entityVal <$> available) newRes
@@ -51,7 +55,8 @@ postApiCurrentResearchR = do
 -- | Api to delete research currently in progress
 deleteApiCurrentResearchR :: Handler Value
 deleteApiCurrentResearchR = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireOpenSimulation uId
     newRes <- requireJsonBody
     current <- runDB $ selectList [ CurrentResearchFactionId ==. fId
                                   , CurrentResearchType ==. (researchType . researchProgressResearch) newRes] []
@@ -65,7 +70,8 @@ deleteApiCurrentResearchR = do
 -- | Api to get current research production
 getApiResearchProductionR :: Handler Value
 getApiResearchProductionR = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     pnbs <- runDB $ factionBuildings fId
     let buildings = pnbs >>= snd
     let total = mconcat $ (researchOutput . entityVal) <$> buildings

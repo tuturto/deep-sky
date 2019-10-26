@@ -9,7 +9,7 @@ module Handler.Common where
 import Data.FileEmbed (embedFile)
 import Import
 import MenuHelpers ( starDate, getScore )
-import Common ( apiRequireFaction )
+import Common ( apiRequireFaction, apiRequireViewSimulation )
 import Dto.Common ( StarDateResponse(..) )
 
 -- These handlers embed files in the executable at compile time to avoid a
@@ -37,7 +37,8 @@ getApiStarDateR = do
 -- | API for loading currently available resources
 getApiResourcesR :: Handler Value
 getApiResourcesR = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     faction <- runDB $ get fId
     let score = getScore faction
     return $ toJSON score

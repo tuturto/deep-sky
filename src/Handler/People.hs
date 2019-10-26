@@ -10,7 +10,8 @@ module Handler.People
 
 import Import
 import Data.Maybe ( fromJust )
-import Common ( apiRequireFaction, apiNotFound, mkUniq )
+import Common ( apiRequireFaction, apiNotFound, mkUniq
+              , apiRequireViewSimulation )
 import MenuHelpers ( starDate )
 import People.Import ( personReport, demesneReport )
 import People.Queries ( getPersonLocation, PersonLocationSum(..))
@@ -31,7 +32,8 @@ getPeopleR = getNewHomeR
 -- | Information of single person, taking intel level into account
 getApiPersonR :: Key Person -> HandlerFor App Value
 getApiPersonR pId = do
-    (_, _, avatar, fId) <- apiRequireFaction
+    (uId, _, avatar, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     let avatarId = entityKey avatar
     today <- runDB $ starDate
     info <- runDB $ personRelations pId (entityKey avatar)
@@ -69,7 +71,8 @@ getApiPersonR pId = do
 -- | Demesne of given character, according to intelligence level
 getApiDemesneR :: Key Person -> HandlerFor App Value
 getApiDemesneR pId = do
-    (_, _, avatar, _) <- apiRequireFaction
+    (uId, _, avatar, _) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     today <- runDB $ starDate
     person <- runDB $ get pId
     when (isNothing person) apiNotFound

@@ -15,7 +15,8 @@ import Control.Monad.Random ( evalRand, getStdGen )
 import Database.Persist.Sql (toSqlKey)
 
 import Data.Maybe ( fromJust, maybe )
-import Common ( apiRequireFaction, mkUniq )
+import Common ( apiRequireFaction, mkUniq, apiRequireOpenSimulation
+              , apiRequireViewSimulation )
 import CustomTypes ( StarDate )
 import Dto.Ship ( DesignDto(..), designToDesignDto, toChassisDto
                 , componentDtoToPlannedComponent )
@@ -36,7 +37,8 @@ getDesignerR = getNewHomeR
 -- | Get list of all components that currently logged in user has access to
 getApiComponentsR :: Handler Value
 getApiComponentsR = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     completed <- runDB $ selectList [ CompletedResearchFactionId ==. fId ] []
     let comps = mkUniq . join $ toComponent <$> completed
     return $ toJSON comps
@@ -62,7 +64,8 @@ toComponent = (componentLookup requirements components) . entityVal
 -- | Get list of all chassis that currently logged in user has access to
 getApiChassisR :: Handler Value
 getApiChassisR = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     chassisRequirements <- runDB $ chassisList fId
     return $ toJSON $ toChassisDto <$> chassisRequirements
 
@@ -71,7 +74,8 @@ getApiChassisR = do
 getApiDesignR :: Handler Value
 getApiDesignR = do
     -- TODO: use esqueleto and refactor into own function
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireViewSimulation uId
     loadedDesigns <- runDB $ selectList [ DesignOwnerId ==. fId ] []
     loadedComponents <- runDB $ selectList [ PlannedComponentDesignId <-. map entityKey loadedDesigns ] []
     let designs = map (\d -> designToDesignDto (entityKey d, entityVal d)
@@ -83,7 +87,8 @@ getApiDesignR = do
 -- | Create a new design
 postApiDesignR :: Handler Value
 postApiDesignR = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireOpenSimulation uId
     msg <- requireJsonBody
     if validateSaveDesign msg then
         (do date <- runDB starDate
@@ -95,7 +100,8 @@ postApiDesignR = do
 -- | Update existing design
 putApiDesignIdR :: Key Design -> Handler Value
 putApiDesignIdR dId = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireOpenSimulation uId
     msg <- requireJsonBody
     if validateSaveDesign msg then
         (do savedDesign <- runDB $ updateDesign dId msg fId
@@ -106,7 +112,8 @@ putApiDesignIdR dId = do
 -- | Permanently delete design
 deleteApiDesignIdR :: Key Design -> Handler Value
 deleteApiDesignIdR dId = do
-    (_, _, _, fId) <- apiRequireFaction
+    (uId, _, _, fId) <- apiRequireFaction
+    _ <- apiRequireOpenSimulation uId
     --TODO: allow deleting only faction's designs
     _ <- runDB $ deleteDesign dId
     loadedDesigns <- runDB $ selectList [ DesignOwnerId ==. fId ] []
@@ -163,7 +170,8 @@ deleteDesign dId = do
 -- | Estimate stats of a design being worked
 postApiDoDesignEstimateR :: Handler Value
 postApiDoDesignEstimateR = do
-    (_, _, _, _) <- apiRequireFaction
+    (uId, _, _, _) <- apiRequireFaction
+    _ <- apiRequireOpenSimulation uId
     msg <- requireJsonBody
     let dId = case designDtoId msg of
                 Nothing ->
