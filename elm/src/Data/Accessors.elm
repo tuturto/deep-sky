@@ -1,5 +1,7 @@
 module Data.Accessors exposing
     ( activeUserIconA
+    , adminEditPersonRA
+    , adminListPeopleRA
     , adminRA
     , ageA
     , amountA
@@ -15,6 +17,7 @@ module Data.Accessors exposing
     , chassisCurrentPageA
     , chassisListStatusA
     , choiceA
+    , cognomenA
     , commandsStatusA
     , componentListStatusA
     , componentsA
@@ -26,6 +29,7 @@ module Data.Accessors exposing
     , currentResearchA
     , currentResearchStatusA
     , currentTimeA
+    , dateOfBirthA
     , demesneA
     , demesneCurrentPageA
     , demesneStatusA
@@ -39,6 +43,9 @@ module Data.Accessors exposing
     , dynastyA
     , emptyPanelStatusA
     , errorsA
+    , familyNameA
+    , fieldsA
+    , firstNameA
     , focusedTopCategoryA
     , genderA
     , iconsA
@@ -53,11 +60,13 @@ module Data.Accessors exposing
     , messagesRA
     , messagesStatusA
     , nameA
+    , nameTypeA
     , newsA
     , newsPanelStatusA
     , opinionOfAvatarA
     , orbitingShipsStatusA
     , pageSizeA
+    , peopleA
     , personA
     , personDetailsStatusA
     , personRA
@@ -74,6 +83,7 @@ module Data.Accessors exposing
     , populationsA
     , processTurnA
     , productionStatusA
+    , regnalNumberA
     , relationsA
     , relationsCurrentPageA
     , relationsStatusA
@@ -108,6 +118,76 @@ module Data.Accessors exposing
 
 import Accessors exposing (Relation, makeOneToN, makeOneToOne)
 import Accessors.Library exposing (onEach)
+
+
+dateOfBirthA : Relation field sub wrap -> Relation { rec | dateOfBirth : field } sub wrap
+dateOfBirthA =
+    makeOneToOne
+        .dateOfBirth
+        (\change rec -> { rec | dateOfBirth = change rec.dateOfBirth })
+
+
+regnalNumberA : Relation field sub wrap -> Relation { rec | regnalNumber : field } sub wrap
+regnalNumberA =
+    makeOneToOne
+        .regnalNumber
+        (\change rec -> { rec | regnalNumber = change rec.regnalNumber })
+
+
+familyNameA : Relation field sub wrap -> Relation { rec | familyName : field } sub wrap
+familyNameA =
+    makeOneToOne
+        .familyName
+        (\change rec -> { rec | familyName = change rec.familyName })
+
+
+firstNameA : Relation field sub wrap -> Relation { rec | firstName : field } sub wrap
+firstNameA =
+    makeOneToOne
+        .firstName
+        (\change rec -> { rec | firstName = change rec.firstName })
+
+
+cognomenA : Relation field sub wrap -> Relation { rec | cognomen : field } sub wrap
+cognomenA =
+    makeOneToOne
+        .cognomen
+        (\change rec -> { rec | cognomen = change rec.cognomen })
+
+
+nameTypeA : Relation field sub wrap -> Relation { rec | nameType : field } sub wrap
+nameTypeA =
+    makeOneToOne
+        .nameType
+        (\change rec -> { rec | nameType = change rec.nameType })
+
+
+fieldsA : Relation field sub wrap -> Relation { rec | fields : field } sub wrap
+fieldsA =
+    makeOneToOne
+        .fields
+        (\change rec -> { rec | fields = change rec.fields })
+
+
+adminEditPersonRA : Relation field sub wrap -> Relation { rec | adminEditPersonR : field } sub wrap
+adminEditPersonRA =
+    makeOneToOne
+        .adminEditPersonR
+        (\change rec -> { rec | adminEditPersonR = change rec.adminEditPersonR })
+
+
+peopleA : Relation field sub wrap -> Relation { rec | people : field } sub wrap
+peopleA =
+    makeOneToOne
+        .people
+        (\change rec -> { rec | people = change rec.people })
+
+
+adminListPeopleRA : Relation field sub wrap -> Relation { rec | adminListPeopleR : field } sub wrap
+adminListPeopleRA =
+    makeOneToOne
+        .adminListPeopleR
+        (\change rec -> { rec | adminListPeopleR = change rec.adminListPeopleR })
 
 
 statusA : Relation field sub wrap -> Relation { rec | status : field } sub wrap

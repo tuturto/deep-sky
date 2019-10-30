@@ -1,28 +1,43 @@
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 
 module Handler.AdminPanel
     ( getAdminPanelR, getAdminApiSimulationR, putAdminApiSimulationR
-    , getAdminApiPeopleR )
+    , getAdminApiPeopleR, getAdminPeopleR, getAdminPersonR, getAdminApiPersonR
+    , putAdminApiPersonR
+    )
     where
 
-import Control.Lens ( (#) )
+import Control.Lens ( (#), (^?) )
 import Database.Persist.Sql (toSqlKey)
 import Data.Either.Validation ( Validation(..), _Failure, _Success )
-import Data.Maybe ( isNothing )
+import Data.Maybe ( isNothing, fromJust )
 import Import
+import qualified Prelude as P
 
-import Common ( apiRequireAdmin )
+import Common ( apiRequireAdmin, pagedResult, apiNotFound )
 import CustomTypes ( SystemStatus(..) )
 import Errors ( ErrorCode(..), raiseIfErrors, raiseIfFailure )
 import Handler.Home ( getNewHomeR )
+import People.Data ( StatScore(..), firstName, cognomen, familyName
+                   , regnalNumber, unFirstName, unCognomen, unFamilyName )
 import Simulation.Main ( processTurn )
 
 
 -- | Get admin panel
 getAdminPanelR :: Handler Html
 getAdminPanelR = getNewHomeR
+
+
+-- | Get people listing for admins
+getAdminPeopleR :: Handler Html
+getAdminPeopleR = getNewHomeR
+
+-- | Get single person for admins
+getAdminPersonR:: PersonId -> Handler Html
+getAdminPersonR _ = getNewHomeR
 
 
 -- | Get current state of simulation
@@ -63,6 +78,57 @@ putAdminApiSimulationR = do
     return $ toJSON finalStatus
 
 
+-- | All people in the simulation
+-- supports query parameters skip and take
+getAdminApiPeopleR :: Handler Value
+getAdminApiPeopleR = do
+    _ <- apiRequireAdmin
+    skipParamM <- lookupGetParam "skip"
+    takeParamM <- lookupGetParam "take"
+    let skipParam = maybe 0 id (join $ fmap readMay skipParamM)
+    let takeParam = maybe 60000 id (join $ fmap readMay takeParamM)
+
+    people <- runDB $ selectList [] [ Asc PersonId
+                                    , OffsetBy skipParam
+                                    , LimitTo takeParam
+                                    ]
+
+    return $ toJSON $ pagedResult skipParam takeParam people
+
+
+-- | Details of single person
+getAdminApiPersonR :: Key Person -> Handler Value
+getAdminApiPersonR pId = do
+    _ <- apiRequireAdmin
+    person <- runDB $ get pId
+    when (isNothing person) apiNotFound
+
+    return $ toJSON (Entity pId $ fromJust person)
+
+
+-- | Update details of single person
+putAdminApiPersonR :: Key Person -> Handler Value
+putAdminApiPersonR pId = do
+    _ <- apiRequireAdmin
+    msg <- requireJsonBody
+    errors <- runDB $ updatePerson pId msg
+    _ <- raiseIfErrors errors
+    returnJson (Entity pId msg)
+
+
+updatePerson :: (MonadIO m,
+    PersistUniqueRead backend, PersistStoreWrite backend,
+    BaseBackend backend ~ SqlBackend)
+    => Key Person -> Person -> ReaderT backend m [ErrorCode]
+updatePerson pId msg = do
+    person <- get pId
+    simulation <- get $ toSqlKey 1
+    let errors = validatePersonPut simulation person msg
+    when (P.null $ concat $ errors ^? _Failure) $ do
+        replace pId msg
+    return $ concat $ errors ^? _Failure
+
+
 -- | Given simulation status loaded from database, validate new simulation status
 validateSimulationPut :: Maybe Simulation -> Simulation -> Validation [ErrorCode] Simulation
 validateSimulationPut old new =
@@ -71,7 +137,7 @@ validateSimulationPut old new =
             _Failure # [ SimulationStatusNotFound ]
 
         Just oldStatus ->
-            pure oldStatus
+            pure new
                 <* timeDifferenceIsNotTooBig oldStatus new
                 <* onlyTimeOrStatusChanges oldStatus new
 
@@ -100,6 +166,114 @@ onlyTimeOrStatusChanges old new =
         dt = simulationCurrentTime new - simulationCurrentTime old
 
 
--- | All people in the simulation
-getAdminApiPeopleR :: Handler Value
-getAdminApiPeopleR = undefined
+-- | Validate updating person
+validatePersonPut :: Maybe Simulation -> Maybe Person -> Person -> Validation [ErrorCode] Person
+validatePersonPut simulation old new =
+    case old of
+        Nothing ->
+            _Failure # [ ResourceNotFound ]
+
+        Just _ ->
+            pure new
+                <* statsAreValid new
+                <* dateOfBirthIsNotInFuture simulation new
+                <* nameIsValid new
+
+
+-- | Validate that all stats are ok
+statsAreValid :: Person -> Validation [ErrorCode] Person
+statsAreValid person =
+    pure person
+        <* statIsZeroOrGreater personDiplomacy "diplomacy" person
+        <* statIsZeroOrGreater personMartial "martial" person
+        <* statIsZeroOrGreater personStewardship "stewardship" person
+        <* statIsZeroOrGreater personLearning "learning" person
+        <* statIsZeroOrGreater personIntrique "intrique" person
+
+
+-- | Stat should be zero or greater
+statIsZeroOrGreater :: (Person -> StatScore a) -> Text -> Person -> Validation [ErrorCode] Person
+statIsZeroOrGreater stat name new =
+    if stat new >= 0
+        then
+            _Success # new
+        else
+            _Failure # [ StatIsTooLow name ]
+
+
+-- | Person's date of birth should not be in future
+dateOfBirthIsNotInFuture :: Maybe Simulation -> Person -> Validation [ErrorCode] Person
+dateOfBirthIsNotInFuture Nothing _ =
+    _Failure # [ CouldNotConfirmDateOfBirth ]
+
+dateOfBirthIsNotInFuture (Just simulation) person =
+    if personDateOfBirth person <= simulationCurrentTime simulation
+        then
+            _Success # person
+        else
+            _Failure # [ DateOfBirthIsInFuture ]
+
+
+-- | Validate various aspects of person's name
+nameIsValid :: Person -> Validation [ErrorCode] Person
+nameIsValid person =
+    pure person
+        <* firstNameIsNotEmpty person
+        <* cognomenIsNotEmpty person
+        <* familyNameIsNotEmpty person
+        <* regnalNumberIsNotNegative person
+
+
+-- | First name can't be empty text
+firstNameIsNotEmpty :: Person -> Validation [ErrorCode] Person
+firstNameIsNotEmpty person =
+    if (not . null . unFirstName . firstName . personName) person
+        then
+            _Success # person
+        else
+            _Failure # [ FirstNameIsEmpty ]
+
+
+-- | Cognomen can't be empty text
+cognomenIsNotEmpty :: Person -> Validation [ErrorCode] Person
+cognomenIsNotEmpty person =
+    case (cognomen . personName) person of
+        Nothing ->
+            _Success # person
+
+        Just s ->
+            if (not . null . unCognomen) s
+                then
+                    _Success # person
+                else
+                    _Failure # [ CognomenIsEmpty ]
+
+
+-- | Family name can't be empty text
+familyNameIsNotEmpty :: Person -> Validation [ErrorCode] Person
+familyNameIsNotEmpty person =
+    case (familyName . personName) person of
+        Nothing ->
+            _Success # person
+
+        Just s ->
+            if (not . null . unFamilyName) s
+                then
+                    _Success # person
+                else
+                    _Failure # [ FamilyNameIsEmpty ]
+
+
+-- | Regnal number should be zero or greater
+regnalNumberIsNotNegative :: Person -> Validation [ErrorCode] Person
+regnalNumberIsNotNegative person =
+    case (regnalNumber . personName) person of
+        Nothing ->
+            _Success # person
+
+        Just n ->
+            if n >= 0
+                then
+                    _Success # person
+                else
+                    _Failure # [ RegnalNumberIsLessThanZero ]

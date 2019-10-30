@@ -4,18 +4,20 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE FunctionalDependencies     #-}
 {-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 module Common ( maybeGet, chooseOne, requireFaction, apiRequireFaction, apiRequireAuthPair
               , FromDto(..), ToDto(..), apiNotFound, apiInvalidArgs, apiInternalError, apiOk
               , safeHead, apiForbidden, mkUniq, choose, getR, apiError, entityValL, entityKeyL
               , Frequency(..), clamp, safeTail, chooseM, apiRequireAdmin, systemStatus
-              , apiRequireOpenSimulation, apiRequireViewSimulation )
+              , apiRequireOpenSimulation, apiRequireViewSimulation, PagedResult, pagedResult )
     where
 
 import Import
-import qualified Prelude as P ( (!!), length )
+import qualified Prelude as P
 import Control.Lens ( Lens', lens )
 import Control.Monad.Random ( Rand, getRandomR, runRand )
+import Data.Aeson.TH ( deriveJSON, defaultOptions, fieldLabelModifier )
 import Database.Persist.Sql (toSqlKey)
 import Data.Set
 import qualified Data.List as List
@@ -318,3 +320,26 @@ systemStatus :: (BaseBackend backend ~ SqlBackend, MonadIO m,
 systemStatus = do
     simulation <- get (toSqlKey 1)
     return $ maybe Offline simulationStatus simulation
+
+
+-- | Result of paged query
+data PagedResult a = PagedResult
+    { pagedResultSkip :: !Int
+    , pagedResultTake :: !Int
+    , pagedResultPage :: !Int
+    , pagedResultContents :: ![a]
+    }
+
+
+-- | Construct new PagedResult and calculate current page
+pagedResult :: (ToJSON a) => Int -> Int -> [a] -> PagedResult a
+pagedResult s t r =
+    PagedResult
+        { pagedResultSkip = s
+        , pagedResultTake = t
+        , pagedResultPage = s `div` t
+        , pagedResultContents = r
+        }
+
+
+$(deriveJSON defaultOptions { fieldLabelModifier = P.drop 11 } ''PagedResult)

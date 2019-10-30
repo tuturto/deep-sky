@@ -17,7 +17,7 @@ module People.Data
     , DemesneName(..), ShortTitle(..), LongTitle(..), RelationType(..)
     , RelationVisibility(..), DynastyName(..), MarriageStatus(..), TraitType(..)
     , OpinionIntel(..), PetType(..), PetName(..), opinionIntelVisibility
-    , displayPetType
+    , displayPetType, firstName, cognomen, familyName, regnalNumber
     )
     where
 
@@ -37,26 +37,78 @@ data PersonName =
     deriving (Show, Read, Eq)
 
 
+firstName :: PersonName -> FirstName
+firstName name =
+    case name of
+        SimpleName s _ ->
+            s
+
+        RegularName s _ _ ->
+            s
+
+        RegalName s _ _ _ ->
+            s
+
+
+familyName :: PersonName -> Maybe FamilyName
+familyName name =
+    case name of
+        SimpleName _ _ ->
+            Nothing
+
+        RegularName _ s _ ->
+            Just s
+
+        RegalName _ s _ _ ->
+            Just s
+
+
+cognomen :: PersonName -> Maybe Cognomen
+cognomen name =
+    case name of
+        SimpleName _ s ->
+            s
+
+        RegularName _ _ s ->
+            s
+
+        RegalName _ _ _ s ->
+            s
+
+
+regnalNumber :: PersonName -> Maybe RegnalNumber
+regnalNumber name =
+    case name of
+        SimpleName _ _ ->
+            Nothing
+
+        RegularName _ _ _ ->
+            Nothing
+
+        RegalName _ _ n _ ->
+            Just n
+
+
 instance ToJSON PersonName where
-    toJSON (RegularName firstName familyName cognomen) =
+    toJSON (RegularName a b c) =
         object [ "Tag" .= ("RegularName" :: Text)
-               , "FirstName" .= firstName
-               , "FamilyName" .= familyName
-               , "Cognomen" .= cognomen
+               , "FirstName" .= a
+               , "FamilyName" .= b
+               , "Cognomen" .= c
                ]
 
-    toJSON (SimpleName firstName cognomen) =
+    toJSON (SimpleName a b) =
         object [ "Tag" .= ("SimpleName" :: Text)
-               , "FirstName" .= firstName
-               , "Cognomen" .= cognomen
+               , "FirstName" .= a
+               , "Cognomen" .= b
                ]
 
-    toJSON (RegalName firstName familyName regnalNumber cognomen) =
+    toJSON (RegalName a b c d) =
         object [ "Tag" .= ("RegalName" :: Text)
-               , "FirstName" .= firstName
-               , "FamilyName" .= familyName
-               , "RegnalNumber" .= regnalNumber
-               , "Cognomen" .= cognomen
+               , "FirstName" .= a
+               , "FamilyName" .= b
+               , "RegnalNumber" .= c
+               , "Cognomen" .= d
                ]
 
 
@@ -71,22 +123,22 @@ instance FromJSON PersonName where
 -- first parameter defines value constructor to use
 parseName :: Text -> Object -> Parser PersonName
 parseName "RegularName" o = do
-    firstName <- o .: "FirstName"
-    familyName <- o .: "FamilyName"
-    cognomen <- o .: "Cognomen"
-    return $ RegularName firstName familyName cognomen
+    a <- o .: "FirstName"
+    b <- o .: "FamilyName"
+    c <- o .: "Cognomen"
+    return $ RegularName a b c
 
 parseName "SimpleName" o = do
-    firstName <- o .: "FirstName"
-    cognomen <- o .: "Cognomen"
-    return $ SimpleName firstName cognomen
+    a <- o .: "FirstName"
+    b <- o .: "Cognomen"
+    return $ SimpleName a b
 
 parseName "RegalName" o = do
-    firstName <- o .: "FirstName"
-    familyName <- o .: "FamilyName"
-    regnalNumber <- o .: "RegnalNumber"
-    cognomen <- o .: "Cognomen"
-    return $ RegalName firstName familyName regnalNumber cognomen
+    a <- o .: "FirstName"
+    b <- o .: "FamilyName"
+    c <- o .: "RegnalNumber"
+    d <- o .: "Cognomen"
+    return $ RegalName a b c d
 
 parseName _ _  = mempty
 

@@ -1,12 +1,13 @@
-module ViewModels.Admin exposing
+module ViewModels.Admin.Main exposing
     ( AdminRMsg(..)
     , AdminViewModel
-    , DisplayMode(..)
     , init
     )
 
 import Data.Admin exposing (Simulation, SystemStatus)
 import Http
+import ViewModels.Admin.People.Edit exposing (AdminEditPersonViewModel)
+import ViewModels.Admin.People.List exposing (AdminListPeopleViewModel)
 
 
 {-| Messages admin view model may emit
@@ -14,23 +15,15 @@ import Http
 type AdminRMsg
     = SimulationStatusReceived (Result Http.Error Simulation)
     | ChangeStatusRequested SystemStatus
-    | DisplayPage DisplayMode
 
 
 {-| Current state of admin view model
 -}
 type alias AdminViewModel =
     { simulation : Maybe Simulation
-    , currentPage : DisplayMode
+    , adminListPeopleR : AdminListPeopleViewModel
+    , adminEditPersonR : AdminEditPersonViewModel
     }
-
-
-{-| Currently displayed page on admin view
--}
-type DisplayMode
-    = AdminMenu
-    | SimulationStatusMenu
-    | PeopleMenu
 
 
 {-| Create initial view model
@@ -38,5 +31,6 @@ type DisplayMode
 init : AdminViewModel
 init =
     { simulation = Nothing
-    , currentPage = AdminMenu
+    , adminListPeopleR = ViewModels.Admin.People.List.init
+    , adminEditPersonR = ViewModels.Admin.People.Edit.init
     }

@@ -1,18 +1,55 @@
-module Api.Admin exposing (getSimulationStatus, putSimulationStatus)
+module Api.Admin exposing
+    ( getPeople
+    , getPerson
+    , getSimulationStatus
+    , putPerson
+    , putSimulationStatus
+    )
 
 import Api.Common
     exposing
-        ( get
+        ( dynastyIdDecoder
+        , dynastyIdEncoder
+        , encodeMaybe
+        , get
+        , planetIdDecoder
+        , planetIdEncoder
         , put
         , starDateDecoder
         , starDateEncoder
+        , starSystemIdDecoder
+        , starSystemIdEncoder
         )
 import Api.Endpoints exposing (Endpoint(..))
-import Data.Admin exposing (Simulation, SystemStatus(..))
-import Data.Common exposing (StarDate(..))
+import Api.People
+    exposing
+        ( genderDecoder
+        , genderEncoder
+        , personIdDecoder
+        , personIdEncoder
+        , personNameDecoder
+        , personNameEncoder
+        , sexDecoder
+        , sexEncoder
+        , statDecoder
+        , statEncoder
+        )
+import Api.User exposing (factionIdDecoder, factionIdEncoder)
+import Data.Admin exposing (Person, Simulation, SystemStatus(..))
+import Data.Common exposing (PagedResult, PersonId)
 import Data.Model exposing (ApiMsg(..), Model, Msg(..))
 import Http
-import Json.Decode as Decode exposing (andThen, fail, field, string, succeed)
+import Json.Decode as Decode
+    exposing
+        ( andThen
+        , fail
+        , field
+        , int
+        , list
+        , maybe
+        , string
+        , succeed
+        )
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
 
@@ -21,14 +58,35 @@ import Json.Encode as Encode
 -}
 getSimulationStatus : (Result Http.Error Simulation -> Msg) -> Cmd Msg
 getSimulationStatus msg =
-    Http.send msg (get AdminSimulationStatus simulationDecoder)
+    Http.send msg (get ApiAdminSimulationStatus simulationDecoder)
 
 
 {-| Update simulation status
 -}
 putSimulationStatus : (Result Http.Error Simulation -> Msg) -> Simulation -> Cmd Msg
 putSimulationStatus msg simulation =
-    Http.send msg (put AdminSimulationStatus (simulationEncoder simulation) simulationDecoder)
+    Http.send msg (put ApiAdminSimulationStatus (simulationEncoder simulation) simulationDecoder)
+
+
+{-| Get list of people
+Results are paged, first parameter indicates amount of records to skip, second parameter amount
+of records to take. In case Nothing is supplied, server default is used.
+-}
+getPeople : (Result Http.Error (PagedResult Person) -> Msg) -> Maybe Int -> Maybe Int -> Cmd Msg
+getPeople msg skip take =
+    Http.send msg (get (ApiAdminPeople skip take) (pagedDecoder personDecoder))
+
+
+{-| Get details of single person
+-}
+getPerson : (Result Http.Error Person -> Msg) -> PersonId -> Cmd Msg
+getPerson msg personId =
+    Http.send msg (get (ApiAdminPerson personId) personDecoder)
+
+
+putPerson : (Result Http.Error Person -> Msg) -> PersonId -> Person -> Cmd Msg
+putPerson msg pId person =
+    Http.send msg (put (ApiAdminPerson pId) (personEncoder person) personDecoder)
 
 
 {-| Decoder for Simulation
@@ -94,3 +152,51 @@ systemStatusEncoder status =
 
             ProcessingTurn ->
                 "ProcessingTurn"
+
+
+pagedDecoder : Decode.Decoder a -> Decode.Decoder (PagedResult a)
+pagedDecoder d =
+    succeed PagedResult
+        |> andMap (field "Skip" int)
+        |> andMap (field "Take" int)
+        |> andMap (field "Page" int)
+        |> andMap (field "Contents" (list d))
+
+
+personDecoder : Decode.Decoder Person
+personDecoder =
+    succeed Person
+        |> andMap (field "id" personIdDecoder)
+        |> andMap (field "name" personNameDecoder)
+        |> andMap (field "sex" sexDecoder)
+        |> andMap (field "gender" genderDecoder)
+        |> andMap (field "dateOfBirth" starDateDecoder)
+        |> andMap (field "diplomacy" statDecoder)
+        |> andMap (field "learning" statDecoder)
+        |> andMap (field "martial" statDecoder)
+        |> andMap (field "intrique" statDecoder)
+        |> andMap (field "stewardship" statDecoder)
+        |> andMap (field "factionId" (maybe factionIdDecoder))
+        |> andMap (field "planetTitle" (maybe planetIdDecoder))
+        |> andMap (field "starSystemTitle" (maybe starSystemIdDecoder))
+        |> andMap (field "dynastyId" (maybe dynastyIdDecoder))
+
+
+personEncoder : Person -> Encode.Value
+personEncoder person =
+    Encode.object
+        [ ( "id", personIdEncoder person.id )
+        , ( "name", personNameEncoder person.name )
+        , ( "sex", sexEncoder person.sex )
+        , ( "gender", genderEncoder person.gender )
+        , ( "dateOfBirth", starDateEncoder person.dateOfBirth )
+        , ( "diplomacy", statEncoder person.diplomacy )
+        , ( "learning", statEncoder person.learning )
+        , ( "martial", statEncoder person.martial )
+        , ( "intrique", statEncoder person.intrique )
+        , ( "stewardship", statEncoder person.stewardship )
+        , ( "factionId", encodeMaybe factionIdEncoder person.factionId )
+        , ( "planetTitle", encodeMaybe planetIdEncoder person.planetTitle )
+        , ( "starSystemTitle", encodeMaybe starSystemIdEncoder person.starSystemTitle )
+        , ( "dynastyId", encodeMaybe dynastyIdEncoder person.dynastyId )
+        ]

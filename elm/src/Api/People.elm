@@ -1,20 +1,28 @@
 module Api.People exposing
-    ( getDemesne
+    ( genderDecoder
+    , genderEncoder
+    , getDemesne
     , getPersonDetails
     , personIdDecoder
     , personIdEncoder
     , personNameDecoder
+    , personNameEncoder
     , petIdDecoder
     , petIdEncoder
     , petTypeDecoder
     , petTypeEncoder
+    , sexDecoder
+    , sexEncoder
     , shortTitleDecoder
+    , statDecoder
+    , statEncoder
     )
 
 import Api.Common
     exposing
         ( dynastyIdDecoder
         , dynastyNameDecoder
+        , encodeMaybe
         , get
         , is
         , planetIdDecoder
@@ -68,6 +76,7 @@ import Data.People
         , TraitDescription(..)
         , TraitName(..)
         , TraitType(..)
+        , unStatValue
         )
 import Data.Vehicles exposing (CrewPosition(..))
 import Http
@@ -155,10 +164,20 @@ firstNameDecoder =
         |> andMap string
 
 
+firstNameEncoder : FirstName -> Encode.Value
+firstNameEncoder (FirstName name) =
+    Encode.string name
+
+
 familyNameDecoder : Decode.Decoder FamilyName
 familyNameDecoder =
     succeed FamilyName
         |> andMap string
+
+
+familyNameEncoder : FamilyName -> Encode.Value
+familyNameEncoder (FamilyName name) =
+    Encode.string name
 
 
 regnalNumberDecoder : Decode.Decoder RegnalNumber
@@ -167,10 +186,48 @@ regnalNumberDecoder =
         |> andMap int
 
 
+regnalNumberEncoder : RegnalNumber -> Encode.Value
+regnalNumberEncoder (RegnalNumber n) =
+    Encode.int n
+
+
 cognomenDecoder : Decode.Decoder Cognomen
 cognomenDecoder =
     succeed Cognomen
         |> andMap string
+
+
+cognomenEncoder : Cognomen -> Encode.Value
+cognomenEncoder (Cognomen name) =
+    Encode.string name
+
+
+personNameEncoder : PersonName -> Encode.Value
+personNameEncoder name =
+    case name of
+        SimpleName a b ->
+            Encode.object
+                [ ( "Tag", Encode.string "SimpleName" )
+                , ( "FirstName", firstNameEncoder a )
+                , ( "Cognomen", encodeMaybe cognomenEncoder b )
+                ]
+
+        RegularName a b c ->
+            Encode.object
+                [ ( "Tag", Encode.string "RegularName" )
+                , ( "FirstName", firstNameEncoder a )
+                , ( "FamilyName", familyNameEncoder b )
+                , ( "Cognomen", encodeMaybe cognomenEncoder c )
+                ]
+
+        RegalName a b c d ->
+            Encode.object
+                [ ( "Tag", Encode.string "RegalName" )
+                , ( "FirstName", firstNameEncoder a )
+                , ( "FamilyName", familyNameEncoder b )
+                , ( "RegnalNumber", regnalNumberEncoder c )
+                , ( "Cognomen", encodeMaybe cognomenEncoder d )
+                ]
 
 
 personDecoder : Decode.Decoder Person
@@ -198,6 +255,11 @@ statDecoder : Decode.Decoder StatValue
 statDecoder =
     succeed StatValue
         |> andMap int
+
+
+statEncoder : StatValue -> Encode.Value
+statEncoder stat =
+    Encode.int <| unStatValue stat
 
 
 statsDecoder : Decode.Decoder StatValues
@@ -231,6 +293,19 @@ sexDecoder =
     string |> andThen stringToSex
 
 
+sexEncoder : Sex -> Encode.Value
+sexEncoder sex =
+    case sex of
+        Male ->
+            Encode.string "Male"
+
+        Female ->
+            Encode.string "Female"
+
+        Intersex ->
+            Encode.string "Intersex"
+
+
 stringToGender : String -> Decode.Decoder Gender
 stringToGender s =
     case s of
@@ -248,6 +323,22 @@ stringToGender s =
 
         _ ->
             fail "Failed to deserialize"
+
+
+genderEncoder : Gender -> Encode.Value
+genderEncoder gender =
+    case gender of
+        Man ->
+            Encode.string "Man"
+
+        Woman ->
+            Encode.string "Woman"
+
+        Agender ->
+            Encode.string "Agender"
+
+        Nonbinary ->
+            Encode.string "Nonbinary"
 
 
 genderDecoder : Decode.Decoder Gender

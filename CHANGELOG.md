@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- `SystemStatus` and related checks for API endpoints
+- People section for admin panel
 ### Changed
 - Admin interface has been rewritten in Elm
 ### Removed

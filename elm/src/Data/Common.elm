@@ -1,5 +1,6 @@
 module Data.Common exposing
     ( BioResource(..)
+    , apMaybe
     , BuildingId(..)
     , ChemResource(..)
     , ConstructionId(..)
@@ -13,6 +14,7 @@ module Data.Common exposing
     , Location(..)
     , MechResource(..)
     , MessageId(..)
+    , PagedResult
     , PersonId(..)
     , PetId(..)
     , PlanetId(..)
@@ -145,6 +147,8 @@ type Route
     | MessagesR
     | PersonR PersonId
     | AdminR
+    | AdminListPeopleR
+    | AdminPersonR PersonId
     | LogoutR
     | ResearchR
 
@@ -256,6 +260,12 @@ routeToString route =
 
         AdminR ->
             "/admin"
+
+        AdminListPeopleR ->
+            "/admin/people"
+
+        AdminPersonR pId ->
+            "/admin/people/" ++ personIdToString pId
 
         LogoutR ->
             "/logout"
@@ -581,3 +591,24 @@ type UnitId
 unUnitId : UnitId -> Int
 unUnitId (UnitId n) =
     n
+
+
+{-| Results of paged query
+-}
+type alias PagedResult a =
+    { skip : Int
+    , take : Int
+    , page : Int
+    , results : List a
+    }
+
+{-| Apply Maybe a to Maybe (a -> b), producing Maybe b
+-}
+apMaybe : Maybe a -> Maybe (a -> b) -> Maybe b
+apMaybe a f =
+    case ( a, f ) of
+        ( Just value, Just func ) ->
+            Just (func value)
+
+        _ ->
+            Nothing

@@ -31,6 +31,14 @@ data ErrorCode
     | TurnProcessingAndStateChangeDisallowed
     | SimulationNotOpenForCommands
     | SimulationNotOpenForBrowsing
+    -- errors specific to people
+    | StatIsTooLow Text
+    | CouldNotConfirmDateOfBirth
+    | DateOfBirthIsInFuture
+    | FirstNameIsEmpty
+    | FamilyNameIsEmpty
+    | CognomenIsEmpty
+    | RegnalNumberIsLessThanZero
     deriving (Show, Read, Eq)
 
 
@@ -62,7 +70,13 @@ errorCodeToStatusCode =
         TurnProcessingAndStateChangeDisallowed -> 400
         SimulationNotOpenForCommands -> 500
         SimulationNotOpenForBrowsing -> 500
-
+        StatIsTooLow _ -> 400
+        CouldNotConfirmDateOfBirth -> 500
+        DateOfBirthIsInFuture -> 400
+        FirstNameIsEmpty -> 400
+        FamilyNameIsEmpty -> 400
+        CognomenIsEmpty -> 400
+        RegnalNumberIsLessThanZero -> 400
 
 
 -- | Map status code to message text
@@ -138,6 +152,27 @@ errorCodeToText =
 
         SimulationNotOpenForBrowsing ->
             "Simulation not currently available for browsing"
+
+        StatIsTooLow s ->
+            "Stat " ++ s ++ " is too low"
+
+        CouldNotConfirmDateOfBirth ->
+            "Could not confirm date of birth is later than current stardate"
+
+        DateOfBirthIsInFuture ->
+            "Date of birth is in future"
+
+        FirstNameIsEmpty ->
+            "First name is empty"
+
+        FamilyNameIsEmpty ->
+            "Family name is empty"
+
+        CognomenIsEmpty ->
+            "Cognomen is empty"
+
+        RegnalNumberIsLessThanZero ->
+            "Regnal number is less than zero"
 
 
 $(deriveJSON defaultOptions ''ErrorCode)

@@ -58,14 +58,16 @@ import List
 import Maybe.Extra exposing (isJust)
 import Navigation exposing (parseLocation)
 import Url exposing (Url)
-import ViewModels.Admin
+import ViewModels.Admin.Main
 import ViewModels.Designer exposing (DesignerRMsg(..))
 import ViewModels.Messages exposing (MessagesRMsg(..))
 import ViewModels.Person
 import ViewModels.Planet exposing (PlanetRMsg(..))
 import ViewModels.Research exposing (ResearchRMsg(..))
 import ViewModels.StarSystem exposing (StarSystemRMsg(..))
-import Views.Admin
+import Views.Admin.Main
+import Views.Admin.People.Edit
+import Views.Admin.People.List
 import Views.Bases
 import Views.Construction
 import Views.Designer
@@ -132,7 +134,7 @@ init flags url key =
             , designs = Nothing
             , designerR = ViewModels.Designer.init
             , personR = ViewModels.Person.init
-            , adminR = ViewModels.Admin.init
+            , adminR = ViewModels.Admin.Main.init
             }
     in
     ( model
@@ -159,6 +161,7 @@ update msg model =
 
         UrlChanged url ->
             ( { model | url = url }
+              -- TODO: reinit new view model
             , currentInit url <| model
             )
 
@@ -189,7 +192,13 @@ update msg model =
             Views.Person.update message model
 
         AdminMessage message ->
-            Views.Admin.update message model
+            Views.Admin.Main.update message model
+
+        AdminListPeopleMessage message ->
+            Views.Admin.People.List.update message model
+
+        AdminEditPersonMessage message ->
+            Views.Admin.People.Edit.update message model
 
 
 {-| Handle messages related to API calls
@@ -462,7 +471,13 @@ currentInit : Url -> (Model -> Cmd Msg)
 currentInit url =
     case parseLocation url of
         AdminR ->
-            Views.Admin.init
+            Views.Admin.Main.init
+
+        AdminListPeopleR ->
+            Views.Admin.People.List.init
+
+        AdminPersonR pId ->
+            Views.Admin.People.Edit.init pId
 
         BasesR ->
             Views.Bases.init

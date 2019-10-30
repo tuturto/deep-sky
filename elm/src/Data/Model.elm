@@ -23,7 +23,9 @@ import Data.Vehicles exposing (Chassis, Component, Design, UnitStats)
 import Dict exposing (Dict)
 import Http
 import Url exposing (Url)
-import ViewModels.Admin exposing (AdminRMsg, AdminViewModel)
+import ViewModels.Admin.Main exposing (AdminRMsg, AdminViewModel)
+import ViewModels.Admin.People.Edit exposing (AdminEditPersonRMsg)
+import ViewModels.Admin.People.List exposing (AdminListPeopleRMsg)
 import ViewModels.Designer exposing (DesignerRMsg, DesignerViewModel)
 import ViewModels.Messages exposing (MessagesRMsg, MessagesViewModel)
 import ViewModels.Person exposing (PersonRMsg, PersonViewModel)
@@ -76,6 +78,8 @@ type Msg
     | DesignerMessage DesignerRMsg
     | PersonMessage PersonRMsg
     | AdminMessage AdminRMsg
+    | AdminListPeopleMessage AdminListPeopleRMsg
+    | AdminEditPersonMessage AdminEditPersonRMsg
 
 
 type ApiMsg

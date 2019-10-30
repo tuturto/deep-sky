@@ -205,6 +205,16 @@
     margin-top: 0.25em;
 }
 
+.space-bottom {
+    padding-bottom: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.space-bottom-sm {
+    padding-bottom: 0.25em;
+    margin-bottom: 0.25em;
+}
+
 .selected-chassis {
     font-weight: bold
 }
@@ -245,4 +255,31 @@
     margin-top: 0.5em;
     padding-right: 0.5em;
     margin-right: 0.5em;
+}
+
+table {
+  border-spacing: 0.5em;
+  width: 100%;
+}
+
+table tr.clickable {
+    cursor: pointer;
+}
+
+table tr:nth-child(even) {
+  background-color: #eee;
+}
+
+table tr:nth-child(odd) {
+  background-color: #fff;
+}
+
+thead {
+    display: table-header-group;
+    vertical-align: middle;
+    border-color: inherit;
+}
+
+th, td {
+  padding: 0.1em;
 }

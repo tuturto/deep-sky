@@ -9,6 +9,7 @@ module Views.Helpers exposing
     , mechanicalsToText
     , starDateToString
     , starDateToText
+    , stringToStarDate
     , triplePanels
     , twinPanels
     )
@@ -37,6 +38,16 @@ starDateToString (StarDate currentTime) =
 
     else
         String.fromFloat <| toFloat currentTime / 10
+
+
+stringToStarDate : String -> Maybe StarDate
+stringToStarDate s =
+    case String.toFloat s of
+        Nothing ->
+            Nothing
+
+        Just f ->
+            Just <| StarDate <| floor (f * 10)
 
 
 starDateToText : Maybe StarDate -> Html msg

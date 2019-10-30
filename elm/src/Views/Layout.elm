@@ -8,6 +8,7 @@ import Data.Common
     exposing
         ( ErrorMessage(..)
         , Route(..)
+        , routeToString
         , unPlanetId
         , unPlanetName
         , unStarSystemId
@@ -25,7 +26,9 @@ import Maybe exposing (andThen, withDefault)
 import Navigation exposing (parseLocation, routes)
 import Url exposing (Url)
 import Url.Parser exposing (parse)
-import Views.Admin
+import Views.Admin.Main
+import Views.Admin.People.Edit
+import Views.Admin.People.List
 import Views.Bases
 import Views.Construction
 import Views.Designer
@@ -81,8 +84,8 @@ menuBar model roles =
                     , menuButton MessagesR "Messages"
                     ]
                 , ul [ class "nav navbar-nav navbar-right" ]
-                    [ li [ mClass AdminR ] [ a [ href AdminR ] [ text "Admin" ] ]
-                    , li [ mClass LogoutR ] [ a [ href LogoutR ] [ text "Logout" ] ]
+                    [ menuButton AdminR "Admin"
+                    , menuButton LogoutR "Logout"
                     ]
                 ]
             ]
@@ -128,29 +131,37 @@ menuClass current checked =
         class ""
 
 
+{-| Compare routes and deduce if they should be considired similar for purposes
+of active menu item selection. First route is currently active route
+(ie. the route that browser is currently displaying). Second route should be
+one of the top level routes (ie. ones that are displayed at the top menu bar).
+-}
 similarRoutes : Route -> Route -> Bool
 similarRoutes current checked =
-    case current of
-        StarSystemR _ ->
-            case checked of
+    case checked of
+        StarSystemsR ->
+            case current of
+                StarSystemsR ->
+                    True
+
                 StarSystemR _ ->
                     True
 
-                StarSystemsR ->
+                PlanetR _ _ ->
                     True
 
                 _ ->
                     False
 
-        PlanetR _ _ ->
-            case checked of
-                PlanetR _ _ ->
+        AdminR ->
+            case current of
+                AdminR ->
                     True
 
-                StarSystemR _ ->
+                AdminListPeopleR ->
                     True
 
-                StarSystemsR ->
+                AdminPersonR _ ->
                     True
 
                 _ ->
@@ -170,12 +181,26 @@ breadcrumbPath model =
         ]
 
 
+{-| Given model and route, build segment of breadcrumb path as a tuple.
+First element of tuple is text that should be displayed in the breadcrumb
+path. Second element is possible parent element of the route. For example
+HomeR is parent of StarSystemsR, which in turn is parent of StarSystemR 1.
+Model can be used to compute dynamic text to be displayed in breadcrumb path,
+for example a planet or person name.
+-}
 segment : Model -> Route -> ( String, Maybe Route )
 segment model route =
     case route of
         AdminR ->
             ( "Admin", Just HomeR )
 
+        AdminListPeopleR ->
+            ( "People", Just AdminR )
+
+        AdminPersonR pId ->
+            ( "Name Here", Just AdminListPeopleR )
+
+        --TODO: person name
         BasesR ->
             ( "Bases", Just HomeR )
 
@@ -290,7 +315,13 @@ currentPage : Url -> (Model -> Html Msg)
 currentPage url =
     case parseLocation url of
         AdminR ->
-            Views.Admin.page
+            Views.Admin.Main.page
+
+        AdminListPeopleR ->
+            Views.Admin.People.List.page
+
+        AdminPersonR pId ->
+            Views.Admin.People.Edit.page
 
         BasesR ->
             Views.Bases.page

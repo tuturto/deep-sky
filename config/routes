@@ -60,5 +60,9 @@
 /api/person/#PersonId/demesne                       ApiDemesneR                     GET
 
 /api/admin/simulation                               AdminApiSimulationR             GET PUT
+/api/admin/people                                   AdminApiPeopleR                 GET
+/api/admin/people/#PersonId                         AdminApiPersonR                 GET PUT
 
 /admin                                              AdminPanelR                     GET
+/admin/people                                       AdminPeopleR                    GET
+/admin/people/#PersonId                             AdminPersonR                    GET

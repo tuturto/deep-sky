@@ -33,8 +33,13 @@ module Data.People exposing
     , TraitDescription(..)
     , TraitName(..)
     , TraitType(..)
+    , age
     , displayName
     , formalName
+    , getCognomen
+    , getFamilyName
+    , getFirstName
+    , getRegnalNumber
     , nameWithTitle
     , personIntelToString
     , personNameOrdering
@@ -72,6 +77,7 @@ import Data.Common
         , UnitId
         , findFirst
         , perhapsOrdering
+        , unStarDate
         )
 import Data.Vehicles exposing (CrewPosition(..))
 import List exposing (repeat)
@@ -264,7 +270,7 @@ displayName name =
         RegalName firstName _ regnalNumber cognomen ->
             case cognomen of
                 Just cog ->
-                    unFirstName firstName ++ " " ++ displayRegnal regnalNumber ++ " " ++ " \"" ++ unCognomen cog
+                    unFirstName firstName ++ " " ++ displayRegnal regnalNumber ++ " " ++ " \"" ++ unCognomen cog ++ "\""
 
                 Nothing ->
                     unFirstName firstName ++ " " ++ displayRegnal regnalNumber
@@ -381,6 +387,20 @@ type Age
 unAge : Age -> Int
 unAge (Age n) =
     n
+
+
+{-| Age (time difference between two points in time) in full star years
+-}
+age : StarDate -> StarDate -> Age
+age old new =
+    let
+        diff =
+            unStarDate old - unStarDate new
+
+        fullYears =
+            diff // 10
+    in
+    Age fullYears
 
 
 {-| Short form demesne report, listing only ID and Name

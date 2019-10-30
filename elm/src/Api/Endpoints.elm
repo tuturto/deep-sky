@@ -15,6 +15,9 @@ import Data.Common
         , starSystemIdToString
         )
 import Data.Construction exposing (Construction(..))
+import Maybe
+import Maybe.Extra exposing (or, values)
+import Url.Builder exposing (absolute, int)
 
 
 type Endpoint
@@ -45,7 +48,9 @@ type Endpoint
     | ApiDesignEstimate
     | ApiSinglePerson PersonId
     | ApiDemesne PersonId
-    | AdminSimulationStatus
+    | ApiAdminSimulationStatus
+    | ApiAdminPeople (Maybe Int) (Maybe Int)
+    | ApiAdminPerson PersonId
 
 
 {-| Map type safe Endpoint into String that can be used in HTTP requests
@@ -54,90 +59,100 @@ endpointToString : Endpoint -> String
 endpointToString endpoint =
     case endpoint of
         ApiStarDate ->
-            "/api/stardate"
+            absolute [ "api", "stardate" ] []
 
         ApiResources ->
-            "/api/resources"
+            absolute [ "api", "resources" ] []
 
         ApiStarSystem ->
-            "/api/starsystem"
+            absolute [ "api", "starsystem" ] []
 
         ApiSingleStarSystem systemId ->
-            "/api/starsystem/" ++ starSystemIdToString systemId
+            absolute [ "api", "starsystem", starSystemIdToString systemId ] []
 
         ApiStar ->
-            "/api/star"
+            absolute [ "api", "star" ] []
 
         ApiPlanet ->
-            "/api/planet/"
+            absolute [ "api", "planet" ] []
 
         ApiSinglePlanet planetId ->
-            "/api/planet/" ++ planetIdToString planetId
+            absolute [ "api", "planet", planetIdToString planetId ] []
 
         ApiPopulation planetId ->
-            "/api/planet/" ++ planetIdToString planetId ++ "/population"
+            absolute [ "api", "planet", planetIdToString planetId, "population" ] []
 
         ApiBuilding planetId ->
-            "/api/planet/" ++ planetIdToString planetId ++ "/buildings"
+            absolute [ "api", "planet", planetIdToString planetId, "buildings" ] []
 
         ApiConstructionQueue planetId ->
-            "/api/construction/planet/" ++ planetIdToString planetId
+            absolute [ "api", "construction", "planet", planetIdToString planetId ] []
 
         ApiConstruction construction ->
             case construction of
                 BuildingConstruction data ->
-                    "/api/construction/building/" ++ constructionIdToString data.id
+                    absolute [ "api", "construction", "building", constructionIdToString data.id ] []
 
                 ShipConstruction data ->
-                    "/api/construction/ship/" ++ constructionIdToString data.id
+                    absolute [ "api", "construction", "ship", constructionIdToString data.id ] []
 
         ApiBuildingConstruction ->
-            "/api/construction/building"
+            absolute [ "api", "construction", "building" ] []
 
         ApiAvailableBuildings ->
-            "/api/construction/buildings"
+            absolute [ "api", "construction", "buildings" ] []
 
         ApiMessageList ->
-            "/api/message"
+            absolute [ "api", "message" ] []
 
         ApiSingleMessage messageId ->
-            "/api/message/" ++ messageIdToString messageId
+            absolute [ "api", "message", messageIdToString messageId ] []
 
         ApiIcon ->
-            "/api/icon"
+            absolute [ "api", "icon" ] []
 
         ApiPlanetStatus planetId ->
-            "/api/planet/" ++ planetIdToString planetId ++ "/status"
+            absolute [ "api", "planet", planetIdToString planetId, "status" ] []
 
         ApiAvailableResearch ->
-            "/api/research/available"
+            absolute [ "api", "research", "available" ] []
 
         ApiCurrentResearch ->
-            "/api/research/current"
+            absolute [ "api", "research", "current" ] []
 
         ApiResearchProduction ->
-            "/api/research/production"
+            absolute [ "api", "research", "production" ] []
 
         ApiAvailableComponents ->
-            "/api/components"
+            absolute [ "api", "components" ] []
 
         ApiAvailableChassis ->
-            "api/chassis"
+            absolute [ "api", "chassis" ] []
 
         ApiAllDesigns ->
-            "api/design"
+            absolute [ "api", "design" ] []
 
         ApiSingleDesign designId ->
-            "api/design/" ++ designIdToString designId
+            absolute [ "api", "design", designIdToString designId ] []
 
         ApiDesignEstimate ->
-            "api/designestimate"
+            absolute [ "api", "designestimate" ] []
 
         ApiSinglePerson personId ->
-            "/api/person/" ++ personIdToString personId
+            absolute [ "api", "person", personIdToString personId ] []
 
         ApiDemesne personId ->
-            "/api/person/" ++ personIdToString personId ++ "/demesne"
+            absolute [ "api", "person", personIdToString personId, "demesne" ] []
 
-        AdminSimulationStatus ->
-            "/api/admin/simulation"
+        ApiAdminSimulationStatus ->
+            absolute [ "api", "admin", "simulation" ] []
+
+        ApiAdminPeople skip take ->
+            absolute [ "api", "admin", "people" ] <|
+                values
+                    [ Maybe.map (int "skip") skip
+                    , Maybe.map (int "take") take
+                    ]
+
+        ApiAdminPerson personId ->
+            absolute [ "api", "admin", "people", personIdToString personId ] []

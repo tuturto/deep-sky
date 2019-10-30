@@ -15,7 +15,7 @@ import Database.Persist.Sql (ConnectionPool, runSqlPool)
 import Text.Hamlet          (hamletFile)
 import Text.Jasmine         (minifym)
 import Control.Monad.Logger (LogSource)
-import MenuHelpers
+import qualified MenuHelpers
 import Resources (RawResources(..), RawResource(..))
 
 -- Used only when in "auth-dummy-login" setting is enabled.
@@ -110,12 +110,12 @@ instance Yesod App where
 
         mcurrentRoute <- getCurrentRoute
         adminOnly <- case muser of
-                        Just (userId, _) -> runDB $ isAdmin userId
+                        Just (userId, _) -> runDB $ MenuHelpers.isAdmin userId
                         _ -> return False
 
         -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
         (title, parents) <- breadcrumbs
-        currentStarDate <- runDB starDate
+        currentStarDate <- runDB MenuHelpers.starDate
         -- Define the menu items of the header.
         let menuItems =
                 [ NavbarLeft $ MenuItem
@@ -193,7 +193,7 @@ instance Yesod App where
         -- you to use normal widget features in default-layout.
 
         -- TODO: remove unCost and just pass total resources to hamlet template
-        totalResources <- runDB $ statusBarScore muser
+        totalResources <- runDB $ MenuHelpers.statusBarScore muser
         let statusBarBiologicals = (unRawResource . ccdBiologicalCost) totalResources
         let statusBarMechanicals = (unRawResource . ccdMechanicalCost) totalResources
         let statusBarChemicals = (unRawResource . ccdChemicalCost) totalResources
@@ -240,13 +240,15 @@ instance Yesod App where
     isAuthorized (PersonR _) _        = hasAvatar
     isAuthorized PeopleR _            = hasAvatar
 
-    -- Special authorization
-    isAuthorized AdminPanelR _     = do
-        muid <- maybeAuthId
-        authorizeAdmin muid
+    -- Special authorization for admin panel
+    isAuthorized AdminPanelR _        = isAdmin
+    isAuthorized AdminPeopleR _       = isAdmin
+    isAuthorized (AdminPersonR _) _   = isAdmin
 
     -- Admin API routes
     isAuthorized AdminApiSimulationR _              = return Authorized
+    isAuthorized AdminApiPeopleR _                  = return Authorized
+    isAuthorized (AdminApiPersonR _) _              = return Authorized
 
     -- API routes
     isAuthorized ApiStarSystemsR _                  = return Authorized
@@ -311,6 +313,13 @@ instance Yesod App where
     makeLogger = return . appLogger
 
 
+-- | Authorize admin user
+isAdmin :: HandlerFor App AuthResult
+isAdmin = do
+    muid <- maybeAuthId
+    MenuHelpers.authorizeAdmin muid
+
+
 -- | Authorize user that has logged in and have selected an avatar
 hasAvatar :: Handler AuthResult
 hasAvatar = do
@@ -337,10 +346,10 @@ instance YesodBreadcrumbs App where
     breadcrumb FactionR = return ("Faction", Just ProfileR)
     breadcrumb StarSystemsR = return ("Star systems", Just HomeR)
     breadcrumb (StarSystemR systemId) = do
-        systemName <- runDB $ systemNameById systemId
+        systemName <- runDB $ MenuHelpers.systemNameById systemId
         return (unStarSystemName systemName, Just StarSystemsR)
     breadcrumb (PlanetR systemId planetId) = do
-        name <- runDB $ planetNameById planetId
+        name <- runDB $ MenuHelpers.planetNameById planetId
         return (unPlanetName name, Just (StarSystemR systemId))
     breadcrumb FleetR = return ("Fleet", Just HomeR)
     breadcrumb DesignerR = return ("Designer", Just HomeR)
@@ -348,7 +357,7 @@ instance YesodBreadcrumbs App where
     breadcrumb ConstructionR = return ("Construction", Just HomeR)
     breadcrumb BasesR = return ("Bases", Just HomeR)
     breadcrumb (BaseR _ planetId) = do
-        name <- runDB $ planetNameById planetId
+        name <- runDB $ MenuHelpers.planetNameById planetId
         return (unPlanetName name, Just BasesR)
     breadcrumb AdminPanelR = return ("Admin", Just HomeR)
     breadcrumb _ = return ("home", Nothing)
