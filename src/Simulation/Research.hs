@@ -112,7 +112,7 @@ updateAvailableResearch :: (MonadIO m, PersistQueryWrite backend,
 updateAvailableResearch fId = do
     available <- selectList [ AvailableResearchFactionId ==. fId ] []
     completed <- selectList [ CompletedResearchFactionId ==. fId ] []
-    g <- liftIO getStdGen
+    g <- liftIO newStdGen
     let maxAvailable = ResearchLimit 3
     -- reusing same g should not have adverse effect here
     let engCand = getR g (unResearchLimit maxAvailable) $ newAvailableResearch isEngineering maxAvailable available completed

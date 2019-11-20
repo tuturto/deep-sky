@@ -1,9 +1,12 @@
 module Data.Accessors exposing
     ( activeUserIconA
+    , adminAddPersonRA
     , adminEditPersonRA
     , adminListPeopleRA
     , adminRA
     , ageA
+    , ageFieldsA
+    , ageOptionA
     , amountA
     , availableBuildingsA
     , availableChassisA
@@ -42,7 +45,9 @@ module Data.Accessors exposing
     , diplomacyA
     , dynastyA
     , emptyPanelStatusA
+    , endAgeA
     , errorsA
+    , exactAgeA
     , familyNameA
     , fieldsA
     , firstNameA
@@ -102,6 +107,7 @@ module Data.Accessors exposing
     , starSystemsA
     , starSystemsRA
     , starsA
+    , startAgeA
     , statsA
     , statsStatusA
     , statusA
@@ -118,6 +124,48 @@ module Data.Accessors exposing
 
 import Accessors exposing (Relation, makeOneToN, makeOneToOne)
 import Accessors.Library exposing (onEach)
+
+
+ageFieldsA : Relation field sub wrap -> Relation { rec | ageFields : field } sub wrap
+ageFieldsA =
+    makeOneToOne
+        .ageFields
+        (\change rec -> { rec | ageFields = change rec.ageFields })
+
+
+exactAgeA : Relation field sub wrap -> Relation { rec | exactAge : field } sub wrap
+exactAgeA =
+    makeOneToOne
+        .exactAge
+        (\change rec -> { rec | exactAge = change rec.exactAge })
+
+
+startAgeA : Relation field sub wrap -> Relation { rec | startAge : field } sub wrap
+startAgeA =
+    makeOneToOne
+        .startAge
+        (\change rec -> { rec | startAge = change rec.startAge })
+
+
+endAgeA : Relation field sub wrap -> Relation { rec | endAge : field } sub wrap
+endAgeA =
+    makeOneToOne
+        .endAge
+        (\change rec -> { rec | endAge = change rec.endAge })
+
+
+ageOptionA : Relation field sub wrap -> Relation { rec | ageOption : field } sub wrap
+ageOptionA =
+    makeOneToOne
+        .ageOption
+        (\change rec -> { rec | ageOption = change rec.ageOption })
+
+
+adminAddPersonRA : Relation field sub wrap -> Relation { rec | adminAddPersonR : field } sub wrap
+adminAddPersonRA =
+    makeOneToOne
+        .adminAddPersonR
+        (\change rec -> { rec | adminAddPersonR = change rec.adminAddPersonR })
 
 
 dateOfBirthA : Relation field sub wrap -> Relation { rec | dateOfBirth : field } sub wrap

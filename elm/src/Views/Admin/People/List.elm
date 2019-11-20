@@ -22,12 +22,13 @@ import Data.Model exposing (Model, Msg(..))
 import Data.People exposing (displayName)
 import Dict
 import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html.Attributes exposing (class)
 import Html.Events exposing (..)
 import Maybe.Extra
 import ViewModels.Admin.Main exposing (AdminRMsg(..))
 import ViewModels.Admin.People.List exposing (AdminListPeopleRMsg(..))
 import Views.Admin.Menu exposing (adminLayout, personMenu)
+import Views.Helpers exposing (href)
 
 
 {-| Render list people view
@@ -46,7 +47,11 @@ page model =
 listControls : Model -> Html Msg
 listControls model =
     div [ class "row" ]
-        [ div [ class "col-lg-12" ] [ text "control block here" ] ]
+        [ div [ class "col-lg-12" ]
+            [ a [ href AdminNewPersonR ]
+                [ i [ class "fas fa-plus-square" ] [] ]
+            ]
+        ]
 
 
 {-| Render search results

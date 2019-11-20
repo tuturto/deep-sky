@@ -12,14 +12,13 @@ module CustomTypes
     , SystemStatus(..), age, buildingTypeName, roll )
     where
 
+import ClassyPrelude.Yesod   as Import
 import Data.Aeson ( ToJSON(..), withScientific, withText )
 import Data.Aeson.TH
 import Data.Scientific ( toBoundedInteger )
-import Database.Persist.TH
 import Database.Persist.Sql
-import Data.Text
-import ClassyPrelude.Yesod   as Import
 import Data.Monoid ()
+import Numeric.Natural ( Natural )
 import System.Random
 
 
@@ -135,7 +134,7 @@ instance PersistFieldSql StarDate where
     sqlType _ = SqlInt64
 
 
-newtype Age = Age { unAge :: Int }
+newtype Age = Age { unAge :: Natural }
     deriving (Show, Read, Eq, Num, Ord)
 
 
@@ -151,13 +150,17 @@ instance FromJSON Age where
                     mempty
 
                 Just n ->
-                    return $ Age n)
+                    if n >= 0 then
+                        return $ Age $ fromIntegral (n :: Int)
+
+                    else
+                        mempty)
 
 
 -- | Age (ie. difference between two star dates in whole years)
 age :: StarDate -> StarDate -> Age
 age (StarDate start) (StarDate end) =
-    Age $ ((end - start) `quot` 10)
+    Age $ fromIntegral $ ((end - start) `quot` 10)
 
 
 newtype UserIdentity = UserIdentity { unUserIdentity :: Text }

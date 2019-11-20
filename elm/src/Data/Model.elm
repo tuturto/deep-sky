@@ -24,6 +24,7 @@ import Dict exposing (Dict)
 import Http
 import Url exposing (Url)
 import ViewModels.Admin.Main exposing (AdminRMsg, AdminViewModel)
+import ViewModels.Admin.People.Add exposing (AdminAddPersonRMsg)
 import ViewModels.Admin.People.Edit exposing (AdminEditPersonRMsg)
 import ViewModels.Admin.People.List exposing (AdminListPeopleRMsg)
 import ViewModels.Designer exposing (DesignerRMsg, DesignerViewModel)
@@ -80,6 +81,7 @@ type Msg
     | AdminMessage AdminRMsg
     | AdminListPeopleMessage AdminListPeopleRMsg
     | AdminEditPersonMessage AdminEditPersonRMsg
+    | AdminAddPersonMessage AdminAddPersonRMsg
 
 
 type ApiMsg

@@ -1,4 +1,10 @@
-module Data.Admin exposing (Person, Simulation, SystemStatus(..))
+module Data.Admin exposing
+    ( AgeOptions(..)
+    , Person
+    , PersonOptions
+    , Simulation
+    , SystemStatus(..)
+    )
 
 import Data.Common
     exposing
@@ -11,7 +17,8 @@ import Data.Common
         )
 import Data.People
     exposing
-        ( Gender(..)
+        ( Age(..)
+        , Gender(..)
         , PersonName(..)
         , Sex(..)
         , StatValue(..)
@@ -47,3 +54,15 @@ type alias Person =
     , starSystemTitle : Maybe StarSystemId
     , dynastyId : Maybe DynastyId
     }
+
+
+{-| Available options for person creation
+-}
+type alias PersonOptions =
+    { age : Maybe AgeOptions
+    }
+
+
+type AgeOptions
+    = AgeBracket Age Age
+    | ExactAge Age

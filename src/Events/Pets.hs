@@ -21,7 +21,7 @@ import Control.Monad.Trans.Maybe ( MaybeT(..), runMaybeT )
 import Control.Monad.Trans.Writer ( WriterT, runWriterT, tell )
 import Control.Monad.Random ( evalRand )
 import Data.Aeson.TH
-import System.Random ( getStdGen )
+import System.Random ( newStdGen )
 import Common ( ToDto(..), FromDto(..) )
 import CustomTypes ( StarDate, RollResult(..), PercentileChance(..), roll )
 import Dto.News ( ScurryingSoundsNewsDto(..), ScurryingSoundsChoiceDto(..)
@@ -377,13 +377,13 @@ chooseToGiveName (_, event) (GiveName name) = do
             (lift . lift) $ update pId [ PetName =. name ]
             return (RemoveOriginalEvent, [])
         else do
-            g <- liftIO getStdGen
+            g <- liftIO newStdGen
             lift $ tell [ RandomNameGiven pId (evalRand petNameM g) ]
             return (RemoveOriginalEvent, [])
 
 chooseToGiveName (_, event) LetSomeoneElseDecide = do
     let pId = namingPetEventPetId event
-    g <- liftIO getStdGen
+    g <- liftIO newStdGen
     lift $ tell [ RandomNameGiven pId (evalRand petNameM g) ]
     return (RemoveOriginalEvent, [])
 

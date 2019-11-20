@@ -8,8 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `SystemStatus` and related checks for API endpoints
 - People section for admin panel
+- `Creators.Person` module for generating new people
 ### Changed
 - Admin interface has been rewritten in Elm
+- `Age` changed from `Int` to `Natural`
 ### Removed
 ### Fixed
 ### Known bugs

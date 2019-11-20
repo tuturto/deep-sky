@@ -244,11 +244,13 @@ instance Yesod App where
     isAuthorized AdminPanelR _        = isAdmin
     isAuthorized AdminPeopleR _       = isAdmin
     isAuthorized (AdminPersonR _) _   = isAdmin
+    isAuthorized AdminAddPersonR _    = isAdmin
 
     -- Admin API routes
     isAuthorized AdminApiSimulationR _              = return Authorized
     isAuthorized AdminApiPeopleR _                  = return Authorized
     isAuthorized (AdminApiPersonR _) _              = return Authorized
+    isAuthorized AdminApiAddPersonR _               = return Authorized
 
     -- API routes
     isAuthorized ApiStarSystemsR _                  = return Authorized

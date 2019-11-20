@@ -1,5 +1,6 @@
 module Api.Admin exposing
-    ( getPeople
+    ( addPerson
+    , getPeople
     , getPerson
     , getSimulationStatus
     , putPerson
@@ -14,6 +15,7 @@ import Api.Common
         , get
         , planetIdDecoder
         , planetIdEncoder
+        , post
         , put
         , starDateDecoder
         , starDateEncoder
@@ -23,7 +25,8 @@ import Api.Common
 import Api.Endpoints exposing (Endpoint(..))
 import Api.People
     exposing
-        ( genderDecoder
+        ( ageEncoder
+        , genderDecoder
         , genderEncoder
         , personIdDecoder
         , personIdEncoder
@@ -35,7 +38,14 @@ import Api.People
         , statEncoder
         )
 import Api.User exposing (factionIdDecoder, factionIdEncoder)
-import Data.Admin exposing (Person, Simulation, SystemStatus(..))
+import Data.Admin
+    exposing
+        ( AgeOptions(..)
+        , Person
+        , PersonOptions
+        , Simulation
+        , SystemStatus(..)
+        )
 import Data.Common exposing (PagedResult, PersonId)
 import Data.Model exposing (ApiMsg(..), Model, Msg(..))
 import Http
@@ -87,6 +97,13 @@ getPerson msg personId =
 putPerson : (Result Http.Error Person -> Msg) -> PersonId -> Person -> Cmd Msg
 putPerson msg pId person =
     Http.send msg (put (ApiAdminPerson pId) (personEncoder person) personDecoder)
+
+
+{-| Request creation of new person
+-}
+addPerson : (Result Http.Error Person -> Msg) -> PersonOptions -> Cmd Msg
+addPerson msg opt =
+    Http.send msg (post ApiAdminAddPerson (personOptionsEncoder opt) personDecoder)
 
 
 {-| Decoder for Simulation
@@ -200,3 +217,25 @@ personEncoder person =
         , ( "starSystemTitle", encodeMaybe starSystemIdEncoder person.starSystemTitle )
         , ( "dynastyId", encodeMaybe dynastyIdEncoder person.dynastyId )
         ]
+
+
+personOptionsEncoder : PersonOptions -> Encode.Value
+personOptionsEncoder opt =
+    Encode.object
+        [ ( "Age", encodeMaybe ageOptionsEncoder opt.age ) ]
+
+
+ageOptionsEncoder : AgeOptions -> Encode.Value
+ageOptionsEncoder opt =
+    case opt of
+        AgeBracket start end ->
+            Encode.object
+                [ ( "tag", Encode.string "AgeBracket" )
+                , ( "contents", Encode.list ageEncoder [ start, end ] )
+                ]
+
+        ExactAge age ->
+            Encode.object
+                [ ( "tag", Encode.string "ExactAge" )
+                , ( "contents", ageEncoder age )
+                ]

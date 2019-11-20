@@ -76,6 +76,7 @@ routes =
         , map AdminR (s "admin")
         , map AdminListPeopleR (s "admin" </> s "people")
         , map AdminPersonR (s "admin" </> s "people" </> personId)
+        , map AdminNewPersonR (s "admin" </> s "addPerson")
         , map LogoutR (s "logout")
         ]
 

@@ -6,6 +6,7 @@ module ViewModels.Admin.Main exposing
 
 import Data.Admin exposing (Simulation, SystemStatus)
 import Http
+import ViewModels.Admin.People.Add exposing (AdminAddPersonViewModel)
 import ViewModels.Admin.People.Edit exposing (AdminEditPersonViewModel)
 import ViewModels.Admin.People.List exposing (AdminListPeopleViewModel)
 
@@ -23,6 +24,7 @@ type alias AdminViewModel =
     { simulation : Maybe Simulation
     , adminListPeopleR : AdminListPeopleViewModel
     , adminEditPersonR : AdminEditPersonViewModel
+    , adminAddPersonR : AdminAddPersonViewModel
     }
 
 
@@ -33,4 +35,5 @@ init =
     { simulation = Nothing
     , adminListPeopleR = ViewModels.Admin.People.List.init
     , adminEditPersonR = ViewModels.Admin.People.Edit.init
+    , adminAddPersonR = ViewModels.Admin.People.Add.init
     }

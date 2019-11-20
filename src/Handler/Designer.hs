@@ -11,7 +11,7 @@ module Handler.Designer ( getDesignerR, getApiComponentsR, getApiChassisR
     where
 
 import Import
-import Control.Monad.Random ( evalRand, getStdGen )
+import Control.Monad.Random ( evalRand, newStdGen )
 import Database.Persist.Sql (toSqlKey)
 
 import Data.Maybe ( fromJust, maybe )
@@ -189,7 +189,7 @@ postApiDoDesignEstimateR = do
                     return x
 
     let comps = fmap (componentDtoToPlannedComponent dId) $ designDtoComponents msg
-    g <- liftIO getStdGen
+    g <- liftIO newStdGen
     let estimate = evalRand (estimateDesign chassis comps) g
 
     return $ toJSON estimate

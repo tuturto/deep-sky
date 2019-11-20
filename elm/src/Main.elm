@@ -66,6 +66,7 @@ import ViewModels.Planet exposing (PlanetRMsg(..))
 import ViewModels.Research exposing (ResearchRMsg(..))
 import ViewModels.StarSystem exposing (StarSystemRMsg(..))
 import Views.Admin.Main
+import Views.Admin.People.Add
 import Views.Admin.People.Edit
 import Views.Admin.People.List
 import Views.Bases
@@ -199,6 +200,9 @@ update msg model =
 
         AdminEditPersonMessage message ->
             Views.Admin.People.Edit.update message model
+
+        AdminAddPersonMessage message ->
+            Views.Admin.People.Add.update message model
 
 
 {-| Handle messages related to API calls
@@ -478,6 +482,9 @@ currentInit url =
 
         AdminPersonR pId ->
             Views.Admin.People.Edit.init pId
+
+        AdminNewPersonR ->
+            Views.Admin.People.Add.init
 
         BasesR ->
             Views.Bases.init

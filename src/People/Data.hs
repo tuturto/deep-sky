@@ -28,6 +28,7 @@ import Data.Scientific ( toBoundedInteger )
 import Database.Persist.TH
 import Database.Persist.Sql
 import ClassyPrelude.Yesod   as Import
+import System.Random
 
 
 data PersonName =
@@ -364,6 +365,16 @@ instance PersistField (StatScore a) where
 
 instance PersistFieldSql (StatScore a) where
     sqlType _ = SqlInt64
+
+
+instance Random (StatScore a) where
+    randomR (a, b) g =
+        (StatScore stat, g')
+        where
+            (stat, g') = randomR (unStatScore a, unStatScore b) g
+
+    random g =
+        randomR (1, 20) g
 
 
 data Diplomacy = Diplomacy

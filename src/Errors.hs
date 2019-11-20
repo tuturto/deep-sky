@@ -39,6 +39,9 @@ data ErrorCode
     | FamilyNameIsEmpty
     | CognomenIsEmpty
     | RegnalNumberIsLessThanZero
+    -- errors specific to new person creation
+    | AgeBracketStartIsGreaterThanEnd
+    | PersonCreationFailed
     deriving (Show, Read, Eq)
 
 
@@ -77,6 +80,8 @@ errorCodeToStatusCode =
         FamilyNameIsEmpty -> 400
         CognomenIsEmpty -> 400
         RegnalNumberIsLessThanZero -> 400
+        AgeBracketStartIsGreaterThanEnd -> 400
+        PersonCreationFailed -> 500
 
 
 -- | Map status code to message text
@@ -173,6 +178,12 @@ errorCodeToText =
 
         RegnalNumberIsLessThanZero ->
             "Regnal number is less than zero"
+
+        AgeBracketStartIsGreaterThanEnd ->
+            "Age bracket start is greater than end"
+
+        PersonCreationFailed ->
+            "Person creation failed"
 
 
 $(deriveJSON defaultOptions ''ErrorCode)

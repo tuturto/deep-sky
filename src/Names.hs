@@ -6,7 +6,7 @@ module Names ( greekMasculineNameM, greekFemineNameM, greekMasculineNames
     where
 
 import Import
-import Control.Monad.Random ( Rand, Rand )
+import Control.Monad.Random ( Rand )
 import qualified Prelude as P
 import Data.List ( nub )
 import Data.Text ( chunksOf, toTitle )

@@ -27,6 +27,7 @@ import Navigation exposing (parseLocation, routes)
 import Url exposing (Url)
 import Url.Parser exposing (parse)
 import Views.Admin.Main
+import Views.Admin.People.Add
 import Views.Admin.People.Edit
 import Views.Admin.People.List
 import Views.Bases
@@ -164,6 +165,9 @@ similarRoutes current checked =
                 AdminPersonR _ ->
                     True
 
+                AdminNewPersonR ->
+                    True
+
                 _ ->
                     False
 
@@ -198,9 +202,16 @@ segment model route =
             ( "People", Just AdminR )
 
         AdminPersonR pId ->
-            ( "Name Here", Just AdminListPeopleR )
+            let
+                name =
+                    Maybe.map (\x -> displayName x.name) model.adminR.adminEditPersonR.person
+                        |> Maybe.withDefault "-"
+            in
+            ( name, Just AdminListPeopleR )
 
-        --TODO: person name
+        AdminNewPersonR ->
+            ( "Add person", Just AdminListPeopleR )
+
         BasesR ->
             ( "Bases", Just HomeR )
 
@@ -322,6 +333,9 @@ currentPage url =
 
         AdminPersonR pId ->
             Views.Admin.People.Edit.page
+
+        AdminNewPersonR ->
+            Views.Admin.People.Add.page
 
         BasesR ->
             Views.Bases.page

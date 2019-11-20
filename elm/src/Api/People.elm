@@ -1,5 +1,6 @@
 module Api.People exposing
-    ( genderDecoder
+    ( ageEncoder
+    , genderDecoder
     , genderEncoder
     , getDemesne
     , getPersonDetails
@@ -350,6 +351,11 @@ ageDecoder : Decode.Decoder Age
 ageDecoder =
     succeed Age
         |> andMap int
+
+
+ageEncoder : Age -> Encode.Value
+ageEncoder (Age n) =
+    Encode.int n
 
 
 demesneReportShortDecoder : Decode.Decoder DemesneShortInfo

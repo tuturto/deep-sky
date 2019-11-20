@@ -1,6 +1,5 @@
 module Data.Common exposing
     ( BioResource(..)
-    , apMaybe
     , BuildingId(..)
     , ChemResource(..)
     , ConstructionId(..)
@@ -30,6 +29,7 @@ module Data.Common exposing
     , StarSystemName(..)
     , UnitId(..)
     , UserId(..)
+    , apMaybe
     , capitalize
     , constructionIdToString
     , designIdToString
@@ -75,6 +75,7 @@ module Data.Common exposing
 
 import Http exposing (Error(..))
 import Ordering exposing (Ordering)
+import Url.Builder exposing (absolute, int)
 
 
 type StarDate
@@ -149,6 +150,7 @@ type Route
     | AdminR
     | AdminListPeopleR
     | AdminPersonR PersonId
+    | AdminNewPersonR
     | LogoutR
     | ResearchR
 
@@ -226,52 +228,55 @@ routeToString : Route -> String
 routeToString route =
     case route of
         HomeR ->
-            "/home"
+            absolute [ "home" ] []
 
         ProfileR ->
-            "/profile"
+            absolute [ "profile" ] []
 
         StarSystemR (StarSystemId sId) ->
-            "/starsystem/" ++ String.fromInt sId
+            absolute [ "starsystem", String.fromInt sId ] []
 
         PlanetR (StarSystemId sId) (PlanetId pId) ->
-            "/starsystem/" ++ String.fromInt sId ++ "/" ++ String.fromInt pId
+            absolute [ "starsystem", String.fromInt sId, String.fromInt pId ] []
 
         StarSystemsR ->
-            "/starsystem"
+            absolute [ "starsystem" ] []
 
         BasesR ->
-            "/base"
+            absolute [ "base" ] []
 
         FleetR ->
-            "/fleet"
+            absolute [ "fleet" ] []
 
         DesignerR ->
-            "/designer"
+            absolute [ "designer" ] []
 
         ConstructionR ->
-            "/construction"
+            absolute [ "construction" ] []
 
         MessagesR ->
-            "/message"
+            absolute [ "message" ] []
 
         PersonR pId ->
-            "/person/" ++ personIdToString pId
+            absolute [ "person", personIdToString pId ] []
 
         AdminR ->
-            "/admin"
+            absolute [ "admin" ] []
 
         AdminListPeopleR ->
-            "/admin/people"
+            absolute [ "admin", "people" ] []
 
         AdminPersonR pId ->
-            "/admin/people/" ++ personIdToString pId
+            absolute [ "admin", "people", personIdToString pId ] []
+
+        AdminNewPersonR ->
+            absolute [ "admin", "addPerson" ] []
 
         LogoutR ->
-            "/logout"
+            absolute [ "logout" ] []
 
         ResearchR ->
-            "/research"
+            absolute [ "research" ] []
 
 
 type InfoPanelStatus
@@ -601,6 +606,7 @@ type alias PagedResult a =
     , page : Int
     , results : List a
     }
+
 
 {-| Apply Maybe a to Maybe (a -> b), producing Maybe b
 -}

@@ -51,6 +51,7 @@ type Endpoint
     | ApiAdminSimulationStatus
     | ApiAdminPeople (Maybe Int) (Maybe Int)
     | ApiAdminPerson PersonId
+    | ApiAdminAddPerson
 
 
 {-| Map type safe Endpoint into String that can be used in HTTP requests
@@ -156,3 +157,6 @@ endpointToString endpoint =
 
         ApiAdminPerson personId ->
             absolute [ "api", "admin", "people", personIdToString personId ] []
+
+        ApiAdminAddPerson ->
+            absolute [ "api", "admin", "addPerson" ] []

@@ -13,7 +13,7 @@ module Events.News
 
 import Import
 import Data.Maybe ( fromJust )
-import System.Random ( getStdGen )
+import System.Random ( newStdGen )
 
 import Common ( safeHead )
 import CustomTypes ( StarDate )
@@ -163,7 +163,7 @@ namingPetEvent personE petE date = do
                        , PetDateOfDeath ==. Nothing
                        ] []
     let names = (petName . entityVal) <$> pets
-    g <- liftIO getStdGen
+    g <- liftIO newStdGen
     let availableNames = take 3 $ filter (\x -> not (x `elem` names)) $ petNames g
     let content = NamingPet (NamingPetEvent { namingPetEventPersonId = entityKey personE
                                             , namingPetEventPetId = entityKey petE

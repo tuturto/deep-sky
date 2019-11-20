@@ -6,21 +6,25 @@
 module Handler.AdminPanel
     ( getAdminPanelR, getAdminApiSimulationR, putAdminApiSimulationR
     , getAdminApiPeopleR, getAdminPeopleR, getAdminPersonR, getAdminApiPersonR
-    , putAdminApiPersonR
+    , putAdminApiPersonR, getAdminAddPersonR, postAdminApiAddPersonR
     )
     where
 
 import Control.Lens ( (#), (^?) )
+import Control.Monad.Random ( evalRand )
 import Database.Persist.Sql (toSqlKey)
 import Data.Either.Validation ( Validation(..), _Failure, _Success )
 import Data.Maybe ( isNothing, fromJust )
 import Import
 import qualified Prelude as P
+import System.Random ( newStdGen )
 
 import Common ( apiRequireAdmin, pagedResult, apiNotFound )
+import Creators.Person ( PersonOptions(..), AgeOptions(..), generatePersonM )
 import CustomTypes ( SystemStatus(..) )
 import Errors ( ErrorCode(..), raiseIfErrors, raiseIfFailure )
 import Handler.Home ( getNewHomeR )
+import MenuHelpers ( starDate )
 import People.Data ( StatScore(..), firstName, cognomen, familyName
                    , regnalNumber, unFirstName, unCognomen, unFamilyName )
 import Simulation.Main ( processTurn )
@@ -36,8 +40,13 @@ getAdminPeopleR :: Handler Html
 getAdminPeopleR = getNewHomeR
 
 -- | Get single person for admins
-getAdminPersonR:: PersonId -> Handler Html
+getAdminPersonR :: PersonId -> Handler Html
 getAdminPersonR _ = getNewHomeR
+
+
+-- | Add new person
+getAdminAddPersonR :: Handler Html
+getAdminAddPersonR = getNewHomeR
 
 
 -- | Get current state of simulation
@@ -114,6 +123,19 @@ putAdminApiPersonR pId = do
     errors <- runDB $ updatePerson pId msg
     _ <- raiseIfErrors errors
     returnJson (Entity pId msg)
+
+
+-- | Create new person
+postAdminApiAddPersonR :: Handler Value
+postAdminApiAddPersonR = do
+    _ <- apiRequireAdmin
+    msg <- requireJsonBody
+    date <- runDB $ starDate
+    _ <- raiseIfFailure $ validateAddPerson msg
+    g <- liftIO newStdGen
+    let person = evalRand (generatePersonM date msg) g
+    pId <- runDB $ insert person
+    returnJson (Entity pId person)
 
 
 updatePerson :: (MonadIO m,
@@ -277,3 +299,25 @@ regnalNumberIsNotNegative person =
                     _Success # person
                 else
                     _Failure # [ RegnalNumberIsLessThanZero ]
+
+
+-- | Validate person add message
+validateAddPerson :: PersonOptions -> Validation [ErrorCode] PersonOptions
+validateAddPerson opt =
+        pure opt
+            <* validateAgeOptions opt
+
+
+validateAgeOptions :: PersonOptions -> Validation [ErrorCode] PersonOptions
+validateAgeOptions opt =
+    case personOptionsAge opt of
+        Nothing ->
+            _Success # opt
+
+        Just (AgeBracket a b) ->
+            if a <= b
+                then _Success # opt
+                else _Failure # [ AgeBracketStartIsGreaterThanEnd ]
+
+        Just (ExactAge _) ->
+            _Success # opt

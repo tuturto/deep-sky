@@ -5,6 +5,8 @@ This panel is visible at all times at the top of admin view. It shows current
 status of simulation and can be used to change the status or trigger processing
 of next turn.
 
+![Admin panel](img/admin-panel.png)
+
 Status
 ------
 
