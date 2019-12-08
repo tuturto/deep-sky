@@ -73,7 +73,7 @@ expirationNews _ _ _ (PlanetStatus _ KragiiAttack _) =
 -- owner.
 boostEnded :: (SemiSequence seq1, SemiSequence seq2,
     Element seq1 ~ Entity Planet, Element seq2 ~ Entity StarSystem) =>
-    seq1 -> seq2 -> StarDate -> Key Planet -> ResourceType -> StatusType -> Maybe News
+    seq1 -> seq2 -> StarDate -> PlanetId -> ResourceType -> StatusType -> Maybe News
 boostEnded planets systems date pId resource sType =
         mkFactionNews <$> fId
                       <*> Just date

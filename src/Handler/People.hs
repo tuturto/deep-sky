@@ -10,17 +10,14 @@ module Handler.People
 
 import Import
 import Data.Maybe ( fromJust )
-import Common ( apiRequireFaction, apiNotFound, mkUniq
-              , apiRequireViewSimulation )
+import Common ( apiRequireFaction, apiNotFound, apiRequireViewSimulation )
 import MenuHelpers ( starDate )
 import People.Import ( personReport, demesneReport )
-import People.Queries ( getPersonLocation, PersonLocationSum(..))
 import Handler.Home ( getNewHomeR )
-import Queries ( personRelations, PersonRelationData(..) )
 
 
 -- | serve client program and have it started showing person details
-getPersonR :: Key Person -> Handler Html
+getPersonR :: PersonId -> Handler Html
 getPersonR _ = getNewHomeR
 
 
@@ -30,46 +27,20 @@ getPeopleR = getNewHomeR
 
 
 -- | Information of single person, taking intel level into account
-getApiPersonR :: Key Person -> HandlerFor App Value
+getApiPersonR :: PersonId -> HandlerFor App Value
 getApiPersonR pId = do
     (uId, _, avatar, fId) <- apiRequireFaction
     _ <- apiRequireViewSimulation uId
-    let avatarId = entityKey avatar
-    today <- runDB $ starDate
-    info <- runDB $ personRelations pId (entityKey avatar)
-    when (isNothing info) apiNotFound
-    let dId = join $ (personDynastyId . entityVal . personRelationDataPerson) <$> info
-    dynasty <- runDB $ mapM getEntity dId
-    intel <- runDB $ selectList [ HumanIntelligencePersonId ==. pId
-                                , HumanIntelligenceOwnerId ==. avatarId ] []
-    let intelTypes = mkUniq $ (humanIntelligenceLevel . entityVal) <$> intel
-    targetRelations <- runDB $ selectList [ RelationOriginatorId ==. pId ] []
-    let pIds = pId : avatarId : (mkUniq $ fmap (relationTargetId . entityVal) targetRelations)
-    allTraits <- runDB $ selectList ( [PersonTraitPersonId <-. pIds] ++
-                                      ( [PersonTraitValidUntil <=. (Just today)]
-                                        ||. [PersonTraitValidUntil ==. Nothing])
-                                    ) []
-    locationDb <- runDB $ getPersonLocation fId pId
-    let location = case locationDb of
-                    Nothing ->
-                        UnknownLocation
+    target <- runDB $ get pId
+    when (isNothing target) apiNotFound
 
-                    Just l ->
-                        l
+    report <- runDB $ personReport avatar fId (Entity pId (fromJust target))
 
-    let report = personReport today
-                              (fromJust info)
-                              (join dynasty)
-                              (entityVal <$> allTraits)
-                              intelTypes
-                              (entityVal <$> targetRelations)
-                              location
-                              avatarId
-    return $ toJSON report
+    returnJson report
 
 
 -- | Demesne of given character, according to intelligence level
-getApiDemesneR :: Key Person -> HandlerFor App Value
+getApiDemesneR :: PersonId -> HandlerFor App Value
 getApiDemesneR pId = do
     (uId, _, avatar, _) <- apiRequireFaction
     _ <- apiRequireViewSimulation uId

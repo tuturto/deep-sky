@@ -17,7 +17,7 @@ import Api.Common
         , post
         )
 import Api.Endpoints exposing (Endpoint(..))
-import Data.Model exposing (ApiMsg(..), Model, Msg(..))
+import Data.Model exposing (ApiMsg(..), Msg(..))
 import Data.Research
     exposing
         ( CurrentResearch
@@ -37,10 +37,8 @@ import Json.Decode as Decode
         ( andThen
         , fail
         , field
-        , float
         , int
         , list
-        , maybe
         , oneOf
         , string
         , succeed

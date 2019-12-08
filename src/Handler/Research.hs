@@ -82,7 +82,7 @@ getApiResearchProductionR = do
 -- Remove all current research in progress with same top category
 saveNewResearch :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
-    Key Faction -> (ResearchProgress, Research) -> ReaderT backend m (Key CurrentResearch)
+    FactionId -> (ResearchProgress, Research) -> ReaderT backend m CurrentResearchId
 saveNewResearch fId (progress, research) = do
     current <- selectList [ CurrentResearchFactionId ==. fId ] []
     let curRes = fmap (\x -> (entityKey x, techMap (currentResearchType $ entityVal x))) current
@@ -156,7 +156,7 @@ availableResearch available val@(progress, _) =
 -- | Load faction's current research
 loadCurrentResearch :: (PersistQueryRead backend, MonadIO m,
     BaseBackend backend ~ SqlBackend) =>
-    Key Faction -> ReaderT backend m [ResearchProgress]
+    FactionId -> ReaderT backend m [ResearchProgress]
 loadCurrentResearch fId = do
     current <- selectList [ CurrentResearchFactionId ==. fId ] []
     let res = currentToProgress <$> current

@@ -3,142 +3,30 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell            #-}
 
-module Vehicles.Stats
-    ( CrewRequirement(..), CrewSpace(..), UnitStats(..), QuartersQuality(..)
-    , TotalCrewSpace(..), SteerageQuarters(..), StandardQuarters(..)
-    , LuxuryQuarters(..)
+module Units.Stats
+    ( UnitStats(..), QuartersQuality(..)
     , unitMinCrew, unitNominalCrew, unitCrewSpace, estimateDesign
     , designMinCrew, designNominalCrew, designCrewSpace
     , seniorityRanks, crewRequirementAmountL, crewRequirementRankL
     , crewRequirementPositionL, quarterCrew, compsToCrew, plannedToCompPair
-    , unCrewSpaceL, totalCrewSpaceSteerageL, totalCrewSpaceStandardL
-    , totalCrewSpaceLuxuryL, filterZeroCrews
+    , filterZeroCrews
     )
     where
 
 import Import
 import Control.Lens ( Lens', lens, (%~), (&), (+~), (^.), traverse )
-import Control.Lens.TH
 import Control.Monad.Random ( Rand )
-import Data.Aeson ( ToJSON(..), withObject )
 import Data.Aeson.TH ( deriveJSON, defaultOptions, fieldLabelModifier )
 import qualified Prelude as P
 import System.Random
 
-import Vehicles.Components ( Component(..), ComponentId(..)
-                           , ComponentAmount(..), components )
-import Vehicles.Data ( CrewPosition(..), CrewSpaceReq(..), CrewRank(..)
-                     , CrewAmount(..), unCrewAmountL )
-import Vehicles.Queries ( Unit'(..) )
-
-
-data CrewRequirement =
-    CrewRequirement CrewPosition CrewRank CrewAmount
-    deriving (Show, Read, Eq)
-
-
-crewRequirementPositionL :: Lens' CrewRequirement CrewPosition
-crewRequirementPositionL = lens (\(CrewRequirement p _ _) -> p)
-                                (\(CrewRequirement _ r a) p -> CrewRequirement p r a)
-
-crewRequirementAmountL :: Lens' CrewRequirement CrewAmount
-crewRequirementAmountL = lens (\(CrewRequirement _ _ a) -> a)
-                              (\(CrewRequirement p r _) a -> CrewRequirement p r a)
-
-crewRequirementRankL :: Lens' CrewRequirement CrewRank
-crewRequirementRankL = lens (\(CrewRequirement _ r _) -> r)
-                            (\(CrewRequirement p _ a) r -> CrewRequirement p r a)
-
--- | Space of specific quality for crew
-data CrewSpace a =
-    CrewSpace { unCrewSpace :: CrewAmount }
-    deriving (Show, Read, Eq)
-
-
-instance Num (CrewSpace a) where
-    (CrewSpace a) + (CrewSpace b) =
-        CrewSpace (a + b)
-
-    (CrewSpace a) * (CrewSpace b) =
-        CrewSpace (a * b)
-
-    abs (CrewSpace a) =
-        CrewSpace (abs a)
-
-    signum (CrewSpace n)
-        | n < 0 = -1
-        | n == 0 = 0
-        | otherwise = 1
-
-    fromInteger n =
-        CrewSpace $ CrewAmount $ fromIntegral n
-
-    (CrewSpace a) - (CrewSpace b) =
-        CrewSpace (a - b)
-
-
-instance Semigroup (CrewSpace a) where
-    (<>) = (+)
-
-
-instance Monoid (CrewSpace a) where
-    mempty = 0
-
-
-data SteerageQuarters = SteerageQuarters
-    deriving (Show, Read, Eq)
-
-data StandardQuarters = StandardQuarters
-    deriving (Show, Read, Eq)
-
-data LuxuryQuarters = LuxuryQuarters
-    deriving (Show, Read, Eq)
-
-
--- | Total space for crew, categorized by quality of quarters
-data TotalCrewSpace = TotalCrewSpace
-    { totalCrewSpaceSteerage :: !(CrewSpace SteerageQuarters)
-    , totalCrewSpaceStandard :: !(CrewSpace StandardQuarters)
-    , totalCrewSpaceLuxury :: !(CrewSpace LuxuryQuarters)
-    } deriving (Show, Read, Eq)
-
-
-instance Semigroup TotalCrewSpace where
-    a <> b =
-        TotalCrewSpace
-        { totalCrewSpaceSteerage = totalCrewSpaceSteerage a <> totalCrewSpaceSteerage b
-        , totalCrewSpaceStandard = totalCrewSpaceStandard a <> totalCrewSpaceStandard b
-        , totalCrewSpaceLuxury = totalCrewSpaceLuxury a <> totalCrewSpaceLuxury b
-        }
-
-
-instance Monoid TotalCrewSpace where
-    mempty =
-        TotalCrewSpace
-        { totalCrewSpaceSteerage = 0
-        , totalCrewSpaceStandard = 0
-        , totalCrewSpaceLuxury = 0
-        }
-
-
-instance ToJSON TotalCrewSpace where
-    toJSON tSpace =
-        object [ "Steerage" .= (unCrewSpace . totalCrewSpaceSteerage) tSpace
-               , "Standard" .= (unCrewSpace . totalCrewSpaceStandard) tSpace
-               , "Luxury" .= (unCrewSpace . totalCrewSpaceLuxury) tSpace
-               ]
-
-
-instance FromJSON TotalCrewSpace where
-    parseJSON = withObject "total crew space" $ \o -> do
-        steerage <- o .: "Steerage"
-        standard <- o .: "Standard"
-        luxury <- o .: "Luxury"
-        return $ TotalCrewSpace
-            { totalCrewSpaceSteerage = CrewSpace steerage
-            , totalCrewSpaceStandard = CrewSpace standard
-            , totalCrewSpaceLuxury = CrewSpace luxury
-            }
+import Units.Components ( Component(..), ComponentId(..)
+                        , ComponentAmount(..), components )
+import Units.Data ( CrewPosition(..), CrewSpaceReq(..), CrewRank(..)
+                  , CrewAmount(..), CrewRequirement(..), TotalCrewSpace(..)
+                  , unCrewAmountL, crewRequirementAmountL, crewRequirementRankL
+                  , crewRequirementPositionL )
+import Units.Queries ( Unit'(..) )
 
 
 -- | Quality of quarters
@@ -228,7 +116,7 @@ unitNominalCrew comps =
 -- | Maximum amount of crew unit can have
 unitCrewSpace :: Unit' -> Chassis -> [InstalledComponent] -> TotalCrewSpace
 unitCrewSpace _ _ comps =
-    mconcat $ (providedCrewSpace . installedComponentComponentId) <$> comps
+    mconcat $ providedCrewSpace . installedComponentComponentId <$> comps
 
 
 -- | Amount of crew space given component provides
@@ -315,7 +203,7 @@ compsToCrew comps =
     where
         combinedReqs = foldr addReq noReqs compReqs
         compReqs = join $ compToCrewReq <$> comps
-        noReqs = (\x -> ComponentCrewReq x 0.0) <$> [minBound..]
+        noReqs = (`ComponentCrewReq` 0.0) <$> [minBound..]
 
 
 -- | Given list of crew requirements, compute total amount of crew needed
@@ -336,7 +224,7 @@ seniorityRanks (CrewRequirement p SecondClass a) =
     -- 5 second class crew -> chief
     -- after 10 second class crew -> 1st class for every 5 2nd class
     -- every 5 1st class -> senior
-    catMaybes $ cRanks : sRanks : fRanks : []
+    catMaybes $ [ cRanks, sRanks, fRanks ]
     where
         amount = unCrewAmount a
         cRanks = if amount >= 5
@@ -383,7 +271,7 @@ addReq (ComponentCrewReq p a) reqs =
 -- | Crew requirements imposed by a component
 compToCrewReq :: Component -> [ComponentCrewReq]
 compToCrewReq comp =
-    case (componentId comp) of
+    case componentId comp of
         ShipLongRangeSensors ->
             [ ComponentCrewReq Artificer 0.1
             , ComponentCrewReq Crew 1.0
@@ -441,14 +329,5 @@ compToCrewReq comp =
         VehicleHoverMotiveSystem ->
             []
 
-
-$(deriveJSON defaultOptions ''CrewRequirement)
-$(deriveJSON defaultOptions ''CrewSpace)
 $(deriveJSON defaultOptions ''QuartersQuality)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 9 } ''UnitStats)
-
-makeLensesFor [("unCrewSpace", "unCrewSpaceL")] ''CrewSpace
-
-makeLensesFor [ ("totalCrewSpaceSteerage", "totalCrewSpaceSteerageL")
-              , ("totalCrewSpaceStandard", "totalCrewSpaceStandardL")
-              , ("totalCrewSpaceLuxury", "totalCrewSpaceLuxuryL")] ''TotalCrewSpace

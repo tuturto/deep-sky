@@ -6,9 +6,11 @@ module Api.StarSystem exposing
     , buildingTypeEncoder
     , buildingsCmd
     , getBuildingsCmd
+    , getPlanet
     , getPlanetCmd
     , getPlanetsCmd
     , getPopulationsCmd
+    , getStarSystem
     , getStarSystemCmd
     , getStarSystemsCmd
     , getStarsCmd
@@ -103,6 +105,11 @@ getStarSystemsCmd model =
         Cmd.none
 
 
+getStarSystem : (Result Http.Error StarSystem -> Msg) -> StarSystemId -> Cmd Msg
+getStarSystem msg sId =
+    Http.send msg (get (ApiSingleStarSystem sId) starSystemDecoder)
+
+
 getStarSystemCmd : (Result Http.Error StarSystem -> Msg) -> StarSystemId -> Cmd Msg
 getStarSystemCmd msg starSystemId =
     Http.send msg (get (ApiSingleStarSystem starSystemId) starSystemDecoder)
@@ -122,6 +129,11 @@ getStarsCmd model =
         Cmd.none
 
 
+getPlanet : (Result Http.Error Planet -> Msg) -> PlanetId -> Cmd Msg
+getPlanet msg pId =
+    Http.send msg (get (ApiSinglePlanet pId) planetDecoder)
+
+
 getPlanetsCmd : Cmd Msg
 getPlanetsCmd =
     Http.send (ApiMsgCompleted << PlanetsReceived) (get ApiPlanet (list planetDecoder))
@@ -133,7 +145,7 @@ getPlanetCmd msg pId =
 
 
 getPopulationsCmd : Model -> PlanetId -> Cmd Msg
-getPopulationsCmd model planetId =
+getPopulationsCmd _ planetId =
     populationCmd planetId
 
 
@@ -143,7 +155,7 @@ populationCmd planetId =
 
 
 getBuildingsCmd : Model -> PlanetId -> Cmd Msg
-getBuildingsCmd model planetId =
+getBuildingsCmd _ planetId =
     buildingsCmd planetId
 
 

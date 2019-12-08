@@ -30,7 +30,6 @@ import Data.Accessors
         , personA
         , personDetailsStatusA
         , personRA
-        , planetNameA
         , relationsA
         , relationsCurrentPageA
         , relationsStatusA
@@ -61,38 +60,45 @@ import Data.People
     exposing
         ( DemesneShortInfo(..)
         , Gender(..)
+        , OnUnitData
         , OpinionFeeling(..)
         , OpinionReport(..)
         , OpinionScore(..)
-        , Person
         , PersonLocation(..)
-        , PersonName(..)
         , RelationLink
         , RelationType(..)
-        , ShortTitle
         , Trait
-        , displayName
         , formalName
         , personIntelToString
-        , personNameOrdering
         , relationTypeOrdering
         , relationTypeToString
         , traitOrdering
         , unAge
-        , unFamilyName
-        , unFirstName
         , unOpinionScore
-        , unShortTitle
         , unStatValue
         , unTraitDescription
         , unTraitName
         )
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Data.PersonNames
+    exposing
+        ( PersonName(..)
+        , ShortTitle
+        , displayName
+        , personNameOrdering
+        , unShortTitle
+        )
+import Data.Vehicles
+    exposing
+        ( CrewPosition(..)
+        , crewPositionToString
+        , unUnitName
+        )
+import Html exposing (Html, a, div, text)
+import Html.Attributes exposing (class, title)
 import Maybe
 import Ordering exposing (Ordering)
 import Set
-import ViewModels.Person exposing (PersonRMsg(..), PersonViewModel)
+import ViewModels.Person exposing (PersonRMsg(..))
 import Views.Helpers
     exposing
         ( PanelSizing(..)
@@ -106,7 +112,7 @@ import Views.Helpers
 {-| Initiate retrieval of data needed by this page
 -}
 init : PersonId -> Model -> Cmd Msg
-init pId model =
+init pId _ =
     Cmd.batch
         [ getPersonDetails (PersonMessage << PersonDetailsReceived) pId
         , getDemesne (PersonMessage << DemesneReceived) pId
@@ -230,11 +236,11 @@ personDetailsContent model =
         location =
             case get (personRA << personA << try << locationA) model of
                 Just (OnPlanet pDetails) ->
-                    a [ href (PlanetR pDetails.starSystemId pDetails.planetId) ]
+                    a [ href (PlanetR pDetails.planetId) ]
                         [ text <| unPlanetName pDetails.planetName ]
 
                 Just (OnUnit uDetails) ->
-                    text "Unknown"
+                    displayOnUnitLocation uDetails
 
                 Just UnknownLocation ->
                     text "Unknown"
@@ -285,6 +291,25 @@ personDetailsContent model =
         , div [ class "col-lg-8" ] [ intel ]
         ]
     ]
+
+
+{-| Render location on unit into html link
+-}
+displayOnUnitLocation : OnUnitData -> Html Msg
+displayOnUnitLocation pos =
+    case pos.position of
+        Just position ->
+            let
+                name =
+                    crewPositionToString position
+                        ++ " on "
+                        ++ unUnitName pos.unitName
+                        |> text
+            in
+            a [ href (UnitR pos.unitId) ] [ name ]
+
+        Nothing ->
+            a [ href (UnitR pos.unitId) ] [ text <| unUnitName pos.unitName ]
 
 
 displayOpinion : OpinionReport -> Html Msg
@@ -444,13 +469,12 @@ relationsPanel model =
 -}
 relationsContent : Model -> List (Html Msg)
 relationsContent model =
-    [ div [ class "row panel-table-heading" ]
+    div [ class "row panel-table-heading" ]
         [ div [ class "col-lg-6" ] [ text "Name" ]
         , div [ class "col-lg-3" ] [ text "Type" ]
         , div [ class "col-lg-3" ] [ text "Opinion" ]
         ]
-    ]
-        ++ (get (personRA << personA << try << relationsA) model
+        :: (get (personRA << personA << try << relationsA) model
                 |> Maybe.withDefault []
                 |> List.sortWith relationOrdering
                 |> List.map relationEntry
@@ -507,12 +531,11 @@ demesnePanel model =
 -}
 demesneContent : Model -> List (Html Msg)
 demesneContent model =
-    [ div [ class "row panel-table-heading" ]
+    div [ class "row panel-table-heading" ]
         [ div [ class "col-lg-8" ] [ text "Name" ]
         , div [ class "col-lg-4" ] [ text "Type" ]
         ]
-    ]
-        ++ (model.personR.demesne
+        :: (model.personR.demesne
                 |> Maybe.withDefault []
                 |> List.sortWith demesneSorter
                 |> List.map demesneEntry
@@ -531,7 +554,7 @@ demesneEntry entry =
         link =
             case entry of
                 PlanetDemesneShort report ->
-                    a [ href (PlanetR report.starSystemId report.planetId) ] [ text name ]
+                    a [ href (PlanetR report.planetId) ] [ text name ]
 
                 StarSystemDemesneShort report ->
                     a [ href (StarSystemR report.starSystemId) ] [ text name ]

@@ -8,7 +8,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-module Vehicles.Components
+module Units.Components
     ( Component(..), ComponentSlot(..), ComponentId(..), ComponentType(..), ComponentLevel(..)
     , ComponentPower(..), Weight(..), ChassisType(..), SlotAmount(..), ChassisName(..)
     , ComponentAmount(..), ComponentName(..), ComponentDescription(..), ComponentDamage(..)

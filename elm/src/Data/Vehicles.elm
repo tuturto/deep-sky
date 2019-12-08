@@ -1,5 +1,6 @@
 module Data.Vehicles exposing
-    ( Chassis
+    ( Band(..)
+    , Chassis
     , ChassisId(..)
     , ChassisLevel(..)
     , ChassisName(..)
@@ -18,6 +19,7 @@ module Data.Vehicles exposing
     , CrewAmount(..)
     , CrewPosition(..)
     , CrewRank(..)
+    , CrewReport
     , CrewRequirement
     , CrewSpace(..)
     , CrewSpaceReq(..)
@@ -25,16 +27,29 @@ module Data.Vehicles exposing
     , DesignName(..)
     , PlannedChassis
     , PlannedComponent
+    , ShipDetails
+    , ShipLocation(..)
+    , ShipName(..)
     , SlotAmount(..)
     , TotalCrewSpace
+    , Unit(..)
+    , UnitLocation(..)
+    , UnitName(..)
     , UnitStats
     , ValidationMessage(..)
+    , VehicleDetails
+    , VehicleLocation(..)
+    , VehicleName(..)
     , Weight(..)
     , chassisTypeToString
     , combinedCrewSpace
     , componentSlotToString
     , crewCount
+    , crewPositionToString
+    , crewRankToString
     , installPlan
+    , positionOrdering
+    , rankOrdering
     , slotToIndex
     , totalCost
     , unChassisId
@@ -49,8 +64,11 @@ module Data.Vehicles exposing
     , unCrewAmount
     , unCrewSpace
     , unDesignName
+    , unShipName
     , unSlotAmount
+    , unUnitName
     , unValidationMessage
+    , unVehicleName
     , unWeight
     , validateDesign
     )
@@ -61,7 +79,10 @@ import Data.Common
         , ChemResource(..)
         , DesignId
         , MechResource(..)
+        , PersonId
+        , PlanetId
         , Resources
+        , StarSystemId
         , capitalize
         , findFirst
         , unBio
@@ -69,7 +90,9 @@ import Data.Common
         , unMech
         , writtenNumber
         )
+import Data.PersonNames exposing (PersonName)
 import List exposing (foldl, map, sum)
+import Ordering exposing (Ordering)
 
 
 type ComponentId
@@ -97,6 +120,42 @@ type Weight
 unWeight : Weight -> Int
 unWeight (Weight x) =
     x
+
+
+type DesignName
+    = DesignName String
+
+
+unDesignName : DesignName -> String
+unDesignName (DesignName s) =
+    s
+
+
+type UnitName
+    = UnitName String
+
+
+unUnitName : UnitName -> String
+unUnitName (UnitName s) =
+    s
+
+
+type VehicleName
+    = VehicleName String
+
+
+unVehicleName : VehicleName -> String
+unVehicleName (VehicleName s) =
+    s
+
+
+type ShipName
+    = ShipName String
+
+
+unShipName : ShipName -> String
+unShipName (ShipName s) =
+    s
 
 
 type ComponentName
@@ -321,15 +380,6 @@ type alias Design =
     }
 
 
-type DesignName
-    = DesignName String
-
-
-unDesignName : DesignName -> String
-unDesignName (DesignName x) =
-    x
-
-
 type alias PlannedComponent =
     { id : ComponentId
     , level : ComponentLevel
@@ -393,22 +443,27 @@ validateQuarters s =
 
         Just stats ->
             case stats.crewSpaceRequired of
-                CrewSpaceOptional ->
+                Just CrewSpaceOptional ->
                     []
 
-                CrewSpaceRequired ->
+                Just CrewSpaceRequired ->
                     let
                         provided =
-                            unCrewSpace <| combinedCrewSpace stats.crewSpace
+                            Maybe.map (unCrewSpace << combinedCrewSpace) stats.crewSpace
+                                |> Maybe.withDefault 0
 
                         required =
-                            unCrewAmount <| crewCount stats.nominalCrew
+                            Maybe.map (unCrewAmount << crewCount) stats.nominalCrew
+                                |> Maybe.withDefault 0
                     in
                     if provided < required then
                         [ ValidationMessage <| String.fromInt (required - provided) ++ " more quarters are needed" ]
 
                     else
                         []
+
+                Nothing ->
+                    []
 
 
 {-| Validate that design has name
@@ -666,12 +721,7 @@ installPlan availableComponents plannedComponents =
     List.map (\plan -> ( findFirst (\comp -> plan.id == comp.id) availableComponents, plan.amount )) plannedComponents
         |> List.filterMap
             (\( comp, amount ) ->
-                case comp of
-                    Just c ->
-                        Just ( c, amount )
-
-                    Nothing ->
-                        Nothing
+                Maybe.map (\c -> ( c, amount )) comp
             )
 
 
@@ -713,10 +763,10 @@ scaleCost res n =
 {-| Stats of a unit
 -}
 type alias UnitStats =
-    { minimumCrew : List CrewRequirement
-    , nominalCrew : List CrewRequirement
-    , crewSpace : TotalCrewSpace
-    , crewSpaceRequired : CrewSpaceReq
+    { minimumCrew : Maybe (List CrewRequirement)
+    , nominalCrew : Maybe (List CrewRequirement)
+    , crewSpace : Maybe TotalCrewSpace
+    , crewSpaceRequired : Maybe CrewSpaceReq
     }
 
 
@@ -814,3 +864,184 @@ crewCount reqs =
     List.map (\req -> unCrewAmount req.amount) reqs
         |> List.sum
         |> CrewAmount
+
+
+type Unit
+    = Ship ShipDetails
+    | Vehicle VehicleDetails
+
+
+type alias ShipDetails =
+    { name : ShipName
+    , designName : DesignName
+    , stats : UnitStats
+    , location : Maybe ShipLocation
+    , crew : List CrewReport
+    }
+
+
+type alias VehicleDetails =
+    { name : VehicleName
+    , designName : DesignName
+    , stats : UnitStats
+    , location : Maybe VehicleLocation
+    , crew : List CrewReport
+    }
+
+
+type UnitLocation
+    = ShipLocation ShipLocation
+    | VehicleLocation VehicleLocation
+
+
+type ShipLocation
+    = PlanetarySpace PlanetId Band
+    | SystemSpace StarSystemId Band
+
+
+type VehicleLocation
+    = VehicleOnPlanet PlanetId
+
+
+type Band
+    = BandSurface
+    | BandOrbit
+    | BandA
+    | BandB
+    | BandC
+    | BandD
+    | BandE
+    | BandF
+    | BandG
+
+
+type alias CrewReport =
+    { personId : PersonId
+    , name : PersonName
+    , position : CrewPosition
+    , rank : CrewRank
+    }
+
+
+{-| Map crew position into descriptive text
+-}
+crewPositionToString : CrewPosition -> String
+crewPositionToString pos =
+    case pos of
+        Commander ->
+            "Commander"
+
+        Navigator ->
+            "Navigator"
+
+        Signaler ->
+            "Signaler"
+
+        SensorOperator ->
+            "Sensor operator"
+
+        Gunner ->
+            "Gunner"
+
+        Doctor ->
+            "Doctor"
+
+        Nurse ->
+            "Nurse"
+
+        Driver ->
+            "Driver"
+
+        Helmsman ->
+            "Helmsman"
+
+        Artificer ->
+            "Artificer"
+
+        Crew ->
+            "Crew"
+
+        Passenger ->
+            "Passenger"
+
+
+crewRankToString : CrewRank -> String
+crewRankToString rank =
+    case rank of
+        SecondClass ->
+            "Second class"
+
+        FirstClass ->
+            "First class"
+
+        Senior ->
+            "Senior"
+
+        Chief ->
+            "Chief"
+
+
+rankToIndex : CrewRank -> Int
+rankToIndex rank =
+    case rank of
+        SecondClass ->
+            4
+
+        FirstClass ->
+            3
+
+        Senior ->
+            2
+
+        Chief ->
+            1
+
+
+rankOrdering : Ordering CrewRank
+rankOrdering a b =
+    Ordering.natural (rankToIndex a) (rankToIndex b)
+
+
+positionToIndex : CrewPosition -> Int
+positionToIndex pos =
+    case pos of
+        Commander ->
+            1
+
+        Navigator ->
+            2
+
+        Signaler ->
+            3
+
+        SensorOperator ->
+            4
+
+        Gunner ->
+            5
+
+        Doctor ->
+            6
+
+        Nurse ->
+            7
+
+        Driver ->
+            8
+
+        Helmsman ->
+            9
+
+        Artificer ->
+            10
+
+        Crew ->
+            11
+
+        Passenger ->
+            12
+
+
+positionOrdering : Ordering CrewPosition
+positionOrdering a b =
+    Ordering.natural (positionToIndex a) (positionToIndex b)

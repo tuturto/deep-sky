@@ -1,5 +1,6 @@
 module Api.People exposing
     ( ageEncoder
+    , crewPositionDecoder
     , genderDecoder
     , genderEncoder
     , getDemesne
@@ -44,13 +45,9 @@ import Data.Model exposing (Msg(..))
 import Data.People
     exposing
         ( Age(..)
-        , Cognomen(..)
         , DemesneShortInfo(..)
         , DynastyLink
-        , FamilyName(..)
-        , FirstName(..)
         , Gender(..)
-        , LongTitle(..)
         , OnPlanetData
         , OnUnitData
         , OpinionFeeling(..)
@@ -61,15 +58,12 @@ import Data.People
         , Person
         , PersonIntel(..)
         , PersonLocation(..)
-        , PersonName(..)
         , PetType(..)
         , PlanetDemesneReportShort
-        , RegnalNumber(..)
         , RelationLink
         , RelationType(..)
         , RelationVisibility(..)
         , Sex(..)
-        , ShortTitle(..)
         , StarSystemDemesneReportShort
         , StatValue(..)
         , StatValues
@@ -79,7 +73,17 @@ import Data.People
         , TraitType(..)
         , unStatValue
         )
-import Data.Vehicles exposing (CrewPosition(..))
+import Data.PersonNames
+    exposing
+        ( Cognomen(..)
+        , FamilyName(..)
+        , FirstName(..)
+        , LongTitle(..)
+        , PersonName(..)
+        , RegnalNumber(..)
+        , ShortTitle(..)
+        )
+import Data.Vehicles exposing (CrewPosition(..), UnitName(..))
 import Http
 import Json.Decode as Decode
     exposing
@@ -681,31 +685,30 @@ petTypeEncoder t =
 personLocationDecoder : Decode.Decoder PersonLocation
 personLocationDecoder =
     oneOf
-        [ when opinionReportType
+        [ when locationTag
             (is "OnPlanet")
             (succeed OnPlanet
                 |> andMap (field "Contents" onPlanetDecoder)
             )
-        , when opinionReportType
+        , when locationTag
             (is "OnUnit")
             (succeed OnUnit
                 |> andMap (field "Contents" onUnitDecoder)
             )
-        , when opinionReportType
+        , when locationTag
             (is "UnknownLocation")
             (succeed UnknownLocation)
         ]
 
 
-locationTagDecoder : Decode.Decoder String
-locationTagDecoder =
+locationTag : Decode.Decoder String
+locationTag =
     field "Tag" string
 
 
 onPlanetDecoder : Decode.Decoder OnPlanetData
 onPlanetDecoder =
     succeed OnPlanetData
-        |> andMap (field "PersonId" personIdDecoder)
         |> andMap (field "PlanetId" planetIdDecoder)
         |> andMap (field "StarSystemId" starSystemIdDecoder)
         |> andMap (field "PlanetName" planetNameDecoder)
@@ -714,11 +717,60 @@ onPlanetDecoder =
 onUnitDecoder : Decode.Decoder OnUnitData
 onUnitDecoder =
     succeed OnUnitData
-        |> andMap (field "PersonId" personIdDecoder)
         |> andMap (field "UnitId" unitIdDecoder)
-        |> andMap (field "CrewPosition" crewPositionDecoder)
+        |> andMap (field "UnitName" unitNameDecoder)
+        |> andMap (field "CrewPosition" (maybe crewPositionDecoder))
+
+
+unitNameDecoder : Decode.Decoder UnitName
+unitNameDecoder =
+    succeed UnitName
+        |> andMap string
 
 
 crewPositionDecoder : Decode.Decoder CrewPosition
 crewPositionDecoder =
-    fail "ups, oho"
+    string |> andThen stringToCrewPosition
+
+
+stringToCrewPosition : String -> Decode.Decoder CrewPosition
+stringToCrewPosition s =
+    case s of
+        "Commander" ->
+            succeed Commander
+
+        "Navigator" ->
+            succeed Navigator
+
+        "Signaler" ->
+            succeed Signaler
+
+        "SensorOperator" ->
+            succeed SensorOperator
+
+        "Gunner" ->
+            succeed Gunner
+
+        "Doctor" ->
+            succeed Doctor
+
+        "Nurse" ->
+            succeed Nurse
+
+        "Driver" ->
+            succeed Driver
+
+        "Helmsman" ->
+            succeed Helmsman
+
+        "Artificer" ->
+            succeed Artificer
+
+        "Crew" ->
+            succeed Crew
+
+        "Passenger" ->
+            succeed Passenger
+
+        _ ->
+            fail "failed to deserialize"

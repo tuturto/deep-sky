@@ -65,7 +65,7 @@ planetAndFirstConstruction (planet, []) =
 -- | Perform construction on a planet at given speed
 doPlanetConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                         MonadIO m, BaseBackend backend ~ SqlBackend) =>
-                        Key Faction -> StarDate -> OverallConstructionSpeed -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction))
+                        FactionId -> StarDate -> OverallConstructionSpeed -> (Maybe (Entity Planet), Maybe (Entity BuildingConstruction))
                         -> ReaderT backend m ()
 doPlanetConstruction fId date speed (Just planetE, Just bConsE) = do
     let bCons = entityVal bConsE
@@ -85,7 +85,7 @@ doPlanetConstruction _ _ _ _ =
 ---  are created for the faction.
 finishConstruction :: (PersistQueryRead backend, PersistQueryWrite backend,
                        MonadIO m, BaseBackend backend ~ SqlBackend) =>
-                       Key Faction -> StarDate -> Entity BuildingConstruction -> ReaderT backend m ()
+                       FactionId -> StarDate -> Entity BuildingConstruction -> ReaderT backend m ()
 finishConstruction fId date bConsE = do
     let bCons = entityVal bConsE
     let bConsId = entityKey bConsE
@@ -111,7 +111,7 @@ finishConstruction fId date bConsE = do
     _ <- insert report
     -- TODO: rather messy piece, clean up this
     planet <- get planetId
-    let starSystemId = fmap planetStarSystemId planet :: Maybe (Key StarSystem)
+    let starSystemId = fmap planetStarSystemId planet :: Maybe StarSystemId
     starSystem <- mapM get starSystemId
     let news = buildingConstructionFinishedNews (Entity planetId $ fromJust planet) (Entity (fromJust starSystemId) (fromJust $ fromJust starSystem) )
                                                 (Entity bId newBuilding) date fId

@@ -2,11 +2,13 @@ module Api.Designer exposing
     ( availableChassisCmd
     , availableComponentsCmd
     , availableDesignsCmd
+    , crewRankDecoder
     , deleteDesignCmd
     , designIdDecoder
     , designNameDecoder
     , estimateDesign
     , saveDesignCmd
+    , unitStatsDecoder
     )
 
 import Api.Common
@@ -23,7 +25,6 @@ import Data.Common exposing (DesignId(..))
 import Data.Model
     exposing
         ( ApiMsg(..)
-        , Model
         , Msg(..)
         )
 import Data.Vehicles
@@ -69,7 +70,6 @@ import Json.Decode as Decode
         , int
         , list
         , maybe
-        , oneOf
         , string
         , succeed
         )
@@ -421,10 +421,10 @@ slotAmountDecoder =
 unitStatsDecoder : Decode.Decoder UnitStats
 unitStatsDecoder =
     succeed UnitStats
-        |> andMap (field "MinimumCrew" (list crewRequirementDecoder))
-        |> andMap (field "NominalCrew" (list crewRequirementDecoder))
-        |> andMap (field "CrewSpace" totalCrewSpaceDecoder)
-        |> andMap (field "CrewSpaceRequired" crewSpaceReqDecoder)
+        |> andMap (field "MinimumCrew" (maybe (list crewRequirementDecoder)))
+        |> andMap (field "NominalCrew" (maybe (list crewRequirementDecoder)))
+        |> andMap (field "CrewSpace" (maybe totalCrewSpaceDecoder))
+        |> andMap (field "CrewSpaceRequired" (maybe crewSpaceReqDecoder))
 
 
 crewRequirementDecoder : Decode.Decoder CrewRequirement

@@ -6,8 +6,7 @@ module Data.Model exposing
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
-import Data.Admin exposing (Simulation)
-import Data.Common exposing (ErrorMessage, InfoPanelStatus, Resources, StarDate)
+import Data.Common exposing (ErrorMessage, Resources, StarDate)
 import Data.Construction exposing (Building, BuildingInfo, Construction)
 import Data.Messages exposing (NewsArticle, UserIcon)
 import Data.Research exposing (CurrentResearch, Research, TotalResearchScore)
@@ -33,6 +32,7 @@ import ViewModels.Person exposing (PersonRMsg, PersonViewModel)
 import ViewModels.Planet exposing (PlanetRMsg(..), PlanetViewModel)
 import ViewModels.Research exposing (ResearchRMsg(..), ResearchViewModel)
 import ViewModels.StarSystem exposing (StarSystemRMsg, StarSystemViewModel)
+import ViewModels.Unit exposing (UnitRMsg, UnitViewModel)
 
 
 type alias Model =
@@ -64,6 +64,7 @@ type alias Model =
     , designerR : DesignerViewModel
     , personR : PersonViewModel
     , adminR : AdminViewModel
+    , unitR : UnitViewModel
     }
 
 
@@ -78,6 +79,7 @@ type Msg
     | ResearchMessage ResearchRMsg
     | DesignerMessage DesignerRMsg
     | PersonMessage PersonRMsg
+    | UnitMessage UnitRMsg
     | AdminMessage AdminRMsg
     | AdminListPeopleMessage AdminListPeopleRMsg
     | AdminEditPersonMessage AdminEditPersonRMsg

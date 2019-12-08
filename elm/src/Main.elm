@@ -3,7 +3,7 @@ module Main exposing (handleApiMsg, init, main, subscriptions, update)
 {-| Main module of the application
 -}
 
-import Accessors exposing (get, over, set)
+import Accessors exposing (over, set)
 import Api.Common exposing (resourcesCmd, starDateCmd)
 import Api.Designer exposing (availableDesignsCmd)
 import Browser
@@ -37,7 +37,6 @@ import Data.Common
         , Route(..)
         , error
         , unPlanetId
-        , unStarId
         , unStarSystemId
         )
 import Data.Construction exposing (constructionPlanet)
@@ -47,12 +46,10 @@ import Data.Model
         , Model
         , Msg(..)
         )
-import Data.StarSystem exposing (Star, StarSystem)
+import Data.StarSystem exposing (StarSystem)
 import Data.User exposing (Role(..))
 import Dict exposing (Dict)
 import Dict.Extra exposing (groupBy)
-import Html exposing (..)
-import Html.Attributes exposing (..)
 import Http exposing (Error(..))
 import List
 import Maybe.Extra exposing (isJust)
@@ -65,6 +62,7 @@ import ViewModels.Person
 import ViewModels.Planet exposing (PlanetRMsg(..))
 import ViewModels.Research exposing (ResearchRMsg(..))
 import ViewModels.StarSystem exposing (StarSystemRMsg(..))
+import ViewModels.Unit
 import Views.Admin.Main
 import Views.Admin.People.Add
 import Views.Admin.People.Edit
@@ -82,6 +80,7 @@ import Views.Profile
 import Views.Research
 import Views.StarSystem
 import Views.StarSystems
+import Views.Unit
 
 
 
@@ -105,7 +104,7 @@ main =
 {-| Initialize the application
 -}
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init flags url key =
+init _ url key =
     let
         model =
             { key = key
@@ -136,6 +135,7 @@ init flags url key =
             , designerR = ViewModels.Designer.init
             , personR = ViewModels.Person.init
             , adminR = ViewModels.Admin.Main.init
+            , unitR = ViewModels.Unit.init
             }
     in
     ( model
@@ -191,6 +191,9 @@ update msg model =
 
         PersonMessage message ->
             Views.Person.update message model
+
+        UnitMessage message ->
+            Views.Unit.update message model
 
         AdminMessage message ->
             Views.Admin.Main.update message model
@@ -516,11 +519,14 @@ currentInit url =
         StarSystemsR ->
             Views.StarSystems.init
 
-        PlanetR starSystemId planetId ->
-            Views.Planet.init starSystemId planetId
+        PlanetR planetId ->
+            Views.Planet.init planetId
 
         PersonR personId ->
             Views.Person.init personId
+
+        UnitR unitId ->
+            Views.Unit.init unitId
 
         LogoutR ->
             Views.Home.init

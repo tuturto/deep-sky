@@ -14,13 +14,14 @@ module Dto.Ship ( ChassisDto(..), RequiredComponentDto(..)
 
 import Data.Aeson.TH ( deriveJSON, defaultOptions, fieldLabelModifier )
 import Import
-import Vehicles.Components ( ComponentId, ComponentPower, ChassisType, SlotAmount
-                           , ChassisName, Weight, ComponentLevel, ComponentAmount
-                           , ComponentPower(..) )
+import Units.Data ( DesignName(..) )
+import Units.Components ( ComponentId, ComponentPower, ChassisType, SlotAmount
+                        , ChassisName, Weight, ComponentLevel, ComponentAmount
+                        , ComponentPower(..) )
 
 
 data ChassisDto = ChassisDto
-    { chassisDtoId :: !(Key Chassis)
+    { chassisDtoId :: !ChassisId
     , chassisDtoName :: !ChassisName
     , chassisDtoType :: !ChassisType
     , chassisDtoMaxTonnage :: !Weight
@@ -50,15 +51,15 @@ data PlannedComponentDto = PlannedComponentDto
 
 
 data DesignDto = DesignDto
-    { designDtoId :: !(Maybe (Key Design))
-    , designDtoChassisId :: !(Key Chassis)
+    { designDtoId :: !(Maybe DesignId)
+    , designDtoChassisId :: !ChassisId
     , designDtoChassisLevel :: !Int
-    , designDtoName :: !Text
+    , designDtoName :: !DesignName
     , designDtoComponents :: ![ PlannedComponentDto ]
     } deriving (Show, Read, Eq)
 
 
-designToDesignDto :: (Key Design, Design) -> [ Entity PlannedComponent ] -> DesignDto
+designToDesignDto :: (DesignId, Design) -> [ Entity PlannedComponent ] -> DesignDto
 designToDesignDto (newId, Design{..}) comps =
     -- TODO: chassis level
     DesignDto (Just newId) designChassisId 1 designName $ fmap (plannedComponentToComponentDto . entityVal) comps
@@ -69,7 +70,7 @@ plannedComponentToComponentDto PlannedComponent{..} =
     PlannedComponentDto plannedComponentComponentId plannedComponentLevel plannedComponentAmount
 
 
-componentDtoToPlannedComponent :: Key Design -> PlannedComponentDto -> PlannedComponent
+componentDtoToPlannedComponent :: DesignId -> PlannedComponentDto -> PlannedComponent
 componentDtoToPlannedComponent dId (PlannedComponentDto {..}) =
     PlannedComponent dId plannedComponentDtoId plannedComponentDtoLevel plannedComponentDtoAmount
 

@@ -23,17 +23,17 @@ getStarSystemsR = getNewHomeR
 
 
 -- | serve client program and have it start displaying specific star system
-getStarSystemR :: Key StarSystem -> Handler Html
+getStarSystemR :: StarSystemId -> Handler Html
 getStarSystemR _ = getNewHomeR
 
 
 -- | serve client program and have it start displaying specific planet
-getPlanetR :: Key StarSystem -> Key Planet -> Handler Html
-getPlanetR _ _ = getNewHomeR
+getPlanetR :: PlanetId -> Handler Html
+getPlanetR _ = getNewHomeR
 
 
 -- | api method to retrieve single star system
-getApiStarSystemR :: Key StarSystem -> Handler Value
+getApiStarSystemR :: StarSystemId -> Handler Value
 getApiStarSystemR sId = do
     (uId, _, _, fId) <- apiRequireFaction
     _ <- apiRequireViewSimulation uId
@@ -76,7 +76,7 @@ getApiAllPlanetsR = do
 
 
 -- | api method to retrieve specific planet
-getApiPlanetR :: Key Planet -> Handler Value
+getApiPlanetR :: PlanetId -> Handler Value
 getApiPlanetR planetId = do
     (uId, _, _, fId) <- apiRequireFaction
     _ <- apiRequireViewSimulation uId
@@ -85,7 +85,7 @@ getApiPlanetR planetId = do
 
 
 -- | api method to retrieve buildings on a planet
-getApiPlanetBuildingsR :: Key Planet -> Handler Value
+getApiPlanetBuildingsR :: PlanetId -> Handler Value
 getApiPlanetBuildingsR planetId = do
     (uId, _, _, fId) <- apiRequireFaction
     _ <- apiRequireViewSimulation uId
@@ -97,7 +97,7 @@ getApiPlanetBuildingsR planetId = do
 
 
 -- | api method to retrieve population of a planet
-getApiPlanetPopulationR :: Key Planet -> Handler Value
+getApiPlanetPopulationR :: PlanetId -> Handler Value
 getApiPlanetPopulationR planetId = do
     (uId, _, _, fId) <- apiRequireFaction
     _ <- apiRequireViewSimulation uId
@@ -106,7 +106,7 @@ getApiPlanetPopulationR planetId = do
     return $ toJSON populationReports
 
 
-getApiPlanetStatusR :: Key Planet -> Handler Value
+getApiPlanetStatusR :: PlanetId -> Handler Value
 getApiPlanetStatusR planetId = do
     (uId, _, _, fId) <- apiRequireFaction
     _ <- apiRequireViewSimulation uId

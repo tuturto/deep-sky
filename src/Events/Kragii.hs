@@ -30,11 +30,11 @@ import Space.Data ( PlanetName(..), StarSystemName(..), PlanetaryStatus(..) )
 
 -- | Data for kragii worms attack
 data KragiiWormsEvent = KragiiWormsEvent
-    { kragiiWormsPlanetId :: !(Key Planet)
+    { kragiiWormsPlanetId :: !PlanetId
     , kragiiWormsPlanetName :: !PlanetName
-    , kragiiWormsSystemId :: !(Key StarSystem)
+    , kragiiWormsSystemId :: !StarSystemId
     , kragiiWormsSystemName :: !StarSystemName
-    , kragiiWormsFactionId :: !(Key Faction)
+    , kragiiWormsFactionId :: !FactionId
     , kragiiWormsDate :: !StarDate
     }
     deriving (Show, Read, Eq)
@@ -59,12 +59,12 @@ data KragiiResults =
 
 -- | data for kragii attack resolution
 data KragiiNews = KragiiNews
-    { kragiiNewsPlanetId :: !(Key Planet)
+    { kragiiNewsPlanetId :: !PlanetId
     , kragiiNewsPlanetName :: !PlanetName
-    , kragiiNewsSystemId :: !(Key StarSystem)
+    , kragiiNewsSystemId :: !StarSystemId
     , kragiiNewsSystemName :: !StarSystemName
     , kragiiNewsExplanation :: !Text
-    , kragiiNewsFactionId :: !(Key Faction)
+    , kragiiNewsFactionId :: !FactionId
     , kragiiNewsDate :: !StarDate
     }
     deriving (Show, Read, Eq)
@@ -119,7 +119,7 @@ instance SpecialEvent KragiiWormsEvent KragiiWormsChoice KragiiResults where
 -- involved and will lead to somewhat smaller crop output while worms are present.
 -- Given enough time, they should naturally move on.
 chooseToAvoid :: (MonadIO m, PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
-                 (Key News, KragiiWormsEvent)
+                 (NewsId, KragiiWormsEvent)
                  -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) (EventRemoval, [EventCreation])
 chooseToAvoid (_, event) = do
     faction <- getFaction event
@@ -133,7 +133,7 @@ chooseToAvoid (_, event) = do
 -- rid of them. Some of the crops might be destroyed as a result of chemicals used
 -- in the attack.
 chooseToAttack :: (MonadIO m, PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
-                  (Key News, KragiiWormsEvent)
+                  (NewsId, KragiiWormsEvent)
                   -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) (EventRemoval, [EventCreation])
 chooseToAttack (_, event) = do
     faction <- getFaction event
@@ -148,7 +148,7 @@ chooseToAttack (_, event) = do
 -- attacked. While this is potentially dangerous to people involved, it can
 -- yield much more nutrient soil and thus higher crop output
 chooseToTame :: (MonadIO m, PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
-                (Key News, KragiiWormsEvent)
+                (NewsId, KragiiWormsEvent)
                 -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) (EventRemoval, [EventCreation])
 chooseToTame (_, event) = do
     -- TODO: proper implementation
@@ -164,7 +164,7 @@ chooseToTame (_, event) = do
 -- use up 100 units of biological resources. There's chance that worms
 -- will eventually leave all by themselves.
 noChoice :: (MonadIO m, PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
-            (Key News, KragiiWormsEvent)
+            (NewsId, KragiiWormsEvent)
             -> MaybeT (WriterT [KragiiResults] (ReaderT backend m)) (EventRemoval, [EventCreation])
 noChoice (_, event) = do
     faction <- getFaction event

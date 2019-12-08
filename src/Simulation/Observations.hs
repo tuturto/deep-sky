@@ -13,6 +13,7 @@ module Simulation.Observations ( handleFactionObservations, ObservationCandidate
     where
 
 import Import
+import Data.Aeson.Text ( encodeToLazyText )
 import Data.Maybe ( fromJust )
 import System.Random
 
@@ -24,6 +25,9 @@ import Report ( createPlanetReports, createStarLaneReports, createStarReports
               , CollatedStarReport(..), CollatedStarSystemReport(..)
               )
 import Space.Data ( Coordinates(..) )
+import Units.Data ( UnitObservationDetailsJSON(..) )
+import Units.Queries ( Unit'(..), getFactionUnits )
+import Units.Reports ( UnitObservationDetails(..), unitLocation )
 
 
 -- | Generate reports for all kinds of things faction can currently observe
@@ -32,7 +36,8 @@ import Space.Data ( Coordinates(..) )
 --   ground forces on other faction's planets
 handleFactionObservations :: (BaseBackend backend ~ SqlBackend,
     PersistStoreWrite backend, PersistQueryRead backend,
-    MonadIO m) =>
+    PersistUniqueRead backend,
+    BackendCompatible SqlBackend backend, MonadIO m) =>
     StarDate -> Entity Faction -> ReaderT backend m ()
 handleFactionObservations date faction = do
     -- observations by on faction's planets
@@ -42,11 +47,33 @@ handleFactionObservations date faction = do
     factionPlanets <- selectList [ PlanetOwnerId ==. Just (entityKey faction)] []
     populations <- selectList [ PlanetPopulationPlanetId <-. map entityKey factionPlanets
                               , PlanetPopulationPopulation >. 0 ] []
+    units <- getFactionUnits $ entityKey faction
     let populatedPlanets = filter isPopulated factionPlanets
                             where isPopulated planet =  entityKey planet `elem`
                                     map (planetPopulationPlanetId . entityVal) populations
     mapM_ (doPlanetObservation date faction) populatedPlanets
     mapM_ (doSensorStationObservations date faction) populatedPlanets
+    mapM_ (doUnitReport date faction) units
+
+
+-- | Let units do reports on their current location, status and such
+doUnitReport :: (BaseBackend backend ~ SqlBackend,
+    PersistStoreWrite backend, BackendCompatible SqlBackend backend, MonadIO m) =>
+    StarDate -> Entity Faction -> (UnitId, Unit') -> ReaderT backend m ()
+doUnitReport date faction (uId, unit) = do
+    _ <- insert obs
+    return ()
+    where
+        obs = UnitObservation
+                { unitObservationUnitId = uId
+                , unitObservationContent = json
+                , unitObservationOwnerId = entityKey faction
+                , unitObservationDate = date
+                }
+        json = MkUnitObservationDetailsJSON $ toStrict (encodeToLazyText details)
+        details = UnitObservationDetails
+                    { unitObservationDetailsLocation = unitLocation unit
+                    }
 
 
 -- | Let forces on populated planet observe their surroundings and write reports

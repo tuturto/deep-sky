@@ -19,11 +19,11 @@ import Data.Common
         , unPersonId
         )
 import Data.Model exposing (Model, Msg(..))
-import Data.People exposing (displayName)
+import Data.PersonNames exposing (displayName)
 import Dict
-import Html exposing (..)
-import Html.Attributes exposing (class)
-import Html.Events exposing (..)
+import Html exposing (Html, a, div, i, table, tbody, td, text, th, thead, tr)
+import Html.Attributes exposing (class, colspan)
+import Html.Events exposing (onClick)
 import Maybe.Extra
 import ViewModels.Admin.Main exposing (AdminRMsg(..))
 import ViewModels.Admin.People.List exposing (AdminListPeopleRMsg(..))
@@ -45,7 +45,7 @@ page model =
 {-| Render control block
 -}
 listControls : Model -> Html Msg
-listControls model =
+listControls _ =
     div [ class "row" ]
         [ div [ class "col-lg-12" ]
             [ a [ href AdminNewPersonR ]
@@ -69,21 +69,20 @@ listDisplay model =
             Maybe.Extra.join <| Dict.get pageNumber model.adminR.adminListPeopleR.people
 
         content =
-            case fetchInitiated of
-                False ->
-                    [ tr []
-                        [ td [] [ text "No data" ] ]
-                    ]
+            if fetchInitiated then
+                [ tr []
+                    [ td [ colspan 2, class "noData" ] [ text "No data" ] ]
+                ]
 
-                True ->
-                    case currentPage of
-                        Nothing ->
-                            [ tr []
-                                [ td [] [ text "Loading ..." ] ]
-                            ]
+            else
+                case currentPage of
+                    Nothing ->
+                        [ tr []
+                            [ td [ colspan 2, class "noData" ] [ text "Loading ..." ] ]
+                        ]
 
-                        Just people ->
-                            List.map personEntry people
+                    Just people ->
+                        List.map personEntry people
     in
     div [ class "row" ]
         [ div [ class "col-lg-12" ]
@@ -113,7 +112,7 @@ personEntry person =
 {-| Initialize data retrieval from server
 -}
 init : Model -> Cmd Msg
-init model =
+init _ =
     Cmd.batch
         [ getPeople (AdminListPeopleMessage << PeopleReceived) (Just 0) (Just 50)
         , getSimulationStatus (AdminMessage << SimulationStatusReceived)

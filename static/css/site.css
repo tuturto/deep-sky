@@ -283,3 +283,7 @@ thead {
 th, td {
   padding: 0.1em;
 }
+
+td.noData {
+    text-align: center;
+}

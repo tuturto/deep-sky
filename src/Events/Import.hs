@@ -43,7 +43,7 @@ class SpecialEvent a b c | a -> b, a-> c where
     -- Function returns a list describing end result of resolution
     resolveEvent :: ( PersistQueryRead backend, PersistQueryWrite backend
                     , MonadIO m, BaseBackend backend ~ SqlBackend ) =>
-                    (Key News, a)
+                    (NewsId, a)
                     -> Maybe b
                     -> ReaderT backend m (Maybe (EventRemoval, [EventCreation]), [c])
 

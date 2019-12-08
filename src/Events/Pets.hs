@@ -37,7 +37,7 @@ import People.Data ( PetType(..), PetName(..) )
 
 -- | Character hears scurrying sounds inside their walls
 data ScurryingSoundsEvent = ScurryingSoundsEvent
-    { scurryingSoundsEventPersonId :: !(Key Person)
+    { scurryingSoundsEventPersonId :: !PersonId
     , scurryingSoundsEventDate :: !StarDate
     } deriving (Show, Read, Eq)
 
@@ -85,7 +85,7 @@ instance ToDto (UserOption ScurryingSoundsChoice) (UserOptionDto ScurryingSounds
 
 -- | End result for scurrying sounds
 data ScurryingSoundsResult
-    = PetObtained PetType (Key Pet)
+    = PetObtained PetType PetId
     | TooManyPets
     | CrittersRemoved
     | SoundsStoppedByThemselves
@@ -95,7 +95,7 @@ data ScurryingSoundsResult
 -- | News article explaining end resolution of scurrying sounds
 data ScurryingSoundsNews = ScurryingSoundsNews
     { scurryingSoundsNewsExplanation :: !Text
-    , scurryingSoundsNewsPetId :: !(Maybe (Key Pet))
+    , scurryingSoundsNewsPetId :: !(Maybe PetId)
     , scurryingSoundsNewsPetType :: !(Maybe PetType)
     , scurryingSoundsNewsDate :: !StarDate
     } deriving (Show, Read, Eq)
@@ -160,7 +160,7 @@ instance SpecialEvent ScurryingSoundsEvent ScurryingSoundsChoice ScurryingSounds
 -- amount of pets hasn't been exceeded
 chooseToGetCat :: (MonadIO m, PersistQueryWrite backend
     , BaseBackend backend ~ SqlBackend) =>
-    (Key News, ScurryingSoundsEvent)
+    (NewsId, ScurryingSoundsEvent)
     -> MaybeT (WriterT [ScurryingSoundsResult] (ReaderT backend m)) (EventRemoval, [EventCreation])
 chooseToGetCat (_, event) = do
     date <- (lift . lift) starDate
@@ -176,7 +176,7 @@ chooseToGetCat (_, event) = do
 -- amount of pets hasn't been exceeded
 chooseToTame :: (MonadIO m, PersistQueryWrite backend
     , BaseBackend backend ~ SqlBackend) =>
-    (Key News, ScurryingSoundsEvent)
+    (NewsId, ScurryingSoundsEvent)
     -> MaybeT (WriterT [ScurryingSoundsResult] (ReaderT backend m)) (EventRemoval, [EventCreation])
 chooseToTame (_, event) = do
     date <- (lift . lift) starDate
@@ -201,7 +201,7 @@ chooseToGetRidOf = do
 -- pets adds to this chance
 noChoice :: (MonadIO m, PersistQueryWrite backend, PersistQueryRead backend
     , BaseBackend backend ~ SqlBackend) =>
-    (Key News, ScurryingSoundsEvent)
+    (NewsId, ScurryingSoundsEvent)
     -> MaybeT (WriterT [ScurryingSoundsResult] (ReaderT backend m)) (EventRemoval, [EventCreation])
 noChoice (_, event) = do
     pets <- (lift . lift) $ selectList [ PetOwnerId ==. (scurryingSoundsEventPersonId event)
@@ -235,7 +235,7 @@ addPet :: (PersistQueryRead backend, MonadIO m,
     Entity Person
     -> StarDate
     -> PetType
-    -> MaybeT (WriterT [ScurryingSoundsResult] (ReaderT backend m)) (Maybe (Key Pet))
+    -> MaybeT (WriterT [ScurryingSoundsResult] (ReaderT backend m)) (Maybe PetId)
 addPet person date pType = MaybeT $ do
     pets <- lift $ selectList [ PetOwnerId ==. (entityKey person)
                               , PetDateOfDeath ==. Nothing
@@ -262,8 +262,8 @@ petTypeToName Rat = "Rat"
 
 
 data NamingPetEvent = NamingPetEvent
-    { namingPetEventPersonId :: !(Key Person)
-    , namingPetEventPetId :: !(Key Pet)
+    { namingPetEventPersonId :: !PersonId
+    , namingPetEventPetId :: !PetId
     , namingPetEventPetType :: !PetType
     , namingPetEventDate :: !StarDate
     , namingPetNameOptions :: ![PetName]
@@ -307,14 +307,14 @@ instance ToDto (UserOption NamingPetChoice) (UserOptionDto NamingPetChoiceDto) w
 
 
 data NamingPetResult
-    = PetNamed (Key Pet) PetName
-    | RandomNameGiven (Key Pet) PetName
+    = PetNamed PetId PetName
+    | RandomNameGiven PetId PetName
     deriving (Show, Read, Eq)
 
 
 data NamingPetNews = NamingPetNews
     { namingPetNewsExplanation :: !Text
-    , namingPetNewsPetId :: !(Key Pet)
+    , namingPetNewsPetId :: !PetId
     , namingPetNewsPetType :: !PetType
     , namingPetNewsDate :: !StarDate
     } deriving (Show, Read, Eq)
@@ -362,7 +362,7 @@ instance SpecialEvent NamingPetEvent NamingPetChoice NamingPetResult where
 
 chooseToGiveName :: (MonadIO m, PersistQueryWrite backend
     , BaseBackend backend ~ SqlBackend) =>
-    (Key News, NamingPetEvent)
+    (NewsId, NamingPetEvent)
     -> NamingPetChoice
     -> MaybeT (WriterT [NamingPetResult] (ReaderT backend m)) (EventRemoval, [EventCreation])
 chooseToGiveName (_, event) (GiveName name) = do

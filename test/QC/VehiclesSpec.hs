@@ -10,22 +10,28 @@ import Test.QuickCheck
 import TestImport
 
 import Database.Persist.Sql (toSqlKey)
+import QC.Helpers (deserializationMirrosSerialization)
+import QC.Generators.Vehicles ( positiveCrewRequirements, anyUnitLocation )
 
-import QC.Generators.Vehicles ( positiveCrewRequirements )
-
+import Data.Aeson ( )
 import Control.Lens ( (^.), (^..), traverse )
 import Research.Data ( Technology(..) )
-import Vehicles.Components ( ComponentId(..), ChassisType(..), components )
-import Vehicles.Data ( CrewPosition(..), CrewRank(..), CrewAmount(..)
-                     , CrewSpaceReq(..), unCrewAmountL )
-import Vehicles.Stats ( CrewRequirement(..), seniorityRanks
-                      , crewRequirementAmountL, quarterCrew, compsToCrew
-                      , crewRequirementPositionL, designNominalCrew
-                      , plannedToCompPair, unCrewSpaceL, designCrewSpace
-                      , totalCrewSpaceSteerageL )
+import Units.Components ( ComponentId(..), ChassisType(..), components )
+import Units.Data ( CrewPosition(..), CrewRank(..), CrewAmount(..)
+                  , CrewSpaceReq(..), CrewRequirement(..), unCrewAmountL
+                  , totalCrewSpaceSteerageL, unCrewSpaceL )
+import Units.Stats ( seniorityRanks
+                   , crewRequirementAmountL, quarterCrew, compsToCrew
+                   , crewRequirementPositionL, designNominalCrew
+                   , plannedToCompPair, designCrewSpace
+                   )
 
 spec :: Spec
 spec = do
+    describe "Vehicle JSON" $ do
+        it "toJSON . parseJSON results to original data" $ do
+            forAll anyUnitLocation deserializationMirrosSerialization
+
     describe "Vehicle stats" $ do
         describe "Crew requirements" $ do
             describe "Seniority ranks" $ do

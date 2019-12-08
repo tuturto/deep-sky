@@ -42,12 +42,7 @@ starDateToString (StarDate currentTime) =
 
 stringToStarDate : String -> Maybe StarDate
 stringToStarDate s =
-    case String.toFloat s of
-        Nothing ->
-            Nothing
-
-        Just f ->
-            Just <| StarDate <| floor (f * 10)
+    Maybe.map (\f -> StarDate <| floor (f * 10)) (String.toFloat s)
 
 
 starDateToText : Maybe StarDate -> Html msg
@@ -199,15 +194,14 @@ paginating the data
 -}
 infoPanel : InfoPanelConfig -> Maybe PagingConfig -> (Model -> List (Html Msg)) -> Model -> List (Html Msg)
 infoPanel config pagingConfig generator model =
-    [ div [ class "row info-panel-header" ]
+    div [ class "row info-panel-header" ]
         [ div [ class "col-lg-6" ]
             [ text config.title ]
         , div [ class "col-lg-6" ]
             [ span [ class "pull-right" ] <| infoPanelButtons config pagingConfig
             ]
         ]
-    ]
-        ++ (case config.currentStatus of
+        :: (case config.currentStatus of
                 InfoPanelOpen ->
                     generator model
 

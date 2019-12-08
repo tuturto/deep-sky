@@ -38,7 +38,7 @@ class ResultsReport a b c | a -> b, a -> c where
 
 
 -- | Special event of person hearing scurrying sounds in walls of their house
-scurryingSoundsEvent :: Key Person -> StarDate -> News
+scurryingSoundsEvent :: PersonId -> StarDate -> News
 scurryingSoundsEvent pId date =
     let
         content = ScurryingSounds (ScurryingSoundsEvent
@@ -96,7 +96,7 @@ instance ResultsReport ScurryingSoundsEvent ScurryingSoundsChoice ScurryingSound
 
 -- | Special event of kragii worms attacking a given planet
 -- In case the planet is not currently owned by anyone, event is not created
-kragiiWormsEvent :: Entity Planet -> Entity StarSystem -> StarDate -> Key Faction -> Maybe News
+kragiiWormsEvent :: Entity Planet -> Entity StarSystem -> StarDate -> FactionId -> Maybe News
 kragiiWormsEvent planetEntity systemEntity date fId =
     let
         planet = entityVal planetEntity

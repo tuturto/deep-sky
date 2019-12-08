@@ -38,7 +38,6 @@ import Data.Accessors
         , messagesStatusA
         , nameA
         , statsStatusA
-        , validatationMessagesA
         )
 import Data.Common
     exposing
@@ -53,7 +52,6 @@ import Data.User exposing (Role(..))
 import Data.Vehicles
     exposing
         ( Chassis
-        , ChassisId
         , ChassisLevel(..)
         , Component
         , ComponentAmount(..)
@@ -62,7 +60,6 @@ import Data.Vehicles
         , CrewSpaceReq(..)
         , Design
         , DesignName(..)
-        , PlannedChassis
         , PlannedComponent
         , SlotAmount(..)
         , UnitStats
@@ -78,7 +75,6 @@ import Data.Vehicles
         , unChassisName
         , unChassisTonnage
         , unComponentAmount
-        , unComponentDescription
         , unComponentName
         , unCrewAmount
         , unCrewSpace
@@ -87,9 +83,9 @@ import Data.Vehicles
         , unWeight
         , validateDesign
         )
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Html exposing (Html, div, i, text)
+import Html.Attributes exposing (class, placeholder, type_, value)
+import Html.Events exposing (onClick, onInput)
 import Http
 import Maybe exposing (andThen, withDefault)
 import ViewModels.Designer exposing (DesignerRMsg(..), DesignerViewModel)
@@ -147,13 +143,12 @@ chassisList model =
 -}
 chassisListContent : Model -> List (Html Msg)
 chassisListContent model =
-    [ div [ class "row info-panel-content-header" ]
+    div [ class "row info-panel-content-header" ]
         [ div [ class "col-lg-6" ] [ text "Name" ]
         , div [ class "col-lg-4" ] [ text "Type" ]
         , div [ class "col-lg-2" ] [ text "Size" ]
         ]
-    ]
-        ++ (model.availableChassis
+        :: (model.availableChassis
                 |> withDefault []
                 |> List.sortWith sortChassis
                 |> List.drop (model.designerR.chassisCurrentPage * model.designerR.chassisPageSize)
@@ -337,10 +332,8 @@ componentEntry component =
                     ]
                 , div [ class "col-lg-9" ]
                     ((biologicalsToText <| Just component.cost)
-                        ++ [ text " " ]
-                        ++ (mechanicalsToText <| Just component.cost)
-                        ++ [ text " " ]
-                        ++ (chemicalsToText <| Just component.cost)
+                        ++ (text " " :: (mechanicalsToText <| Just component.cost))
+                        ++ (text " " :: (chemicalsToText <| Just component.cost))
                     )
                 ]
             ]
@@ -1053,16 +1046,16 @@ displayCrewQuarters : UnitStats -> String
 displayCrewQuarters stats =
     let
         steerage =
-            unCrewSpace stats.crewSpace.steerageSpace
-                |> String.fromInt
+            Maybe.map (String.fromInt << unCrewSpace << .steerageSpace) stats.crewSpace
+                |> Maybe.withDefault "unknown"
 
         standard =
-            unCrewSpace stats.crewSpace.standardSpace
-                |> String.fromInt
+            Maybe.map (String.fromInt << unCrewSpace << .standardSpace) stats.crewSpace
+                |> Maybe.withDefault "unknown"
 
         luxury =
-            unCrewSpace stats.crewSpace.luxurySpace
-                |> String.fromInt
+            Maybe.map (String.fromInt << unCrewSpace << .luxurySpace) stats.crewSpace
+                |> Maybe.withDefault "unknown"
     in
     steerage ++ " / " ++ standard ++ " / " ++ luxury
 
@@ -1072,11 +1065,14 @@ displayCrewQuarters stats =
 displayQuartersRequirement : UnitStats -> String
 displayQuartersRequirement stats =
     case stats.crewSpaceRequired of
-        CrewSpaceRequired ->
+        Just CrewSpaceRequired ->
             "Quarters are mandatory"
 
-        CrewSpaceOptional ->
+        Just CrewSpaceOptional ->
             "Quarters are optional"
+
+        Nothing ->
+            "Quarters requirements are unknown"
 
 
 {-| Block of text displaying crew space
@@ -1085,14 +1081,12 @@ displayCrew : UnitStats -> String
 displayCrew stats =
     let
         minimum =
-            crewCount stats.minimumCrew
-                |> unCrewAmount
-                |> String.fromInt
+            Maybe.map (String.fromInt << unCrewAmount << crewCount) stats.minimumCrew
+                |> Maybe.withDefault "unknown"
 
         nominal =
-            crewCount stats.nominalCrew
-                |> unCrewAmount
-                |> String.fromInt
+            Maybe.map (String.fromInt << unCrewAmount << crewCount) stats.nominalCrew
+                |> Maybe.withDefault "unknown"
     in
     minimum ++ " / " ++ nominal
 
@@ -1100,7 +1094,7 @@ displayCrew stats =
 {-| Request data needed by designer page from server
 -}
 init : Model -> Cmd Msg
-init model =
+init _ =
     Cmd.batch
         [ availableComponentsCmd
         , availableChassisCmd
@@ -1266,7 +1260,7 @@ addComponent component components design =
         Nothing ->
             design
 
-        Just comps ->
+        Just _ ->
             case design of
                 Nothing ->
                     design
@@ -1285,7 +1279,7 @@ addComponent component components design =
                                 )
                                 design
 
-                        Just match ->
+                        Just _ ->
                             over (try << componentsA << onEach)
                                 (\x ->
                                     if x.id == component.id then

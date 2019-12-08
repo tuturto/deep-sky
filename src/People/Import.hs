@@ -2,12 +2,14 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module People.Import
     ( PersonReport(..), StatReport(..), RelationLink(..), TraitReport(..)
-    , TraitDescription(..), TraitName(..), personReport, demesneReport
+    , TraitDescription(..), TraitName(..), PersonLocationReport(..), personReport
+    , demesneReport
     , relationsReport, knownLink, traitName, traitDescription
     , relationOriginatorIdL, relationTargetIdL, relationTypeL
     , flipRelation, flipRelationType, humanIntelligenceLevelL, locationReport
@@ -16,12 +18,15 @@ module People.Import
 
 import Import
 import qualified Prelude as P
-import Control.Lens ( Lens', lens, (&), (.~), (%~), traverse, _Just, (^..) )
-import Data.Aeson ( withText )
+import Control.Lens ( Lens', lens, (&), (.~), (%~), traverse, _Just, (^..)
+                    , (^?), _Just )
+import Data.Aeson ( Object, withObject, withText,  )
 import Data.Aeson.TH ( deriveJSON, defaultOptions, fieldLabelModifier )
+import Data.Aeson.Types ( Parser )
 import Data.List ( nub )
 import Common ( mkUniq )
 import CustomTypes ( StarDate, Age, age )
+import MenuHelpers ( starDate )
 import People.Data ( PersonIntel(..), Diplomacy, Martial, Stewardship
                    , Intrique, Learning, StatScore, PersonName, Sex
                    , Gender, DemesneName(..), ShortTitle(..), LongTitle(..)
@@ -30,15 +35,20 @@ import People.Data ( PersonIntel(..), Diplomacy, Martial, Stewardship
                    )
 import People.Titles ( shortTitle, longTitle )
 import People.Opinion ( OpinionReport, opinionReport )
-import People.Queries ( PersonLocationSum(..) )
+import People.Queries ( PersonLocationSum(..), OnPlanetData(..), OnUnitData(..)
+                      , getPersonLocation, getPlanetReport )
 import Queries ( PersonRelationData(..), PersonDataLink(..)
-               , personDataLinkOriginatorIntelligenceL
-               , personDataLinkTargetIntelligenceL )
+               , personDataLinkOriginatorIntelligenceL, personRelations
+               , personDataLinkTargetIntelligenceL  )
+import Report ( CollatedPlanetReport(..) )
 import Space.Data ( PlanetName(..), StarSystemName(..) )
+import Units.Data ( UnitName(..), CrewPosition(..) )
+import Units.Lenses ( unitNameL )
+import Units.Queries ( getUnit )
 
 
 data PersonReport = PersonReport
-    { personReportId :: !(Key Person)
+    { personReportId :: !PersonId
     , personReportName :: !PersonName
     , personReportShortTitle :: !(Maybe ShortTitle)
     , personReportLongTitle :: !(Maybe LongTitle)
@@ -53,7 +63,7 @@ data PersonReport = PersonReport
     , personReportOpinionOfAvatar :: !OpinionReport
     , personReportTraits :: !(Maybe [TraitReport])
     , personReportAvatar :: !Bool
-    , personReportLocation :: !PersonLocationSum
+    , personReportLocation :: !PersonLocationReport
     } deriving (Show, Read, Eq)
 
 
@@ -73,8 +83,8 @@ data DemesneReport =
 
 
 data PlanetDemesneReport = PlanetDemesneReport
-    { planetDemesneReportPlanetId :: !(Key Planet)
-    , planetDemesneReportStarSystemId :: !(Key StarSystem)
+    { planetDemesneReportPlanetId :: !PlanetId
+    , planetDemesneReportStarSystemId :: !StarSystemId
     , planetDemesneReportName :: !PlanetName
     , planetDemesneReportFormalName :: !DemesneName
     , planetDemesneReport :: !StarDate
@@ -82,7 +92,7 @@ data PlanetDemesneReport = PlanetDemesneReport
 
 
 data StarSystemDemesneReport = StarSystemDemesneReport
-    { starSystemDemesneReportStarSystemId :: !(Key StarSystem)
+    { starSystemDemesneReportStarSystemId :: !StarSystemId
     , starSystemDemesneReportName :: !StarSystemName
     , starSystemDemesneReportFormalName :: !DemesneName
     , starSystemDemesneReportDate :: !StarDate
@@ -178,16 +188,16 @@ systemReport date system =
 
 
 -- | Person report of given person and taking HUMINT level into account
-personReport :: StarDate
-    -> PersonRelationData
+createPersonReport :: StarDate
     -> Maybe (Entity Dynasty)
     -> [PersonTrait]
     -> [PersonIntel]
     -> [Relation]
-    -> PersonLocationSum
-    -> Key Person
+    -> PersonLocationReport
+    -> PersonId
+    -> PersonRelationData
     -> PersonReport
-personReport today info dynasty allTraits targetIntel relations location avatarId =
+createPersonReport today dynasty allTraits targetIntel relations location avatarId info =
     PersonReport { personReportId = pId
                  , personReportAvatar = pId == avatarId
                  , personReportName = personName person
@@ -207,20 +217,21 @@ personReport today info dynasty allTraits targetIntel relations location avatarI
                                                 (mkUniq $ personTraitType <$> avatarTraits)
                                                 [minBound..]
                                                 targetTraitTypes
-                                                targetIntelTypes
+                                                targetRelIntelTypes
                                                 targetRelations
                  , personReportOpinionOfAvatar = opinionReport
                                                     targetTraitTypes
-                                                    targetIntelTypes
+                                                    targetRelIntelTypes
                                                     (mkUniq $ personTraitType <$> avatarTraits)
                                                     [minBound..]
                                                     avatarRelations
-                 , personReportLocation = locationReport targetIntelTypes location
+                 , personReportLocation = location
                  }
                  where
                     person = (entityVal . personRelationDataPerson) info
                     pId = (entityKey . personRelationDataPerson) info
-                    targetIntelTypes = mkUniq $
+                    targetIntelTypes = mkUniq targetIntel
+                    targetRelIntelTypes = mkUniq $
                                             fmap humanIntelligenceLevel
                                                  (mapMaybe personDataLinkTargetIntelligence $
                                                            personRelationDataLinks info)
@@ -229,16 +240,6 @@ personReport today info dynasty allTraits targetIntel relations location avatarI
                     avatarTraits = filter (\x -> personTraitPersonId x == avatarId) allTraits
                     targetTraits = filter (\x -> personTraitPersonId x == pId) allTraits
                     targetTraitTypes = mkUniq $ fmap personTraitType targetTraits
-
-
--- | Location of person
-locationReport :: [PersonIntel] -> PersonLocationSum -> PersonLocationSum
-locationReport intel location =
-    if Location `elem` intel
-        then
-            location
-        else
-            UnknownLocation
 
 
 -- | Relations of a specific person
@@ -321,13 +322,13 @@ data RelationLink = RelationLink
     , relationLinkShortTitle :: !(Maybe ShortTitle)
     , relationLinkLongTitle :: !(Maybe LongTitle)
     , relationLinkTypes :: ![RelationType]
-    , relationLinkId :: !(Key Person)
+    , relationLinkId :: !PersonId
     , relationLinkOpinion :: !OpinionReport
     } deriving (Show, Read, Eq)
 
 
 data DynastyReport = DynastyReport
-    { dynastyReportId :: !(Key Dynasty)
+    { dynastyReportId :: !DynastyId
     , dynastyReportName :: !DynastyName
     } deriving (Show, Read, Eq)
 
@@ -447,12 +448,12 @@ traitDescription Shy = "This person is nervous or uncomfortable with other peopl
 
 
 -- Lens for accessing originator id of relation
-relationOriginatorIdL :: Lens' Relation (Key Person)
+relationOriginatorIdL :: Lens' Relation PersonId
 relationOriginatorIdL = lens relationOriginatorId (\r v -> r { relationOriginatorId = v})
 
 
 -- Lens for accessing target id of relation
-relationTargetIdL :: Lens' Relation (Key Person)
+relationTargetIdL :: Lens' Relation PersonId
 relationTargetIdL = lens relationTargetId (\r v -> r { relationTargetId = v})
 
 
@@ -489,6 +490,143 @@ flipRelationType ExLover = ExLover
 flipRelationType Friend = Friend
 flipRelationType Rival = Rival
 
+
+data PersonLocationReport =
+    OnPlanetReport OnPlanetReportData
+    | OnUnitReport OnUnitReportData
+    | UnknownLocationReport
+    deriving (Show, Read, Eq)
+
+
+data OnPlanetReportData = OnPlanetReportData
+    { onPlanetReportDataPlanetId :: !PlanetId
+    , onPlanetReportDataStarSystemId :: !StarSystemId
+    , onPlanetReportDataPlanetName :: !PlanetName
+    } deriving (Show, Read, Eq)
+
+
+data OnUnitReportData = OnUnitReportData
+    { onUnitReportDataUnitId :: !UnitId
+    , onUnitReportDataCrewPosition :: !(Maybe CrewPosition)
+    , onUnitReportDataUnitName :: !UnitName
+    } deriving (Show, Read, Eq)
+
+
+instance ToJSON PersonLocationReport where
+    toJSON report =
+        case report of
+            OnPlanetReport details ->
+                object [ "Tag" .= ("OnPlanet" :: Text)
+                       , "Contents" .= toJSON details
+                       ]
+
+            OnUnitReport details ->
+                object [ "Tag" .= ("OnUnit" :: Text)
+                       , "Contents" .= toJSON details
+                       ]
+
+            UnknownLocationReport ->
+                object [ "Tag" .= ("UnknownLocation" :: Text)
+                       ]
+
+
+instance FromJSON PersonLocationReport where
+    parseJSON = withObject "Person location report" $ \o -> do
+        tag <- o .: "Tag"
+        report <- parseReport tag o
+        return report
+
+
+parseReport :: Text -> Object -> Parser PersonLocationReport
+parseReport "OnPlanet" o = do
+    contents <- o .: "Contents"
+    return $ OnPlanetReport contents
+
+parseReport "OnUnit" o = do
+    contents <- o .: "Contents"
+    return $ OnUnitReport contents
+
+parseReport "UnknownLocation" _ = do
+    return $ UnknownLocationReport
+
+parseReport _ _ = mempty
+
+
+personReport :: (MonadIO m, BaseBackend backend ~ SqlBackend,
+    BackendCompatible SqlBackend backend,
+    PersistQueryRead backend, PersistUniqueRead backend) =>
+    Entity Person -> FactionId -> Entity Person -> ReaderT backend m PersonReport
+personReport avatar fId target = do
+    today <- starDate
+    let avatarId = entityKey avatar
+    let pId = entityKey target
+
+    info <- personRelations target (entityKey avatar)
+    let dId = (personDynastyId . entityVal . personRelationDataPerson) info
+    dynasty <- mapM getEntity dId
+    intel <- selectList [ HumanIntelligencePersonId ==. pId
+                        , HumanIntelligenceOwnerId ==. avatarId ] []
+    let intelTypes = mkUniq $ (humanIntelligenceLevel . entityVal) <$> intel
+    targetRelations <- selectList [ RelationOriginatorId ==. pId ] []
+    let pIds = pId : avatarId : (mkUniq $ fmap (relationTargetId . entityVal) targetRelations)
+    allTraits <- selectList ( [PersonTraitPersonId <-. pIds] ++
+                                ( [PersonTraitValidUntil <=. (Just today)]
+                                ||. [PersonTraitValidUntil ==. Nothing])
+                            ) []
+
+    location <- locationReport fId pId intelTypes
+
+    let report = createPersonReport today
+                                    (join dynasty)
+                                    (entityVal <$> allTraits)
+                                    intelTypes
+                                    (entityVal <$> targetRelations)
+                                    location
+                                    avatarId
+                                    info
+    return report
+
+
+locationReport :: (MonadIO m, BackendCompatible SqlBackend backend,
+    PersistQueryRead backend, PersistUniqueRead backend,
+    BaseBackend backend ~ SqlBackend) =>
+    FactionId
+    -> PersonId -> [PersonIntel] -> ReaderT backend m PersonLocationReport
+locationReport fId pId intel = do
+    location <- getPersonLocation pId
+    case Location `elem` intel of
+        True -> do
+            case location of
+                -- TODO: break into smaller pieces
+                OnPlanet details -> do
+                    planet <- getPlanetReport fId $ onPlanetDataPlanetId details
+                    return $
+                        OnPlanetReport OnPlanetReportData
+                            { onPlanetReportDataPlanetId = onPlanetDataPlanetId details
+                            , onPlanetReportDataStarSystemId = onPlanetDataStarSystemId details
+                            , onPlanetReportDataPlanetName = fromMaybe "Unknown planet" $ cprName planet
+                            }
+
+                OnUnit details -> do
+                    unit <- getUnit $ onUnitDataUnitId details
+                    return $
+                        OnUnitReport OnUnitReportData
+                            { onUnitReportDataUnitId = onUnitDataUnitId details
+                            , onUnitReportDataCrewPosition = if Activity `elem` intel
+                                                                then Just $ onUnitDataCrewPosition details
+                                                                else Nothing
+                            , onUnitReportDataUnitName = fromMaybe "Unknown unit" $ unit ^? ( _Just . unitNameL )
+                            }
+
+                UnknownLocation ->
+                    return UnknownLocationReport
+
+        False -> do
+            return UnknownLocationReport
+
+
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 18 } ''OnPlanetReportData)
+$(deriveJSON defaultOptions { fieldLabelModifier = drop 16 } ''OnUnitReportData)
 
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 12 } ''PersonReport)
 $(deriveJSON defaultOptions { fieldLabelModifier = drop 10 } ''StatReport)

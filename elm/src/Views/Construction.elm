@@ -1,18 +1,16 @@
 module Views.Construction exposing (init, page)
 
-import Data.Common exposing (PlanetId)
 import Data.Model exposing (Model, Msg(..))
 import Data.User exposing (Role(..))
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html exposing (Html, div, text)
 
 
 page : Model -> Html Msg
-page model =
+page _ =
     div []
         [ text "Hello from Construction" ]
 
 
 init : Model -> Cmd Msg
-init model =
+init _ =
     Cmd.none

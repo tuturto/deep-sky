@@ -39,6 +39,7 @@ import Research.Data ( Technology, Research(..) )
 import Research.Tree ( techMap )
 import Resources ( ResourceType )
 import Space.Data ( PlanetName(..), StarName(..), StarSystemName(..) )
+import Units.Data ( DesignName(..) )
 
 
 -- | All possible news articles
@@ -63,7 +64,7 @@ data NewsArticle =
 data StarFoundNews = StarFoundNews
     { starFoundNewsStarName :: !StarName
     , starFoundNewsSystemName :: !StarSystemName
-    , starFoundNewsSystemId :: !(Key StarSystem)
+    , starFoundNewsSystemId :: !StarSystemId
     , starFoundNewsDate :: !StarDate
     }
 
@@ -90,8 +91,8 @@ instance FromDto StarFoundNews StarFoundNewsDto where
 data PlanetFoundNews = PlanetFoundNews
     { planetFoundNewsPlanetName :: !PlanetName
     , planetFoundNewsSystemName :: !StarSystemName
-    , planetFoundNewsSystemId :: !(Key StarSystem)
-    , planetFoundNewsPlanetId :: !(Key Planet)
+    , planetFoundNewsSystemId :: !StarSystemId
+    , planetFoundNewsPlanetId :: !PlanetId
     , planetFoundNewsDate :: !StarDate
     }
 
@@ -145,8 +146,8 @@ instance FromDto UserWrittenNews UserWrittenNewsDto where
 
 -- | News announcing creation of a new design
 data DesignCreatedNews = DesignCreatedNews
-    { designCreatedNewsDesignId :: !(Key Design)
-    , designCreatedNewsName :: !Text
+    { designCreatedNewsDesignId :: !DesignId
+    , designCreatedNewsName :: !DesignName
     , designCreatedDate :: !StarDate
     }
 
@@ -169,12 +170,12 @@ instance FromDto DesignCreatedNews DesignCreatedNewsDto where
 
 data ConstructionFinishedNews = ConstructionFinishedNews
     { constructionFinishedNewsPlanetName :: !(Maybe PlanetName)
-    , constructionFinishedNewsPlanetId :: !(Maybe (Key Planet))
+    , constructionFinishedNewsPlanetId :: !(Maybe PlanetId)
     , constructionFinishedNewsSystemName :: !StarSystemName
-    , constructionFinishedNewsSystemId :: !(Key StarSystem)
+    , constructionFinishedNewsSystemId :: !StarSystemId
     , constructionFinishedConstructionName :: !Text
-    , constructionFinishedBuildingId :: !(Maybe (Key Building))
-    , constructionFinishedShipId :: !(Maybe (Key Ship))
+    , constructionFinishedBuildingId :: !(Maybe BuildingId)
+    , constructionFinishedShipId :: !(Maybe ShipId)
     , constructionFinishedDate :: !StarDate
     }
 
@@ -206,9 +207,9 @@ instance FromDto ConstructionFinishedNews ConstructionFinishedNewsDto where
 
 
 data ProductionChangedNews = ProductionChangedNews
-    { productionChangedNewsPlanetId :: !(Key Planet)
+    { productionChangedNewsPlanetId :: !PlanetId
     , productionChangedNewsPlanetName :: !PlanetName
-    , productionChangedNewsSystemId :: !(Key StarSystem)
+    , productionChangedNewsSystemId :: !StarSystemId
     , productionChangedNewsSystemName :: !StarSystemName
     , productionChangedNewsType :: !ResourceType
     , productionChangedNewsDate :: !StarDate
@@ -260,7 +261,7 @@ instance FromDto ResearchCompletedNews ResearchCompletedNewsDto where
         }
 
 
-instance ToDto ((Key News, NewsArticle), IconMapper NewsArticleDto) NewsDto where
+instance ToDto ((NewsId, NewsArticle), IconMapper NewsArticleDto) NewsDto where
     toDto ((nId, article), icons) =
         let
             content = toDto article
@@ -473,7 +474,7 @@ instance FromDto UserNewsIcon UserNewsIconDto where
 
 
 -- | Helper function for creating News that aren't special events and haven't been dismissed
-mkFactionNews :: Key Faction -> StarDate -> NewsArticle -> News
+mkFactionNews :: FactionId -> StarDate -> NewsArticle -> News
 mkFactionNews fId date content =
     News { newsContent = toStrict $ encodeToLazyText content
          , newsFactionId = Just fId
@@ -485,7 +486,7 @@ mkFactionNews fId date content =
 
 
 -- | Helper function for creating News that aren't special events and haven't been dismissed
-mkPersonalNews :: Key Person -> StarDate -> NewsArticle -> News
+mkPersonalNews :: PersonId -> StarDate -> NewsArticle -> News
 mkPersonalNews pId date content =
     News { newsContent = toStrict $ encodeToLazyText content
          , newsFactionId = Nothing
@@ -497,7 +498,7 @@ mkPersonalNews pId date content =
 
 
 -- | Helper function for creating News that are special events and haven't been handled
-mkFactionSpecialNews :: StarDate -> Key Faction -> SpecialNews -> News
+mkFactionSpecialNews :: StarDate -> FactionId -> SpecialNews -> News
 mkFactionSpecialNews date fId content =
     News { newsContent = toStrict $ encodeToLazyText $ Special content
          , newsFactionId = Just fId
@@ -509,7 +510,7 @@ mkFactionSpecialNews date fId content =
 
 
 -- | Helper function for creating News that are special events and haven't been handled
-mkPersonalSpecialNews :: StarDate -> Key Person -> SpecialNews -> News
+mkPersonalSpecialNews :: StarDate -> PersonId -> SpecialNews -> News
 mkPersonalSpecialNews date pId content =
     News { newsContent = toStrict $ encodeToLazyText $ Special content
          , newsFactionId = Nothing

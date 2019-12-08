@@ -1,5 +1,6 @@
 module Data.Accessors exposing
-    ( activeUserIconA
+    ( activeTabA
+    , activeUserIconA
     , adminAddPersonRA
     , adminEditPersonRA
     , adminListPeopleRA
@@ -27,6 +28,8 @@ module Data.Accessors exposing
     , componentsCurrentPageA
     , constructionStatusA
     , constructionsA
+    , crewTabCurrentPageA
+    , crewTabStatusA
     , currentDesignA
     , currentPageA
     , currentResearchA
@@ -117,13 +120,49 @@ module Data.Accessors exposing
     , traitsA
     , traitsCurrentPageA
     , traitsStatusA
+    , unitA
+    , unitRA
     , userEntryA
     , userEntryStatusA
     , validatationMessagesA
     )
 
-import Accessors exposing (Relation, makeOneToN, makeOneToOne)
-import Accessors.Library exposing (onEach)
+import Accessors exposing (Relation, makeOneToOne)
+
+
+crewTabCurrentPageA : Relation field sub wrap -> Relation { rec | crewTabCurrentPage : field } sub wrap
+crewTabCurrentPageA =
+    makeOneToOne
+        .crewTabCurrentPage
+        (\change rec -> { rec | crewTabCurrentPage = change rec.crewTabCurrentPage })
+
+
+crewTabStatusA : Relation field sub wrap -> Relation { rec | crewTabStatus : field } sub wrap
+crewTabStatusA =
+    makeOneToOne
+        .crewTabStatus
+        (\change rec -> { rec | crewTabStatus = change rec.crewTabStatus })
+
+
+activeTabA : Relation field sub wrap -> Relation { rec | activeTab : field } sub wrap
+activeTabA =
+    makeOneToOne
+        .activeTab
+        (\change rec -> { rec | activeTab = change rec.activeTab })
+
+
+unitRA : Relation field sub wrap -> Relation { rec | unitR : field } sub wrap
+unitRA =
+    makeOneToOne
+        .unitR
+        (\change rec -> { rec | unitR = change rec.unitR })
+
+
+unitA : Relation field sub wrap -> Relation { rec | unit : field } sub wrap
+unitA =
+    makeOneToOne
+        .unit
+        (\change rec -> { rec | unit = change rec.unit })
 
 
 ageFieldsA : Relation field sub wrap -> Relation { rec | ageFields : field } sub wrap

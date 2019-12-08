@@ -34,7 +34,7 @@ handleFactionFood faction = do
 -- | calculate amount of food a given planet requires
 getFoodRequirement :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistQueryRead backend) =>
-    Key Planet -> ReaderT backend m (RawResource Biological)
+    PlanetId -> ReaderT backend m (RawResource Biological)
 getFoodRequirement pid = do
     pop <- selectList [ PlanetPopulationPlanetId ==. pid ] []
     let res = foodRequirement $ fmap entityVal pop
@@ -44,7 +44,7 @@ getFoodRequirement pid = do
 -- | calculate amount of food a given planet produces
 getFoodProduction :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistQueryRead backend) =>
-    Key Planet -> ReaderT backend m (RawResource Biological)
+    PlanetId -> ReaderT backend m (RawResource Biological)
 getFoodProduction pid = do
     buildings <- selectList [ BuildingPlanetId ==. pid ] []
     statuses <- selectList [ PlanetStatusPlanetId ==. pid ] []

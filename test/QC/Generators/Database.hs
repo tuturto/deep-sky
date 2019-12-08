@@ -8,48 +8,48 @@ import Test.QuickCheck.Gen
 import Database.Persist.Sql
 import Model
 
-randomStarKey :: Gen (Key Star)
+randomStarKey :: Gen StarId
 randomStarKey = do
     aId <- arbitrary
     return $ toSqlKey aId
 
 
-randomStarSystemKey :: Gen (Key StarSystem)
+randomStarSystemKey :: Gen StarSystemId
 randomStarSystemKey = do
     aId <- arbitrary
     return $ toSqlKey aId
 
 
-randomStarLaneKey :: Gen (Key StarLane)
+randomStarLaneKey :: Gen StarLaneId
 randomStarLaneKey = do
     aId <- arbitrary
     return $ toSqlKey aId
 
 
-randomFactionKey :: Gen (Key Faction)
+randomFactionKey :: Gen FactionId
 randomFactionKey = do
     aId <- arbitrary
     return $ toSqlKey aId
 
 
-randomPlanetKey :: Gen (Key Planet)
+randomPlanetKey :: Gen PlanetId
 randomPlanetKey = do
     aId <- arbitrary
     return $ toSqlKey aId
 
-randomUserKey :: Gen (Key User)
+randomUserKey :: Gen UserId
 randomUserKey = do
     aId <- arbitrary
     return $ toSqlKey aId
 
 
-randomDesignKey :: Gen (Key Design)
+randomDesignKey :: Gen DesignId
 randomDesignKey = do
     aId <- arbitrary
     return $ toSqlKey aId
 
 
-randomPersonKey :: Gen (Key Person)
+randomPersonKey :: Gen PersonId
 randomPersonKey = do
     aId <- arbitrary
     return $ toSqlKey aId

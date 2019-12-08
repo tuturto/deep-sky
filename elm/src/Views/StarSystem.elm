@@ -11,15 +11,11 @@ import Api.StarSystem
 import Data.Accessors
     exposing
         ( errorsA
-        , planetsA
         , planetsStatusA
         , starLanesStatusA
         , starListStatusA
         , starSystemA
-        , starSystemRA
-        , starSystemsA
         , starSystemsRA
-        , starsA
         , systemDetailsStatusA
         )
 import Data.Common
@@ -35,17 +31,16 @@ import Data.Common
         , unStarSystemName
         )
 import Data.Model exposing (Model, Msg(..))
-import Data.People exposing (displayName, unShortTitle)
+import Data.PersonNames exposing (displayName, unShortTitle)
 import Data.StarSystem
     exposing
         ( PlanetPosition(..)
         , gravityToString
         , stellarClassification
-        , unPlanetPosition
         )
 import Dict
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html exposing (Html, a, div, text)
+import Html.Attributes exposing (class)
 import Maybe exposing (andThen, withDefault)
 import ViewModels.StarSystem exposing (StarSystemRMsg(..))
 import Views.Helpers
@@ -120,7 +115,7 @@ rightPanel systemId model =
 
 
 systemDetails : StarSystemId -> Model -> List (Html Msg)
-systemDetails systemId model =
+systemDetails _ model =
     let
         name =
             model.starSystemsR.starSystem
@@ -207,7 +202,7 @@ starsInfo systemId model =
 
 
 starLanesInfo : StarSystemId -> Model -> List (Html Msg)
-starLanesInfo systemId model =
+starLanesInfo _ _ =
     []
 
 
@@ -226,7 +221,7 @@ planetsInfo systemId model =
                     (\entry ->
                         div [ class "row" ]
                             [ div [ class "col-lg-4" ]
-                                [ a [ href (PlanetR systemId entry.id) ] [ text (unPlanetName entry.name) ] ]
+                                [ a [ href (PlanetR entry.id) ] [ text (unPlanetName entry.name) ] ]
                             , div [ class "col-lg-1" ]
                                 [ entry.position
                                     |> andThen (\(PlanetPosition x) -> Just <| String.fromInt x)

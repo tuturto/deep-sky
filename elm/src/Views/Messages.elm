@@ -1,7 +1,6 @@
 module Views.Messages exposing (init, page, update)
 
 import Accessors exposing (get, over, set)
-import Accessors.Library exposing (onEach, try)
 import Api.Messages
     exposing
         ( deleteNews
@@ -31,7 +30,6 @@ import Data.Common
         , maxPage
         , unPlanetName
         , unStarDate
-        , unStarName
         , unStarSystemName
         )
 import Data.Messages
@@ -44,8 +42,9 @@ import Data.Messages
         , UserIcon(..)
         )
 import Data.Model exposing (Model, Msg(..))
-import Data.People exposing (displayName, petTypeToString)
-import Data.User exposing (Role(..), unUserName)
+import Data.People exposing (petTypeToString)
+import Data.PersonNames exposing (displayName)
+import Data.User exposing (Role(..))
 import Data.Vehicles exposing (unDesignName)
 import Html
     exposing
@@ -53,7 +52,6 @@ import Html
         , a
         , button
         , div
-        , hr
         , i
         , img
         , li
@@ -62,7 +60,13 @@ import Html
         , textarea
         , ul
         )
-import Html.Attributes exposing (..)
+import Html.Attributes
+    exposing
+        ( class
+        , maxlength
+        , rows
+        , src
+        )
 import Html.Events exposing (onClick, onInput)
 import Maybe exposing (withDefault)
 import ViewModels.Messages exposing (MessagesRMsg(..))
@@ -134,6 +138,7 @@ leftPanel model =
 
 {-| Sort by star date in descending order
 -}
+descendingStarDate : NewsArticle -> NewsArticle -> Order
 descendingStarDate a b =
     case compare (unStarDate a.starDate) (unStarDate b.starDate) of
         LT ->
@@ -245,12 +250,11 @@ optionSelection article option =
     in
     div [ class "row" ]
         [ div [ class "col-lg-12" ]
-            ([ div [ class "row" ]
+            (div [ class "row" ]
                 [ div [ class "col-lg-12" ]
                     titleBlock
                 ]
-             ]
-                ++ List.map optionDescription option.explanation
+                :: List.map optionDescription option.explanation
             )
         ]
 
@@ -329,7 +333,7 @@ newsBody article =
             [ text "A new planet has been discovered in "
             , a [ href (StarSystemR details.systemId) ] [ text <| unStarSystemName details.systemName ]
             , text " and has been named to "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
+            , a [ href (PlanetR details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text "."
             ]
 
@@ -351,7 +355,7 @@ newsBody article =
         BuildingFinished details ->
             [ text details.name
             , text " has been finished in "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
+            , a [ href (PlanetR details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text "."
             ]
 
@@ -374,7 +378,7 @@ newsBody article =
             [ text "Production of "
             , text productionType
             , text " on "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
+            , a [ href (PlanetR details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text " is booming and record results are expected."
             ]
 
@@ -394,7 +398,7 @@ newsBody article =
             [ text "Production of "
             , text productionType
             , text " on "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
+            , a [ href (PlanetR details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text " is slowing down."
             ]
 
@@ -414,7 +418,7 @@ newsBody article =
             [ text "Recent boom in production of "
             , text productionType
             , text " on "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
+            , a [ href (PlanetR details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text " has come to end and production levels are returning to normal."
             ]
 
@@ -434,19 +438,19 @@ newsBody article =
             [ text "Recent downturn in production of "
             , text productionType
             , text " on "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
+            , a [ href (PlanetR details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text " has come to end and production levels are returning to normal."
             ]
 
         KragiiEvent details ->
             [ text "Large amount of kragii worms has been sighted on "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
+            , a [ href (PlanetR details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text ". As the situation develops, decision what to do about them needs to be made."
             ]
 
         KragiiResolved details ->
             [ text "Report from "
-            , a [ href (PlanetR details.systemId details.planetId) ] [ text <| unPlanetName details.planetName ]
+            , a [ href (PlanetR details.planetId) ] [ text <| unPlanetName details.planetName ]
             , text ": \""
             , text details.report
             , text "\""

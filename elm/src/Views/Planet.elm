@@ -19,7 +19,6 @@ import Api.StarSystem
     exposing
         ( getBuildingsCmd
         , getPlanetCmd
-        , getPlanetsCmd
         , getPopulationsCmd
         , getStarSystemsCmd
         , planetStatus
@@ -40,7 +39,6 @@ import Data.Accessors
         , planetDetailsStatusA
         , planetRA
         , planetStatusesStatusA
-        , planetsA
         , populationStatusA
         , populationsA
         )
@@ -53,15 +51,12 @@ import Data.Common
         , Route(..)
         , StarSystemId(..)
         , error
-        , unBuildingId
         , unPlanetId
         , unPlanetName
-        , unStarSystemId
         )
 import Data.Construction
     exposing
         ( Building
-        , BuildingConstructionData
         , BuildingDamage(..)
         , BuildingInfo
         , BuildingLevel(..)
@@ -72,12 +67,11 @@ import Data.Construction
         , constructionIndex
         , constructionName
         , constructionWorkLeft
-        , unBuildingDamage
         , unBuildingLevel
         , unConstructionIndex
         )
 import Data.Model exposing (Model, Msg(..))
-import Data.People exposing (displayName, unShortTitle)
+import Data.PersonNames exposing (displayName, unShortTitle)
 import Data.StarSystem
     exposing
         ( Planet
@@ -90,14 +84,14 @@ import Data.StarSystem
         , unRace
         )
 import Data.User exposing (Role(..))
-import Dict exposing (Dict)
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Dict
+import Html exposing (Html, a, div, hr, i, img, input, span, text)
+import Html.Attributes exposing (class, placeholder, src, style, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Maybe exposing (andThen, withDefault)
 import Navigation exposing (parseLocation)
 import Url exposing (Url)
-import ViewModels.Planet exposing (PlanetRMsg(..), PlanetViewModel)
+import ViewModels.Planet exposing (PlanetRMsg(..))
 import Views.Helpers
     exposing
         ( PanelSizing(..)
@@ -113,15 +107,15 @@ import Views.Helpers
 
 {-| Render page of displaying given planet
 -}
-page : StarSystemId -> PlanetId -> Model -> Html Msg
-page systemId planetId model =
-    div [] <| twinPanels EqualPanels (leftPanel systemId planetId) (rightPanel systemId planetId) model
+page : PlanetId -> Model -> Html Msg
+page planetId model =
+    div [] <| twinPanels EqualPanels (leftPanel planetId) (rightPanel planetId) model
 
 
 {-| Left side panel of the page
 -}
-leftPanel : StarSystemId -> PlanetId -> Model -> List (Html Msg)
-leftPanel systemId planetId model =
+leftPanel : PlanetId -> Model -> List (Html Msg)
+leftPanel planetId model =
     let
         planet =
             model.planetR.planet
@@ -178,8 +172,8 @@ leftPanel systemId planetId model =
 
 {-| Right side panel of the page
 -}
-rightPanel : StarSystemId -> PlanetId -> Model -> List (Html Msg)
-rightPanel systemId planetId model =
+rightPanel : PlanetId -> Model -> List (Html Msg)
+rightPanel planetId model =
     let
         buildings =
             get buildingsA model
@@ -223,15 +217,16 @@ and search portion where user can queue up more constructions
 constructionQueue : Maybe (List Construction) -> Model -> List (Html Msg)
 constructionQueue constructions model =
     currentQueue constructions model
-        ++ [ hr [] [] ]
-        ++ searchField model
+        ++ (hr [] []
+                :: searchField model
+           )
         ++ searchResults model
 
 
 {-| Render list of constructions currently queued
 -}
 currentQueue : Maybe (List Construction) -> Model -> List (Html Msg)
-currentQueue constructions model =
+currentQueue constructions _ =
     let
         maxIndex =
             withDefault [] constructions
@@ -239,13 +234,12 @@ currentQueue constructions model =
                 |> List.maximum
                 |> withDefault 0
     in
-    [ div [ class "row design-panel-title" ]
+    div [ class "row design-panel-title" ]
         [ div [ class "col-lg-1" ] []
         , div [ class "col-lg-6" ] [ text "Name" ]
         , div [ class "col-lg-4" ] [ text "Cost left" ]
         ]
-    ]
-        ++ (withDefault [] constructions
+        :: (withDefault [] constructions
                 |> List.sortBy (unConstructionIndex << constructionIndex)
                 |> List.map (queueItem maxIndex)
            )
@@ -278,10 +272,12 @@ queueItem maxIndex item =
         , div [ class "col-lg-6" ] [ text <| constructionName item ]
         , div [ class "col-lg-4" ]
             ((biologicalsToText <| Just <| constructionWorkLeft item)
-                ++ [ span [ class "small-space-left" ] [ text " " ] ]
-                ++ (mechanicalsToText <| Just <| constructionWorkLeft item)
-                ++ [ span [ class "small-space-left" ] [ text " " ] ]
-                ++ (chemicalsToText <| Just <| constructionWorkLeft item)
+                ++ (span [ class "small-space-left" ] [ text " " ]
+                        :: (mechanicalsToText <| Just <| constructionWorkLeft item)
+                   )
+                ++ (span [ class "small-space-left" ] [ text " " ]
+                        :: (chemicalsToText <| Just <| constructionWorkLeft item)
+                   )
             )
         , div [ class "col-lg-1" ]
             [ i [ class "fas fa-trash-alt", onClick (PlanetMessage <| DeleteConstructionFromQueue item) ] [] ]
@@ -339,10 +335,12 @@ searchResult info =
             ]
         , div [ class "col-lg-5" ]
             ((biologicalsToText <| Just info.cost)
-                ++ [ span [ class "small-space-left" ] [ text " " ] ]
-                ++ (mechanicalsToText <| Just info.cost)
-                ++ [ span [ class "small-space-left" ] [ text " " ] ]
-                ++ (chemicalsToText <| Just info.cost)
+                ++ (span [ class "small-space-left" ] [ text " " ]
+                        :: (mechanicalsToText <| Just info.cost)
+                   )
+                ++ (span [ class "small-space-left" ] [ text " " ]
+                        :: (chemicalsToText <| Just info.cost)
+                   )
             )
         ]
 
@@ -350,7 +348,7 @@ searchResult info =
 {-| List of currently landed ship on the planet
 -}
 landedShips : Maybe (List a) -> Model -> List (Html Msg)
-landedShips ships model =
+landedShips _ _ =
     [ div [ class "row design-panel-title" ]
         [ div [ class "col-lg-4" ] [ text "Name" ]
         , div [ class "col-lg-4" ] [ text "Class" ]
@@ -362,7 +360,7 @@ landedShips ships model =
 {-| List of ships currently orbiting the planet
 -}
 orbitingShips : Maybe (List a) -> Model -> List (Html Msg)
-orbitingShips ships model =
+orbitingShips _ _ =
     [ div [ class "row design-panel-title" ]
         [ div [ class "col-lg-4" ] [ text "Name" ]
         , div [ class "col-lg-4" ] [ text "Class" ]
@@ -374,7 +372,7 @@ orbitingShips ships model =
 {-| Details of the planet
 -}
 planetDetails : Maybe Planet -> Model -> List (Html Msg)
-planetDetails planet model =
+planetDetails planet _ =
     [ div [ class "row" ]
         [ div [ class "col-lg-2 design-panel-title" ] [ text "Name" ]
         , div [ class "col-lg-4" ]
@@ -442,7 +440,7 @@ planetDetails planet model =
 
 
 statusList : Maybe PlanetStatus -> Model -> List (Html Msg)
-statusList status model =
+statusList status _ =
     case status of
         Nothing ->
             []
@@ -467,14 +465,13 @@ planetStatusIcon status =
 {-| List of populations currently inhabiting the planet
 -}
 populationDetails : Maybe (List Population) -> Model -> List (Html Msg)
-populationDetails population model =
-    [ div [ class "row design-panel-title" ]
+populationDetails population _ =
+    div [ class "row design-panel-title" ]
         [ div [ class "col-lg-4" ] [ text "Race" ]
         , div [ class "col-lg-4" ] [ text "Inhabitants" ]
         , div [ class "col-lg-4" ] [ text "Date" ]
         ]
-    ]
-        ++ List.map populationRow (withDefault [] population)
+        :: List.map populationRow (withDefault [] population)
 
 
 {-| Single row in population list
@@ -491,14 +488,13 @@ populationRow population =
 {-| List of buildings currently on the planet
 -}
 buildingsList : Maybe (List Building) -> Model -> List (Html Msg)
-buildingsList buildings model =
-    [ div [ class "row design-panel-title" ]
+buildingsList buildings _ =
+    div [ class "row design-panel-title" ]
         [ div [ class "col-lg-5" ] [ text "Type" ]
         , div [ class "col-lg-3" ] [ text "Damage" ]
         , div [ class "col-lg-4" ] [ text "Date" ]
         ]
-    ]
-        ++ List.map buildingRow (withDefault [] buildings)
+        :: List.map buildingRow (withDefault [] buildings)
 
 
 {-| Single building on the building list
@@ -521,8 +517,8 @@ buildingRow building =
 
 {-| Initiate retrieval of data needed by this page
 -}
-init : StarSystemId -> PlanetId -> Model -> Cmd Msg
-init sId pId model =
+init : PlanetId -> Model -> Cmd Msg
+init pId model =
     Cmd.batch
         [ getPlanetCmd (PlanetMessage << PlanetDetailsReceived) pId
         , getPopulationsCmd model pId
@@ -666,7 +662,7 @@ currentPlanet url =
             parseLocation url
     in
     case location of
-        PlanetR _ planetId ->
+        PlanetR planetId ->
             Just planetId
 
         _ ->

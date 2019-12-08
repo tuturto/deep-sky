@@ -8,7 +8,6 @@ module Handler.Bases where
 
 import Import
 import Report
-import Handler.StarSystems
 import Common (requireFaction)
 
 getBasesR :: Handler Html
@@ -27,8 +26,8 @@ getBasesR = do
         setTitle "Deep Sky - Bases"
         $(widgetFile "bases")
 
-getBaseR :: Key StarSystem -> Key Planet -> Handler Html
-getBaseR = getPlanetR
+getBaseR :: StarSystemId -> PlanetId -> Handler Html
+getBaseR = undefined
 
 addBaseDetails :: CollatedPlanetReport -> Handler CollatedBaseReport
 addBaseDetails planetReport = do

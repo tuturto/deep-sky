@@ -20,7 +20,7 @@ import Api.Common
         , resourcesDecoder
         , resourcesEncoder
         )
-import Api.Endpoints exposing (Endpoint(..), endpointToString)
+import Api.Endpoints exposing (Endpoint(..))
 import Api.StarSystem
     exposing
         ( buildingLevelDecoder
@@ -46,8 +46,7 @@ import Data.Model
 import Http
 import Json.Decode as Decode
     exposing
-        ( andThen
-        , fail
+        ( fail
         , field
         , int
         , list
@@ -70,7 +69,7 @@ constructionsCmd planetId =
 if they have not yet been retrieved
 -}
 getConstructionsCmd : Model -> PlanetId -> Cmd Msg
-getConstructionsCmd model =
+getConstructionsCmd _ =
     constructionsCmd
 
 
@@ -109,7 +108,7 @@ availableBuildingsCmd =
 has not been fetched, create a command to do so
 -}
 getAvailableBuildingsCmd : Model -> Cmd Msg
-getAvailableBuildingsCmd model =
+getAvailableBuildingsCmd _ =
     availableBuildingsCmd
 
 
@@ -178,7 +177,7 @@ shipConstructionDecoder =
 Currently it will always encode "not implemented"
 -}
 shipConstructionEncoder : ShipConstructionData -> Encode.Value
-shipConstructionEncoder ship =
+shipConstructionEncoder _ =
     Encode.string "not implemented"
 
 

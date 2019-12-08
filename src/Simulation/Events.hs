@@ -56,7 +56,7 @@ handlePersonalEvent date = do
 
 
 -- | Extract possible special event from news article
-extractSpecialNews :: (Key News, NewsArticle) -> Maybe (Key News, SpecialNews)
+extractSpecialNews :: (NewsId, NewsArticle) -> Maybe (NewsId, SpecialNews)
 extractSpecialNews (nId, Special article) = Just (nId, article)
 extractSpecialNews _ = Nothing
 
@@ -65,7 +65,7 @@ extractSpecialNews _ = Nothing
 -- | Handle special event, mark it processed and dismissed, create news article about results
 handleSpecialEvent :: (PersistQueryWrite backend, PersistUniqueRead backend, MonadIO m
     , BaseBackend backend ~ SqlBackend) =>
-    StarDate -> (Key News, SpecialNews) -> ReaderT backend m (Key News)
+    StarDate -> (NewsId, SpecialNews) -> ReaderT backend m NewsId
 handleSpecialEvent date (nId, KragiiWorms event _ choice) = do
     (actions, results) <- resolveEvent (nId, event) choice
     _ <- updateEvent date nId actions
@@ -86,7 +86,7 @@ handleSpecialEvent date (nId, NamingPet event _ choice) = do
 updateEvent :: (PersistQueryWrite backend, MonadIO m,
    PersistUniqueRead backend, BaseBackend backend ~ SqlBackend) =>
    StarDate
-   -> Key News
+   -> NewsId
    -> Maybe (EventRemoval, [EC.EventCreation])
    -> ReaderT backend m ()
 updateEvent date nId actions = do
@@ -116,7 +116,7 @@ createSpecialEvents :: (PersistStoreWrite backend, PersistUniqueRead backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
     StarDate
     -> EC.EventCreation
-    -> ReaderT backend m (Maybe (Key News))
+    -> ReaderT backend m (Maybe NewsId)
 createSpecialEvents date event =
     case event of
         EC.NamingPet pId peId ->
@@ -158,7 +158,7 @@ addPersonalSpecialEvents date person = do
 eventCreators :: (PersistStoreWrite backend, PersistUniqueRead backend,
     PersistQueryRead backend, BackendCompatible SqlBackend backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
-    [ (PercentileChance, StarDate -> Entity Faction -> ReaderT backend m (Maybe (Key News))) ]
+    [ (PercentileChance, StarDate -> Entity Faction -> ReaderT backend m (Maybe NewsId)) ]
 eventCreators =
     -- TODO: kragii attack or biological boost / slowdown should really be planet specific
     [ (PercentileChance 2, kragiiAttack)
@@ -171,7 +171,7 @@ eventCreators =
 personalEventCreators :: (PersistStoreWrite backend, PersistUniqueRead backend,
     PersistQueryRead backend, BackendCompatible SqlBackend backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
-    [ (PercentileChance, StarDate -> Entity Person -> ReaderT backend m (Maybe (Key News))) ]
+    [ (PercentileChance, StarDate -> Entity Person -> ReaderT backend m (Maybe NewsId)) ]
 personalEventCreators =
     [ (PercentileChance 1, scurryingNoises)
     ]
@@ -182,7 +182,7 @@ runEvent :: (PersistStoreWrite backend, PersistUniqueRead backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
     PercentileChance -> StarDate -> Entity Faction ->
     (StarDate -> Entity Faction -> ReaderT backend m (Maybe (Key News))) ->
-    ReaderT backend m (Maybe (Key News))
+    ReaderT backend m (Maybe NewsId)
 runEvent odds date faction fn = do
     res <- liftIO $ roll odds
     case res of
@@ -201,8 +201,8 @@ runPersonalEvent :: (PersistStoreWrite backend, PersistUniqueRead backend,
     PercentileChance
     -> StarDate
     -> Entity Person
-    -> (StarDate -> Entity Person -> ReaderT backend m (Maybe (Key News))) ->
-    ReaderT backend m (Maybe (Key News))
+    -> (StarDate -> Entity Person -> ReaderT backend m (Maybe NewsId)) ->
+    ReaderT backend m (Maybe NewsId)
 runPersonalEvent odds date person fn = do
     res <- liftIO $ roll odds
     case res of
@@ -217,7 +217,7 @@ runPersonalEvent odds date person fn = do
 kragiiAttack :: (PersistStoreWrite backend, PersistUniqueRead backend,
     PersistQueryRead backend, BackendCompatible SqlBackend backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
-    StarDate -> Entity Faction -> ReaderT backend m (Maybe (Key News))
+    StarDate -> Entity Faction -> ReaderT backend m (Maybe NewsId)
 kragiiAttack date faction = do
     planets <- kragiiTargetPlanets 10 5 $ entityKey faction
     if length planets == 0
@@ -241,7 +241,7 @@ kragiiAttack date faction = do
 biologicalsBoost :: (PersistStoreWrite backend, PersistUniqueRead backend,
     PersistQueryRead backend, BackendCompatible SqlBackend backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
-    StarDate -> Entity Faction -> ReaderT backend m (Maybe (Key News))
+    StarDate -> Entity Faction -> ReaderT backend m (Maybe NewsId)
 biologicalsBoost date faction = do
     planets <- farmingChangeTargetPlanets $ entityKey faction
     if length planets == 0
@@ -293,7 +293,7 @@ scurryingNoises :: (PersistStoreWrite backend, PersistUniqueRead backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
     StarDate
     -> Entity Person
-    -> ReaderT backend m (Maybe (Key News))
+    -> ReaderT backend m (Maybe NewsId)
 scurryingNoises date person = do
     let info = scurryingSoundsEvent (entityKey person) date
     event <- insert info
@@ -305,9 +305,9 @@ namingPet :: (PersistStoreWrite backend, PersistUniqueRead backend,
     PersistQueryRead backend,
     MonadIO m, BaseBackend backend ~ SqlBackend) =>
     StarDate
-    -> Key Person
-    -> Key Pet
-    -> ReaderT backend m (Maybe (Key News))
+    -> PersonId
+    -> PetId
+    -> ReaderT backend m (Maybe NewsId)
 namingPet date pId peId = do
     personM <- getEntity pId
     petM <- getEntity peId

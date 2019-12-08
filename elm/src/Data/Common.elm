@@ -70,12 +70,13 @@ module Data.Common exposing
     , unStarSystemName
     , unUnitId
     , unUserId
+    , unitIdToString
     , writtenNumber
     )
 
 import Http exposing (Error(..))
 import Ordering exposing (Ordering)
-import Url.Builder exposing (absolute, int)
+import Url.Builder exposing (absolute)
 
 
 type StarDate
@@ -140,13 +141,14 @@ type Route
     | ProfileR
     | StarSystemsR
     | StarSystemR StarSystemId
-    | PlanetR StarSystemId PlanetId
+    | PlanetR PlanetId
     | BasesR
     | FleetR
     | DesignerR
     | ConstructionR
     | MessagesR
     | PersonR PersonId
+    | UnitR UnitId
     | AdminR
     | AdminListPeopleR
     | AdminPersonR PersonId
@@ -236,8 +238,8 @@ routeToString route =
         StarSystemR (StarSystemId sId) ->
             absolute [ "starsystem", String.fromInt sId ] []
 
-        PlanetR (StarSystemId sId) (PlanetId pId) ->
-            absolute [ "starsystem", String.fromInt sId, String.fromInt pId ] []
+        PlanetR (PlanetId pId) ->
+            absolute [ "planet", String.fromInt pId ] []
 
         StarSystemsR ->
             absolute [ "starsystem" ] []
@@ -259,6 +261,9 @@ routeToString route =
 
         PersonR pId ->
             absolute [ "person", personIdToString pId ] []
+
+        UnitR uId ->
+            absolute [ "unit", unitIdToString uId ] []
 
         AdminR ->
             absolute [ "admin" ] []
@@ -485,6 +490,7 @@ type PlanetName
     = PlanetName String
 
 
+unPlanetName : PlanetName -> String
 unPlanetName (PlanetName s) =
     s
 
@@ -493,6 +499,7 @@ type StarSystemName
     = StarSystemName String
 
 
+unStarSystemName : StarSystemName -> String
 unStarSystemName (StarSystemName s) =
     s
 
@@ -558,7 +565,7 @@ perhapsOrdering ord a b =
                 Nothing ->
                     EQ
 
-                Just jb ->
+                Just _ ->
                     GT
 
 
@@ -596,6 +603,11 @@ type UnitId
 unUnitId : UnitId -> Int
 unUnitId (UnitId n) =
     n
+
+
+unitIdToString : UnitId -> String
+unitIdToString (UnitId n) =
+    String.fromInt n
 
 
 {-| Results of paged query

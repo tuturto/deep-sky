@@ -19,10 +19,10 @@ import Data.People
     exposing
         ( Age(..)
         , Gender(..)
-        , PersonName(..)
         , Sex(..)
         , StatValue(..)
         )
+import Data.PersonNames exposing (PersonName(..))
 
 
 type alias Simulation =

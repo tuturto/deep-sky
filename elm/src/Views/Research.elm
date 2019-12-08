@@ -1,7 +1,6 @@
 module Views.Research exposing (init, page, update)
 
-import Accessors exposing (get, set)
-import Accessors.Library exposing (try)
+import Accessors exposing (set)
 import Api.Research
     exposing
         ( availableResearchCmd
@@ -12,8 +11,7 @@ import Api.Research
         )
 import Data.Accessors
     exposing
-        ( currentResearchA
-        , currentResearchStatusA
+        ( currentResearchStatusA
         , focusedTopCategoryA
         , productionStatusA
         , researchFieldStatusA
@@ -30,14 +28,12 @@ import Data.Research
         , researchToCurrent
         , topResearchCategory
         , topResearchCategoryToString
-        , topResearchCategoryToTag
         , unResearchScore
         , unResearchTier
-        , unTechnology
         )
 import Data.User exposing (Role(..))
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html exposing (Html, div, i, text)
+import Html.Attributes exposing (class, id)
 import Html.Events exposing (onClick)
 import ViewModels.Research exposing (ResearchRMsg(..))
 import Views.Helpers
@@ -335,7 +331,7 @@ update msg model =
 {-| Initialize view model
 -}
 init : Model -> Cmd Msg
-init model =
+init _ =
     Cmd.batch
         [ availableResearchCmd
         , currentResearchCmd

@@ -28,7 +28,6 @@ import qualified Yesod.Core.Unsafe as Unsafe
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Text.Encoding as TE
 import CustomTypes ( UserIdentity(..) )
-import Space.Data ( PlanetName(..), StarSystemName(..) )
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -230,7 +229,7 @@ instance Yesod App where
     -- Routes requiring faction membership
     isAuthorized StarSystemsR _       = hasAvatar
     isAuthorized (StarSystemR _) _    = hasAvatar
-    isAuthorized PlanetR {} _         = hasAvatar
+    isAuthorized (PlanetR _) _        = hasAvatar
     isAuthorized BasesR _             = hasAvatar
     isAuthorized BaseR {} _           = hasAvatar
     isAuthorized ResearchR _          = hasAvatar
@@ -239,6 +238,7 @@ instance Yesod App where
     isAuthorized ConstructionR _      = hasAvatar
     isAuthorized (PersonR _) _        = hasAvatar
     isAuthorized PeopleR _            = hasAvatar
+    isAuthorized (UnitR _) _          = hasAvatar
 
     -- Special authorization for admin panel
     isAuthorized AdminPanelR _        = isAdmin
@@ -278,6 +278,8 @@ instance Yesod App where
     isAuthorized (ApiPersonR _) _                   = return Authorized
     isAuthorized (ApiDemesneR _) _                  = return Authorized
     isAuthorized ApiDoDesignEstimateR _             = return Authorized
+    isAuthorized ApiUnitsR _                        = return Authorized
+    isAuthorized (ApiUnitR _) _                     = return Authorized
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of
@@ -339,30 +341,11 @@ instance YesodBreadcrumbs App where
     -- Takes the route that the user is currently on, and returns a tuple
     -- of the 'Text' that you want the label to display, and a previous
     -- breadcrumb route.
+    -- This is provided and required by Yesod, but not used for anything currently
     breadcrumb
         :: Route App  -- ^ The route the user is visiting currently.
         -> Handler (Text, Maybe (Route App))
-    breadcrumb HomeR = return ("Home", Nothing)
-    breadcrumb (AuthR _) = return ("Login", Just HomeR)
-    breadcrumb ProfileR = return ("Profile", Just HomeR)
-    breadcrumb FactionR = return ("Faction", Just ProfileR)
-    breadcrumb StarSystemsR = return ("Star systems", Just HomeR)
-    breadcrumb (StarSystemR systemId) = do
-        systemName <- runDB $ MenuHelpers.systemNameById systemId
-        return (unStarSystemName systemName, Just StarSystemsR)
-    breadcrumb (PlanetR systemId planetId) = do
-        name <- runDB $ MenuHelpers.planetNameById planetId
-        return (unPlanetName name, Just (StarSystemR systemId))
-    breadcrumb FleetR = return ("Fleet", Just HomeR)
-    breadcrumb DesignerR = return ("Designer", Just HomeR)
-    breadcrumb ResearchR = return ("Research", Just HomeR)
-    breadcrumb ConstructionR = return ("Construction", Just HomeR)
-    breadcrumb BasesR = return ("Bases", Just HomeR)
-    breadcrumb (BaseR _ planetId) = do
-        name <- runDB $ MenuHelpers.planetNameById planetId
-        return (unPlanetName name, Just BasesR)
-    breadcrumb AdminPanelR = return ("Admin", Just HomeR)
-    breadcrumb _ = return ("home", Nothing)
+    breadcrumb _ = return ("", Nothing)
 
 -- How to run database actions.
 instance YesodPersist App where

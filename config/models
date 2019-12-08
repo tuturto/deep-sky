@@ -99,7 +99,7 @@ Simulation json
 -- Designs are blueprints for different kinds of vehicles. Each faction have their
 -- own designs.
 Design json
-    name Text
+    name DesignName
     ownerId FactionId
     chassisId ChassisId
     deriving Show Read Eq
@@ -143,28 +143,58 @@ InstalledComponent json
 
 Ship json
     name ShipName
+    designId DesignId -- original design of this ship
     chassisId ChassisId
-    starSystemId StarSystemId
+    starSystemId StarSystemId Maybe
     planetId PlanetId Maybe
-    landed LandingStatus
-    ownerFactionId FactionId Maybe
-    ownerPersonId PersonId Maybe
+    band Band
+    ownerId PersonId
     deriving Show Read Eq
 
 Vehicle json
+    name VehicleName
+    designId DesignId -- original design of this vehicle
     chassisId ChassisId
     planetId PlanetId Maybe
-    ownerId FactionId
+    ownerId PersonId
     deriving Show Read Eq
 
 +Unit
     shipId ShipId
     vehicleId VehicleId
 
+-- unit observation records details of observation made of a particular unit
+-- these include things like name, location, class of vehicle
+-- and visible components when they differ of the class
+UnitObservation json
+    unitId UnitId
+    content UnitObservationDetailsJSON
+    ownerId FactionId
+    date StarDate
+    deriving Show Read Eq
+
+-- stats report records observed performance stats of a unit or blueprint
+-- unit or design might be observer's own or another faction's
+UnitStatsReport json
+    unitId UnitId
+    content StatsReportDetails
+    ownerId FactionId
+    date StarDate
+    deriving Show Read Eq
+
+DesignStatsReport json
+    designId DesignId
+    content StatsReportDetails
+    ownerId FactionId
+    date StarDate
+    deriving Show Read Eq
+
+-- position and rank of a person in unit
 CrewAssignment json
     unitId UnitId
     personId PersonId
     position CrewPosition
+    rank CrewRank
     UniqueCrewAssignment personId
 
 ShipConstruction json
@@ -341,7 +371,6 @@ Pet json
 PersonOnUnit
     personId PersonId
     unitId UnitId
-    position CrewPosition
 
 -- location data of person who is stationed on a planet
 PersonOnPlanet

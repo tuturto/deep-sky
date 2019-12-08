@@ -47,7 +47,7 @@ import Data.Admin
         , SystemStatus(..)
         )
 import Data.Common exposing (PagedResult, PersonId)
-import Data.Model exposing (ApiMsg(..), Model, Msg(..))
+import Data.Model exposing (ApiMsg(..), Msg(..))
 import Http
 import Json.Decode as Decode
     exposing

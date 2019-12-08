@@ -9,6 +9,7 @@ import Test.QuickCheck.Instances()
 import QC.Generators.Common ( ArbStarDate(..) )
 import QC.Generators.Database
 import QC.Generators.People
+import QC.Generators.Vehicles ( anyDesignName )
 import Dto.News ( DesignCreatedNewsDto(..), UserWrittenNewsDto(..), UserNewsIconDto(..)
                 , NewsArticleDto(..) )
 
@@ -27,7 +28,7 @@ instance Arbitrary ArbUserNewsIconDto where
 singleDesignCreatedNewsDto :: Gen DesignCreatedNewsDto
 singleDesignCreatedNewsDto = do
     aDesignId <- randomDesignKey
-    aName <- arbitrary
+    aName <- anyDesignName
     aDate <- arbitrary
     return $ DesignCreatedNewsDto { designCreatedNewsDtoDesignId = aDesignId
                                   , designCreatedNewsDtoName = aName

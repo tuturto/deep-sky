@@ -41,7 +41,7 @@ handleFactionResearch date faction = do
 totalProduction :: (MonadIO m,
     BackendCompatible SqlBackend backend, PersistQueryRead backend,
     PersistUniqueRead backend) =>
-    Key Faction -> ReaderT backend m (TotalResearchScore ResearchProduction)
+    FactionId -> ReaderT backend m (TotalResearchScore ResearchProduction)
 totalProduction fId = do
     pnbs <- factionBuildings fId
     let buildings = join $ fmap snd pnbs
@@ -53,7 +53,7 @@ totalProduction fId = do
 -- entry from available researches. Create new article for each completed research.
 handleCompleted :: (MonadIO m, PersistQueryWrite backend,
     BaseBackend backend ~ SqlBackend) =>
-    StarDate -> [Entity CurrentResearch] -> Key Faction -> ReaderT backend m ()
+    StarDate -> [Entity CurrentResearch] -> FactionId -> ReaderT backend m ()
 handleCompleted date updated fId = do
     let finished = filter (researchReady . entityVal) updated
     let finishedTech = currentResearchType . entityVal <$> finished
@@ -108,7 +108,7 @@ updateUnfinished updated = do
 -- | Add new available research when required
 updateAvailableResearch :: (MonadIO m, PersistQueryWrite backend,
     BaseBackend backend ~ SqlBackend) =>
-    Key Faction -> ReaderT backend m ()
+    FactionId -> ReaderT backend m ()
 updateAvailableResearch fId = do
     available <- selectList [ AvailableResearchFactionId ==. fId ] []
     completed <- selectList [ CompletedResearchFactionId ==. fId ] []
@@ -127,7 +127,7 @@ updateAvailableResearch fId = do
 -- | with new ones
 rewriteAvailableResearch :: (MonadIO m, PersistQueryWrite backend,
     BaseBackend backend ~ SqlBackend) =>
-    Key Faction -> [Research] -> ReaderT backend m ()
+    FactionId -> [Research] -> ReaderT backend m ()
 rewriteAvailableResearch fId res = do
     let cats = mkUniq $ fmap (topCategory . researchCategory) res
     unless (null cats) $ do
@@ -136,7 +136,7 @@ rewriteAvailableResearch fId res = do
         insertMany_ $ researchToAvailable fId <$> res
 
 
-researchToAvailable :: Key Faction -> Research -> AvailableResearch
+researchToAvailable :: FactionId -> Research -> AvailableResearch
 researchToAvailable fId res =
     AvailableResearch
         { availableResearchType = researchType res

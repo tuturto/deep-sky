@@ -40,7 +40,7 @@ parseNews =
 
 
 -- | Given a news entity, parse that into a tuple of key and possible news article
-parseNewsEntity :: Entity News -> (Key News, Maybe NewsArticle)
+parseNewsEntity :: Entity News -> (NewsId, Maybe NewsArticle)
 parseNewsEntity entity =
     let
         nId = entityKey entity
@@ -51,7 +51,7 @@ parseNewsEntity entity =
 
 -- | Given a list of news entities, parse them into a list of tuples of key and possible news article
 -- Entries that failed to parse are removed from the end result
-parseNewsEntities :: [Entity News] -> [(Key News, NewsArticle)]
+parseNewsEntities :: [Entity News] -> [(NewsId, NewsArticle)]
 parseNewsEntities entities =
     let
         parsed = map parseNewsEntity entities
@@ -214,7 +214,7 @@ userWrittenNews msg icon date person =
 
 
 -- | Construct news entry for discovery of new planet
-planetFoundNews :: Entity Planet -> StarSystem -> StarDate -> Key Faction -> News
+planetFoundNews :: Entity Planet -> StarSystem -> StarDate -> FactionId -> News
 planetFoundNews planetEnt system date fId =
     let
         planet = entityVal planetEnt
@@ -225,7 +225,7 @@ planetFoundNews planetEnt system date fId =
 
 
 -- | Construct news entry for discovery of new star
-starFoundNews :: Star -> Entity StarSystem -> StarDate -> Key Faction -> News
+starFoundNews :: Star -> Entity StarSystem -> StarDate -> FactionId -> News
 starFoundNews star systemEnt date fId =
     let
         system = entityVal systemEnt
@@ -236,7 +236,7 @@ starFoundNews star systemEnt date fId =
 
 
 -- | Construct news entry for creation of new space ship desgin
-designCreatedNews :: Entity Design -> StarDate -> Key Faction -> News
+designCreatedNews :: Entity Design -> StarDate -> FactionId -> News
 designCreatedNews design date fId =
     let
         dId = entityKey design
@@ -247,7 +247,7 @@ designCreatedNews design date fId =
 
 
 -- | Construct news entry for a finished building construction
-buildingConstructionFinishedNews :: Entity Planet -> Entity StarSystem -> Entity Building -> StarDate -> Key Faction -> News
+buildingConstructionFinishedNews :: Entity Planet -> Entity StarSystem -> Entity Building -> StarDate -> FactionId -> News
 buildingConstructionFinishedNews planetE starSystemE buildingE date fId =
     let
         modelBuilding = building (buildingType $ entityVal buildingE) (BLevel $ buildingLevel $ entityVal buildingE)
@@ -265,7 +265,7 @@ buildingConstructionFinishedNews planetE starSystemE buildingE date fId =
         mkFactionNews fId date content
 
 
-productionBoostStartedNews :: Entity Planet -> Entity StarSystem -> ResourceType -> StarDate -> Key Faction -> News
+productionBoostStartedNews :: Entity Planet -> Entity StarSystem -> ResourceType -> StarDate -> FactionId -> News
 productionBoostStartedNews planet system rType date fId =
     let
         content = ProductionBoostStarted $ productionChanged planet system rType date
@@ -273,7 +273,7 @@ productionBoostStartedNews planet system rType date fId =
         mkFactionNews fId date content
 
 
-productionSlowdownStartedNews :: Entity Planet -> Entity StarSystem -> ResourceType -> StarDate -> Key Faction -> News
+productionSlowdownStartedNews :: Entity Planet -> Entity StarSystem -> ResourceType -> StarDate -> FactionId -> News
 productionSlowdownStartedNews planet system rType date fId =
     let
         content = ProductionSlowdownStarted $ productionChanged planet system rType date
@@ -293,7 +293,7 @@ productionChanged planet system rType date =
         }
 
 
-researchCompleted :: StarDate -> Key Faction -> Technology -> News
+researchCompleted :: StarDate -> FactionId -> Technology -> News
 researchCompleted date fId tech =
     let
         content = ResearchCompleted $ ResearchCompletedNews

@@ -49,7 +49,7 @@ getApiBuildingsR = do
 
 
 -- | Retrieve construction queue of a given planet as JSON
-getApiPlanetConstQueueR :: Key Planet -> Handler Value
+getApiPlanetConstQueueR :: PlanetId -> Handler Value
 getApiPlanetConstQueueR planetId = do
     (uId, _, _, _) <- apiRequireFaction
     _ <- apiRequireViewSimulation uId
@@ -58,7 +58,7 @@ getApiPlanetConstQueueR planetId = do
 
 
 -- | Retrieve details of given building construction
-getApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
+getApiBuildingConstructionIdR :: BuildingConstructionId -> Handler Value
 getApiBuildingConstructionIdR cId = do
     (uId, _, _, _) <- apiRequireFaction
     _ <- apiRequireViewSimulation uId
@@ -85,7 +85,7 @@ postApiBuildingConstructionR = do
 
 -- | Update existing building construction
 --   In case this method is called to update ship construction http 400 error will be returned
-putApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
+putApiBuildingConstructionIdR :: BuildingConstructionId -> Handler Value
 putApiBuildingConstructionIdR cId = do
     (uId, _, _, _) <- apiRequireFaction
     _ <- apiRequireOpenSimulation uId
@@ -116,7 +116,7 @@ putApiBuildingConstructionIdR cId = do
 
 
 -- | Delete building construction
-deleteApiBuildingConstructionIdR :: Key BuildingConstruction -> Handler Value
+deleteApiBuildingConstructionIdR :: BuildingConstructionId -> Handler Value
 deleteApiBuildingConstructionIdR cId = do
     (uId, _, _, _) <- apiRequireFaction
     _ <- apiRequireOpenSimulation uId
@@ -131,7 +131,7 @@ deleteApiBuildingConstructionIdR cId = do
 --   In case message doesn't actually move construction anywhere (old and new index are same)
 --   http 200 is returned with current construction queue as content
 --   In case there is problem with the message, appropriate http error will be returned
-validatePut :: ConstructionDto -> Key BuildingConstruction -> HandlerFor App (Int, Int, Key Planet)
+validatePut :: ConstructionDto -> BuildingConstructionId -> HandlerFor App (Int, Int, PlanetId)
 validatePut msg cId = do
     newIndex <- if bcdtoIndex msg < 0
                 then apiInvalidArgs [ "negative building index" ]
@@ -155,7 +155,7 @@ validatePut msg cId = do
 -- | transform building construction dto into building construction and save is into database
 createBuildingConstruction :: (PersistQueryRead backend, MonadIO m,
                                PersistStoreWrite backend, BaseBackend backend ~ SqlBackend) =>
-                              ConstructionDto -> ReaderT backend m (Maybe (Key BuildingConstruction))
+                              ConstructionDto -> ReaderT backend m (Maybe BuildingConstructionId)
 createBuildingConstruction cDto = do
     currentConstructions <- loadPlanetConstructionQueue $ bcdtoPlanet cDto
     let nextIndex = if P.length currentConstructions == 0
@@ -167,7 +167,7 @@ createBuildingConstruction cDto = do
 -- | load construction queue of a given planet
 loadPlanetConstructionQueue :: (PersistQueryRead backend,
                                 MonadIO m, BaseBackend backend ~ SqlBackend) =>
-                                Key Planet -> ReaderT backend m [ConstructionDto]
+                                PlanetId -> ReaderT backend m [ConstructionDto]
 loadPlanetConstructionQueue planetId = do
     loadedBuildings <- selectList [ BuildingConstructionPlanetId ==. planetId ] []
     loadedShips <- selectList [ ShipConstructionPlanetId ==. Just planetId ] []

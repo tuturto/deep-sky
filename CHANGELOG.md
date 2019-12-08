@@ -9,14 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SystemStatus` and related checks for API endpoints
 - People section for admin panel
 - `Creators.Person` module for generating new people
+- interface for accessing unit info added
+- units report their status to faction of owner
 ### Changed
 - Admin interface has been rewritten in Elm
 - `Age` changed from `Int` to `Natural`
+- `Vehicles` module renamed to `Units`
+- url of planet changed from `/starsystem/sId/pId` to `planet/pId`
+- type of design name changed from `Text` to `DesignName`
+- `PersonName` and related types and functions moved from `Data.Person` to `Data.PersonName` on client
 ### Removed
 ### Fixed
 ### Known bugs
 - [Disallow dismissing special events][1]
 - [Old planet details are shown][6]
+- [Admin panel is not displaying people][13]
+- [Submitting user written news fails][14]
 
 ## [0.2.0] - 2019-10-19
 ### Added
@@ -91,3 +99,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [5]: https://github.com/tuturto/deep-sky/issues/5
 [6]: https://github.com/tuturto/deep-sky/issues/6
 [10]: https://github.com/tuturto/deep-sky/issues/10
+[13]: https://github.com/tuturto/deep-sky/issues/13
+[14]: https://github.com/tuturto/deep-sky/issues/14

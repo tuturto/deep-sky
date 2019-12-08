@@ -40,7 +40,7 @@ getApiMessageR = do
 
 -- | Api method to mark message deleted. Marking already deleted message doesn't have
 -- any effect.
-deleteApiMessageIdR :: Key News -> Handler Value
+deleteApiMessageIdR :: NewsId -> Handler Value
 deleteApiMessageIdR mId = do
     (uId, _, avatar, fId) <- apiRequireFaction
     _ <- apiRequireOpenSimulation uId
@@ -54,7 +54,7 @@ deleteApiMessageIdR mId = do
 
 -- | Api method for updated specific message. Used to make user choice for interactive
 -- event
-putApiMessageIdR :: Key News -> Handler Value
+putApiMessageIdR :: NewsId -> Handler Value
 putApiMessageIdR mId = do
     (uId, _, avatarE, fId) <- apiRequireFaction
     _ <- apiRequireOpenSimulation uId
@@ -70,7 +70,7 @@ putApiMessageIdR mId = do
 -- made choice immediately triggers resolving of the event
 updateEventWithChoice :: (MonadIO m, PersistQueryWrite backend, PersistUniqueRead backend,
     BaseBackend backend ~ SqlBackend) =>
-    Key News
+    NewsId
     -> Entity Person
     -> NewsArticle
     -> WriterT [ErrorCode] (ReaderT backend m) ()
@@ -134,7 +134,7 @@ userHasRightToChoose personE news =
 -- | Update news article content
 updateWithChoice :: (MonadIO m, PersistStoreWrite backend,
     BaseBackend backend ~ SqlBackend) =>
-    Key News -> NewsArticle -> ReaderT backend m ()
+    NewsId -> NewsArticle -> ReaderT backend m ()
 updateWithChoice mId article =
     update mId [ NewsContent =. toStrict (encodeToLazyText article) ]
 
@@ -143,9 +143,9 @@ updateWithChoice mId article =
 -- resolution for special event
 handleWithChoice :: (MonadIO m, PersistQueryWrite backend, PersistUniqueRead backend,
     BaseBackend backend ~ SqlBackend) =>
-    Key News
+    NewsId
     -> NewsArticle
-    -> WriterT [ErrorCode] (ReaderT backend m) (Maybe (Key News))
+    -> WriterT [ErrorCode] (ReaderT backend m) (Maybe NewsId)
 handleWithChoice mId article = do
     date <- lift starDate
     _ <- lift $ updateWithChoice mId article
@@ -220,7 +220,7 @@ setUser _ article =
 
 -- | Load all messages of a faction that have not yet been dismissed and return them as JSON
 -- Message icons are returned as links to respective server resources
-loadAllMessages :: Key Faction -> Key Person -> HandlerFor App Value
+loadAllMessages :: FactionId -> PersonId -> HandlerFor App Value
 loadAllMessages fId pId = do
     loadedMessages <- runDB $ selectList ( [ NewsFactionId ==. Just fId
                                            , NewsDismissed ==. False ]

@@ -172,7 +172,7 @@ anyPersonDataLink linkVisibility targetIntel originatorIntel = do
         }
 
 
-anyHumanIntelligence :: Key Person -> Key Person -> Gen PersonIntel -> Gen HumanIntelligence
+anyHumanIntelligence :: PersonId -> PersonId -> Gen PersonIntel -> Gen HumanIntelligence
 anyHumanIntelligence ownerId targetId levels = do
     aLevel <- levels
     return $ HumanIntelligence
@@ -182,7 +182,7 @@ anyHumanIntelligence ownerId targetId levels = do
                 }
 
 
-anyRelation :: Key Person -> Key Person -> RelationVisibility -> Gen Relation
+anyRelation :: PersonId -> PersonId -> RelationVisibility -> Gen Relation
 anyRelation targetId originatorId visibility = do
     aType <- anyRelationType
     return $ Relation
@@ -272,19 +272,19 @@ anyPersonEntity params = do
 
 
 data PersonParameter =
-    PlanetaryPrimaryTitle (Key Planet)
+    PlanetaryPrimaryTitle PlanetId
     | RandomPlanetaryPrimaryTitle
-    | StarSystemPrimaryTitle (Key StarSystem)
+    | StarSystemPrimaryTitle StarSystemId
     | RandomStarSystemPrimaryTitle
-    | WithPersonId (Key Person)
-    | WithFactionId (Key Faction)
+    | WithPersonId PersonId
+    | WithFactionId FactionId
     | RandomFactionId
-    | WithDynastyId (Key Dynasty)
+    | WithDynastyId DynastyId
     | RandomDynastyId
     deriving (Show, Read, Eq)
 
 
-getPersonId :: [PersonParameter] -> Maybe (Key Person)
+getPersonId :: [PersonParameter] -> Maybe PersonId
 getPersonId params =
     safeHead $ mapMaybe (\x -> case x of
                             WithPersonId n ->

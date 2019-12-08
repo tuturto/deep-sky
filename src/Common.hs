@@ -58,7 +58,7 @@ chooseOne item1 item2 = do
 
 -- | Check that user has logged in and is member of a faction
 --   In case user is not member of a faction, http 500 will be returned as an error page
-requireFaction :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User, Entity Person, Key Faction)
+requireFaction :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User, Entity Person, FactionId)
 requireFaction = do
     (authId, user) <- requireAuthPair
     pId <- case userAvatar user of
@@ -101,7 +101,7 @@ apiRequireAuthPair = do
 
 -- | Check that user has logged in and is member of a faction
 --   In case user is not member of a faction, http 500 with json body will be returned
-apiRequireFaction :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User, Entity Person, Key Faction)
+apiRequireFaction :: HandlerFor App (AuthId (HandlerSite (HandlerFor App)), User, Entity Person, FactionId)
 apiRequireFaction = do
     (authId, user) <- apiRequireAuthPair
     pId <- case userAvatar user of

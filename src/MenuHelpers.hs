@@ -32,7 +32,7 @@ starDate = do
 
 systemNameById :: (BaseBackend backend ~ SqlBackend,
     PersistStoreRead backend, MonadIO m) =>
-    Key StarSystem -> ReaderT backend m StarSystemName
+    StarSystemId -> ReaderT backend m StarSystemName
 systemNameById systemId = do
     system <- get systemId
     let name = case system of
@@ -42,7 +42,7 @@ systemNameById systemId = do
 
 planetNameById :: (BaseBackend backend ~ SqlBackend,
     PersistStoreRead backend, MonadIO m) =>
-    Key Planet -> ReaderT backend m PlanetName
+    PlanetId -> ReaderT backend m PlanetName
 planetNameById planetId = do
     planet <- get planetId
     let name = case planet of
@@ -87,14 +87,14 @@ getScore _ = mempty
 
 usersRoles :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistQueryRead backend) =>
-    Key User -> ReaderT backend m [Role]
+    UserId -> ReaderT backend m [Role]
 usersRoles userId = do
     roles <- selectList [ UserRoleUserId ==. userId ] []
     return $ map (userRoleRole . entityVal) roles
 
 isAdmin :: (BaseBackend backend ~ SqlBackend,
     PersistQueryRead backend, MonadIO m) =>
-    Key User -> ReaderT backend m Bool
+    UserId -> ReaderT backend m Bool
 isAdmin userId = do
     roles <- usersRoles userId
     return $ elem RoleAdministrator roles
@@ -103,7 +103,7 @@ authorizeAdmin :: (BaseBackend (YesodPersistBackend site)
     ~
     SqlBackend,
     YesodPersist site, PersistQueryRead (YesodPersistBackend site)) =>
-    Maybe (Key User) -> HandlerFor site AuthResult
+    Maybe UserId -> HandlerFor site AuthResult
 authorizeAdmin (Just userId) = do
     checkAdmin <- runDB $ isAdmin userId
     let res = if checkAdmin then Authorized

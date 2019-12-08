@@ -14,7 +14,7 @@ delete_ = performMethod "DELETE"
 
 
 -- | Insert faction and person into database and return their primary keys as tuple
-setupPerson :: SIO (YesodExampleData App) (Key Person, Key Faction)
+setupPerson :: SIO (YesodExampleData App) (PersonId, FactionId)
 setupPerson = do
     sId <- runDB $ insert $ StarSystem { starSystemName = "Star system"
                                        , starSystemCoordX = 0.0

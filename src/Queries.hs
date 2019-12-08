@@ -5,7 +5,7 @@
 
 module Queries
     ( PersonRelationData(..), PersonDataLink(..)
-    , planetPopulationReports, shipsAtPlanet, planetConstructionQueue
+    , planetPopulationReports, planetConstructionQueue
     , kragiiTargetPlanets, farmingChangeTargetPlanets, factionBuildings
     , chassisList, planetReports, starSystemReports, personAndDynasty
     , personRelations, personDataLinkPersonL, personDataLinkRelationL
@@ -22,13 +22,12 @@ import Data.List ( nub )
 import Common ( safeHead )
 import CustomTypes ( BuildingType(..) )
 import Space.Data ( PlanetaryStatus(..) )
-import Vehicles.Data ( LandingStatus(..) )
 
 
 -- | Load population reports of a planet and respective races
 planetPopulationReports :: (MonadIO m, BackendCompatible SqlBackend backend,
                                 PersistQueryRead backend, PersistUniqueRead backend) =>
-                               Key Planet -> Key Faction -> ReaderT backend m [(Entity PlanetPopulationReport, Maybe (Entity Race))]
+                               PlanetId -> FactionId -> ReaderT backend m [(Entity PlanetPopulationReport, Maybe (Entity Race))]
 planetPopulationReports pId fId =
     E.select $
         E.from $ \(popReport `E.LeftOuterJoin` pRace) -> do
@@ -42,23 +41,10 @@ planetPopulationReports pId fId =
             return (popReport, pRace)
 
 
--- | Load ships that are on or around a given planet and their faction info
-shipsAtPlanet :: (MonadIO m, BackendCompatible SqlBackend backend,
-                    PersistQueryRead backend, PersistUniqueRead backend) =>
-                   Key Planet -> LandingStatus -> ReaderT backend m [(Entity Ship, Entity Faction)]
-shipsAtPlanet pId landingStatus = do
-    E.select $
-        E.from $ \(ship `E.InnerJoin` faction) -> do
-                E.on (ship E.^. ShipOwnerFactionId E.==. E.just (faction E.^. FactionId))
-                E.where_ (ship E.^. ShipPlanetId E.==. E.val (Just pId)
-                          E.&&. ship E.^. ShipLanded E.==. E.val landingStatus)
-                return (ship, faction)
-
-
 -- | Load planet with construction queue
 planetConstructionQueue :: (MonadIO m, BackendCompatible SqlBackend backend,
                             PersistQueryRead backend, PersistUniqueRead backend) =>
-                           Key Planet -> ReaderT backend m (Maybe (Entity Planet), [Entity BuildingConstruction])
+                           PlanetId -> ReaderT backend m (Maybe (Entity Planet), [Entity BuildingConstruction])
 planetConstructionQueue pId = do
     res <- E.select $
             E.from $ \(planet `E.LeftOuterJoin` bConstruction) -> do
@@ -73,7 +59,7 @@ planetConstructionQueue pId = do
 -- | Load planets that are kragii attack candidates
 kragiiTargetPlanets :: (MonadIO m, BackendCompatible SqlBackend backend
                            , PersistQueryRead backend, PersistUniqueRead backend) =>
-                           Int -> Int -> Key Faction -> ReaderT backend m [Entity Planet]
+                           Int -> Int -> FactionId -> ReaderT backend m [Entity Planet]
 kragiiTargetPlanets pop farms fId = do
     planets <- E.select $
         E.from $ \(planet `E.LeftOuterJoin` population `E.LeftOuterJoin` building `E.LeftOuterJoin` status) -> do
@@ -99,7 +85,7 @@ kragiiTargetPlanets pop farms fId = do
 -- these planets have population of at least 1 and 1 or more farms
 farmingChangeTargetPlanets :: (MonadIO m, BackendCompatible SqlBackend backend
     , PersistQueryRead backend, PersistUniqueRead backend) =>
-    Key Faction -> ReaderT backend m [Entity Planet]
+    FactionId -> ReaderT backend m [Entity Planet]
 farmingChangeTargetPlanets fId = do
     planets <- E.select $
         E.from $ \(planet `E.LeftOuterJoin` population `E.LeftOuterJoin` building `E.LeftOuterJoin` status) -> do
@@ -140,7 +126,7 @@ farmAndPopCount xs =
 factionBuildings :: (MonadIO m,
     BackendCompatible SqlBackend backend, PersistQueryRead backend,
     PersistUniqueRead backend) =>
-    Key Faction -> ReaderT backend m [(Entity Planet, [Entity Building])]
+    FactionId -> ReaderT backend m [(Entity Planet, [Entity Building])]
 factionBuildings fId = do
     planetBuildings <- E.select $
         E.from $ \(planet `E.LeftOuterJoin` building) -> do
@@ -156,7 +142,7 @@ factionBuildings fId = do
 -- faction's current completed research into account
 chassisList :: (MonadIO m, BackendCompatible SqlBackend backend,
     PersistQueryRead backend, PersistUniqueRead backend) =>
-    (Key Faction) -> ReaderT backend m [(Entity Chassis, [Entity RequiredComponent])]
+    FactionId -> ReaderT backend m [(Entity Chassis, [Entity RequiredComponent])]
 chassisList fId = do
     chassisRequirements <- E.select $
         E.from $ \(chassis `E.LeftOuterJoin` requirement) -> do
@@ -187,7 +173,7 @@ groupUnderParent xs =
 -- | Load reports of given planet and join people for ruler information
 planetReports :: (MonadIO m, BackendCompatible SqlBackend backend,
     PersistQueryRead backend, PersistUniqueRead backend) =>
-    Key Faction -> Key Planet
+    FactionId -> PlanetId
     -> ReaderT backend m [(PlanetReport, Maybe (Person))]
 planetReports fId planetId = do
     pairs <- E.select $
@@ -206,7 +192,7 @@ planetReports fId planetId = do
 starSystemReports :: (MonadIO m,
     BackendCompatible SqlBackend backend, PersistQueryRead backend,
     PersistUniqueRead backend) =>
-    Key Faction -> Key StarSystem
+    FactionId -> StarSystemId
    -> ReaderT backend m [(StarSystemReport, Maybe Person)]
 starSystemReports fId sId = do
     pairs <- E.select $
@@ -223,7 +209,7 @@ starSystemReports fId sId = do
 
 personAndDynasty :: (MonadIO m, BackendCompatible SqlBackend backend,
     PersistQueryRead backend, PersistUniqueRead backend) =>
-    Key Person -> ReaderT backend m (Maybe (Entity Person, Maybe (Entity Dynasty)))
+    PersonId -> ReaderT backend m (Maybe (Entity Person, Maybe (Entity Dynasty)))
 personAndDynasty pId = do
     pairs <- E.select $
         E.from $ \(person `E.LeftOuterJoin` dynasty) -> do
@@ -242,8 +228,9 @@ personAndDynasty pId = do
 -- intelligence targeting originator as Entity HumanIntelligence
 personRelations :: (MonadIO m, BackendCompatible SqlBackend backend,
     PersistQueryRead backend, PersistUniqueRead backend) =>
-    Key Person -> Key Person -> ReaderT backend m (Maybe PersonRelationData)
-personRelations pId ownerId = do
+    Entity Person -> PersonId -> ReaderT backend m PersonRelationData
+personRelations target ownerId = do
+    let pId = entityKey target
     info <- E.select $
         E.from $ \(person1
                     `E.LeftOuterJoin` relation
@@ -258,7 +245,7 @@ personRelations pId ownerId = do
                       E.&&. (intel1 E.?. HumanIntelligenceOwnerId E.==. (E.just (E.val ownerId))
                              E.||. intel2 E.?. HumanIntelligenceOwnerId E.==. (E.just (E.val ownerId))))
             return (person1, intel1, relation, person2, intel2)
-    return $ mapPersonInfo info
+    return $ mapPersonInfo target info
 
 
 data PersonRelationData = PersonRelationData
@@ -276,16 +263,19 @@ data PersonDataLink = PersonDataLink
 
 
 -- | post process data fetched by personRelations query
-mapPersonInfo :: [(Entity Person, Maybe (Entity HumanIntelligence)
-                 ,Maybe (Entity Relation), Maybe (Entity Person), Maybe (Entity HumanIntelligence))]
-                 -> Maybe PersonRelationData
-mapPersonInfo [] =
-    Nothing
+mapPersonInfo :: Entity Person ->
+    [(Entity Person, Maybe (Entity HumanIntelligence)
+    ,Maybe (Entity Relation), Maybe (Entity Person), Maybe (Entity HumanIntelligence))]
+    -> PersonRelationData
+mapPersonInfo target [] =
+    PersonRelationData { personRelationDataPerson = target
+                       , personRelationDataLinks = []
+                       }
 
-mapPersonInfo info =
-    Just $ PersonRelationData { personRelationDataPerson = (target . P.head) info
-                              , personRelationDataLinks = mapMaybe linker info
-                              }
+mapPersonInfo _ info =
+    PersonRelationData { personRelationDataPerson = (target . P.head) info
+                       , personRelationDataLinks = mapMaybe linker info
+                       }
     where
         target = \(x, _, _, _, _) -> x
 

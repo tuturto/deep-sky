@@ -9,6 +9,7 @@ import Data.Common
         , PlanetId(..)
         , Route(..)
         , StarSystemId(..)
+        , UnitId(..)
         )
 import Url exposing (Url)
 import Url.Parser
@@ -20,7 +21,6 @@ import Url.Parser
         , oneOf
         , parse
         , s
-        , string
         , top
         )
 
@@ -43,6 +43,12 @@ personId =
         stringToPersonId
 
 
+unitId : Parser (UnitId -> a) a
+unitId =
+    custom "UNIT_ID" <|
+        stringToUnitId
+
+
 stringToStarSystemId : String -> Maybe StarSystemId
 stringToStarSystemId s =
     Maybe.map StarSystemId (String.toInt s)
@@ -58,6 +64,11 @@ stringToPersonId s =
     Maybe.map PersonId (String.toInt s)
 
 
+stringToUnitId : String -> Maybe UnitId
+stringToUnitId s =
+    Maybe.map UnitId (String.toInt s)
+
+
 routes : Parser (Route -> a) a
 routes =
     oneOf
@@ -66,13 +77,14 @@ routes =
         , map ResearchR (s "research")
         , map StarSystemsR (s "starsystem")
         , map StarSystemR (s "starsystem" </> starSystemId)
-        , map PlanetR (s "starsystem" </> starSystemId </> planetId)
+        , map PlanetR (s "planet" </> planetId)
         , map BasesR (s "base")
         , map FleetR (s "fleet")
         , map DesignerR (s "designer")
         , map ConstructionR (s "construction")
         , map MessagesR (s "message")
         , map PersonR (s "person" </> personId)
+        , map UnitR (s "unit" </> unitId)
         , map AdminR (s "admin")
         , map AdminListPeopleR (s "admin" </> s "people")
         , map AdminPersonR (s "admin" </> s "people" </> personId)

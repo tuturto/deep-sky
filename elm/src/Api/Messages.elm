@@ -19,11 +19,9 @@ import Api.Common
         , post
         , put
         , resourceTypeDecoder
-        , resourceTypeEncoder
         , starDateDecoder
         , starDateEncoder
         , starNameDecoder
-        , starNameEncoder
         , starSystemIdDecoder
         , starSystemIdEncoder
         , starSystemNameDecoder
@@ -46,10 +44,9 @@ import Api.User
     exposing
         ( factionIdDecoder
         , factionIdEncoder
-        , userNameDecoder
         )
 import Data.Accessors exposing (iconsA)
-import Data.Common exposing (MessageId(..), StarDate(..), triple)
+import Data.Common exposing (MessageId(..), StarDate(..))
 import Data.Messages
     exposing
         ( BuildingFinishedNews
@@ -66,7 +63,6 @@ import Data.Messages
         , ResearchCompletedNews
         , ScurryingSoundsResolution
         , ScurryingSoundsSpecialEvent
-        , ShipFinishedNews
         , SpecialEventChoice(..)
         , SpecialEventOption
         , StarFoundNews
@@ -74,15 +70,14 @@ import Data.Messages
         , UserWrittenNews
         )
 import Data.Model exposing (ApiMsg(..), Model, Msg(..))
-import Data.People exposing (FirstName(..), PersonName(..))
-import Data.User exposing (UserName(..), unUserName)
+import Data.PersonNames exposing (FirstName(..), PersonName(..))
+import Data.User exposing (UserName(..))
 import Http
 import Json.Decode as Decode
     exposing
         ( andThen
         , fail
         , field
-        , float
         , index
         , int
         , list
@@ -94,7 +89,6 @@ import Json.Decode as Decode
 import Json.Decode.Extra
     exposing
         ( andMap
-        , optionalField
         , when
         , withDefault
         )

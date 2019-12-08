@@ -45,29 +45,32 @@ import Data.Common
 import Data.Model exposing (Model, Msg(..))
 import Data.People
     exposing
-        ( Cognomen(..)
-        , FamilyName(..)
-        , FirstName(..)
-        , Gender(..)
-        , PersonName(..)
-        , RegnalNumber(..)
+        ( Gender(..)
         , Sex(..)
         , StatValue(..)
         , age
+        , unAge
+        , unStatValue
+        )
+import Data.PersonNames
+    exposing
+        ( Cognomen(..)
+        , FamilyName(..)
+        , FirstName(..)
+        , PersonName(..)
+        , RegnalNumber(..)
         , getCognomen
         , getFamilyName
         , getFirstName
         , getRegnalNumber
-        , unAge
         , unCognomen
         , unFamilyName
         , unFirstName
         , unRegnalNumber
-        , unStatValue
         )
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Html exposing (Html, div, input, option, select, text)
+import Html.Attributes exposing (class, disabled, maxlength, step, type_, value)
+import Html.Events exposing (onClick, onInput)
 import ViewModels.Admin.Main exposing (AdminRMsg(..))
 import ViewModels.Admin.People.Edit
     exposing
@@ -84,9 +87,6 @@ import Views.Helpers exposing (starDateToString, stringToStarDate)
 page : Model -> Html Msg
 page model =
     let
-        edited =
-            model.adminR.adminEditPersonR.person
-
         fields =
             model.adminR.adminEditPersonR.fields
 
@@ -516,7 +516,7 @@ personNameToNameTypeString name =
 {-| Initialize data retrieval from server
 -}
 init : PersonId -> Model -> Cmd Msg
-init pId model =
+init pId _ =
     Cmd.batch
         [ getSimulationStatus (AdminMessage << SimulationStatusReceived)
         , getPerson (AdminEditPersonMessage << PersonReceived) pId

@@ -42,10 +42,10 @@ class Grouped a where
 
 
 data CollatedStarSystemReport = CollatedStarSystemReport
-    { cssrId :: Key StarSystem
+    { cssrId :: StarSystemId
     , cssrName :: Maybe StarSystemName
     , cssrLocation :: Coordinates
-    , cssrRulerId :: Maybe (Key Person)
+    , cssrRulerId :: Maybe PersonId
     , cssrRulerName :: Maybe PersonName
     , cssrRulerTitle :: Maybe ShortTitle
     , cssrDate :: StarDate
@@ -108,8 +108,8 @@ instance Grouped StarSystemReport where
 
 
 data CollatedStarReport = CollatedStarReport
-    { csrStarId          :: Key Star
-    , csrSystemId        :: Key StarSystem
+    { csrStarId          :: StarId
+    , csrSystemId        :: StarSystemId
     , csrName            :: Maybe StarName
     , csrSpectralType    :: Maybe SpectralType
     , csrLuminosityClass :: Maybe LuminosityClass
@@ -161,14 +161,14 @@ instance ToJSON CollatedStarReport where
 
 
 data CollatedPlanetReport = CollatedPlanetReport
-    { cprId :: Key Planet
-    , cprSystemId :: Key StarSystem
-    , cprOwnerId :: Maybe (Key Faction)
+    { cprId :: PlanetId
+    , cprSystemId :: StarSystemId
+    , cprOwnerId :: Maybe FactionId
     , cprName :: Maybe PlanetName
     , cprPosition :: Maybe Int
     , cprGravity :: Maybe Double
     , cprDate :: StarDate
-    , cprRulerId :: Maybe (Key Person)
+    , cprRulerId :: Maybe PersonId
     , cprRulerName :: Maybe PersonName
     , cprRulerTitle :: Maybe ShortTitle
     } deriving Show
@@ -243,8 +243,8 @@ instance Grouped PlanetReport where
 
 
 data CollatedPopulationReport = CollatedPopulationReport
-    { cpopPlanetId   :: Key Planet
-    , cpopRaceId     :: Maybe (Key Race)
+    { cpopPlanetId   :: PlanetId
+    , cpopRaceId     :: Maybe RaceId
     , cpopRace       :: Maybe Text
     , cpopPopulation :: Maybe Int
     , cpopDate       :: StarDate
@@ -292,7 +292,7 @@ instance Grouped (PlanetPopulationReport, Maybe Race) where
 
 
 data CollatedPlanetStatusReport = CollatedPlanetStatusReport
-    { collatedPlanetStatusReportPlanetId :: !(Key Planet)
+    { collatedPlanetStatusReportPlanetId :: !PlanetId
     , collatedPlanetStatusReportStatus :: ![PlanetaryStatusInfo]
     , collatedPlanetStatusReportDate :: !StarDate
     }
@@ -343,9 +343,9 @@ data PlanetaryStatusInfo = PlanetaryStatusInfo
 
 
 data CollatedStarLaneReport = CollatedStarLaneReport
-    { cslStarLaneId      :: Key StarLane
-    , cslSystemId1       :: Key StarSystem
-    , cslSystemId2       :: Key StarSystem
+    { cslStarLaneId      :: StarLaneId
+    , cslSystemId1       :: StarSystemId
+    , cslSystemId2       :: StarSystemId
     , cslStarSystemName1 :: Maybe StarSystemName
     , cslStarSystemName2 :: Maybe StarSystemName
     , cslDate            :: StarDate
@@ -398,8 +398,8 @@ data CollatedBaseReport = CollatedBaseReport {
 
 
 data CollatedBuildingReport = CollatedBuildingReport
-    { cbrBuildingId   :: Key Building
-    , cbrPlanetId     :: Key Planet
+    { cbrBuildingId   :: BuildingId
+    , cbrPlanetId     :: PlanetId
     , cbrType         :: Maybe BuildingType
     , cbrLevel        :: Maybe Int
     , cbrDamage       :: Maybe Double
@@ -488,7 +488,7 @@ collateReports s@(x:_) = collateReport itemsOfKind : collateReports restOfItems
 
 createStarReports :: (BaseBackend backend ~ SqlBackend,
     PersistQueryRead backend, MonadIO m) =>
-    Key StarSystem -> Key Faction -> ReaderT backend m [CollatedStarReport]
+    StarSystemId -> FactionId -> ReaderT backend m [CollatedStarReport]
 createStarReports systemId factionId = do
     loadedStarReports <- selectList [ StarReportStarSystemId ==. systemId
                                     , StarReportFactionId ==. factionId ] [ Asc StarReportId
@@ -498,7 +498,7 @@ createStarReports systemId factionId = do
 
 createSystemReport :: (BaseBackend backend ~ SqlBackend, MonadIO m,
     PersistQueryRead backend) =>
-    Key StarSystem -> Key Faction -> ReaderT backend m CollatedStarSystemReport
+    StarSystemId -> FactionId -> ReaderT backend m CollatedStarSystemReport
 createSystemReport systemId factionId = do
     systemReports <- selectList [ StarSystemReportStarSystemId ==. systemId
                                 , StarSystemReportFactionId ==. factionId ] [ Asc StarSystemReportDate ]
@@ -507,7 +507,7 @@ createSystemReport systemId factionId = do
 
 createPlanetReports :: (BaseBackend backend ~ SqlBackend,
     MonadIO m, PersistQueryRead backend) =>
-    Key StarSystem -> Key Faction -> ReaderT backend m [CollatedPlanetReport]
+    StarSystemId -> FactionId -> ReaderT backend m [CollatedPlanetReport]
 createPlanetReports systemId factionId = do
     planets <- selectList [ PlanetStarSystemId ==. systemId ] []
     loadedPlanetReports <-  selectList [ PlanetReportPlanetId <-. fmap entityKey planets
@@ -518,7 +518,7 @@ createPlanetReports systemId factionId = do
 
 createPlanetStatusReport :: ( BaseBackend backend ~ SqlBackend
                             , MonadIO m, PersistQueryRead backend) =>
-                            (Route App -> Text) -> Key Planet -> Key Faction -> ReaderT backend m [CollatedPlanetStatusReport]
+                            (Route App -> Text) -> PlanetId -> FactionId -> ReaderT backend m [CollatedPlanetStatusReport]
 createPlanetStatusReport render planetId factionId = do
     statuses <- selectList [ PlanetStatusReportPlanetId ==. planetId
                            , PlanetStatusReportFactionId ==. factionId ]
@@ -529,7 +529,7 @@ createPlanetStatusReport render planetId factionId = do
 
 createStarLaneReports :: (BaseBackend backend ~ SqlBackend,
     MonadIO m, PersistQueryRead backend) =>
-    Key StarSystem -> Key Faction -> ReaderT backend m [CollatedStarLaneReport]
+    StarSystemId -> FactionId -> ReaderT backend m [CollatedStarLaneReport]
 createStarLaneReports systemId factionId = do
     loadedLaneReports <- selectList ([ StarLaneReportStarSystem1 ==. systemId
                                      , StarLaneReportFactionId ==. factionId ]
@@ -538,7 +538,7 @@ createStarLaneReports systemId factionId = do
     return $ rearrangeStarLanes systemId $ collateReports $ fmap entityVal loadedLaneReports
 
 
-rearrangeStarLanes :: Key StarSystem -> [CollatedStarLaneReport] -> [CollatedStarLaneReport]
+rearrangeStarLanes :: StarSystemId -> [CollatedStarLaneReport] -> [CollatedStarLaneReport]
 rearrangeStarLanes systemId = fmap arrangeStarLane
     where arrangeStarLane starLane = if systemId == cslSystemId1 starLane
                                         then starLane

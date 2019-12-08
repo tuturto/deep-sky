@@ -39,7 +39,8 @@ import Data.Common
         , StarSystemName
         , UserId
         )
-import Data.People exposing (PersonName, PetType)
+import Data.People exposing (PetType)
+import Data.PersonNames exposing (PersonName)
 import Data.User exposing (UserName)
 import Data.Vehicles exposing (DesignName)
 

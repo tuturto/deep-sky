@@ -12,7 +12,7 @@
 /profile                                            ProfileR                        GET
 /starsystem                                         StarSystemsR                    GET
 /starsystem/#StarSystemId                           StarSystemR                     GET
-/starsystem/#StarSystemId/#PlanetId                 PlanetR                         GET
+/planet/#PlanetId                                   PlanetR                         GET
 /research                                           ResearchR                       GET
 /fleet                                              FleetR                          GET
 /construction                                       ConstructionR                   GET
@@ -23,17 +23,25 @@
 /message                                            MessageR                        GET
 /person/#PersonId                                   PersonR                         GET
 /person                                             PeopleR                         GET
+/unit/#UnitId                                       UnitR                           GET
 
 /api/stardate                                       ApiStarDateR                    GET
 /api/resources                                      ApiResourcesR                   GET
 /api/starsystem                                     ApiStarSystemsR                 GET
 /api/starsystem/#StarSystemId                       ApiStarSystemR                  GET
 /api/star                                           ApiStarsR                       GET
+
 /api/components                                     ApiComponentsR                  GET
 /api/chassis                                        ApiChassisR                     GET
 /api/design                                         ApiDesignR                      GET POST
 /api/design/#DesignId                               ApiDesignIdR                    PUT DELETE
 /api/designestimate                                 ApiDoDesignEstimateR            POST
+
+/api/unit                                           ApiUnitsR                       GET
+/api/unit/#UnitId                                   ApiUnitR                        GET POST PUT
+-- /api/Order                                          ApiOrderR                       GET
+-- /api/Order/#OrderId                                 ApiOrdersR                      GET POST PUT DELETE
+
 /api/construction/building                          ApiBuildingConstructionR        POST
 /api/construction/building/#BuildingConstructionId  ApiBuildingConstructionIdR      GET PUT DELETE
 -- /api/construction/ship                           ApiShipConstructionR            POST

@@ -10,5 +10,5 @@ module Events.Creation
 import Import
 
 data EventCreation
-    = NamingPet (Key Person) (Key Pet)
+    = NamingPet PersonId PetId
     deriving (Show, Read, Eq)

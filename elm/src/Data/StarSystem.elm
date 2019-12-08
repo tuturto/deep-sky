@@ -31,7 +31,7 @@ import Data.Common
         , StarSystemId
         , StarSystemName
         )
-import Data.People exposing (PersonName, ShortTitle)
+import Data.PersonNames exposing (PersonName, ShortTitle)
 import Maybe exposing (andThen, withDefault)
 
 

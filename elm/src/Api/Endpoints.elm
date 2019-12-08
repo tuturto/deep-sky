@@ -7,16 +7,18 @@ import Data.Common
         , PersonId
         , PlanetId
         , StarSystemId
+        , UnitId
         , constructionIdToString
         , designIdToString
         , messageIdToString
         , personIdToString
         , planetIdToString
         , starSystemIdToString
+        , unitIdToString
         )
 import Data.Construction exposing (Construction(..))
 import Maybe
-import Maybe.Extra exposing (or, values)
+import Maybe.Extra exposing (values)
 import Url.Builder exposing (absolute, int)
 
 
@@ -48,6 +50,7 @@ type Endpoint
     | ApiDesignEstimate
     | ApiSinglePerson PersonId
     | ApiDemesne PersonId
+    | ApiSingleUnit UnitId
     | ApiAdminSimulationStatus
     | ApiAdminPeople (Maybe Int) (Maybe Int)
     | ApiAdminPerson PersonId
@@ -144,6 +147,9 @@ endpointToString endpoint =
 
         ApiDemesne personId ->
             absolute [ "api", "person", personIdToString personId, "demesne" ] []
+
+        ApiSingleUnit unitId ->
+            absolute [ "api", "unit", unitIdToString unitId ] []
 
         ApiAdminSimulationStatus ->
             absolute [ "api", "admin", "simulation" ] []

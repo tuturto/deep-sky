@@ -25,9 +25,9 @@ import MenuHelpers ( starDate )
 import News.Import ( designCreatedNews )
 import Queries ( chassisList )
 import Research.Data ( Technology )
-import Vehicles.Components ( ComponentLevel(..), ComponentId(..), Component
-                           , components, requirements )
-import Vehicles.Stats ( estimateDesign )
+import Units.Components ( ComponentLevel(..), ComponentId(..), Component
+                        , components, requirements )
+import Units.Stats ( estimateDesign )
 
 
 getDesignerR :: Handler Html
@@ -98,7 +98,7 @@ postApiDesignR = do
 
 
 -- | Update existing design
-putApiDesignIdR :: Key Design -> Handler Value
+putApiDesignIdR :: DesignId -> Handler Value
 putApiDesignIdR dId = do
     (uId, _, _, fId) <- apiRequireFaction
     _ <- apiRequireOpenSimulation uId
@@ -110,7 +110,7 @@ putApiDesignIdR dId = do
 
 
 -- | Permanently delete design
-deleteApiDesignIdR :: Key Design -> Handler Value
+deleteApiDesignIdR :: DesignId -> Handler Value
 deleteApiDesignIdR dId = do
     (uId, _, _, fId) <- apiRequireFaction
     _ <- apiRequireOpenSimulation uId
@@ -133,7 +133,7 @@ validateSaveDesign _ = True
 -- | Save given design into database and create a news article about it
 saveDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     BaseBackend backend ~ SqlBackend) =>
-    StarDate -> DesignDto -> Key Faction -> ReaderT backend m DesignDto
+    StarDate -> DesignDto -> FactionId -> ReaderT backend m DesignDto
 saveDesign date design fId = do
     newId <- insert $ Design (designDtoName design) fId (designDtoChassisId design)
     _ <- mapM (insert . componentDtoToPlannedComponent newId) (designDtoComponents design)
@@ -147,7 +147,7 @@ saveDesign date design fId = do
 -- | Update existing design in database
 updateDesign :: (MonadIO m, PersistStoreWrite backend, PersistQueryRead backend,
     PersistQueryWrite backend, BaseBackend backend ~ SqlBackend) =>
-    Key Design -> DesignDto -> Key Faction -> ReaderT backend m DesignDto
+    DesignId -> DesignDto -> FactionId -> ReaderT backend m DesignDto
 updateDesign dId design fId = do
     _ <- replace dId $ Design (designDtoName design) fId (designDtoChassisId design)
     deleteWhere [ PlannedComponentDesignId ==. dId ]
@@ -161,7 +161,7 @@ updateDesign dId design fId = do
 -- | Delete design and related components from database
 deleteDesign :: (MonadIO m, PersistQueryWrite backend,
                  BaseBackend backend ~ SqlBackend) =>
-                Key Design -> ReaderT backend m ()
+                DesignId -> ReaderT backend m ()
 deleteDesign dId = do
     deleteWhere [ PlannedComponentDesignId ==. dId ]
     delete dId

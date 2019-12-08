@@ -2,30 +2,25 @@ module Views.Layout exposing (view)
 
 import Accessors exposing (get)
 import Browser
-import Browser.Navigation as Nav
-import Data.Accessors exposing (planetsA, starSystemsA)
 import Data.Common
     exposing
         ( ErrorMessage(..)
         , Route(..)
-        , routeToString
-        , unPlanetId
         , unPlanetName
         , unStarSystemId
         , unStarSystemName
         )
 import Data.Model exposing (Model, Msg(..))
-import Data.People exposing (displayName)
+import Data.PersonNames exposing (displayName)
 import Data.User exposing (Role(..))
+import Data.Vehicles exposing (Unit(..), unShipName, unVehicleName)
 import Dict
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html exposing (Attribute, Html, a, div, i, li, nav, text, ul)
+import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
-import List exposing (member)
 import Maybe exposing (andThen, withDefault)
-import Navigation exposing (parseLocation, routes)
+import Navigation exposing (parseLocation)
 import Url exposing (Url)
-import Url.Parser exposing (parse)
 import Views.Admin.Main
 import Views.Admin.People.Add
 import Views.Admin.People.Edit
@@ -50,17 +45,12 @@ import Views.Profile
 import Views.Research
 import Views.StarSystem
 import Views.StarSystems
+import Views.Unit
 
 
 menuBar : Model -> List Role -> Html Msg
-menuBar model roles =
+menuBar model _ =
     let
-        isAdmin =
-            member AdminRole roles
-
-        isplayer =
-            member PlayerRole roles
-
         currentLocation =
             parseLocation model.url
 
@@ -148,7 +138,7 @@ similarRoutes current checked =
                 StarSystemR _ ->
                     True
 
-                PlanetR _ _ ->
+                PlanetR _ ->
                     True
 
                 _ ->
@@ -166,6 +156,17 @@ similarRoutes current checked =
                     True
 
                 AdminNewPersonR ->
+                    True
+
+                _ ->
+                    False
+
+        FleetR ->
+            case current of
+                FleetR ->
+                    True
+
+                UnitR _ ->
                     True
 
                 _ ->
@@ -201,7 +202,7 @@ segment model route =
         AdminListPeopleR ->
             ( "People", Just AdminR )
 
-        AdminPersonR pId ->
+        AdminPersonR _ ->
             let
                 name =
                     Maybe.map (\x -> displayName x.name) model.adminR.adminEditPersonR.person
@@ -249,20 +250,15 @@ segment model route =
         StarSystemsR ->
             ( "Star systems", Just HomeR )
 
-        PlanetR systemId planetId ->
-            let
-                planetName =
-                    model.planets
-                        |> andThen (Dict.get (unStarSystemId systemId))
-                        |> withDefault []
-                        |> List.filter (\planet -> unPlanetId planet.id == unPlanetId planetId)
-                        |> List.head
-                        |> andThen (\x -> Just (unPlanetName x.name))
-                        |> withDefault "Unknown planet"
-            in
-            ( planetName, Just (StarSystemR systemId) )
+        PlanetR _ ->
+            case model.planetR.planet of
+                Nothing ->
+                    ( "-", Just HomeR )
 
-        PersonR personId ->
+                Just planet ->
+                    ( unPlanetName planet.name, Just (StarSystemR planet.systemId) )
+
+        PersonR _ ->
             let
                 personName =
                     case model.personR.person of
@@ -273,6 +269,21 @@ segment model route =
                             displayName person.name
             in
             ( personName, Just HomeR )
+
+        UnitR _ ->
+            let
+                unitName =
+                    case model.unitR.unit of
+                        Just (Ship details) ->
+                            unShipName details.name
+
+                        Just (Vehicle details) ->
+                            unVehicleName details.name
+
+                        Nothing ->
+                            "-"
+            in
+            ( unitName, Just FleetR )
 
         LogoutR ->
             ( "Logout", Just HomeR )
@@ -285,20 +296,18 @@ breadcrumb model topLevel route =
             segment model route
 
         textEntry =
-            case topLevel of
-                True ->
-                    text <| Tuple.first segmentPair
+            if topLevel then
+                text <| Tuple.first segmentPair
 
-                False ->
-                    a [ href route ] [ text <| Tuple.first segmentPair ]
+            else
+                a [ href route ] [ text <| Tuple.first segmentPair ]
 
         entryClass =
-            case topLevel of
-                True ->
-                    [ class "active" ]
+            if topLevel then
+                [ class "active" ]
 
-                False ->
-                    []
+            else
+                []
     in
     case Tuple.second segmentPair of
         Nothing ->
@@ -331,7 +340,7 @@ currentPage url =
         AdminListPeopleR ->
             Views.Admin.People.List.page
 
-        AdminPersonR pId ->
+        AdminPersonR _ ->
             Views.Admin.People.Edit.page
 
         AdminNewPersonR ->
@@ -367,11 +376,14 @@ currentPage url =
         StarSystemsR ->
             Views.StarSystems.page
 
-        PlanetR systemId planetId ->
-            Views.Planet.page systemId planetId
+        PlanetR planetId ->
+            Views.Planet.page planetId
 
-        PersonR personId ->
+        PersonR _ ->
             Views.Person.page
+
+        UnitR _ ->
+            Views.Unit.page
 
         LogoutR ->
             Views.Home.page

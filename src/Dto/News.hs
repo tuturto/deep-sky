@@ -25,11 +25,12 @@ import Research.Data ( Technology )
 import People.Data ( PersonName(..), PetType(..), PetName(..) )
 import Resources ( ResourceType(..) )
 import Space.Data ( PlanetName(..), StarName(..), StarSystemName(..) )
+import Units.Data ( DesignName(..) )
 
 
 -- | Data transfer object for news that mainly just wraps id and contents together
 data NewsDto = NewsDto
-    { newsDtoId :: !(Key News)
+    { newsDtoId :: !NewsId
     , newsContents :: !NewsArticleDto
     , newsIcon :: !Text
     } deriving (Show, Read, Eq)
@@ -64,13 +65,13 @@ data SpecialNewsDto =
 
 -- | Data transfer object for kragii attack special event
 data KragiiWormsEventDto = KragiiWormsEventDto
-    { kragiiWormsDtoPlanetId :: !(Key Planet)
+    { kragiiWormsDtoPlanetId :: !PlanetId
     , kragiiWormsDtoPlanetName :: !PlanetName
-    , kragiiWormsDtoSystemId :: !(Key StarSystem)
+    , kragiiWormsDtoSystemId :: !StarSystemId
     , kragiiWormsDtoSystemName :: !StarSystemName
     , kragiiWormsDtoOptions :: ![UserOptionDto KragiiWormsChoiceDto]
     , kragiiWormsDtoChoice :: !(Maybe KragiiWormsChoiceDto)
-    , kragiiWormsDtoFactionId :: !(Key Faction)
+    , kragiiWormsDtoFactionId :: !FactionId
     , kragiiWormsDtoDate :: !StarDate
     , kragiiWormsDtoResolveType :: !(Maybe EventResolveType)
     } deriving (Show, Read, Eq)
@@ -79,7 +80,7 @@ data KragiiWormsEventDto = KragiiWormsEventDto
 -- | Data transfer object for scurrying sounds special event
 data ScurryingSoundsEventDto = ScurryingSoundsEventDto
     { scurryingSoundsEventDtoDate :: !StarDate
-    , scurryingSoundsEventDtoPersonId :: !(Key Person)
+    , scurryingSoundsEventDtoPersonId :: !PersonId
     , scurryingSoundsEventDtoOptions :: ![UserOptionDto ScurryingSoundsChoiceDto]
     , scurryingSoundsEventDtoChoice :: !(Maybe ScurryingSoundsChoiceDto)
     , scurryingSoundsEventDtoResolveType :: !(Maybe EventResolveType)
@@ -102,8 +103,8 @@ data ScurryingSoundsChoiceDto =
 
 
 data NamingPetEventDto = NamingPetEventDto
-    { namingPetEventDtoPersonId :: !(Key Person)
-    , namingPetEventDtoPetId :: !(Key Pet)
+    { namingPetEventDtoPersonId :: !PersonId
+    , namingPetEventDtoPetId :: !PetId
     , namingPetEventDtoPetType :: !PetType
     , namingPetEventDtoDate :: !StarDate
     , namingPetEventDtoOptions :: ![UserOptionDto NamingPetChoiceDto]
@@ -128,19 +129,19 @@ data UserOptionDto a = UserOptionDto
 
 -- | data transfer object for news that tell resolution of kragii attack
 data KragiiNewsDto = KragiiNewsDto
-    { kragiiNewsDtoPlanetId :: !(Key Planet)
+    { kragiiNewsDtoPlanetId :: !PlanetId
     , kragiiNewsDtoPlanetName :: !PlanetName
-    , kragiiNewsDtoSystemId :: !(Key StarSystem)
+    , kragiiNewsDtoSystemId :: !StarSystemId
     , kragiiNewsDtoSystemName :: !StarSystemName
     , kragiiNewsDtoResolution :: !Text
-    , kragiiNewsDtoFactionId :: !(Key Faction)
+    , kragiiNewsDtoFactionId :: !FactionId
     , kragiiNewsDtoDate :: !StarDate
     } deriving (Show, Read, Eq)
 
 
 data ScurryingSoundsNewsDto = ScurryingSoundsNewsDto
     { scurryingSoundsNewsDtoExplanation :: !Text
-    , scurryingSoundsNewsDtoPetId :: !(Maybe (Key Pet))
+    , scurryingSoundsNewsDtoPetId :: !(Maybe PetId)
     , scurryingSoundsNewsDtoPetType :: !(Maybe PetType)
     , scurryingSoundsNewsDtoDate :: !StarDate
     } deriving (Show, Read, Eq)
@@ -148,7 +149,7 @@ data ScurryingSoundsNewsDto = ScurryingSoundsNewsDto
 
 data NamingPetNewsDto = NamingPetNewsDto
     { namingPetNewsDtoExplanation :: !Text
-    , namingPetNewsDtoPetId :: !(Key Pet)
+    , namingPetNewsDtoPetId :: !PetId
     , namingPetNewsDtoPetType :: !PetType
     , namingPetNewsDtoDate :: !StarDate
     } deriving (Show, Read, Eq)
@@ -158,7 +159,7 @@ data NamingPetNewsDto = NamingPetNewsDto
 data StarFoundNewsDto = StarFoundNewsDto
     { starFoundNewsDtoStarName :: !StarName
     , starFoundNewsDtoSystemName :: !StarSystemName
-    , starFoundNewsDtoSystemId :: !(Key StarSystem)
+    , starFoundNewsDtoSystemId :: !StarSystemId
     , starFoundNewsDtoDate :: !StarDate
     } deriving (Show, Read, Eq)
 
@@ -167,8 +168,8 @@ data StarFoundNewsDto = StarFoundNewsDto
 data PlanetFoundNewsDto = PlanetFoundNewsDto
     { planetFoundNewsDtoPlanetName :: !PlanetName
     , planetFoundNewsDtoSystemName :: !StarSystemName
-    , planetFoundNewsDtoSystemId :: !(Key StarSystem)
-    , planetFoundNewsDtoPlanetId :: !(Key Planet)
+    , planetFoundNewsDtoSystemId :: !StarSystemId
+    , planetFoundNewsDtoPlanetId :: !PlanetId
     , planetFoundNewsDtoDate :: !StarDate
     } deriving (Show, Read, Eq)
 
@@ -192,8 +193,8 @@ data UserNewsIconDto =
 
 -- | data transfer object for design created news
 data DesignCreatedNewsDto = DesignCreatedNewsDto
-    { designCreatedNewsDtoDesignId :: !(Key Design)
-    , designCreatedNewsDtoName :: !Text
+    { designCreatedNewsDtoDesignId :: !DesignId
+    , designCreatedNewsDtoName :: !DesignName
     , designCreatedNewsDtoDate :: !StarDate
     } deriving (Show, Read, Eq)
 
@@ -201,12 +202,12 @@ data DesignCreatedNewsDto = DesignCreatedNewsDto
 -- | data transfer object for construction finished news
 data ConstructionFinishedNewsDto = ConstructionFinishedNewsDto
     { constructionFinishedNewsDtoPlanetName :: !(Maybe PlanetName)
-    , constructionFinishedNewsDtoPlanetId :: !(Maybe (Key Planet))
+    , constructionFinishedNewsDtoPlanetId :: !(Maybe PlanetId)
     , constructionFinishedNewsDtoSystemName :: !StarSystemName
-    , constructionFinishedNewsDtoSystemId :: !(Key StarSystem)
+    , constructionFinishedNewsDtoSystemId :: !StarSystemId
     , constructionFinishedNewsDtoConstructionName :: !Text
-    , constructionFinishedNewsDtoBuildingId :: !(Maybe (Key Building))
-    , constructionFinishedNewsDtoShipId :: !(Maybe (Key Ship))
+    , constructionFinishedNewsDtoBuildingId :: !(Maybe BuildingId)
+    , constructionFinishedNewsDtoShipId :: !(Maybe ShipId)
     , constructionFinishedNewsDtoDate :: !StarDate
     } deriving (Show, Read, Eq)
 
@@ -441,9 +442,9 @@ instance FromJSON ConstructionFinishedNewsDto where
 
 
 data ProductionChangedNewsDto = ProductionChangedNewsDto
-    { productionChangedNewsDtoPlanetId :: !(Key Planet)
+    { productionChangedNewsDtoPlanetId :: !PlanetId
     , productionChangedNewsDtoPlanetName :: !PlanetName
-    , productionChangedNewsDtoSystemId :: !(Key StarSystem)
+    , productionChangedNewsDtoSystemId :: !StarSystemId
     , productionChangedNewsDtoSystemName :: !StarSystemName
     , productionChangedNewsDtoType :: !ResourceType
     , productionChangedNewsDtoDate :: !StarDate

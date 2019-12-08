@@ -15,19 +15,19 @@ import Data.Aeson (object, (.=))
 import Buildings (building, BLevel(..), buildingInfoCost)
 import CustomTypes (buildingTypeName, BuildingType(..))
 import Resources (RawResources(..), RawResource(..), ConstructionLeft)
-import Vehicles.Data ( ShipType(..) )
+import Units.Data ( ShipType(..) )
 
 data ConstructionDto = BuildingConstructionDto
-    { bcdtoId :: Key BuildingConstruction
+    { bcdtoId :: BuildingConstructionId
     , bcdtoName :: Text
     , bcdtoIndex :: Int
     , bcdtoLevel :: Int
     , bcdtoType :: BuildingType
-    , bcdtoPlanet :: Key Planet
+    , bcdtoPlanet :: PlanetId
     , bcdtoCostLeft :: RawResources ConstructionLeft
     }
   | ShipConstructionDto
-    { scdtoId :: Key ShipConstruction
+    { scdtoId :: ShipConstructionId
     , scdtoName :: Text
     , scdtoShipType :: ShipType
     , scdtoIndex :: Int

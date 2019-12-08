@@ -106,7 +106,7 @@ getAdminApiPeopleR = do
 
 
 -- | Details of single person
-getAdminApiPersonR :: Key Person -> Handler Value
+getAdminApiPersonR :: PersonId -> Handler Value
 getAdminApiPersonR pId = do
     _ <- apiRequireAdmin
     person <- runDB $ get pId
@@ -116,7 +116,7 @@ getAdminApiPersonR pId = do
 
 
 -- | Update details of single person
-putAdminApiPersonR :: Key Person -> Handler Value
+putAdminApiPersonR :: PersonId -> Handler Value
 putAdminApiPersonR pId = do
     _ <- apiRequireAdmin
     msg <- requireJsonBody
@@ -141,7 +141,7 @@ postAdminApiAddPersonR = do
 updatePerson :: (MonadIO m,
     PersistUniqueRead backend, PersistStoreWrite backend,
     BaseBackend backend ~ SqlBackend)
-    => Key Person -> Person -> ReaderT backend m [ErrorCode]
+    => PersonId -> Person -> ReaderT backend m [ErrorCode]
 updatePerson pId msg = do
     person <- get pId
     simulation <- get $ toSqlKey 1
