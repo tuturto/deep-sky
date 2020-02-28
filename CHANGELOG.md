@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Creators.Person` module for generating new people
 - interface for accessing unit info added
 - units report their status to faction of owner
+- Robot Framework and Selenium taken into use for testing
 ### Changed
 - Admin interface has been rewritten in Elm
 - `Age` changed from `Int` to `Natural`
@@ -20,11 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PersonName` and related types and functions moved from `Data.Person` to `Data.PersonName` on client
 ### Removed
 ### Fixed
+- [Submitting user written news fails][14]
 ### Known bugs
 - [Disallow dismissing special events][1]
 - [Old planet details are shown][6]
 - [Admin panel is not displaying people][13]
-- [Submitting user written news fails][14]
 
 ## [0.2.0] - 2019-10-19
 ### Added

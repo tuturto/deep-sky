@@ -63,6 +63,7 @@ import Html
 import Html.Attributes
     exposing
         ( class
+        , id
         , maxlength
         , rows
         , src
@@ -492,7 +493,8 @@ rightPanel model =
     [ div [ class "row" ]
         [ div [ class "col-lg-12" ]
             [ textarea
-                [ rows 6
+                [ id "user-news-input"
+                , rows 6
                 , maxlength 200
                 , class "user-news-input"
                 , onInput (NewsMessage << UserMessageTextChanged)
@@ -531,7 +533,8 @@ iconInfo selected ( icon, link ) =
     let
         passiveIcon =
             img
-                [ class "news-icon-thumbnail"
+                [ id <| userIconId icon
+                , class "news-icon-thumbnail"
                 , src link
                 , onClick ((NewsMessage << UserIconSelected) icon)
                 ]
@@ -547,6 +550,19 @@ iconInfo selected ( icon, link ) =
 
             else
                 passiveIcon
+
+
+userIconId : UserIcon -> String
+userIconId icon =
+    case icon of
+        GenericUserNewsIcon ->
+            "news-icon-generic-user-news"
+
+        JubilationUserNewsIcon ->
+            "news-icon-jubilation-user-news"
+
+        CatUserNewsIcon ->
+            "news-icon-cat-user-news-icon"
 
 
 {-| Initiate retrieval of data needed by this page

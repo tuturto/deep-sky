@@ -383,19 +383,19 @@ instance ToJSON UserWrittenNewsDto where
                               , userWrittenNewsDtoDate = sDate
                               , userWrittenNewsDtoIcon = icon
                               } =
-        object [ "content" .= content
-               , "userName" .= userName
-               , "starDate" .= sDate
-               , "icon" .= icon
+        object [ "Content" .= content
+               , "UserName" .= userName
+               , "Date" .= sDate
+               , "Icon" .= icon
                ]
 
 
 instance FromJSON UserWrittenNewsDto where
     parseJSON (Object b) =
-        UserWrittenNewsDto <$> b .: "content"
-                           <*> b .: "starDate"
-                           <*> b .:? "userName" .!= (SimpleName "" Nothing)
-                           <*> b .: "icon"
+        UserWrittenNewsDto <$> b .: "Content"
+                           <*> b .: "Date"
+                           <*> b .:? "UserName" .!= (SimpleName "" Nothing)
+                           <*> b .: "Icon"
     parseJSON _ = mzero
 
 

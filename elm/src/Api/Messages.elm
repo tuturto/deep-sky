@@ -385,7 +385,7 @@ userWrittenNewsArticle =
     let
         decoder =
             succeed UserWrittenNews
-                |> andMap (field "content" string)
+                |> andMap (field "Content" string)
                 |> andMap (field "UserName" personNameDecoder)
                 |> andMap (field "Icon" userIconDecoder)
     in
