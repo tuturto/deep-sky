@@ -33,7 +33,7 @@ They contain short free form text and user selectable icon.
 
 Known issues
 ++++++++++++
- - [Submitting user written news article fails][14]
+ - 14_: Submitting user written news article fails
 
 .. code:: robotframework
 
@@ -46,4 +46,4 @@ Known issues
         Element Should Not Be Visible   class:error-bar
 
 
-[14]: https://github.com/tuturto/deep-sky/issues/14
+.. _14: https://github.com/tuturto/deep-sky/issues/14
