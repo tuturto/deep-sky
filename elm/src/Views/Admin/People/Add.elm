@@ -2,7 +2,6 @@ module Views.Admin.People.Add exposing (init, page, update)
 
 import Accessors exposing (over, set)
 import Api.Admin exposing (addPerson, getSimulationStatus)
-import Browser.Navigation exposing (pushUrl)
 import Data.Accessors
     exposing
         ( adminAddPersonRA
@@ -21,22 +20,20 @@ import Data.Common
         ( Route(..)
         , apMaybe
         , error
-        , routeToString
         )
 import Data.Model exposing (Model, Msg(..))
 import Data.People exposing (Age(..))
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Html exposing (Html, div, input, option, select, text)
+import Html.Attributes exposing (class, type_, value)
+import Html.Events exposing (onClick, onInput)
 import ViewModels.Admin.Main exposing (AdminRMsg(..))
 import ViewModels.Admin.People.Add
     exposing
         ( AdminAddPersonRMsg(..)
-        , AdminAddPersonViewModel
-        , AgeFields
         , Fields
         )
 import Views.Admin.Menu exposing (adminLayout, personMenu)
+import Views.Helpers exposing (pushUrl)
 
 
 {-| Render add person view
@@ -48,7 +45,7 @@ page model =
             model.adminR.adminAddPersonR.fields
     in
     adminLayout personMenu
-        ([ div [ class "row" ]
+        (div [ class "row" ]
             [ div [ class "col-lg-2" ] [ text "Age type" ]
             , div [ class "col-lg-4" ]
                 [ select
@@ -61,8 +58,7 @@ page model =
                     ]
                 ]
             ]
-         ]
-            ++ (ageSelection fields <| stringToAgeOptionType fields.ageOption)
+            :: (ageSelection fields <| stringToAgeOptionType fields.ageOption)
             ++ buttonStrip
         )
         model
@@ -159,7 +155,7 @@ stringToAgeOptionType s =
 {-| Initialize data retrieval from server
 -}
 init : Model -> Cmd Msg
-init model =
+init _ =
     Cmd.batch
         [ getSimulationStatus (AdminMessage << SimulationStatusReceived)
         ]
@@ -210,9 +206,8 @@ update message model =
             )
 
         PersonCreated (Ok res) ->
-            -- TODO: type safe pushUrl
             ( model
-            , pushUrl model.key (routeToString <| AdminPersonR res.id)
+            , pushUrl model (AdminPersonR res.id)
             )
 
 

@@ -7,6 +7,7 @@ module Views.Helpers exposing
     , href
     , infoPanel
     , mechanicalsToText
+    , pushUrl
     , starDateToString
     , starDateToText
     , stringToStarDate
@@ -14,6 +15,7 @@ module Views.Helpers exposing
     , twinPanels
     )
 
+import Browser.Navigation
 import Data.Common
     exposing
         ( InfoPanelStatus(..)
@@ -109,9 +111,18 @@ chemicalsToText resources =
     ]
 
 
+{-| href tag that works with Route instead of String
+-}
 href : Route -> Html.Attribute msg
 href route =
     Html.Attributes.href <| routeToString route
+
+
+{-| Set browser's URL to given route
+-}
+pushUrl : Model -> Route -> Cmd Msg
+pushUrl model route =
+    Browser.Navigation.pushUrl model.key (routeToString route)
 
 
 {-| Create panel layout with two panels.

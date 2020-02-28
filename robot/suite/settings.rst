@@ -34,3 +34,9 @@
         Submit Form   xpath:/html/body/div[2]/div/div/form[3]
         Wait Until Page Contains   You are now logged in
 
+    Logout
+        Go To   ${LOGOUT URL}
+        Wait Until Page Contains   Login
+
+    Error Bar Should Not Be Visible
+        Element Should Not Be Visible   class:error-bar

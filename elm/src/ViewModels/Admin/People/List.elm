@@ -7,14 +7,15 @@ module ViewModels.Admin.People.List exposing
 import Data.Admin exposing (Person)
 import Data.Common exposing (PagedResult, PersonId)
 import Dict exposing (Dict)
-import Http
+import RemoteData exposing (RemoteData(..), WebData)
 
 
 {-| Messages view model may emit
 -}
 type AdminListPeopleRMsg
-    = PeopleReceived (Result Http.Error (PagedResult Person))
+    = PeopleReceived (WebData (PagedResult Person))
     | PersonSelected PersonId
+    | PageRequested Int
 
 
 {-| Current state of view model
@@ -22,7 +23,7 @@ type AdminListPeopleRMsg
 type alias AdminListPeopleViewModel =
     { currentPage : Int
     , pageSize : Int
-    , people : Dict Int (Maybe (List Person))
+    , people : Dict Int (WebData (List Person))
     }
 
 
@@ -31,6 +32,10 @@ type alias AdminListPeopleViewModel =
 init : AdminListPeopleViewModel
 init =
     { currentPage = 0
-    , pageSize = 50
-    , people = Dict.empty
+    , pageSize = 25
+    , people =
+        Dict.fromList
+            [ ( 0, Loading )
+            , ( 1, Loading )
+            ]
     }

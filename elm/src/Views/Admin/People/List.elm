@@ -1,12 +1,12 @@
 module Views.Admin.People.List exposing (init, page, update)
 
-import Accessors exposing (over)
+import Accessors exposing (over, set)
 import Api.Admin exposing (getPeople, getSimulationStatus)
-import Browser.Navigation exposing (pushUrl)
 import Data.Accessors
     exposing
         ( adminListPeopleRA
         , adminRA
+        , currentPageA
         , errorsA
         , peopleA
         )
@@ -15,20 +15,33 @@ import Data.Common
     exposing
         ( Route(..)
         , error
-        , routeToString
         , unPersonId
         )
 import Data.Model exposing (Model, Msg(..))
 import Data.PersonNames exposing (displayName)
 import Dict
-import Html exposing (Html, a, div, i, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (class, colspan)
+import Html
+    exposing
+        ( Html
+        , a
+        , div
+        , i
+        , span
+        , table
+        , tbody
+        , td
+        , text
+        , th
+        , thead
+        , tr
+        )
+import Html.Attributes exposing (class, colspan, id)
 import Html.Events exposing (onClick)
-import Maybe.Extra
+import RemoteData exposing (RemoteData(..), WebData)
 import ViewModels.Admin.Main exposing (AdminRMsg(..))
 import ViewModels.Admin.People.List exposing (AdminListPeopleRMsg(..))
 import Views.Admin.Menu exposing (adminLayout, personMenu)
-import Views.Helpers exposing (href)
+import Views.Helpers exposing (href, pushUrl)
 
 
 {-| Render list people view
@@ -45,13 +58,50 @@ page model =
 {-| Render control block
 -}
 listControls : Model -> Html Msg
-listControls _ =
+listControls model =
+    let
+        n =
+            model.adminR.adminListPeopleR.currentPage
+
+        lastPage =
+            Dict.filter onlyAvailablePages model.adminR.adminListPeopleR.people
+                |> Dict.keys
+                |> List.maximum
+                |> Maybe.withDefault 0
+    in
     div [ class "row" ]
         [ div [ class "col-lg-12" ]
             [ a [ href AdminNewPersonR ]
-                [ i [ class "fas fa-plus-square" ] [] ]
+                [ i [ id "add-new-person", class "fas fa-plus-square" ] [] ]
+            , i [ id "first-page", class "fas fa-fast-backward small-space-left", onClick (AdminListPeopleMessage <| PageRequested 0) ] []
+            , i [ id "previous-page", class "fas fa-step-backward small-space-left", onClick (AdminListPeopleMessage <| PageRequested (n - 1)) ] []
+            , span [ id "current-page", class "small-space-left" ]
+                [ text <| String.fromInt (n + 1)
+                , text " / "
+                , text <| String.fromInt (lastPage + 1)
+                ]
+            , i [ id "next-page", class "fas fa-step-forward small-space-left", onClick (AdminListPeopleMessage <| PageRequested (n + 1)) ] []
+            , i [ id "last-page", class "fas fa-fast-forward small-space-left", onClick (AdminListPeopleMessage <| PageRequested lastPage) ] []
             ]
         ]
+
+
+{-| Filter dictionary for pages that are available
+-}
+onlyAvailablePages : Int -> WebData (List a) -> Bool
+onlyAvailablePages _ val =
+    case val of
+        Success people ->
+            List.length people > 0
+
+        Failure _ ->
+            False
+
+        NotAsked ->
+            False
+
+        Loading ->
+            False
 
 
 {-| Render search results
@@ -62,27 +112,33 @@ listDisplay model =
         pageNumber =
             model.adminR.adminListPeopleR.currentPage
 
-        fetchInitiated =
-            Dict.member pageNumber model.adminR.adminListPeopleR.people
-
         currentPage =
-            Maybe.Extra.join <| Dict.get pageNumber model.adminR.adminListPeopleR.people
+            Dict.get pageNumber model.adminR.adminListPeopleR.people
 
         content =
-            if fetchInitiated then
-                [ tr []
-                    [ td [ colspan 2, class "noData" ] [ text "No data" ] ]
-                ]
+            case currentPage of
+                Nothing ->
+                    [ tr []
+                        [ td [ colspan 2, class "noData" ] [ text "No data" ] ]
+                    ]
 
-            else
-                case currentPage of
-                    Nothing ->
-                        [ tr []
-                            [ td [ colspan 2, class "noData" ] [ text "Loading ..." ] ]
-                        ]
+                Just NotAsked ->
+                    [ tr []
+                        [ td [ colspan 2, class "noData" ] [ text "No data" ] ]
+                    ]
 
-                    Just people ->
-                        List.map personEntry people
+                Just Loading ->
+                    [ tr []
+                        [ td [ colspan 2, class "noData" ] [ text "Loading ..." ] ]
+                    ]
+
+                Just (Failure _) ->
+                    [ tr []
+                        [ td [ colspan 2, class "noData" ] [ text "Failed to load page" ] ]
+                    ]
+
+                Just (Success people) ->
+                    List.map personEntry people
     in
     div [ class "row" ]
         [ div [ class "col-lg-12" ]
@@ -112,9 +168,14 @@ personEntry person =
 {-| Initialize data retrieval from server
 -}
 init : Model -> Cmd Msg
-init _ =
+init model =
+    let
+        size =
+            model.adminR.adminListPeopleR.pageSize
+    in
     Cmd.batch
-        [ getPeople (AdminListPeopleMessage << PeopleReceived) (Just 0) (Just 50)
+        [ getPeople (AdminListPeopleMessage << PeopleReceived) (Just 0) (Just size)
+        , getPeople (AdminListPeopleMessage << PeopleReceived) (Just size) (Just size)
         , getSimulationStatus (AdminMessage << SimulationStatusReceived)
         ]
 
@@ -124,18 +185,106 @@ init _ =
 update : AdminListPeopleRMsg -> Model -> ( Model, Cmd Msg )
 update message model =
     case message of
-        PeopleReceived (Ok res) ->
-            ( over (adminRA << adminListPeopleRA << peopleA) (Dict.insert res.page (Just res.results)) model
+        PeopleReceived (Success res) ->
+            ( over (adminRA << adminListPeopleRA << peopleA) (Dict.insert res.page (Success res.results)) model
             , Cmd.none
             )
 
-        PeopleReceived (Err err) ->
+        PeopleReceived (Failure err) ->
             ( over errorsA (\errors -> error err "Failed to load people" :: errors) model
+            , Cmd.none
+            )
+
+        PeopleReceived _ ->
+            ( model
             , Cmd.none
             )
 
         PersonSelected pId ->
             ( model
-            , pushUrl model.key (routeToString <| AdminPersonR pId)
-              -- TODO: typesafe pushUrl
+            , pushUrl model (AdminPersonR pId)
             )
+
+        PageRequested n ->
+            let
+                people =
+                    model.adminR.adminListPeopleR.people
+
+                size =
+                    model.adminR.adminListPeopleR.pageSize
+
+                maxPage =
+                    Dict.keys people
+                        |> List.maximum
+                        |> Maybe.withDefault 0
+
+                clamped =
+                    if n < 0 then
+                        0
+
+                    else if n > maxPage then
+                        maxPage
+
+                    else
+                        n
+
+                nextPage =
+                    clamped + 1
+            in
+            case Dict.get clamped people of
+                Nothing ->
+                    ( set (adminRA << adminListPeopleRA << currentPageA) clamped model
+                        |> over (adminRA << adminListPeopleRA << peopleA) (Dict.insert clamped Loading)
+                    , getPeople (AdminListPeopleMessage << PeopleReceived) (Just (clamped * size)) (Just size)
+                    )
+
+                Just (Success p) ->
+                    if List.length p > 0 then
+                        case Dict.get (clamped + 1) people of
+                            Nothing ->
+                                ( set (adminRA << adminListPeopleRA << currentPageA) clamped model
+                                    |> over (adminRA << adminListPeopleRA << peopleA) (Dict.insert nextPage Loading)
+                                , getPeople (AdminListPeopleMessage << PeopleReceived) (Just (nextPage * size)) (Just size)
+                                )
+
+                            Just (Success _) ->
+                                ( set (adminRA << adminListPeopleRA << currentPageA) clamped model
+                                , Cmd.none
+                                )
+
+                            Just NotAsked ->
+                                ( set (adminRA << adminListPeopleRA << currentPageA) clamped model
+                                    |> over (adminRA << adminListPeopleRA << peopleA) (Dict.insert nextPage Loading)
+                                , getPeople (AdminListPeopleMessage << PeopleReceived) (Just (nextPage * size)) (Just size)
+                                )
+
+                            Just Loading ->
+                                ( set (adminRA << adminListPeopleRA << currentPageA) clamped model
+                                , Cmd.none
+                                )
+
+                            Just (Failure _) ->
+                                ( set (adminRA << adminListPeopleRA << currentPageA) clamped model
+                                , Cmd.none
+                                )
+
+                    else
+                        ( model
+                        , Cmd.none
+                        )
+
+                Just NotAsked ->
+                    ( set (adminRA << adminListPeopleRA << currentPageA) clamped model
+                        |> over (adminRA << adminListPeopleRA << peopleA) (Dict.insert clamped Loading)
+                    , getPeople (AdminListPeopleMessage << PeopleReceived) (Just (clamped * size)) (Just size)
+                    )
+
+                Just Loading ->
+                    ( set (adminRA << adminListPeopleRA << currentPageA) clamped model
+                    , Cmd.none
+                    )
+
+                Just (Failure _) ->
+                    ( model
+                    , Cmd.none
+                    )

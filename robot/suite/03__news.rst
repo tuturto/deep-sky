@@ -4,7 +4,8 @@
     Resource            ./settings.rst
     Library             SeleniumLibrary
     Suite Setup         News Setup
-    Suite Teardown      Stop Testing
+    Suite Teardown      News Teardown
+    Test Teardown       Error Bar Should Not Be Visible
 
 .. code:: robotframework
 
@@ -12,9 +13,11 @@
     News Setup
         Login As    ${VALID USER}
 
+    News Teardown
+        Logout
+
 Messages
 ========
-
 Messages can be opened by clicking main menu item "Messages", which should
 always be available for logged in users.
 
@@ -27,7 +30,6 @@ always be available for logged in users.
 
 User submitted news
 -------------------
-
 User submitted news are meant for sending to members of user's own faction.
 They contain short free form text and user selectable icon.
 
@@ -43,7 +45,6 @@ Known issues
         Click Element   id:news-icon-jubilation-user-news
         Click Button   Submit
         Wait Until Page Contains   Ready for blast-off!
-        Element Should Not Be Visible   class:error-bar
 
 
 .. _14: https://github.com/tuturto/deep-sky/issues/14

@@ -7,8 +7,6 @@ module ViewModels.Admin.People.Edit exposing
     )
 
 import Data.Admin exposing (Person)
-import Data.Common exposing (PagedResult, PersonId)
-import Dict exposing (Dict)
 import Http
 
 

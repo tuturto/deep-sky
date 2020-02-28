@@ -62,6 +62,7 @@ import Json.Decode as Decode
         )
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
+import RemoteData exposing (WebData)
 
 
 {-| Command for loading current simulation status
@@ -82,9 +83,9 @@ putSimulationStatus msg simulation =
 Results are paged, first parameter indicates amount of records to skip, second parameter amount
 of records to take. In case Nothing is supplied, server default is used.
 -}
-getPeople : (Result Http.Error (PagedResult Person) -> Msg) -> Maybe Int -> Maybe Int -> Cmd Msg
+getPeople : (WebData (PagedResult Person) -> Msg) -> Maybe Int -> Maybe Int -> Cmd Msg
 getPeople msg skip take =
-    Http.send msg (get (ApiAdminPeople skip take) (pagedDecoder personDecoder))
+    Http.send (RemoteData.fromResult >> msg) (get (ApiAdminPeople skip take) (pagedDecoder personDecoder))
 
 
 {-| Get details of single person
