@@ -1,25 +1,33 @@
 module Views.Layout exposing (view)
 
-import Accessors exposing (get)
 import Browser
 import Data.Common
     exposing
         ( ErrorMessage(..)
         , Route(..)
         , unPlanetName
-        , unStarSystemId
         , unStarSystemName
         )
 import Data.Model exposing (Model, Msg(..))
 import Data.PersonNames exposing (displayName)
 import Data.User exposing (Role(..))
 import Data.Vehicles exposing (Unit(..), unShipName, unVehicleName)
-import Dict
-import Html exposing (Attribute, Html, a, div, i, li, nav, text, ul)
-import Html.Attributes exposing (class)
+import Html
+    exposing
+        ( Attribute
+        , Html
+        , a
+        , div
+        , i
+        , li
+        , nav
+        , text
+        , ul
+        )
+import Html.Attributes exposing (class, id)
 import Html.Events exposing (onClick)
-import Maybe exposing (andThen, withDefault)
 import Navigation exposing (parseLocation)
+import RemoteData exposing (RemoteData(..))
 import Url exposing (Url)
 import Views.Admin.Main
 import Views.Admin.People.Add
@@ -87,18 +95,93 @@ infoBar : Model -> Html Msg
 infoBar model =
     div [ class "container" ]
         [ ul [ class "infoitem" ]
-            [ li []
+            ([ li []
                 [ i [ class "fas fa-clock" ] []
-                , starDateToText model.currentTime
+                , starDateToText <| RemoteData.toMaybe model.currentTime
                 ]
-            , li [] <|
-                biologicalsToText model.resources
-            , li [] <|
-                mechanicalsToText model.resources
-            , li [] <|
-                chemicalsToText model.resources
-            ]
+             , li [] <|
+                biologicalsToText <|
+                    RemoteData.toMaybe model.resources
+             , li [] <|
+                mechanicalsToText <|
+                    RemoteData.toMaybe model.resources
+             , li [] <|
+                chemicalsToText <|
+                    RemoteData.toMaybe model.resources
+             ]
+                ++ (if isLoading model then
+                        [ li [ id "loading-indicator", class "pull-right" ] [ text "loading..." ] ]
+
+                    else
+                        []
+                   )
+            )
         ]
+
+
+isLoading : Model -> Bool
+isLoading model =
+    isModuleLoading model
+        || RemoteData.isLoading model.resources
+        || RemoteData.isLoading model.currentTime
+
+
+isModuleLoading : Model -> Bool
+isModuleLoading model =
+    case parseLocation model.url of
+        AdminR ->
+            Views.Admin.Main.isLoading model
+
+        AdminListPeopleR ->
+            Views.Admin.People.List.isLoading model
+
+        AdminPersonR _ ->
+            Views.Admin.People.Edit.isLoading model
+
+        AdminNewPersonR ->
+            Views.Admin.People.Add.isLoading model
+
+        BasesR ->
+            False
+
+        ConstructionR ->
+            False
+
+        DesignerR ->
+            Views.Designer.isLoading model
+
+        FleetR ->
+            False
+
+        HomeR ->
+            False
+
+        MessagesR ->
+            Views.Messages.isLoading model
+
+        ProfileR ->
+            False
+
+        ResearchR ->
+            Views.Research.isLoading model
+
+        StarSystemR _ ->
+            Views.StarSystem.isLoading model
+
+        StarSystemsR ->
+            Views.StarSystems.isLoading model
+
+        PlanetR _ ->
+            Views.Planet.isLoading model
+
+        PersonR _ ->
+            Views.Person.isLoading model
+
+        UnitR _ ->
+            Views.Unit.isLoading model
+
+        LogoutR ->
+            False
 
 
 errorBar : Model -> Html Msg
@@ -186,130 +269,141 @@ breadcrumbPath model =
         ]
 
 
-{-| Given model and route, build segment of breadcrumb path as a tuple.
+{-| Given model and route, build segment of breadcrumb path as a triple.
 First element of tuple is text that should be displayed in the breadcrumb
-path. Second element is possible parent element of the route. For example
-HomeR is parent of StarSystemsR, which in turn is parent of StarSystemR 1.
-Model can be used to compute dynamic text to be displayed in breadcrumb path,
-for example a planet or person name.
+path. Second element is possible id for Html. Third element is possible
+parent element of the route. For example HomeR is parent of StarSystemsR,
+which in turn is parent of StarSystemR 1. Model can be used to compute
+dynamic text to be displayed in breadcrumb path, for example a planet or
+person name.
 -}
-segment : Model -> Route -> ( String, Maybe Route )
+segment : Model -> Route -> ( String, Maybe (Attribute Msg), Maybe Route )
 segment model route =
     case route of
         AdminR ->
-            ( "Admin", Just HomeR )
+            ( "Admin", Nothing, Just HomeR )
 
         AdminListPeopleR ->
-            ( "People", Just AdminR )
+            ( "People", Nothing, Just AdminR )
 
         AdminPersonR _ ->
             let
                 name =
-                    Maybe.map (\x -> displayName x.name) model.adminR.adminEditPersonR.person
-                        |> Maybe.withDefault "-"
+                    RemoteData.map (\x -> displayName x.name) model.adminR.adminEditPersonR.person
+                        |> RemoteData.withDefault "-"
             in
-            ( name, Just AdminListPeopleR )
+            ( name, Just (id "breadcrumb-person-name"), Just AdminListPeopleR )
 
         AdminNewPersonR ->
-            ( "Add person", Just AdminListPeopleR )
+            ( "Add person", Nothing, Just AdminListPeopleR )
 
         BasesR ->
-            ( "Bases", Just HomeR )
+            ( "Bases", Nothing, Just HomeR )
 
         ConstructionR ->
-            ( "Constructions", Just HomeR )
+            ( "Constructions", Nothing, Just HomeR )
 
         DesignerR ->
-            ( "Designs", Just HomeR )
+            ( "Designs", Nothing, Just HomeR )
 
         FleetR ->
-            ( "Fleet", Just HomeR )
+            ( "Fleet", Nothing, Just HomeR )
 
         HomeR ->
-            ( "Home", Nothing )
+            ( "Home", Nothing, Nothing )
 
         MessagesR ->
-            ( "Messages", Just HomeR )
+            ( "Messages", Nothing, Just HomeR )
 
         ProfileR ->
-            ( "Profile", Just HomeR )
+            ( "Profile", Nothing, Just HomeR )
 
         ResearchR ->
-            ( "Research", Just HomeR )
+            ( "Research", Nothing, Just HomeR )
 
-        StarSystemR systemId ->
+        StarSystemR _ ->
             let
                 starSystemName =
-                    model.starSystems
-                        |> andThen (Dict.get (unStarSystemId systemId))
-                        |> andThen (\x -> Just (unStarSystemName x.name))
-                        |> withDefault "Unknown star system"
+                    model.starSystemR.starSystem
+                        |> RemoteData.map (\x -> unStarSystemName x.name)
+                        |> RemoteData.withDefault "Unknown star system"
             in
-            ( starSystemName, Just StarSystemsR )
+            ( starSystemName, Just (id "breadcrumb-system-name"), Just StarSystemsR )
 
         StarSystemsR ->
-            ( "Star systems", Just HomeR )
+            ( "Star systems", Nothing, Just HomeR )
 
         PlanetR _ ->
-            case model.planetR.planet of
-                Nothing ->
-                    ( "-", Just HomeR )
-
-                Just planet ->
-                    ( unPlanetName planet.name, Just (StarSystemR planet.systemId) )
+            RemoteData.map
+                (\planet ->
+                    ( unPlanetName planet.name
+                    , Just (id "breadcrumb-planet-name")
+                    , Just (StarSystemR planet.systemId)
+                    )
+                )
+                model.planetR.planet
+                |> RemoteData.withDefault ( "-", Just (id "breadcrumb-planet-name"), Just HomeR )
 
         PersonR _ ->
             let
                 personName =
-                    case model.personR.person of
-                        Nothing ->
-                            "-"
-
-                        Just person ->
-                            displayName person.name
+                    RemoteData.map (\person -> displayName person.name) model.personR.person
+                        |> RemoteData.withDefault "-"
             in
-            ( personName, Just HomeR )
+            ( personName, Just (id "breadcrumb-person-name"), Just HomeR )
 
         UnitR _ ->
             let
                 unitName =
-                    case model.unitR.unit of
-                        Just (Ship details) ->
-                            unShipName details.name
+                    RemoteData.map
+                        (\x ->
+                            case x of
+                                Ship details ->
+                                    unShipName details.name
 
-                        Just (Vehicle details) ->
-                            unVehicleName details.name
-
-                        Nothing ->
-                            "-"
+                                Vehicle details ->
+                                    unVehicleName details.name
+                        )
+                        model.unitR.unit
+                        |> RemoteData.withDefault "-"
             in
-            ( unitName, Just FleetR )
+            ( unitName, Just (id "breadcrumb-unit-name"), Just FleetR )
 
         LogoutR ->
-            ( "Logout", Just HomeR )
+            ( "Logout", Nothing, Just HomeR )
 
 
 breadcrumb : Model -> Bool -> Route -> List (Html Msg)
 breadcrumb model topLevel route =
     let
-        segmentPair =
+        ( linkText, linkId, linkParent ) =
             segment model route
 
         textEntry =
             if topLevel then
-                text <| Tuple.first segmentPair
+                text <| linkText
 
             else
-                a [ href route ] [ text <| Tuple.first segmentPair ]
+                a [ href route ] [ text linkText ]
 
         entryClass =
             if topLevel then
-                [ class "active" ]
+                case linkId of
+                    Nothing ->
+                        [ class "active" ]
+
+                    Just x ->
+                        [ class "active", x ]
 
             else
-                []
+                case linkId of
+                    Nothing ->
+                        []
+
+                    Just x ->
+                        [ x ]
     in
-    case Tuple.second segmentPair of
+    case linkParent of
         Nothing ->
             [ li entryClass [ textEntry ] ]
 
@@ -326,7 +420,7 @@ view model =
         , infoBar model
         , errorBar model
         , div [ class "container" ]
-            [ currentPage model.url <| model ]
+            [ currentPage model.url model ]
         ]
     }
 

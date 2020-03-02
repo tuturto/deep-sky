@@ -12,8 +12,9 @@ import Data.Vehicles
         , Design
         , PlannedComponent
         , UnitStats
-        , ValidationMessage
         )
+import RemoteData exposing (RemoteData(..), WebData)
+import SaveData exposing (SaveData(..))
 
 
 {-| Messages sent by designer view
@@ -41,6 +42,11 @@ type DesignerRMsg
     | DesignDeleted Design
     | DesignCopied Design
     | StatsStatusChanged InfoPanelStatus
+    | ComponentsReceived (WebData (List Component))
+    | ChassisReceived (WebData (List Chassis))
+    | DesignsReceived (SaveData (List Design))
+    | DesignEstimated (WebData UnitStats)
+    | DesignSaved (WebData Design)
 
 
 {-| State of the designer view
@@ -59,8 +65,11 @@ type alias DesignerViewModel =
     , messagesStatus : InfoPanelStatus
     , designPanelStatus : InfoPanelStatus
     , currentDesign : Maybe Design
-    , designStats : Maybe UnitStats
+    , designStats : WebData UnitStats
     , statsStatus : InfoPanelStatus
+    , availableComponents : WebData (List Component)
+    , availableChassis : WebData (List Chassis)
+    , designs : SaveData (List Design)
     }
 
 
@@ -81,6 +90,9 @@ init =
     , messagesStatus = InfoPanelOpen
     , designPanelStatus = InfoPanelOpen
     , currentDesign = Nothing
-    , designStats = Nothing
+    , designStats = NotAsked
     , statsStatus = InfoPanelOpen
+    , availableComponents = Loading
+    , availableChassis = Loading
+    , designs = RData Loading
     }

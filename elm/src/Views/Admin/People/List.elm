@@ -1,4 +1,4 @@
-module Views.Admin.People.List exposing (init, page, update)
+module Views.Admin.People.List exposing (init, isLoading, page, update)
 
 import Accessors exposing (over, set)
 import Api.Admin exposing (getPeople, getSimulationStatus)
@@ -40,6 +40,7 @@ import Html.Events exposing (onClick)
 import RemoteData exposing (RemoteData(..), WebData)
 import ViewModels.Admin.Main exposing (AdminRMsg(..))
 import ViewModels.Admin.People.List exposing (AdminListPeopleRMsg(..))
+import Views.Admin.Main
 import Views.Admin.Menu exposing (adminLayout, personMenu)
 import Views.Helpers exposing (href, pushUrl)
 
@@ -129,7 +130,7 @@ listDisplay model =
 
                 Just Loading ->
                     [ tr []
-                        [ td [ colspan 2, class "noData" ] [ text "Loading ..." ] ]
+                        [ td [ colspan 2, class "noData" ] [] ]
                     ]
 
                 Just (Failure _) ->
@@ -138,7 +139,7 @@ listDisplay model =
                     ]
 
                 Just (Success people) ->
-                    List.map personEntry people
+                    List.indexedMap personEntry people
     in
     div [ class "row" ]
         [ div [ class "col-lg-12" ]
@@ -157,11 +158,11 @@ listDisplay model =
 
 {-| Single row in person table
 -}
-personEntry : Person -> Html Msg
-personEntry person =
-    tr [ class "clickable", onClick <| AdminListPeopleMessage <| PersonSelected person.id ]
-        [ td [] [ text <| String.fromInt <| unPersonId person.id ]
-        , td [] [ text <| displayName person.name ]
+personEntry : Int -> Person -> Html Msg
+personEntry index person =
+    tr [ id <| "person-row-" ++ String.fromInt (index + 1), class "clickable", onClick <| AdminListPeopleMessage <| PersonSelected person.id ]
+        [ td [ id <| "person-id-" ++ String.fromInt (index + 1) ] [ text <| String.fromInt <| unPersonId person.id ]
+        , td [ id <| "person-name-" ++ String.fromInt (index + 1) ] [ text <| displayName person.name ]
         ]
 
 
@@ -178,6 +179,19 @@ init model =
         , getPeople (AdminListPeopleMessage << PeopleReceived) (Just size) (Just size)
         , getSimulationStatus (AdminMessage << SimulationStatusReceived)
         ]
+
+
+isLoading : Model -> Bool
+isLoading model =
+    let
+        vm =
+            model.adminR.adminListPeopleR
+    in
+    (Dict.get vm.currentPage vm.people
+        |> Maybe.withDefault NotAsked
+        |> RemoteData.isLoading
+    )
+        || Views.Admin.Main.isLoading model
 
 
 {-| Handle incoming messages

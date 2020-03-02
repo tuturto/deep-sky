@@ -7,13 +7,13 @@ module ViewModels.Admin.People.Edit exposing
     )
 
 import Data.Admin exposing (Person)
-import Http
+import RemoteData exposing (RemoteData(..), WebData)
 
 
 {-| Messages view model may emit
 -}
 type AdminEditPersonRMsg
-    = PersonReceived (Result Http.Error Person)
+    = PersonReceived (WebData Person)
     | DiplomacyChanged String
     | MartialChanged String
     | StewardshipChanged String
@@ -34,7 +34,7 @@ type AdminEditPersonRMsg
 {-| Current state of view model
 -}
 type alias AdminEditPersonViewModel =
-    { person : Maybe Person
+    { person : WebData Person
     , fields : Fields
     }
 
@@ -78,6 +78,6 @@ emptyFields =
 -}
 init : AdminEditPersonViewModel
 init =
-    { person = Nothing
+    { person = Loading
     , fields = emptyFields
     }

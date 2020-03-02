@@ -1,23 +1,32 @@
-module Views.Research exposing (init, page, update)
+module Views.Research exposing
+    ( init
+    , isLoading
+    , page
+    , update
+    )
 
-import Accessors exposing (set)
+import Accessors exposing (over, set)
 import Api.Research
     exposing
-        ( availableResearchCmd
-        , cancelResearchCmd
-        , currentResearchCmd
-        , researchProductionCmd
-        , startResearchCmd
+        ( cancelResearch
+        , getAvailableResearch
+        , getCurrentResearch
+        , getResearchProduction
+        , startResearch
         )
 import Data.Accessors
     exposing
-        ( currentResearchStatusA
+        ( availableResearchA
+        , currentResearchA
+        , currentResearchStatusA
+        , errorsA
         , focusedTopCategoryA
         , productionStatusA
         , researchFieldStatusA
+        , researchProductionA
         , researchRA
         )
-import Data.Common exposing (InfoPanelStatus(..))
+import Data.Common exposing (InfoPanelStatus(..), error)
 import Data.Model exposing (Model, Msg(..))
 import Data.Research
     exposing
@@ -35,6 +44,8 @@ import Data.User exposing (Role(..))
 import Html exposing (Html, div, i, text)
 import Html.Attributes exposing (class, id)
 import Html.Events exposing (onClick)
+import RemoteData exposing (RemoteData(..), WebData)
+import SaveData exposing (SaveData(..))
 import ViewModels.Research exposing (ResearchRMsg(..))
 import Views.Helpers
     exposing
@@ -78,27 +89,48 @@ statusPanel model =
 
 productionStatus : Model -> List (Html Msg)
 productionStatus model =
-    let
-        ( eng, nat, soc ) =
-            case model.researchProduction of
-                Nothing ->
-                    ( 0, 0, 0 )
+    case model.researchR.researchProduction of
+        NotAsked ->
+            [ div [ class "row" ]
+                [ div [ class "col-lg-6" ]
+                    [ text "-" ]
+                ]
+            ]
 
-                Just production ->
-                    ( unResearchScore production.engineering
-                    , unResearchScore production.natural
-                    , unResearchScore production.social
-                    )
-    in
-    [ div [ class "row" ]
-        [ div [ class "col-lg-2" ]
-            [ text <| "Engineering: " ++ String.fromInt eng ]
-        , div [ class "col-lg-2" ]
-            [ text <| "Natural sciences: " ++ String.fromInt nat ]
-        , div [ class "col-lg-2" ]
-            [ text <| "Social sciences: " ++ String.fromInt soc ]
-        ]
-    ]
+        Loading ->
+            [ div [ class "row" ]
+                [ div [ class "col-lg-6" ]
+                    [ text "-" ]
+                ]
+            ]
+
+        Failure _ ->
+            [ div [ class "row" ]
+                [ div [ class "col-lg-6" ]
+                    [ text "-" ]
+                ]
+            ]
+
+        Success production ->
+            let
+                eng =
+                    unResearchScore production.engineering
+
+                nat =
+                    unResearchScore production.natural
+
+                soc =
+                    unResearchScore production.social
+            in
+            [ div [ class "row" ]
+                [ div [ class "col-lg-2" ]
+                    [ text <| "Engineering: " ++ String.fromInt eng ]
+                , div [ class "col-lg-2" ]
+                    [ text <| "Natural sciences: " ++ String.fromInt nat ]
+                , div [ class "col-lg-2" ]
+                    [ text <| "Social sciences: " ++ String.fromInt soc ]
+                ]
+            ]
 
 
 {-| Display right panel that shows research that is available for selection
@@ -141,7 +173,7 @@ availableResearchList model =
         candidates =
             Maybe.map
                 (\topCat ->
-                    Maybe.withDefault [] model.availableResearch
+                    RemoteData.withDefault [] model.researchR.availableResearch
                         |> List.filter
                             (\res -> topCat == topResearchCategory res.category)
                 )
@@ -256,21 +288,21 @@ currentProjects : Model -> List (Html Msg)
 currentProjects model =
     let
         engProject =
-            model.currentResearch
-                |> Maybe.map (List.filter (\b -> topResearchCategory b.research.category == Eng))
-                |> Maybe.withDefault []
+            model.researchR.currentResearch
+                |> SaveData.map (List.filter (\b -> topResearchCategory b.research.category == Eng))
+                |> SaveData.withDefault []
                 |> List.head
 
         natSciProject =
-            model.currentResearch
-                |> Maybe.map (List.filter (\b -> topResearchCategory b.research.category == NatSci))
-                |> Maybe.withDefault []
+            model.researchR.currentResearch
+                |> SaveData.map (List.filter (\b -> topResearchCategory b.research.category == NatSci))
+                |> SaveData.withDefault []
                 |> List.head
 
         socSciProject =
-            model.currentResearch
-                |> Maybe.map (List.filter (\b -> topResearchCategory b.research.category == SocSci))
-                |> Maybe.withDefault []
+            model.researchR.currentResearch
+                |> SaveData.map (List.filter (\b -> topResearchCategory b.research.category == SocSci))
+                |> SaveData.withDefault []
                 |> List.head
     in
     [ currentProject engProject Eng
@@ -319,12 +351,80 @@ update msg model =
 
         ProjectStarted research ->
             ( model
-            , startResearchCmd <| researchToCurrent research
+            , startResearch (ResearchMessage << CurrentResearchReceived) <| researchToCurrent research
             )
 
         ProjectCancelled research ->
             ( model
-            , cancelResearchCmd research
+            , cancelResearch (ResearchMessage << CurrentResearchReceived) research
+            )
+
+        AvailableResearchReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        AvailableResearchReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        AvailableResearchReceived (Success research) ->
+            ( set (researchRA << availableResearchA) (Success research) model
+            , Cmd.none
+            )
+
+        AvailableResearchReceived (Failure err) ->
+            ( over errorsA (\errors -> error err "Failed to load available research" :: errors) model
+                |> set (researchRA << availableResearchA) (Failure err)
+            , Cmd.none
+            )
+
+        CurrentResearchReceived (RData NotAsked) ->
+            ( model
+            , Cmd.none
+            )
+
+        CurrentResearchReceived (RData Loading) ->
+            ( model
+            , Cmd.none
+            )
+
+        CurrentResearchReceived (RData (Success research)) ->
+            ( set (researchRA << currentResearchA) (RData (Success research)) model
+            , Cmd.none
+            )
+
+        CurrentResearchReceived (RData (Failure err)) ->
+            ( over errorsA (\errors -> error err "Failed to load current research" :: errors) model
+                |> set (researchRA << currentResearchA) (RData (Failure err))
+            , Cmd.none
+            )
+
+        CurrentResearchReceived (Saving _) ->
+            ( model
+            , Cmd.none
+            )
+
+        ResearchProductionReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        ResearchProductionReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        ResearchProductionReceived (Success production) ->
+            ( set (researchRA << researchProductionA) (Success production) model
+            , Cmd.none
+            )
+
+        ResearchProductionReceived (Failure err) ->
+            ( over errorsA (\errors -> error err "Failed to research production" :: errors) model
+                |> set (researchRA << researchProductionA) (Failure err)
+            , Cmd.none
             )
 
 
@@ -333,7 +433,18 @@ update msg model =
 init : Model -> Cmd Msg
 init _ =
     Cmd.batch
-        [ availableResearchCmd
-        , currentResearchCmd
-        , researchProductionCmd
+        [ getAvailableResearch (ResearchMessage << AvailableResearchReceived)
+        , getCurrentResearch (ResearchMessage << CurrentResearchReceived)
+        , getResearchProduction (ResearchMessage << ResearchProductionReceived)
         ]
+
+
+isLoading : Model -> Bool
+isLoading model =
+    let
+        vm =
+            model.researchR
+    in
+    RemoteData.isLoading vm.researchProduction
+        || SaveData.isLoading vm.currentResearch
+        || RemoteData.isLoading vm.availableResearch

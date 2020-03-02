@@ -5,8 +5,8 @@ module ViewModels.StarSystem exposing
     )
 
 import Data.Common exposing (InfoPanelStatus(..))
-import Data.StarSystem exposing (StarSystem)
-import Http
+import Data.StarSystem exposing (Planet, Star, StarSystem)
+import RemoteData exposing (RemoteData(..), WebData)
 
 
 type StarSystemRMsg
@@ -14,7 +14,9 @@ type StarSystemRMsg
     | StarListStatusChanged InfoPanelStatus
     | StarLaneListStatusChanged InfoPanelStatus
     | PlanetListStatusChanged InfoPanelStatus
-    | StarSystemReceived (Result Http.Error StarSystem)
+    | StarSystemReceived (WebData StarSystem)
+    | StarsReceived (WebData (List Star))
+    | PlanetsReceived (WebData (List Planet))
 
 
 type alias StarSystemViewModel =
@@ -22,7 +24,9 @@ type alias StarSystemViewModel =
     , starListStatus : InfoPanelStatus
     , starLanesStatus : InfoPanelStatus
     , planetsStatus : InfoPanelStatus
-    , starSystem : Maybe StarSystem
+    , starSystem : WebData StarSystem
+    , stars : WebData (List Star)
+    , planets : WebData (List Planet)
     }
 
 
@@ -32,5 +36,7 @@ init =
     , starListStatus = InfoPanelOpen
     , starLanesStatus = InfoPanelOpen
     , planetsStatus = InfoPanelOpen
-    , starSystem = Nothing
+    , starSystem = Loading
+    , stars = Loading
+    , planets = Loading
     }

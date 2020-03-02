@@ -1,13 +1,13 @@
 module Api.Designer exposing
-    ( availableChassisCmd
-    , availableComponentsCmd
-    , availableDesignsCmd
-    , crewRankDecoder
-    , deleteDesignCmd
+    ( crewRankDecoder
+    , deleteDesign
     , designIdDecoder
     , designNameDecoder
     , estimateDesign
-    , saveDesignCmd
+    , getAvailableChassis
+    , getAvailableComponents
+    , getAvailableDesigns
+    , saveDesign
     , unitStatsDecoder
     )
 
@@ -75,46 +75,48 @@ import Json.Decode as Decode
         )
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
+import RemoteData exposing (WebData)
+import SaveData exposing (SaveData)
 
 
-availableComponentsCmd : Cmd Msg
-availableComponentsCmd =
-    Http.send (ApiMsgCompleted << ComponentsReceived) (get ApiAvailableComponents (list componentDecoder))
+getAvailableComponents : (WebData (List Component) -> Msg) -> Cmd Msg
+getAvailableComponents msg =
+    Http.send (RemoteData.fromResult >> msg) (get ApiAvailableComponents (list componentDecoder))
 
 
-availableChassisCmd : Cmd Msg
-availableChassisCmd =
-    Http.send (ApiMsgCompleted << ChassisReceived) (get ApiAvailableChassis (list chassisDecoder))
+getAvailableChassis : (WebData (List Chassis) -> Msg) -> Cmd Msg
+getAvailableChassis msg =
+    Http.send (RemoteData.fromResult >> msg) (get ApiAvailableChassis (list chassisDecoder))
 
 
-availableDesignsCmd : Cmd Msg
-availableDesignsCmd =
-    Http.send (ApiMsgCompleted << DesignsReceived) (get ApiAllDesigns (list designDecoder))
+getAvailableDesigns : (SaveData (List Design) -> Msg) -> Cmd Msg
+getAvailableDesigns msg =
+    Http.send (SaveData.fromResult >> msg) (get ApiAllDesigns (list designDecoder))
 
 
-saveDesignCmd : Design -> Cmd Msg
-saveDesignCmd design =
+saveDesign : (WebData Design -> Msg) -> Design -> Cmd Msg
+saveDesign msg design =
     case design.id of
         Just dId ->
-            Http.send (ApiMsgCompleted << DesignSaved) (put (ApiSingleDesign dId) (designEncoder design) designDecoder)
+            Http.send (RemoteData.fromResult >> msg) (put (ApiSingleDesign dId) (designEncoder design) designDecoder)
 
         Nothing ->
-            Http.send (ApiMsgCompleted << DesignSaved) (post ApiAllDesigns (designEncoder design) designDecoder)
+            Http.send (RemoteData.fromResult >> msg) (post ApiAllDesigns (designEncoder design) designDecoder)
 
 
-deleteDesignCmd : Design -> Cmd Msg
-deleteDesignCmd design =
+deleteDesign : (SaveData (List Design) -> Msg) -> Design -> Cmd Msg
+deleteDesign msg design =
     case design.id of
         Just dId ->
-            Http.send (ApiMsgCompleted << DesignsReceived) (delete (ApiSingleDesign dId) Nothing (list designDecoder))
+            Http.send (SaveData.fromResult >> msg) (delete (ApiSingleDesign dId) Nothing (list designDecoder))
 
         Nothing ->
             Cmd.none
 
 
-estimateDesign : Design -> Cmd Msg
-estimateDesign design =
-    Http.send (ApiMsgCompleted << DesignEstimated) (post ApiDesignEstimate (designEncoder design) unitStatsDecoder)
+estimateDesign : (WebData UnitStats -> Msg) -> Design -> Cmd Msg
+estimateDesign msg design =
+    Http.send (RemoteData.fromResult >> msg) (post ApiDesignEstimate (designEncoder design) unitStatsDecoder)
 
 
 componentDecoder : Decode.Decoder Component

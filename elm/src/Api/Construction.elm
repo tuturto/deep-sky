@@ -1,12 +1,10 @@
 module Api.Construction exposing
-    ( availableBuildingsCmd
-    , constructionIdDecoder
-    , constructionsCmd
-    , deleteConstructionCmd
-    , getAvailableBuildingsCmd
-    , getConstructionsCmd
-    , postBuildingConstructionCmd
-    , putConstructionCmd
+    ( constructionIdDecoder
+    , deleteConstruction
+    , getAvailableBuildings
+    , getConstructions
+    , postBuildingConstruction
+    , putConstruction
     )
 
 import Api.Common
@@ -40,7 +38,6 @@ import Data.Construction
 import Data.Model
     exposing
         ( ApiMsg(..)
-        , Model
         , Msg(..)
         )
 import Http
@@ -56,60 +53,46 @@ import Json.Decode as Decode
         )
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
+import RemoteData exposing (WebData)
+import SaveData exposing (SaveData)
 
 
 {-| Command to load currently ongoing constructions of a planet
 -}
-constructionsCmd : PlanetId -> Cmd Msg
-constructionsCmd planetId =
-    Http.send (ApiMsgCompleted << ConstructionsReceived) (get (ApiConstructionQueue planetId) (list constructionDecoder))
-
-
-{-| Create command to load currently ongoing constructions of a planet
-if they have not yet been retrieved
--}
-getConstructionsCmd : Model -> PlanetId -> Cmd Msg
-getConstructionsCmd _ =
-    constructionsCmd
+getConstructions : (WebData (List Construction) -> Msg) -> PlanetId -> Cmd Msg
+getConstructions msg planetId =
+    Http.send (RemoteData.fromResult >> msg) (get (ApiConstructionQueue planetId) (list constructionDecoder))
 
 
 {-| Add new construction queue item
 -}
-postBuildingConstructionCmd : Construction -> Cmd Msg
-postBuildingConstructionCmd construction =
-    Http.send (ApiMsgCompleted << ConstructionsReceived)
+postBuildingConstruction : (SaveData (List Construction) -> Msg) -> Construction -> Cmd Msg
+postBuildingConstruction msg construction =
+    Http.send (SaveData.fromResult >> msg)
         (post ApiBuildingConstruction (constructionEncoder construction) (list constructionDecoder))
 
 
 {-| Modify existing construction queue item
 -}
-putConstructionCmd : Construction -> Cmd Msg
-putConstructionCmd construction =
-    Http.send (ApiMsgCompleted << ConstructionsReceived)
+putConstruction : (SaveData (List Construction) -> Msg) -> Construction -> Cmd Msg
+putConstruction msg construction =
+    Http.send (SaveData.fromResult >> msg)
         (put (ApiConstruction construction) (constructionEncoder construction) (list constructionDecoder))
 
 
 {-| Delete construction from construction queue
 -}
-deleteConstructionCmd : Construction -> Cmd Msg
-deleteConstructionCmd construction =
-    Http.send (ApiMsgCompleted << ConstructionsReceived)
+deleteConstruction : (SaveData (List Construction) -> Msg) -> Construction -> Cmd Msg
+deleteConstruction msg construction =
+    Http.send (SaveData.fromResult >> msg)
         (delete (ApiConstruction construction) Nothing (list constructionDecoder))
 
 
 {-| Command to retrieve buildings available for construction
 -}
-availableBuildingsCmd : Cmd Msg
-availableBuildingsCmd =
-    Http.send (ApiMsgCompleted << AvailableBuildingsReceived) (get ApiAvailableBuildings (list buildingInfoDecoder))
-
-
-{-| Check provided model and if buildings available for construction
-has not been fetched, create a command to do so
--}
-getAvailableBuildingsCmd : Model -> Cmd Msg
-getAvailableBuildingsCmd _ =
-    availableBuildingsCmd
+getAvailableBuildings : (WebData (List BuildingInfo) -> Msg) -> Cmd Msg
+getAvailableBuildings msg =
+    Http.send (RemoteData.fromResult >> msg) (get ApiAvailableBuildings (list buildingInfoDecoder))
 
 
 {-| Decoder for Construction

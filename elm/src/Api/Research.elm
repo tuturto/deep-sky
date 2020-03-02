@@ -1,11 +1,11 @@
 module Api.Research exposing
-    ( availableResearchCmd
-    , cancelResearchCmd
-    , currentResearchCmd
+    ( cancelResearch
+    , getAvailableResearch
+    , getCurrentResearch
+    , getResearchProduction
     , researchDecoder
-    , researchProductionCmd
     , researchTierDecoder
-    , startResearchCmd
+    , startResearch
     , technologyDecoder
     )
 
@@ -45,31 +45,33 @@ import Json.Decode as Decode
         )
 import Json.Decode.Extra exposing (andMap, when)
 import Json.Encode as Encode
+import RemoteData exposing (WebData)
+import SaveData exposing (SaveData)
 
 
-availableResearchCmd : Cmd Msg
-availableResearchCmd =
-    Http.send (ApiMsgCompleted << AvailableResearchReceived) (get ApiAvailableResearch (list researchDecoder))
+getAvailableResearch : (WebData (List Research) -> Msg) -> Cmd Msg
+getAvailableResearch msg =
+    Http.send (RemoteData.fromResult >> msg) (get ApiAvailableResearch (list researchDecoder))
 
 
-currentResearchCmd : Cmd Msg
-currentResearchCmd =
-    Http.send (ApiMsgCompleted << CurrentResearchReceived) (get ApiCurrentResearch (list currentResearchDecoder))
+getCurrentResearch : (SaveData (List CurrentResearch) -> Msg) -> Cmd Msg
+getCurrentResearch msg =
+    Http.send (SaveData.fromResult >> msg) (get ApiCurrentResearch (list currentResearchDecoder))
 
 
-startResearchCmd : CurrentResearch -> Cmd Msg
-startResearchCmd research =
-    Http.send (ApiMsgCompleted << CurrentResearchReceived) (post ApiCurrentResearch (currentResearchEncoder research) (list currentResearchDecoder))
+startResearch : (SaveData (List CurrentResearch) -> Msg) -> CurrentResearch -> Cmd Msg
+startResearch msg research =
+    Http.send (SaveData.fromResult >> msg) (post ApiCurrentResearch (currentResearchEncoder research) (list currentResearchDecoder))
 
 
-cancelResearchCmd : CurrentResearch -> Cmd Msg
-cancelResearchCmd research =
-    Http.send (ApiMsgCompleted << CurrentResearchReceived) (delete ApiCurrentResearch (Just <| currentResearchEncoder research) (list currentResearchDecoder))
+cancelResearch : (SaveData (List CurrentResearch) -> Msg) -> CurrentResearch -> Cmd Msg
+cancelResearch msg research =
+    Http.send (SaveData.fromResult >> msg) (delete ApiCurrentResearch (Just <| currentResearchEncoder research) (list currentResearchDecoder))
 
 
-researchProductionCmd : Cmd Msg
-researchProductionCmd =
-    Http.send (ApiMsgCompleted << ResearchProductionReceived) (get ApiResearchProduction totalResearchScoreDecoder)
+getResearchProduction : (WebData TotalResearchScore -> Msg) -> Cmd Msg
+getResearchProduction msg =
+    Http.send (RemoteData.fromResult >> msg) (get ApiResearchProduction totalResearchScoreDecoder)
 
 
 researchDecoder : Decode.Decoder Research

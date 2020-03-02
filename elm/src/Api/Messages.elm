@@ -6,7 +6,6 @@ module Api.Messages exposing
     , putNews
     )
 
-import Accessors
 import Api.Common
     exposing
         ( delete
@@ -45,7 +44,6 @@ import Api.User
         ( factionIdDecoder
         , factionIdEncoder
         )
-import Data.Accessors exposing (iconsA)
 import Data.Common exposing (MessageId(..), StarDate(..))
 import Data.Messages
     exposing
@@ -69,7 +67,7 @@ import Data.Messages
         , UserIcon(..)
         , UserWrittenNews
         )
-import Data.Model exposing (ApiMsg(..), Model, Msg(..))
+import Data.Model exposing (ApiMsg(..), Msg(..))
 import Data.PersonNames exposing (FirstName(..), PersonName(..))
 import Data.User exposing (UserName(..))
 import Http
@@ -93,28 +91,30 @@ import Json.Decode.Extra
         , withDefault
         )
 import Json.Encode as Encode
+import RemoteData exposing (WebData)
+import SaveData exposing (SaveData)
 import Tuple exposing (pair)
 
 
 {-| Retrieve recent news from the server
 This function never uses cached values, but will always retrieve data from the server
 -}
-getNews : Cmd Msg
-getNews =
-    Http.send (ApiMsgCompleted << NewsReceived) (get ApiMessageList (list newsDecoder))
+getNews : (SaveData (List NewsArticle) -> Msg) -> Cmd Msg
+getNews msg =
+    Http.send (SaveData.fromResult >> msg) (get ApiMessageList (list newsDecoder))
 
 
 {-| Mark news entry read by current user
 -}
-deleteNews : MessageId -> Cmd Msg
-deleteNews mId =
-    Http.send (ApiMsgCompleted << NewsReceived) (delete (ApiSingleMessage mId) Nothing (list newsDecoder))
+deleteNews : (SaveData (List NewsArticle) -> Msg) -> MessageId -> Cmd Msg
+deleteNews msg mId =
+    Http.send (SaveData.fromResult >> msg) (delete (ApiSingleMessage mId) Nothing (list newsDecoder))
 
 
 {-| Submit user written news entry
 -}
-postNews : String -> UserIcon -> Cmd Msg
-postNews message icon =
+postNews : (SaveData (List NewsArticle) -> Msg) -> String -> UserIcon -> Cmd Msg
+postNews msg message icon =
     let
         content =
             UserWritten
@@ -133,14 +133,14 @@ postNews message icon =
             , resolveType = Nothing -- Not used in user written entries
             }
     in
-    Http.send (ApiMsgCompleted << NewsReceived) (post ApiMessageList (newsEncoder news) (list newsDecoder))
+    Http.send (SaveData.fromResult >> msg) (post ApiMessageList (newsEncoder news) (list newsDecoder))
 
 
 {-| Update news article. Used for making choice for special events
 -}
-putNews : NewsArticle -> Cmd Msg
-putNews article =
-    Http.send (ApiMsgCompleted << NewsReceived) (put (ApiSingleMessage article.messageId) (newsEncoder article) (list newsDecoder))
+putNews : (SaveData (List NewsArticle) -> Msg) -> NewsArticle -> Cmd Msg
+putNews msg article =
+    Http.send (SaveData.fromResult >> msg) (put (ApiSingleMessage article.messageId) (newsEncoder article) (list newsDecoder))
 
 
 newsEncoder : NewsArticle -> Encode.Value
@@ -281,14 +281,9 @@ choiceEncoder article =
 {-| Retrieve user news icons and links to corresponding images
 This method will not retrieve them again if supplied model contains cached ones
 -}
-getIcons : Model -> Cmd Msg
-getIcons model =
-    case Accessors.get iconsA model of
-        Just _ ->
-            Cmd.none
-
-        Nothing ->
-            Http.send (ApiMsgCompleted << IconsReceived) (get ApiIcon (list iconDefinitionDecoder))
+getIcons : (WebData (List ( UserIcon, String )) -> Msg) -> Cmd Msg
+getIcons msg =
+    Http.send (RemoteData.fromResult >> msg) (get ApiIcon (list iconDefinitionDecoder))
 
 
 {-| Decoder for news article

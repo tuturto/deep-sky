@@ -48,11 +48,12 @@ import Json.Decode as Decode
         , succeed
         )
 import Json.Decode.Extra exposing (andMap, when)
+import RemoteData exposing (WebData)
 
 
-getUnitDetails : (Result Http.Error Unit -> Msg) -> UnitId -> Cmd Msg
+getUnitDetails : (WebData Unit -> Msg) -> UnitId -> Cmd Msg
 getUnitDetails msg uId =
-    Http.send msg (get (ApiSingleUnit uId) unitDecoder)
+    Http.send (RemoteData.fromResult >> msg) (get (ApiSingleUnit uId) unitDecoder)
 
 
 unitDecoder : Decode.Decoder Unit

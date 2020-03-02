@@ -5,7 +5,7 @@ module ViewModels.Admin.Main exposing
     )
 
 import Data.Admin exposing (Simulation, SystemStatus)
-import Http
+import RemoteData exposing (RemoteData(..), WebData)
 import ViewModels.Admin.People.Add exposing (AdminAddPersonViewModel)
 import ViewModels.Admin.People.Edit exposing (AdminEditPersonViewModel)
 import ViewModels.Admin.People.List exposing (AdminListPeopleViewModel)
@@ -14,14 +14,14 @@ import ViewModels.Admin.People.List exposing (AdminListPeopleViewModel)
 {-| Messages admin view model may emit
 -}
 type AdminRMsg
-    = SimulationStatusReceived (Result Http.Error Simulation)
+    = SimulationStatusReceived (WebData Simulation)
     | ChangeStatusRequested SystemStatus
 
 
 {-| Current state of admin view model
 -}
 type alias AdminViewModel =
-    { simulation : Maybe Simulation
+    { simulation : WebData Simulation
     , adminListPeopleR : AdminListPeopleViewModel
     , adminEditPersonR : AdminEditPersonViewModel
     , adminAddPersonR : AdminAddPersonViewModel
@@ -32,7 +32,7 @@ type alias AdminViewModel =
 -}
 init : AdminViewModel
 init =
-    { simulation = Nothing
+    { simulation = Loading
     , adminListPeopleR = ViewModels.Admin.People.List.init
     , adminEditPersonR = ViewModels.Admin.People.Edit.init
     , adminAddPersonR = ViewModels.Admin.People.Add.init

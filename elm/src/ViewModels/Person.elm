@@ -6,12 +6,12 @@ module ViewModels.Person exposing
 
 import Data.Common exposing (InfoPanelStatus(..))
 import Data.People exposing (DemesneShortInfo, Person)
-import Http
+import RemoteData exposing (RemoteData(..), WebData)
 
 
 type PersonRMsg
-    = PersonDetailsReceived (Result Http.Error Person)
-    | DemesneReceived (Result Http.Error (List DemesneShortInfo))
+    = PersonDetailsReceived (WebData Person)
+    | DemesneReceived (WebData (List DemesneShortInfo))
     | PersonDetailsStatusChanged InfoPanelStatus
     | PersonDetailsRefreshRequested
     | StatsStatusChanged InfoPanelStatus
@@ -25,8 +25,8 @@ type PersonRMsg
 
 
 type alias PersonViewModel =
-    { person : Maybe Person
-    , demesne : Maybe (List DemesneShortInfo)
+    { person : WebData Person
+    , demesne : WebData (List DemesneShortInfo)
     , personDetailsStatus : InfoPanelStatus
     , statsStatus : InfoPanelStatus
     , demesneStatus : InfoPanelStatus
@@ -43,8 +43,8 @@ type alias PersonViewModel =
 
 init : PersonViewModel
 init =
-    { person = Nothing
-    , demesne = Nothing
+    { person = Loading
+    , demesne = Loading
     , personDetailsStatus = InfoPanelOpen
     , statsStatus = InfoPanelOpen
     , demesneStatus = InfoPanelOpen

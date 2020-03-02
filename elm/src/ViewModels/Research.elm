@@ -10,7 +10,10 @@ import Data.Research
         ( CurrentResearch
         , Research
         , TopResearchCategory
+        , TotalResearchScore
         )
+import RemoteData exposing (RemoteData(..), WebData)
+import SaveData exposing (SaveData(..))
 
 
 type ResearchRMsg
@@ -20,6 +23,9 @@ type ResearchRMsg
     | ProjectFocused (Maybe TopResearchCategory)
     | ProjectStarted Research
     | ProjectCancelled CurrentResearch
+    | AvailableResearchReceived (WebData (List Research))
+    | CurrentResearchReceived (SaveData (List CurrentResearch))
+    | ResearchProductionReceived (WebData TotalResearchScore)
 
 
 type alias ResearchViewModel =
@@ -27,6 +33,9 @@ type alias ResearchViewModel =
     , researchFieldStatus : InfoPanelStatus
     , productionStatus : InfoPanelStatus
     , focusedTopCategory : Maybe TopResearchCategory
+    , researchProduction : WebData TotalResearchScore
+    , currentResearch : SaveData (List CurrentResearch)
+    , availableResearch : WebData (List Research)
     }
 
 
@@ -38,4 +47,7 @@ init =
     , researchFieldStatus = InfoPanelOpen
     , productionStatus = InfoPanelOpen
     , focusedTopCategory = Nothing
+    , researchProduction = Loading
+    , currentResearch = RData Loading
+    , availableResearch = Loading
     }

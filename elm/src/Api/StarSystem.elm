@@ -4,27 +4,20 @@ module Api.StarSystem exposing
     , buildingLevelEncoder
     , buildingTypeDecoder
     , buildingTypeEncoder
-    , buildingsCmd
-    , getBuildingsCmd
+    , getBuildings
     , getPlanet
-    , getPlanetCmd
-    , getPlanetsCmd
-    , getPopulationsCmd
+    , getPlanetStatus
+    , getPlanets
+    , getPopulations
     , getStarSystem
-    , getStarSystemCmd
-    , getStarSystemsCmd
-    , getStarsCmd
+    , getStarSystems
+    , getStars
     , gravityDecoder
     , planetDecoder
     , planetPositionDecoder
-    , planetStatus
     , starDecoder
-    , starSystemsCmd
-    , starsCmd
     )
 
-import Accessors
-import Accessors.Library
 import Api.Common
     exposing
         ( get
@@ -39,7 +32,6 @@ import Api.Common
 import Api.Endpoints exposing (Endpoint(..))
 import Api.People exposing (personIdDecoder, personNameDecoder, shortTitleDecoder)
 import Api.User exposing (factionIdDecoder)
-import Data.Accessors exposing (planetIdA, planetStatusA)
 import Data.Common
     exposing
         ( BuildingId(..)
@@ -47,7 +39,6 @@ import Data.Common
         , PlanetId(..)
         , StarId(..)
         , StarSystemId(..)
-        , unPlanetId
         )
 import Data.Construction
     exposing
@@ -56,7 +47,7 @@ import Data.Construction
         , BuildingLevel(..)
         , BuildingType(..)
         )
-import Data.Model exposing (ApiMsg(..), Model, Msg(..))
+import Data.Model exposing (ApiMsg(..), Msg(..))
 import Data.StarSystem
     exposing
         ( Gravity(..)
@@ -87,98 +78,49 @@ import Json.Decode as Decode
         )
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
-import Maybe
-import Maybe.Extra exposing (isNothing)
+import RemoteData exposing (WebData)
 
 
-starSystemsCmd : Cmd Msg
-starSystemsCmd =
-    Http.send (ApiMsgCompleted << StarSystemsReceived) (get ApiStarSystem (list starSystemDecoder))
+getStarSystems : (WebData (List StarSystem) -> Msg) -> Cmd Msg
+getStarSystems msg =
+    Http.send (RemoteData.fromResult >> msg) (get ApiStarSystem (list starSystemDecoder))
 
 
-getStarSystemsCmd : Model -> Cmd Msg
-getStarSystemsCmd model =
-    if isNothing model.starSystems then
-        starSystemsCmd
-
-    else
-        Cmd.none
-
-
-getStarSystem : (Result Http.Error StarSystem -> Msg) -> StarSystemId -> Cmd Msg
+getStarSystem : (WebData StarSystem -> Msg) -> StarSystemId -> Cmd Msg
 getStarSystem msg sId =
-    Http.send msg (get (ApiSingleStarSystem sId) starSystemDecoder)
+    Http.send (RemoteData.fromResult >> msg) (get (ApiSingleStarSystem sId) starSystemDecoder)
 
 
-getStarSystemCmd : (Result Http.Error StarSystem -> Msg) -> StarSystemId -> Cmd Msg
-getStarSystemCmd msg starSystemId =
-    Http.send msg (get (ApiSingleStarSystem starSystemId) starSystemDecoder)
+{-| Retrieve all known stars or all known stars of specific star system
+-}
+getStars : (WebData (List Star) -> Msg) -> Maybe StarSystemId -> Cmd Msg
+getStars msg sId =
+    Http.send (RemoteData.fromResult >> msg) (get (ApiStar sId) (list starDecoder))
 
 
-starsCmd : Cmd Msg
-starsCmd =
-    Http.send (ApiMsgCompleted << StarsReceived) (get ApiStar (list starDecoder))
-
-
-getStarsCmd : Model -> Cmd Msg
-getStarsCmd model =
-    if isNothing model.stars then
-        starsCmd
-
-    else
-        Cmd.none
-
-
-getPlanet : (Result Http.Error Planet -> Msg) -> PlanetId -> Cmd Msg
+getPlanet : (WebData Planet -> Msg) -> PlanetId -> Cmd Msg
 getPlanet msg pId =
-    Http.send msg (get (ApiSinglePlanet pId) planetDecoder)
+    Http.send (RemoteData.fromResult >> msg) (get (ApiSinglePlanet pId) planetDecoder)
 
 
-getPlanetsCmd : Cmd Msg
-getPlanetsCmd =
-    Http.send (ApiMsgCompleted << PlanetsReceived) (get ApiPlanet (list planetDecoder))
+getPlanets : (WebData (List Planet) -> Msg) -> Maybe StarSystemId -> Cmd Msg
+getPlanets msg systemId =
+    Http.send (RemoteData.fromResult >> msg) (get (ApiPlanet systemId) (list planetDecoder))
 
 
-getPlanetCmd : (Result Http.Error Planet -> Msg) -> PlanetId -> Cmd Msg
-getPlanetCmd msg pId =
-    Http.send msg (get (ApiSinglePlanet pId) planetDecoder)
+getPopulations : (WebData (List Population) -> Msg) -> PlanetId -> Cmd Msg
+getPopulations msg planetId =
+    Http.send (RemoteData.fromResult >> msg) (get (ApiPopulation planetId) (list populationDecoder))
 
 
-getPopulationsCmd : Model -> PlanetId -> Cmd Msg
-getPopulationsCmd _ planetId =
-    populationCmd planetId
+getBuildings : (WebData (List Building) -> Msg) -> PlanetId -> Cmd Msg
+getBuildings msg planetId =
+    Http.send (RemoteData.fromResult >> msg) (get (ApiBuilding planetId) (list buildingDecoder))
 
 
-populationCmd : PlanetId -> Cmd Msg
-populationCmd planetId =
-    Http.send (ApiMsgCompleted << PopulationReceived) (get (ApiPopulation planetId) (list populationDecoder))
-
-
-getBuildingsCmd : Model -> PlanetId -> Cmd Msg
-getBuildingsCmd _ planetId =
-    buildingsCmd planetId
-
-
-buildingsCmd : PlanetId -> Cmd Msg
-buildingsCmd planetId =
-    Http.send (ApiMsgCompleted << BuildingsReceived) (get (ApiBuilding planetId) (list buildingDecoder))
-
-
-planetStatus : Model -> PlanetId -> Cmd Msg
-planetStatus model planetId =
-    let
-        currentId =
-            Accessors.get (planetStatusA << Accessors.Library.try << planetIdA) model
-
-        same =
-            Maybe.map (\current -> unPlanetId current == unPlanetId planetId) currentId
-    in
-    case same of
-        Just True ->
-            Cmd.none
-
-        _ ->
-            Http.send (ApiMsgCompleted << PlanetStatusReceived) (get (ApiPlanetStatus planetId) planetStatusDecoder)
+getPlanetStatus : (WebData PlanetStatus -> Msg) -> PlanetId -> Cmd Msg
+getPlanetStatus msg planetId =
+    Http.send (RemoteData.fromResult >> msg) (get (ApiPlanetStatus planetId) planetStatusDecoder)
 
 
 starSystemDecoder : Decode.Decoder StarSystem

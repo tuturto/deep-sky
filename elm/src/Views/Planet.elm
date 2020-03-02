@@ -1,4 +1,9 @@
-module Views.Planet exposing (init, page, update)
+module Views.Planet exposing
+    ( init
+    , isLoading
+    , page
+    , update
+    )
 
 {-| Page displaying planetary details. The information shown in based on
 all reports gathered by the player's faction and thus might not reflect
@@ -9,19 +14,18 @@ or inaccurate.
 import Accessors exposing (get, over, set)
 import Api.Construction
     exposing
-        ( deleteConstructionCmd
-        , getAvailableBuildingsCmd
-        , getConstructionsCmd
-        , postBuildingConstructionCmd
-        , putConstructionCmd
+        ( deleteConstruction
+        , getAvailableBuildings
+        , getConstructions
+        , postBuildingConstruction
+        , putConstruction
         )
 import Api.StarSystem
     exposing
-        ( getBuildingsCmd
-        , getPlanetCmd
-        , getPopulationsCmd
-        , getStarSystemsCmd
-        , planetStatus
+        ( getBuildings
+        , getPlanet
+        , getPlanetStatus
+        , getPopulations
         )
 import Data.Accessors
     exposing
@@ -38,6 +42,7 @@ import Data.Accessors
         , planetA
         , planetDetailsStatusA
         , planetRA
+        , planetStatusA
         , planetStatusesStatusA
         , populationStatusA
         , populationsA
@@ -88,8 +93,10 @@ import Dict
 import Html exposing (Html, a, div, hr, i, img, input, span, text)
 import Html.Attributes exposing (class, placeholder, src, style, type_, value)
 import Html.Events exposing (onClick, onInput)
-import Maybe exposing (andThen, withDefault)
+import Maybe
 import Navigation exposing (parseLocation)
+import RemoteData exposing (RemoteData(..), WebData)
+import SaveData
 import Url exposing (Url)
 import ViewModels.Planet exposing (PlanetRMsg(..))
 import Views.Helpers
@@ -115,19 +122,7 @@ page planetId model =
 {-| Left side panel of the page
 -}
 leftPanel : PlanetId -> Model -> List (Html Msg)
-leftPanel planetId model =
-    let
-        planet =
-            model.planetR.planet
-
-        population =
-            get populationsA model
-                |> andThen (Dict.get (unPlanetId planetId))
-
-        constructions =
-            get constructionsA model
-                |> andThen (Dict.get (unPlanetId planetId))
-    in
+leftPanel _ model =
     infoPanel
         { title = "Details"
         , currentStatus = model.planetR.planetDetailsStatus
@@ -136,7 +131,7 @@ leftPanel planetId model =
         , refreshMessage = Nothing
         }
         Nothing
-        (planetDetails planet)
+        (planetDetails model.planetR.planet)
         model
         ++ infoPanel
             { title = "Planet status"
@@ -146,7 +141,7 @@ leftPanel planetId model =
             , refreshMessage = Nothing
             }
             Nothing
-            (statusList model.planetStatus)
+            (statusList model.planetR.planetStatus)
             model
         ++ infoPanel
             { title = "Population"
@@ -156,7 +151,7 @@ leftPanel planetId model =
             , refreshMessage = Nothing
             }
             Nothing
-            (populationDetails population)
+            (populationDetails model.planetR.populations)
             model
         ++ infoPanel
             { title = "Construction queue"
@@ -166,19 +161,14 @@ leftPanel planetId model =
             , refreshMessage = Nothing
             }
             Nothing
-            (constructionQueue constructions)
+            (constructionQueue model.planetR.constructions)
             model
 
 
 {-| Right side panel of the page
 -}
 rightPanel : PlanetId -> Model -> List (Html Msg)
-rightPanel planetId model =
-    let
-        buildings =
-            get buildingsA model
-                |> andThen (Dict.get (unPlanetId planetId))
-    in
+rightPanel _ model =
     infoPanel
         { title = "Buildings"
         , currentStatus = model.planetR.buildingsStatus
@@ -187,7 +177,7 @@ rightPanel planetId model =
         , refreshMessage = Nothing
         }
         Nothing
-        (buildingsList buildings)
+        (buildingsList model.planetR.buildings)
         model
         ++ infoPanel
             { title = "Landed ships"
@@ -214,7 +204,7 @@ rightPanel planetId model =
 {-| Construction queue senction, containing all currently queued constructions
 and search portion where user can queue up more constructions
 -}
-constructionQueue : Maybe (List Construction) -> Model -> List (Html Msg)
+constructionQueue : WebData (List Construction) -> Model -> List (Html Msg)
 constructionQueue constructions model =
     currentQueue constructions model
         ++ (hr [] []
@@ -225,21 +215,21 @@ constructionQueue constructions model =
 
 {-| Render list of constructions currently queued
 -}
-currentQueue : Maybe (List Construction) -> Model -> List (Html Msg)
+currentQueue : WebData (List Construction) -> Model -> List (Html Msg)
 currentQueue constructions _ =
     let
         maxIndex =
-            withDefault [] constructions
+            RemoteData.withDefault [] constructions
                 |> List.map (unConstructionIndex << constructionIndex)
                 |> List.maximum
-                |> withDefault 0
+                |> Maybe.withDefault 0
     in
     div [ class "row design-panel-title" ]
         [ div [ class "col-lg-1" ] []
         , div [ class "col-lg-6" ] [ text "Name" ]
         , div [ class "col-lg-4" ] [ text "Cost left" ]
         ]
-        :: (withDefault [] constructions
+        :: (RemoteData.withDefault [] constructions
                 |> List.sortBy (unConstructionIndex << constructionIndex)
                 |> List.map (queueItem maxIndex)
            )
@@ -308,8 +298,8 @@ searchField model =
 -}
 searchResults : Model -> List (Html Msg)
 searchResults model =
-    get availableBuildingsA model
-        |> withDefault []
+    get availableBuildingsA model.planetR
+        |> RemoteData.withDefault []
         |> List.sortWith (\a b -> compare a.name b.name)
         |> List.filter
             (\x ->
@@ -371,14 +361,15 @@ orbitingShips _ _ =
 
 {-| Details of the planet
 -}
-planetDetails : Maybe Planet -> Model -> List (Html Msg)
+planetDetails : WebData Planet -> Model -> List (Html Msg)
 planetDetails planet _ =
     [ div [ class "row" ]
         [ div [ class "col-lg-2 design-panel-title" ] [ text "Name" ]
         , div [ class "col-lg-4" ]
             [ planet
-                |> andThen (\x -> Just (unPlanetName x.name))
-                |> withDefault "-"
+                |> RemoteData.toMaybe
+                |> Maybe.andThen (\x -> Just (unPlanetName x.name))
+                |> Maybe.withDefault "-"
                 |> text
             ]
         ]
@@ -386,9 +377,10 @@ planetDetails planet _ =
         [ div [ class "col-lg-2 design-panel-title" ] [ text "Position" ]
         , div [ class "col-lg-4" ]
             [ planet
-                |> andThen (\x -> andThen (Just << unPlanetPosition) x.position)
-                |> andThen (Just << String.fromInt)
-                |> withDefault "-"
+                |> RemoteData.toMaybe
+                |> Maybe.andThen (\x -> Maybe.andThen (Just << unPlanetPosition) x.position)
+                |> Maybe.andThen (Just << String.fromInt)
+                |> Maybe.withDefault "-"
                 |> text
             ]
         ]
@@ -396,8 +388,9 @@ planetDetails planet _ =
         [ div [ class "col-lg-2 design-panel-title" ] [ text "Gravity" ]
         , div [ class "col-lg-4" ]
             [ planet
-                |> andThen (\x -> andThen (Just << gravityToString) x.gravity)
-                |> withDefault "-"
+                |> RemoteData.toMaybe
+                |> Maybe.andThen (\x -> Maybe.andThen (Just << gravityToString) x.gravity)
+                |> Maybe.withDefault "-"
                 |> text
             ]
         ]
@@ -407,19 +400,25 @@ planetDetails planet _ =
             [ let
                 title =
                     planet
-                        |> andThen (\x -> x.rulerTitle)
-                        |> andThen (Just << unShortTitle)
-                        |> withDefault " "
+                        |> RemoteData.toMaybe
+                        |> Maybe.andThen (\x -> x.rulerTitle)
+                        |> Maybe.andThen (Just << unShortTitle)
+                        |> Maybe.withDefault " "
 
                 rulerText =
                     planet
-                        |> andThen (\x -> x.rulerName)
-                        |> andThen (\x -> Just <| displayName x)
-                        |> andThen (\x -> Just <| title ++ " " ++ x)
-                        |> withDefault "No ruler"
+                        |> RemoteData.toMaybe
+                        |> Maybe.andThen (\x -> x.rulerName)
+                        |> Maybe.andThen (\x -> Just <| displayName x)
+                        |> Maybe.andThen (\x -> Just <| title ++ " " ++ x)
+                        |> Maybe.withDefault "No ruler"
                         |> text
               in
-              case planet |> andThen (\x -> x.rulerId) of
+              case
+                planet
+                    |> RemoteData.toMaybe
+                    |> Maybe.andThen (\x -> x.rulerId)
+              of
                 Nothing ->
                     rulerText
 
@@ -431,26 +430,29 @@ planetDetails planet _ =
         [ div [ class "col-lg-2 design-panel-title" ] [ text "Date" ]
         , div [ class "col-lg-4" ]
             [ planet
-                |> andThen (\x -> Just <| starDateToString x.date)
-                |> withDefault "-"
+                |> RemoteData.toMaybe
+                |> Maybe.andThen (\x -> Just <| starDateToString x.date)
+                |> Maybe.withDefault "-"
                 |> text
             ]
         ]
     ]
 
 
-statusList : Maybe PlanetStatus -> Model -> List (Html Msg)
+statusList : WebData PlanetStatus -> Model -> List (Html Msg)
 statusList status _ =
-    case status of
-        Nothing ->
-            []
-
-        Just x ->
-            [ div [ class "row" ]
-                [ div [ class "col-lg-12" ] <|
-                    List.map planetStatusIcon x.status
-                ]
-            ]
+    status
+        |> RemoteData.toMaybe
+        |> Maybe.andThen
+            (\x ->
+                Just
+                    [ div [ class "row" ]
+                        [ div [ class "col-lg-12" ] <|
+                            List.map planetStatusIcon x.status
+                        ]
+                    ]
+            )
+        |> Maybe.withDefault []
 
 
 planetStatusIcon : PlanetStatusInfo -> Html Msg
@@ -464,14 +466,14 @@ planetStatusIcon status =
 
 {-| List of populations currently inhabiting the planet
 -}
-populationDetails : Maybe (List Population) -> Model -> List (Html Msg)
+populationDetails : WebData (List Population) -> Model -> List (Html Msg)
 populationDetails population _ =
     div [ class "row design-panel-title" ]
         [ div [ class "col-lg-4" ] [ text "Race" ]
         , div [ class "col-lg-4" ] [ text "Inhabitants" ]
         , div [ class "col-lg-4" ] [ text "Date" ]
         ]
-        :: List.map populationRow (withDefault [] population)
+        :: List.map populationRow (RemoteData.withDefault [] population)
 
 
 {-| Single row in population list
@@ -487,14 +489,14 @@ populationRow population =
 
 {-| List of buildings currently on the planet
 -}
-buildingsList : Maybe (List Building) -> Model -> List (Html Msg)
+buildingsList : WebData (List Building) -> Model -> List (Html Msg)
 buildingsList buildings _ =
     div [ class "row design-panel-title" ]
         [ div [ class "col-lg-5" ] [ text "Type" ]
         , div [ class "col-lg-3" ] [ text "Damage" ]
         , div [ class "col-lg-4" ] [ text "Date" ]
         ]
-        :: List.map buildingRow (withDefault [] buildings)
+        :: List.map buildingRow (RemoteData.withDefault [] buildings)
 
 
 {-| Single building on the building list
@@ -518,15 +520,14 @@ buildingRow building =
 {-| Initiate retrieval of data needed by this page
 -}
 init : PlanetId -> Model -> Cmd Msg
-init pId model =
+init pId _ =
     Cmd.batch
-        [ getPlanetCmd (PlanetMessage << PlanetDetailsReceived) pId
-        , getPopulationsCmd model pId
-        , getBuildingsCmd model pId
-        , getConstructionsCmd model pId
-        , getStarSystemsCmd model
-        , getAvailableBuildingsCmd model
-        , planetStatus model pId
+        [ getPlanet (PlanetMessage << PlanetDetailsReceived) pId
+        , getPopulations (PlanetMessage << PopulationReceived) pId
+        , getBuildings (PlanetMessage << BuildingsReceived) pId
+        , getConstructions (PlanetMessage << ConstructionsReceived) pId
+        , getAvailableBuildings (PlanetMessage << AvailableBuildingsReceived)
+        , getPlanetStatus (PlanetMessage << PlanetStatusReceived) pId
         ]
 
 
@@ -563,11 +564,13 @@ update msg model =
                         ShipConstruction data ->
                             ShipConstruction <| set indexA index data
             in
-            ( model, putConstructionCmd newConstruction )
+            ( model
+            , putConstruction (PlanetMessage << ConstructionsReceived << SaveData.toWebData) newConstruction
+            )
 
         DeleteConstructionFromQueue construction ->
             ( model
-            , deleteConstructionCmd construction
+            , deleteConstruction (PlanetMessage << ConstructionsReceived << SaveData.toWebData) construction
             )
 
         BuildingSearch name ->
@@ -588,7 +591,7 @@ update msg model =
             case construction of
                 Just x ->
                     ( model
-                    , postBuildingConstructionCmd x
+                    , postBuildingConstruction (PlanetMessage << ConstructionsReceived << SaveData.toWebData) x
                     )
 
                 Nothing ->
@@ -599,14 +602,129 @@ update msg model =
         PlanetStatusesStatusChanged status ->
             ( set (planetRA << planetStatusesStatusA) status model, Cmd.none )
 
-        PlanetDetailsReceived (Ok planet) ->
-            ( set (planetRA << planetA) (Just planet) model
+        PlanetDetailsReceived NotAsked ->
+            ( model
             , Cmd.none
             )
 
-        PlanetDetailsReceived (Err err) ->
-            ( set (planetRA << planetA) Nothing model
+        PlanetDetailsReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        PlanetDetailsReceived (Success planet) ->
+            ( set (planetRA << planetA) (Success planet) model
+            , Cmd.none
+            )
+
+        PlanetDetailsReceived (Failure err) ->
+            ( set (planetRA << planetA) (Failure err) model
                 |> over errorsA (\errors -> error err "Failed to load planet details" :: errors)
+            , Cmd.none
+            )
+
+        PopulationReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        PopulationReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        PopulationReceived (Success population) ->
+            ( set (planetRA << populationsA) (Success population) model
+            , Cmd.none
+            )
+
+        PopulationReceived (Failure err) ->
+            ( set (planetRA << populationsA) (Failure err) model
+                |> over errorsA (\errors -> error err "Failed to load planet population" :: errors)
+            , Cmd.none
+            )
+
+        BuildingsReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        BuildingsReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        BuildingsReceived (Success buildings) ->
+            ( set (planetRA << buildingsA) (Success buildings) model
+            , Cmd.none
+            )
+
+        BuildingsReceived (Failure err) ->
+            ( set (planetRA << buildingsA) (Failure err) model
+                |> over errorsA (\errors -> error err "Failed to load planet buildings" :: errors)
+            , Cmd.none
+            )
+
+        AvailableBuildingsReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        AvailableBuildingsReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        AvailableBuildingsReceived (Success buildings) ->
+            ( set (planetRA << availableBuildingsA) (Success buildings) model
+            , Cmd.none
+            )
+
+        AvailableBuildingsReceived (Failure err) ->
+            ( set (planetRA << availableBuildingsA) (Failure err) model
+                |> over errorsA (\errors -> error err "Failed to load available buildings" :: errors)
+            , Cmd.none
+            )
+
+        ConstructionsReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        ConstructionsReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        ConstructionsReceived (Success constructions) ->
+            ( set (planetRA << constructionsA) (Success constructions) model
+            , Cmd.none
+            )
+
+        ConstructionsReceived (Failure err) ->
+            ( set (planetRA << constructionsA) (Failure err) model
+                |> over errorsA (\errors -> error err "Failed to load constructions" :: errors)
+            , Cmd.none
+            )
+
+        PlanetStatusReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        PlanetStatusReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        PlanetStatusReceived (Success status) ->
+            ( set (planetRA << planetStatusA) (Success status) model
+            , Cmd.none
+            )
+
+        PlanetStatusReceived (Failure err) ->
+            ( set (planetRA << planetStatusA) (Failure err) model
+                |> over errorsA (\errors -> error err "Failed to load planet status" :: errors)
             , Cmd.none
             )
 
@@ -622,22 +740,17 @@ mapInfoToConstruction model info =
             currentPlanet model.url
 
         constructions =
-            andThen
-                (\x ->
-                    get constructionsA model
-                        |> andThen (Dict.get (unPlanetId x))
-                )
-                planetId
+            RemoteData.toMaybe model.planetR.constructions
 
         newIndex =
-            withDefault [] constructions
+            Maybe.withDefault [] constructions
                 |> List.map (unConstructionIndex << constructionIndex)
                 |> List.maximum
-                |> withDefault -1
+                |> Maybe.withDefault -1
                 |> (\x -> x + 1)
                 |> ConstructionIndex
     in
-    andThen
+    Maybe.andThen
         (\x ->
             Just <|
                 BuildingConstruction
@@ -667,3 +780,17 @@ currentPlanet url =
 
         _ ->
             Nothing
+
+
+isLoading : Model -> Bool
+isLoading model =
+    let
+        vm =
+            model.planetR
+    in
+    RemoteData.isLoading vm.planet
+        || RemoteData.isLoading vm.planetStatus
+        || RemoteData.isLoading vm.populations
+        || RemoteData.isLoading vm.buildings
+        || RemoteData.isLoading vm.availableBuildings
+        || RemoteData.isLoading vm.constructions

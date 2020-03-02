@@ -100,16 +100,17 @@ import Json.Decode as Decode
         )
 import Json.Decode.Extra exposing (andMap, when)
 import Json.Encode as Encode
+import RemoteData exposing (WebData)
 
 
-getPersonDetails : (Result Http.Error Person -> Msg) -> PersonId -> Cmd Msg
+getPersonDetails : (WebData Person -> Msg) -> PersonId -> Cmd Msg
 getPersonDetails msg pId =
-    Http.send msg (get (ApiSinglePerson pId) personDecoder)
+    Http.send (RemoteData.fromResult >> msg) (get (ApiSinglePerson pId) personDecoder)
 
 
-getDemesne : (Result Http.Error (List DemesneShortInfo) -> Msg) -> PersonId -> Cmd Msg
+getDemesne : (WebData (List DemesneShortInfo) -> Msg) -> PersonId -> Cmd Msg
 getDemesne msg pId =
-    Http.send msg (get (ApiDemesne pId) (list demesneReportShortDecoder))
+    Http.send (RemoteData.fromResult >> msg) (get (ApiDemesne pId) (list demesneReportShortDecoder))
 
 
 personNameDecoder : Decode.Decoder PersonName

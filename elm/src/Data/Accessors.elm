@@ -116,6 +116,9 @@ module Data.Accessors exposing
     , statusA
     , stewardshipA
     , systemDetailsStatusA
+    , systemsA
+    , systemsCurrentPageA
+    , systemsStatusA
     , timeA
     , traitsA
     , traitsCurrentPageA
@@ -128,6 +131,27 @@ module Data.Accessors exposing
     )
 
 import Accessors exposing (Relation, makeOneToOne)
+
+
+systemsCurrentPageA : Relation field sub wrap -> Relation { rec | systemsCurrentPage : field } sub wrap
+systemsCurrentPageA =
+    makeOneToOne
+        .systemsCurrentPage
+        (\change rec -> { rec | systemsCurrentPage = change rec.systemsCurrentPage })
+
+
+systemsStatusA : Relation field sub wrap -> Relation { rec | systemsStatus : field } sub wrap
+systemsStatusA =
+    makeOneToOne
+        .systemsStatus
+        (\change rec -> { rec | systemsStatus = change rec.systemsStatus })
+
+
+systemsA : Relation field sub wrap -> Relation { rec | systems : field } sub wrap
+systemsA =
+    makeOneToOne
+        .systems
+        (\change rec -> { rec | systems = change rec.systems })
 
 
 crewTabCurrentPageA : Relation field sub wrap -> Relation { rec | crewTabCurrentPage : field } sub wrap

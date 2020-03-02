@@ -7,12 +7,18 @@ module ViewModels.Planet exposing
 import Data.Common exposing (InfoPanelStatus(..))
 import Data.Construction
     exposing
-        ( BuildingInfo
+        ( Building
+        , BuildingInfo
         , Construction
         , ConstructionIndex
         )
-import Data.StarSystem exposing (Planet)
-import Http
+import Data.StarSystem
+    exposing
+        ( Planet
+        , PlanetStatus
+        , Population
+        )
+import RemoteData exposing (RemoteData(..), WebData)
 
 
 {-| Messages that planet view might create
@@ -30,7 +36,12 @@ type PlanetRMsg
     | BuildingSearch String
     | ClearBuildingSearch
     | QueueConstruction BuildingInfo
-    | PlanetDetailsReceived (Result Http.Error Planet)
+    | PlanetDetailsReceived (WebData Planet)
+    | PopulationReceived (WebData (List Population))
+    | BuildingsReceived (WebData (List Building))
+    | AvailableBuildingsReceived (WebData (List BuildingInfo))
+    | PlanetStatusReceived (WebData PlanetStatus)
+    | ConstructionsReceived (WebData (List Construction))
 
 
 {-| Record that holds information regarding to planet view.
@@ -46,7 +57,12 @@ type alias PlanetViewModel =
     , constructionStatus : InfoPanelStatus
     , buildingSearchText : String
     , planetStatusesStatus : InfoPanelStatus
-    , planet : Maybe Planet
+    , planet : WebData Planet
+    , planetStatus : WebData PlanetStatus
+    , populations : WebData (List Population)
+    , buildings : WebData (List Building)
+    , availableBuildings : WebData (List BuildingInfo)
+    , constructions : WebData (List Construction)
     }
 
 
@@ -62,5 +78,10 @@ init =
     , constructionStatus = InfoPanelOpen
     , buildingSearchText = ""
     , planetStatusesStatus = InfoPanelOpen
-    , planet = Nothing
+    , planet = Loading
+    , planetStatus = Loading
+    , populations = Loading
+    , buildings = Loading
+    , availableBuildings = Loading
+    , constructions = Loading
     }

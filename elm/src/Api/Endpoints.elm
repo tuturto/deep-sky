@@ -14,6 +14,7 @@ import Data.Common
         , personIdToString
         , planetIdToString
         , starSystemIdToString
+        , unStarSystemId
         , unitIdToString
         )
 import Data.Construction exposing (Construction(..))
@@ -27,8 +28,8 @@ type Endpoint
     | ApiResources
     | ApiStarSystem
     | ApiSingleStarSystem StarSystemId
-    | ApiStar
-    | ApiPlanet
+    | ApiStar (Maybe StarSystemId)
+    | ApiPlanet (Maybe StarSystemId)
     | ApiSinglePlanet PlanetId
     | ApiPopulation PlanetId
     | ApiBuilding PlanetId
@@ -74,11 +75,17 @@ endpointToString endpoint =
         ApiSingleStarSystem systemId ->
             absolute [ "api", "starsystem", starSystemIdToString systemId ] []
 
-        ApiStar ->
-            absolute [ "api", "star" ] []
+        ApiStar systemId ->
+            absolute [ "api", "star" ] <|
+                values
+                    [ Maybe.map (int "systemId" << unStarSystemId) systemId
+                    ]
 
-        ApiPlanet ->
-            absolute [ "api", "planet" ] []
+        ApiPlanet systemId ->
+            absolute [ "api", "planet" ] <|
+                values
+                    [ Maybe.map (int "systemId" << unStarSystemId) systemId
+                    ]
 
         ApiSinglePlanet planetId ->
             absolute [ "api", "planet", planetIdToString planetId ] []

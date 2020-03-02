@@ -1,4 +1,9 @@
-module Views.Unit exposing (init, page, update)
+module Views.Unit exposing
+    ( init
+    , isLoading
+    , page
+    , update
+    )
 
 import Accessors exposing (over, set)
 import Api.StarSystem exposing (getPlanet, getStarSystem)
@@ -48,7 +53,6 @@ import Html
         ( Html
         , a
         , div
-        , hr
         , span
         , table
         , tbody
@@ -61,6 +65,7 @@ import Html
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Ordering exposing (Ordering)
+import RemoteData exposing (RemoteData(..))
 import ViewModels.Unit
     exposing
         ( Tab(..)
@@ -88,13 +93,13 @@ page model =
 commonInfo : UnitViewModel -> List (Html Msg)
 commonInfo vm =
     case vm.unit of
-        Just (Ship details) ->
+        Success (Ship details) ->
             shipCommonInfo vm details
 
-        Just (Vehicle details) ->
+        Success (Vehicle details) ->
             vehicleCommonInfo vm details
 
-        Nothing ->
+        _ ->
             emptyCommonInfo
 
 
@@ -136,12 +141,12 @@ shipLocation : UnitViewModel -> Maybe ShipLocation -> Html Msg
 shipLocation vm location =
     let
         planetName =
-            Maybe.map (unPlanetName << .name) vm.planet
-                |> Maybe.withDefault "unknown planet"
+            RemoteData.map (unPlanetName << .name) vm.planet
+                |> RemoteData.withDefault "unknown planet"
 
         systemName =
-            Maybe.map (unStarSystemName << .name) vm.starSystem
-                |> Maybe.withDefault "unknown system"
+            RemoteData.map (unStarSystemName << .name) vm.starSystem
+                |> RemoteData.withDefault "unknown system"
     in
     case location of
         Just (PlanetarySpace pId band) ->
@@ -318,13 +323,13 @@ crewTab model =
     let
         crew =
             case model.unitR.unit of
-                Just (Ship details) ->
+                Success (Ship details) ->
                     details.crew
 
-                Just (Vehicle details) ->
+                Success (Vehicle details) ->
                     details.crew
 
-                Nothing ->
+                _ ->
                     []
     in
     infoPanel
@@ -358,7 +363,7 @@ crewTabContent model =
                         ]
                     ]
                 , case model.unitR.unit of
-                    Just unit ->
+                    Success unit ->
                         case unit of
                             Ship details ->
                                 crewTable model.unitR details.crew
@@ -366,7 +371,7 @@ crewTabContent model =
                             Vehicle details ->
                                 crewTable model.unitR details.crew
 
-                    Nothing ->
+                    _ ->
                         tbody []
                             [ tr []
                                 [ td [ class "noData", Html.Attributes.colspan 3 ] [ text "Nothing to show" ] ]
@@ -430,35 +435,65 @@ statsTab _ =
 update : UnitRMsg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        UnitDetailsReceived (Ok unit) ->
-            ( set (unitRA << unitA) (Just unit) model
+        UnitDetailsReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        UnitDetailsReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        UnitDetailsReceived (Success unit) ->
+            ( set (unitRA << unitA) (Success unit) model
             , getLocationDetails unit
             )
 
-        UnitDetailsReceived (Err err) ->
-            ( set (unitRA << unitA) Nothing model
+        UnitDetailsReceived (Failure err) ->
+            ( set (unitRA << unitA) (Failure err) model
                 |> over errorsA (\errors -> error err "Failed to load unit details" :: errors)
             , Cmd.none
             )
 
-        PlanetDetailsReceived (Ok planet) ->
-            ( set (unitRA << planetA) (Just planet) model
+        PlanetDetailsReceived NotAsked ->
+            ( model
             , Cmd.none
             )
 
-        PlanetDetailsReceived (Err err) ->
-            ( set (unitRA << planetA) Nothing model
+        PlanetDetailsReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        PlanetDetailsReceived (Success planet) ->
+            ( set (unitRA << planetA) (Success planet) model
+            , Cmd.none
+            )
+
+        PlanetDetailsReceived (Failure err) ->
+            ( set (unitRA << planetA) (Failure err) model
                 |> over errorsA (\errors -> error err "Failed to load planet details" :: errors)
             , Cmd.none
             )
 
-        StarSystemDetailsReceived (Ok starSystem) ->
-            ( set (unitRA << starSystemA) (Just starSystem) model
+        StarSystemDetailsReceived NotAsked ->
+            ( model
             , Cmd.none
             )
 
-        StarSystemDetailsReceived (Err err) ->
-            ( set (unitRA << starSystemA) Nothing model
+        StarSystemDetailsReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        StarSystemDetailsReceived (Success starSystem) ->
+            ( set (unitRA << starSystemA) (Success starSystem) model
+            , Cmd.none
+            )
+
+        StarSystemDetailsReceived (Failure err) ->
+            ( set (unitRA << starSystemA) (Failure err) model
                 |> over errorsA (\errors -> error err "Failed to load star system details" :: errors)
             , Cmd.none
             )
@@ -511,3 +546,14 @@ init uId _ =
     Cmd.batch
         [ getUnitDetails (UnitMessage << UnitDetailsReceived) uId
         ]
+
+
+isLoading : Model -> Bool
+isLoading model =
+    let
+        vm =
+            model.unitR
+    in
+    RemoteData.isLoading vm.starSystem
+        || RemoteData.isLoading vm.planet
+        || RemoteData.isLoading vm.unit

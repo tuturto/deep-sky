@@ -40,3 +40,13 @@
 
     Error Bar Should Not Be Visible
         Element Should Not Be Visible   class:error-bar
+
+All actions that communicate with server indicate their readiness. Common
+loading indicator is enabled as long as at least one such an action is
+being processed. ``Wait Until Data Has Finished Loading`` will wait until
+indicator disappears or time-out expires.
+
+.. code:: robotframework
+
+    Wait Until Data Has Finished Loading
+        Wait Until Element Is Not Visible   id:loading-indicator

@@ -1,7 +1,6 @@
-module Views.Admin.People.Edit exposing (init, page, update)
+module Views.Admin.People.Edit exposing (init, isLoading, page, update)
 
-import Accessors exposing (get, over, set)
-import Accessors.Library exposing (try)
+import Accessors exposing (over, set)
 import Api.Admin
     exposing
         ( getPerson
@@ -27,9 +26,7 @@ import Data.Accessors
         , personA
         , regnalNumberA
         , sexA
-        , simulationA
         , stewardshipA
-        , timeA
         )
 import Data.Admin exposing (Person)
 import Data.Common
@@ -71,6 +68,7 @@ import Data.PersonNames
 import Html exposing (Html, div, input, option, select, text)
 import Html.Attributes exposing (class, disabled, maxlength, step, type_, value)
 import Html.Events exposing (onClick, onInput)
+import RemoteData exposing (RemoteData(..))
 import ViewModels.Admin.Main exposing (AdminRMsg(..))
 import ViewModels.Admin.People.Edit
     exposing
@@ -78,6 +76,7 @@ import ViewModels.Admin.People.Edit
         , Fields
         , emptyFields
         )
+import Views.Admin.Main
 import Views.Admin.Menu exposing (adminLayout, personMenu)
 import Views.Helpers exposing (starDateToString, stringToStarDate)
 
@@ -225,7 +224,9 @@ page model =
                 [ text "Age" ]
             , div [ class "col-lg-4" ]
                 [ Maybe.map2 age
-                    (get (adminRA << simulationA << try << timeA) model)
+                    (RemoteData.map .time model.adminR.simulation
+                        |> RemoteData.toMaybe
+                    )
                     (stringToStarDate fields.dateOfBirth)
                     |> Maybe.map unAge
                     |> Maybe.map String.fromInt
@@ -528,16 +529,26 @@ init pId _ =
 update : AdminEditPersonRMsg -> Model -> ( Model, Cmd Msg )
 update message model =
     case message of
-        PersonReceived (Ok res) ->
-            ( set (adminRA << adminEditPersonRA << personA) (Just res) model
+        PersonReceived (Success res) ->
+            ( set (adminRA << adminEditPersonRA << personA) (Success res) model
                 |> set (adminRA << adminEditPersonRA << fieldsA) (personToFields (Just res))
             , Cmd.none
             )
 
-        PersonReceived (Err err) ->
+        PersonReceived (Failure err) ->
             ( over errorsA (\errors -> error err "Failed to load person" :: errors) model
-                |> set (adminRA << adminEditPersonRA << personA) Nothing
+                |> set (adminRA << adminEditPersonRA << personA) (Failure err)
                 |> set (adminRA << adminEditPersonRA << fieldsA) (personToFields Nothing)
+            , Cmd.none
+            )
+
+        PersonReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        PersonReceived NotAsked ->
+            ( model
             , Cmd.none
             )
 
@@ -607,20 +618,42 @@ update message model =
             )
 
         UndoRequested ->
-            ( set (adminRA << adminEditPersonRA << fieldsA)
-                (personToFields <| get (adminRA << adminEditPersonRA << personA) model)
-                model
-            , Cmd.none
-            )
-
-        SaveRequested ->
             case model.adminR.adminEditPersonR.person of
-                Nothing ->
+                NotAsked ->
                     ( model
                     , Cmd.none
                     )
 
-                Just person ->
+                Loading ->
+                    ( model
+                    , Cmd.none
+                    )
+
+                Success person ->
+                    ( set (adminRA << adminEditPersonRA << fieldsA)
+                        (personToFields <| Just person)
+                        model
+                    , Cmd.none
+                    )
+
+                Failure _ ->
+                    ( model
+                    , Cmd.none
+                    )
+
+        SaveRequested ->
+            case model.adminR.adminEditPersonR.person of
+                NotAsked ->
+                    ( model
+                    , Cmd.none
+                    )
+
+                Loading ->
+                    ( model
+                    , Cmd.none
+                    )
+
+                Success person ->
                     let
                         updatedPerson =
                             fieldsToPerson person model.adminR.adminEditPersonR.fields
@@ -632,6 +665,17 @@ update message model =
                             )
 
                         Just p ->
-                            ( model
+                            ( set (adminRA << adminEditPersonRA << personA) Loading model
                             , putPerson (AdminEditPersonMessage << PersonReceived) p.id p
                             )
+
+                Failure _ ->
+                    ( model
+                    , Cmd.none
+                    )
+
+
+isLoading : Model -> Bool
+isLoading model =
+    RemoteData.isLoading model.adminR.adminEditPersonR.person
+        || Views.Admin.Main.isLoading model

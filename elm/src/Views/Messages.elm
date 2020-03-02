@@ -1,4 +1,9 @@
-module Views.Messages exposing (init, page, update)
+module Views.Messages exposing
+    ( init
+    , isLoading
+    , page
+    , update
+    )
 
 import Accessors exposing (get, over, set)
 import Api.Messages
@@ -14,6 +19,7 @@ import Data.Accessors
         ( activeUserIconA
         , choiceA
         , currentPageA
+        , errorsA
         , iconsA
         , messagesRA
         , newsA
@@ -27,6 +33,7 @@ import Data.Common
         ( InfoPanelStatus(..)
         , ResourceType(..)
         , Route(..)
+        , error
         , maxPage
         , unPlanetName
         , unStarDate
@@ -69,7 +76,8 @@ import Html.Attributes
         , src
         )
 import Html.Events exposing (onClick, onInput)
-import Maybe exposing (withDefault)
+import RemoteData exposing (RemoteData(..))
+import SaveData exposing (SaveData(..))
 import ViewModels.Messages exposing (MessagesRMsg(..))
 import Views.Helpers
     exposing
@@ -98,8 +106,8 @@ page model =
                     { pageSize = get (messagesRA << pageSizeA) model
                     , currentPage = get (messagesRA << currentPageA) model
                     , maxPage =
-                        get newsA model
-                            |> withDefault []
+                        get (messagesRA << newsA) model
+                            |> SaveData.withDefault []
                             |> maxPage (get (messagesRA << pageSizeA) model)
                     , pageChangedMessage = NewsMessage << PageChanged
                     }
@@ -123,18 +131,27 @@ page model =
 -}
 leftPanel : Model -> List (Html Msg)
 leftPanel model =
-    case get newsA model of
-        Nothing ->
+    let
+        shownEntries entries =
+            List.sortWith descendingStarDate entries
+                |> List.drop (get (messagesRA << pageSizeA) model * get (messagesRA << currentPageA) model)
+                |> List.take (get (messagesRA << pageSizeA) model)
+    in
+    case get (messagesRA << newsA) model of
+        RData NotAsked ->
             []
 
-        Just entries ->
-            let
-                shownEntries =
-                    List.sortWith descendingStarDate entries
-                        |> List.drop (get (messagesRA << pageSizeA) model * get (messagesRA << currentPageA) model)
-                        |> List.take (get (messagesRA << pageSizeA) model)
-            in
-            List.map newsEntry shownEntries
+        RData Loading ->
+            []
+
+        RData (Success entries) ->
+            List.map newsEntry <| shownEntries entries
+
+        Saving entries ->
+            List.map newsEntry <| shownEntries entries
+
+        RData (Failure _) ->
+            []
 
 
 {-| Sort by star date in descending order
@@ -520,12 +537,18 @@ iconBar model =
         activeButton =
             get (messagesRA << activeUserIconA) model
     in
-    case get iconsA model of
-        Nothing ->
+    case get (messagesRA << iconsA) model of
+        NotAsked ->
             []
 
-        Just icons ->
+        Loading ->
+            []
+
+        Success icons ->
             List.map (iconInfo activeButton) icons
+
+        Failure _ ->
+            []
 
 
 iconInfo : Maybe UserIcon -> ( UserIcon, String ) -> Html Msg
@@ -568,10 +591,10 @@ userIconId icon =
 {-| Initiate retrieval of data needed by this page
 -}
 init : Model -> Cmd Msg
-init model =
+init _ =
     Cmd.batch
-        [ getNews
-        , getIcons model
+        [ getNews (NewsMessage << NewsReceived)
+        , getIcons (NewsMessage << IconsReceived)
         ]
 
 
@@ -602,29 +625,29 @@ update msg model =
 
         UserMessageSent icon message ->
             ( model
-            , postNews message icon
+            , postNews (NewsMessage << NewsReceived) message icon
             )
 
         SpecialEventChoiceMade article ->
             ( model
-            , putNews article
+            , putNews (NewsMessage << NewsReceived) article
             )
 
         NewsEntryDismissed article ->
             ( model
-            , deleteNews article.messageId
+            , deleteNews (NewsMessage << NewsReceived) article.messageId
             )
 
         NewsPanelRefresh ->
             ( model
-            , getNews
+            , getNews (NewsMessage << NewsReceived)
             )
 
         PageChanged pageNumber ->
             let
                 lastPgNumber =
-                    get newsA model
-                        |> withDefault []
+                    get (messagesRA << newsA) model
+                        |> SaveData.withDefault []
                         |> maxPage (get (messagesRA << pageSizeA) model)
 
                 setPage target _ =
@@ -640,3 +663,60 @@ update msg model =
             ( over (messagesRA << currentPageA) (setPage pageNumber) model
             , Cmd.none
             )
+
+        NewsReceived (RData NotAsked) ->
+            ( model
+            , Cmd.none
+            )
+
+        NewsReceived (RData Loading) ->
+            ( model
+            , Cmd.none
+            )
+
+        NewsReceived (RData (Success entries)) ->
+            ( set (messagesRA << newsA) (RData <| Success entries) model
+            , Cmd.none
+            )
+
+        NewsReceived (RData (Failure err)) ->
+            ( over errorsA (\errors -> error err "Failed to load news" :: errors) model
+                |> set (messagesRA << newsA) (RData <| Failure err)
+            , Cmd.none
+            )
+
+        NewsReceived (Saving _) ->
+            ( model
+            , Cmd.none
+            )
+
+        IconsReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        IconsReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        IconsReceived (Success icons) ->
+            ( set (messagesRA << iconsA) (Success icons) model
+            , Cmd.none
+            )
+
+        IconsReceived (Failure err) ->
+            ( over errorsA (\errors -> error err "Failed to load icons" :: errors) model
+                |> set (messagesRA << iconsA) (Failure err)
+            , Cmd.none
+            )
+
+
+isLoading : Model -> Bool
+isLoading model =
+    let
+        vm =
+            model.messagesR
+    in
+    RemoteData.isLoading vm.icons
+        || SaveData.isLoading vm.news

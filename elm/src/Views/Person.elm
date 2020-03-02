@@ -1,4 +1,9 @@
-module Views.Person exposing (init, page, update)
+module Views.Person exposing
+    ( init
+    , isLoading
+    , page
+    , update
+    )
 
 {-| Page displaying person details. The shown information depends on human
 intelligence level. The higher the level, the more details are shown.
@@ -47,7 +52,6 @@ import Data.Common
         , PersonId
         , Route(..)
         , error
-        , joinMaybe
         , listOrdering
         , maxPage
         , unDemesneName
@@ -97,6 +101,8 @@ import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (class, title)
 import Maybe
 import Ordering exposing (Ordering)
+import RemoteData exposing (RemoteData(..))
+import SaveData exposing (tryRemote)
 import Set
 import ViewModels.Person exposing (PersonRMsg(..))
 import Views.Helpers
@@ -175,48 +181,45 @@ personDetailsContent : Model -> List (Html Msg)
 personDetailsContent model =
     let
         aName =
-            get (personRA << personA << try << nameA) model
-
-        aDynasty =
-            joinMaybe <| get (personRA << personA << try << dynastyA << try << nameA) model
+            get (personRA << personA << tryRemote << nameA) model
 
         dynastyText =
-            case get (personRA << personA) model of
-                Nothing ->
-                    "-"
+            get (personRA << personA << tryRemote << dynastyA << try << nameA) model
+                |> RemoteData.map
+                    (\x ->
+                        case x of
+                            Nothing ->
+                                "lowborn"
 
-                Just _ ->
-                    case aDynasty of
-                        Nothing ->
-                            "lowborn"
-
-                        Just s ->
-                            unDynastyName s
+                            Just s ->
+                                unDynastyName s
+                    )
+                |> RemoteData.withDefault "-"
 
         aTitle =
-            get (personRA << personA << try << shortTitleA) model
+            get (personRA << personA << tryRemote << shortTitleA) model
 
         fullName =
-            Maybe.map2 personName aName aTitle
-                |> Maybe.withDefault "-"
+            RemoteData.map2 personName aName aTitle
+                |> RemoteData.withDefault "-"
 
         isPlayerAvatar =
-            get (personRA << personA << try << avatarA) model
-                |> Maybe.withDefault False
+            get (personRA << personA << tryRemote << avatarA) model
+                |> RemoteData.withDefault False
 
         age =
-            get (personRA << personA << try << ageA) model
-                |> Maybe.map (String.fromInt << unAge)
-                |> Maybe.withDefault "-"
+            get (personRA << personA << tryRemote << ageA) model
+                |> RemoteData.map (String.fromInt << unAge)
+                |> RemoteData.withDefault "-"
 
         gender =
-            get (personRA << personA << try << genderA) model
-                |> Maybe.map displayGender
-                |> Maybe.withDefault (text "-")
+            get (personRA << personA << tryRemote << genderA) model
+                |> RemoteData.map displayGender
+                |> RemoteData.withDefault (text "-")
 
         intel =
-            get (personRA << personA << try << intelTypesA) model
-                |> Maybe.withDefault []
+            get (personRA << personA << tryRemote << intelTypesA) model
+                |> RemoteData.withDefault []
                 |> List.map personIntelToString
                 |> Set.fromList
                 |> Set.toList
@@ -224,29 +227,31 @@ personDetailsContent model =
                 |> text
 
         avatarOpinion =
-            get (personRA << personA << try << avatarOpinionA) model
-                |> Maybe.map displayOpinion
-                |> Maybe.withDefault (text "-")
+            get (personRA << personA << tryRemote << avatarOpinionA) model
+                |> RemoteData.map displayOpinion
+                |> RemoteData.withDefault (text "-")
 
         opinionOfAvatar =
-            get (personRA << personA << try << opinionOfAvatarA) model
-                |> Maybe.map displayOpinion
-                |> Maybe.withDefault (text "-")
+            get (personRA << personA << tryRemote << opinionOfAvatarA) model
+                |> RemoteData.map displayOpinion
+                |> RemoteData.withDefault (text "-")
 
         location =
-            case get (personRA << personA << try << locationA) model of
-                Just (OnPlanet pDetails) ->
-                    a [ href (PlanetR pDetails.planetId) ]
-                        [ text <| unPlanetName pDetails.planetName ]
+            get (personRA << personA << tryRemote << locationA) model
+                |> RemoteData.map
+                    (\x ->
+                        case x of
+                            OnPlanet pDetails ->
+                                a [ href (PlanetR pDetails.planetId) ]
+                                    [ text <| unPlanetName pDetails.planetName ]
 
-                Just (OnUnit uDetails) ->
-                    displayOnUnitLocation uDetails
+                            OnUnit uDetails ->
+                                displayOnUnitLocation uDetails
 
-                Just UnknownLocation ->
-                    text "Unknown"
-
-                Nothing ->
-                    text "Unknown"
+                            UnknownLocation ->
+                                text "Unknown"
+                    )
+                |> RemoteData.withDefault (text "Unknown")
     in
     [ div [ class "row" ]
         [ div [ class "col-lg-4 panel-table-heading" ] [ text "Name" ]
@@ -385,32 +390,32 @@ statsContent : Model -> List (Html Msg)
 statsContent model =
     let
         diplomacy =
-            get (personRA << personA << try << statsA << try << diplomacyA) model
-                |> joinMaybe
+            get (personRA << personA << tryRemote << statsA << try << diplomacyA) model
+                |> RemoteData.withDefault Nothing
                 |> Maybe.map (text << String.fromInt << unStatValue)
                 |> Maybe.withDefault (text "-")
 
         intrique =
-            get (personRA << personA << try << statsA << try << intriqueA) model
-                |> joinMaybe
+            get (personRA << personA << tryRemote << statsA << try << intriqueA) model
+                |> RemoteData.withDefault Nothing
                 |> Maybe.map (text << String.fromInt << unStatValue)
                 |> Maybe.withDefault (text "-")
 
         stewardship =
-            get (personRA << personA << try << statsA << try << stewardshipA) model
-                |> joinMaybe
+            get (personRA << personA << tryRemote << statsA << try << stewardshipA) model
+                |> RemoteData.withDefault Nothing
                 |> Maybe.map (text << String.fromInt << unStatValue)
                 |> Maybe.withDefault (text "-")
 
         learning =
-            get (personRA << personA << try << statsA << try << learningA) model
-                |> joinMaybe
+            get (personRA << personA << tryRemote << statsA << try << learningA) model
+                |> RemoteData.withDefault Nothing
                 |> Maybe.map (text << String.fromInt << unStatValue)
                 |> Maybe.withDefault (text "-")
 
         martial =
-            get (personRA << personA << try << statsA << try << martialA) model
-                |> joinMaybe
+            get (personRA << personA << tryRemote << statsA << try << martialA) model
+                |> RemoteData.withDefault Nothing
                 |> Maybe.map (text << String.fromInt << unStatValue)
                 |> Maybe.withDefault (text "-")
     in
@@ -455,8 +460,8 @@ relationsPanel model =
             { pageSize = model.personR.relationsPageSize
             , currentPage = model.personR.relationsCurrentPage
             , maxPage =
-                get (personRA << personA << try << relationsA) model
-                    |> Maybe.withDefault []
+                get (personRA << personA << tryRemote << relationsA) model
+                    |> RemoteData.withDefault []
                     |> maxPage model.personR.relationsPageSize
             , pageChangedMessage = PersonMessage << RelationsPageChanged
             }
@@ -474,8 +479,8 @@ relationsContent model =
         , div [ class "col-lg-3" ] [ text "Type" ]
         , div [ class "col-lg-3" ] [ text "Opinion" ]
         ]
-        :: (get (personRA << personA << try << relationsA) model
-                |> Maybe.withDefault []
+        :: (get (personRA << personA << tryRemote << relationsA) model
+                |> RemoteData.withDefault []
                 |> List.sortWith relationOrdering
                 |> List.map relationEntry
            )
@@ -518,7 +523,7 @@ demesnePanel model =
             , currentPage = model.personR.demesneCurrentPage
             , maxPage =
                 model.personR.demesne
-                    |> Maybe.withDefault []
+                    |> RemoteData.withDefault []
                     |> maxPage model.personR.demesnePageSize
             , pageChangedMessage = PersonMessage << DemesnePageChanged
             }
@@ -536,7 +541,7 @@ demesneContent model =
         , div [ class "col-lg-4" ] [ text "Type" ]
         ]
         :: (model.personR.demesne
-                |> Maybe.withDefault []
+                |> RemoteData.withDefault []
                 |> List.sortWith demesneSorter
                 |> List.map demesneEntry
            )
@@ -614,8 +619,8 @@ traitsPanel model =
             { pageSize = model.personR.traitsPageSize
             , currentPage = model.personR.traitsCurrentPage
             , maxPage =
-                get (personRA << personA << try << traitsA) model
-                    |> joinMaybe
+                get (personRA << personA << tryRemote << traitsA) model
+                    |> RemoteData.withDefault (Just [])
                     |> Maybe.withDefault []
                     |> maxPage model.personR.traitsPageSize
             , pageChangedMessage = PersonMessage << TraitsPageChanged
@@ -629,8 +634,8 @@ traitsContent : Model -> List (Html Msg)
 traitsContent model =
     let
         traits =
-            get (personRA << personA << try << traitsA) model
-                |> joinMaybe
+            get (personRA << personA << tryRemote << traitsA) model
+                |> RemoteData.withDefault (Just [])
                 |> Maybe.withDefault []
                 |> List.sortWith traitOrdering
 
@@ -697,24 +702,44 @@ traitEntry trait =
 update : PersonRMsg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        PersonDetailsReceived (Ok person) ->
-            ( set (personRA << personA) (Just person) model
+        PersonDetailsReceived NotAsked ->
+            ( model
             , Cmd.none
             )
 
-        PersonDetailsReceived (Err err) ->
-            ( set (personRA << personA) Nothing model
+        PersonDetailsReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        PersonDetailsReceived (Success person) ->
+            ( set (personRA << personA) (Success person) model
+            , Cmd.none
+            )
+
+        PersonDetailsReceived (Failure err) ->
+            ( set (personRA << personA) (Failure err) model
                 |> over errorsA (\errors -> error err "Failed to load person details" :: errors)
             , Cmd.none
             )
 
-        DemesneReceived (Ok demesne) ->
-            ( set (personRA << demesneA) (Just demesne) model
+        DemesneReceived NotAsked ->
+            ( model
             , Cmd.none
             )
 
-        DemesneReceived (Err err) ->
-            ( set (personRA << demesneA) Nothing model
+        DemesneReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        DemesneReceived (Success demesne) ->
+            ( set (personRA << demesneA) (Success demesne) model
+            , Cmd.none
+            )
+
+        DemesneReceived (Failure err) ->
+            ( set (personRA << demesneA) (Failure err) model
                 |> over errorsA (\errors -> error err "Failed to load demesne" :: errors)
             , Cmd.none
             )
@@ -725,14 +750,14 @@ update msg model =
             )
 
         PersonDetailsRefreshRequested ->
-            case get (personRA << personA << try << idA) model of
-                Nothing ->
-                    ( model, Cmd.none )
-
-                Just pId ->
-                    ( set (personRA << personA) Nothing model
-                    , getPersonDetails (PersonMessage << PersonDetailsReceived) pId
+            get (personRA << personA << tryRemote << idA) model
+                |> RemoteData.map
+                    (\pId ->
+                        ( set (personRA << personA) Loading model
+                        , getPersonDetails (PersonMessage << PersonDetailsReceived) pId
+                        )
                     )
+                |> RemoteData.withDefault ( model, Cmd.none )
 
         StatsStatusChanged status ->
             ( set (personRA << statsStatusA) status model
@@ -745,20 +770,20 @@ update msg model =
             )
 
         DemesneRefreshRequested ->
-            case get (personRA << personA << try << idA) model of
-                Nothing ->
-                    ( model, Cmd.none )
-
-                Just pId ->
-                    ( set (personRA << demesneA) Nothing model
-                    , getDemesne (PersonMessage << DemesneReceived) pId
+            get (personRA << personA << tryRemote << idA) model
+                |> RemoteData.map
+                    (\pId ->
+                        ( set (personRA << demesneA) Loading model
+                        , getDemesne (PersonMessage << DemesneReceived) pId
+                        )
                     )
+                |> RemoteData.withDefault ( model, Cmd.none )
 
         DemesnePageChanged pageNumber ->
             let
                 lastPgNumber =
                     model.personR.demesne
-                        |> Maybe.withDefault []
+                        |> RemoteData.withDefault []
                         |> maxPage model.personR.demesnePageSize
 
                 setPage target _ =
@@ -783,8 +808,8 @@ update msg model =
         RelationsPageChanged pageNumber ->
             let
                 lastPgNumber =
-                    get (personRA << personA << try << relationsA) model
-                        |> Maybe.withDefault []
+                    get (personRA << personA << tryRemote << relationsA) model
+                        |> RemoteData.withDefault []
                         |> maxPage model.personR.relationsPageSize
 
                 setPage target _ =
@@ -809,8 +834,8 @@ update msg model =
         TraitsPageChanged pageNumber ->
             let
                 lastPgNumber =
-                    get (personRA << personA << try << traitsA) model
-                        |> joinMaybe
+                    get (personRA << personA << tryRemote << traitsA) model
+                        |> RemoteData.withDefault Nothing
                         |> Maybe.withDefault []
                         |> maxPage model.personR.traitsPageSize
 
@@ -827,3 +852,13 @@ update msg model =
             ( over (personRA << traitsCurrentPageA) (setPage pageNumber) model
             , Cmd.none
             )
+
+
+isLoading : Model -> Bool
+isLoading model =
+    let
+        vm =
+            model.personR
+    in
+    RemoteData.isLoading vm.person
+        || RemoteData.isLoading vm.demesne

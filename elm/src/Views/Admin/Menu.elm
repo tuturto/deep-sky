@@ -5,21 +5,14 @@ module Views.Admin.Menu exposing
     , statusMenu
     )
 
-import Accessors exposing (get)
-import Accessors.Library exposing (try)
-import Data.Accessors
-    exposing
-        ( adminRA
-        , simulationA
-        , statusA
-        )
 import Data.Admin exposing (SystemStatus(..))
-import Data.Common exposing (Route(..), error, nextStarDate)
+import Data.Common exposing (Route(..))
 import Data.Model exposing (Model, Msg(..))
 import Data.User exposing (Role(..))
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Html exposing (Attribute, Html, a, div, text)
+import Html.Attributes exposing (class)
+import Html.Events exposing (onClick)
+import RemoteData exposing (RemoteData(..), WebData)
 import ViewModels.Admin.Main exposing (AdminRMsg(..))
 import Views.Helpers exposing (href)
 
@@ -93,7 +86,7 @@ simulationStatusBlock : Model -> Html Msg
 simulationStatusBlock model =
     let
         status =
-            get (adminRA << simulationA << try << statusA) model
+            RemoteData.map .status model.adminR.simulation
     in
     div [ class "row" ]
         [ div [ class "col-lg-2" ] [ text " " ]
@@ -104,10 +97,10 @@ simulationStatusBlock model =
         ]
 
 
-statusButton : Maybe SystemStatus -> SystemStatus -> String -> Html Msg
+statusButton : WebData SystemStatus -> SystemStatus -> String -> Html Msg
 statusButton status target txt =
     case status of
-        Just x ->
+        Success x ->
             if x /= target then
                 div [ class "col-lg-2" ]
                     [ div
@@ -125,5 +118,11 @@ statusButton status target txt =
                         [ text txt ]
                     ]
 
-        Nothing ->
-            div [] []
+        _ ->
+            div [ class "col-lg-2" ]
+                [ div
+                    [ class "btn btn-default btn-block btn-sm command-button"
+                    ]
+                    [ text txt ]
+                ]
+

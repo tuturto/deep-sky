@@ -67,16 +67,16 @@ import RemoteData exposing (WebData)
 
 {-| Command for loading current simulation status
 -}
-getSimulationStatus : (Result Http.Error Simulation -> Msg) -> Cmd Msg
+getSimulationStatus : (WebData Simulation -> Msg) -> Cmd Msg
 getSimulationStatus msg =
-    Http.send msg (get ApiAdminSimulationStatus simulationDecoder)
+    Http.send (RemoteData.fromResult >> msg) (get ApiAdminSimulationStatus simulationDecoder)
 
 
 {-| Update simulation status
 -}
-putSimulationStatus : (Result Http.Error Simulation -> Msg) -> Simulation -> Cmd Msg
+putSimulationStatus : (WebData Simulation -> Msg) -> Simulation -> Cmd Msg
 putSimulationStatus msg simulation =
-    Http.send msg (put ApiAdminSimulationStatus (simulationEncoder simulation) simulationDecoder)
+    Http.send (RemoteData.fromResult >> msg) (put ApiAdminSimulationStatus (simulationEncoder simulation) simulationDecoder)
 
 
 {-| Get list of people
@@ -90,21 +90,21 @@ getPeople msg skip take =
 
 {-| Get details of single person
 -}
-getPerson : (Result Http.Error Person -> Msg) -> PersonId -> Cmd Msg
+getPerson : (WebData Person -> Msg) -> PersonId -> Cmd Msg
 getPerson msg personId =
-    Http.send msg (get (ApiAdminPerson personId) personDecoder)
+    Http.send (RemoteData.fromResult >> msg) (get (ApiAdminPerson personId) personDecoder)
 
 
-putPerson : (Result Http.Error Person -> Msg) -> PersonId -> Person -> Cmd Msg
+putPerson : (WebData Person -> Msg) -> PersonId -> Person -> Cmd Msg
 putPerson msg pId person =
-    Http.send msg (put (ApiAdminPerson pId) (personEncoder person) personDecoder)
+    Http.send (RemoteData.fromResult >> msg) (put (ApiAdminPerson pId) (personEncoder person) personDecoder)
 
 
 {-| Request creation of new person
 -}
-addPerson : (Result Http.Error Person -> Msg) -> PersonOptions -> Cmd Msg
+addPerson : (WebData Person -> Msg) -> PersonOptions -> Cmd Msg
 addPerson msg opt =
-    Http.send msg (post ApiAdminAddPerson (personOptionsEncoder opt) personDecoder)
+    Http.send (RemoteData.fromResult >> msg) (post ApiAdminAddPerson (personOptionsEncoder opt) personDecoder)
 
 
 {-| Decoder for Simulation

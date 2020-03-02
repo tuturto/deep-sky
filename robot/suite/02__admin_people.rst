@@ -25,10 +25,25 @@ has already been loaded and cached.
 
     Navigate To Next Page
         Click Element   id:next-page
-        Wait Until Page Does Not Contain   Loading data...
+        Wait Until Data Has Finished Loading
 
     Navigate To Previous Page
         Click Element   id:previous-page
+
+When list of people are displayed, they can be opened by clicking respective
+row. Application will then display the detailed person data. Each person row
+has two ids: ``person-id-`` for id field and ``person-name-`` for person name.
+Both are followed by 1 based index of the table. Name of the first person
+can thus be found on element ``person-name-1`` and id of 3rd person on
+element ``person-id-3``.
+
+.. code:: robotframework
+
+    View Person on Row
+        [Arguments]   ${person_row_id}
+        ${id}=   Catenate   SEPARATOR=   person-id-   ${person_row_id}
+        Click Element   id:${id}
+        Wait Until Data Has Finished Loading
 
 Admin page
 ==========
@@ -39,9 +54,9 @@ the respective link on main menu bar.
 .. code:: robotframework
 
     *** Test Cases ***
-    Open Admin Page
-        Click Link   link:Admin
-        Wait Until Page Contains   Maintenance
+    Opening Admin Page
+        Click Link   Admin
+        Wait Until Data Has Finished Loading
 
 People
 ------
@@ -55,23 +70,24 @@ Known issues
 
 .. code:: robotframework
 
-    View People
+    Viewing List of People
         Click Link   link:People
-        Wait Until Page Does Not Contain   Loading data...
+        Wait Until Data Has Finished Loading
         Page Should Not Contain   No data
+        ${person_name}=   Get Text   id:person-name-1
+        Should Not Be Equal   ${person_name}   ${EMPTY}
 
-    View Person
-        Click Element   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]
-        Wait Until Page Contains    Update
+    Viewing Single Person
+        View Person on Row   1
         Go Back
-        Wait Until Element Is Visible   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]
+        Wait Until Data Has Finished Loading
 
-    View Different Pages
-        ${personId1}=   Get Text   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]
+    Viewing Different Pages of Paginated Data
+        ${personId1}=   Get Text   id:person-id-1
         Navigate To Next Page
-        ${personId2}=   Get Text   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]
+        ${personId2}=   Get Text   id:person-id-1
         Navigate To Previous Page
-        ${personId3}=   Get Text   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]
+        ${personId3}=   Get Text   id:person-id-1
         Should Be Equal As Integers   ${personId1}   ${personId3}
         Should Not Be Equal As Integers   ${personId1}   ${personId2}
 
