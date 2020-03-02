@@ -15,8 +15,20 @@ import Data.PersonNames exposing (displayName)
 import Data.User exposing (Role(..))
 import Data.Vehicles exposing (Unit(..), unShipName, unVehicleName)
 import Dict
-import Html exposing (Attribute, Html, a, div, i, li, nav, text, ul)
-import Html.Attributes exposing (class)
+import Html
+    exposing
+        ( Attribute
+        , Html
+        , a
+        , div
+        , i
+        , li
+        , nav
+        , span
+        , text
+        , ul
+        )
+import Html.Attributes exposing (class, id)
 import Html.Events exposing (onClick)
 import Maybe exposing (andThen, withDefault)
 import Navigation exposing (parseLocation)
@@ -87,18 +99,83 @@ infoBar : Model -> Html Msg
 infoBar model =
     div [ class "container" ]
         [ ul [ class "infoitem" ]
-            [ li []
+            ([ li []
                 [ i [ class "fas fa-clock" ] []
                 , starDateToText model.currentTime
                 ]
-            , li [] <|
+             , li [] <|
                 biologicalsToText model.resources
-            , li [] <|
+             , li [] <|
                 mechanicalsToText model.resources
-            , li [] <|
+             , li [] <|
                 chemicalsToText model.resources
-            ]
+             ]
+                ++ (if isReady model then
+                        []
+
+                    else
+                        [ li [ id "loading-indicator", class "pull-right" ] [ text "loading..." ] ]
+                   )
+            )
         ]
+
+
+isReady : Model -> Bool
+isReady model =
+    case parseLocation model.url of
+        AdminR ->
+            True
+
+        AdminListPeopleR ->
+            Views.Admin.People.List.isReady model
+
+        AdminPersonR _ ->
+            True
+
+        AdminNewPersonR ->
+            True
+
+        BasesR ->
+            True
+
+        ConstructionR ->
+            True
+
+        DesignerR ->
+            True
+
+        FleetR ->
+            True
+
+        HomeR ->
+            True
+
+        MessagesR ->
+            True
+
+        ProfileR ->
+            True
+
+        ResearchR ->
+            True
+
+        StarSystemR _ ->
+            True
+
+        StarSystemsR ->
+            True
+
+        PlanetR _ ->
+            True
+
+        PersonR _ ->
+            True
+
+        UnitR _ ->
+            True
+
+        LogoutR ->
+            True
 
 
 errorBar : Model -> Html Msg
@@ -326,7 +403,7 @@ view model =
         , infoBar model
         , errorBar model
         , div [ class "container" ]
-            [ currentPage model.url <| model ]
+            [ currentPage model.url model ]
         ]
     }
 

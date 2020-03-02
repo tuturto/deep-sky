@@ -24,7 +24,7 @@ always be available for logged in users.
 .. code:: robotframework
 
     *** Test Cases ***
-    Open News Page
+    Opening News Page
         Click Link   link:Messages
         Wait Until Page Contains   Latest news
 
@@ -39,7 +39,7 @@ Known issues
 
 .. code:: robotframework
 
-    Submit User Written Article
+    Submitting User Written Article
         Wait Until Element Is Visible   id:user-news-input
         Input Text   id:user-news-input   Ready for blast-off!
         Click Element   id:news-icon-jubilation-user-news

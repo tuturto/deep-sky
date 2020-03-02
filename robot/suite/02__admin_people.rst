@@ -25,7 +25,7 @@ has already been loaded and cached.
 
     Navigate To Next Page
         Click Element   id:next-page
-        Wait Until Page Does Not Contain   Loading data...
+        Wait Until Data Has Finished Loading
 
     Navigate To Previous Page
         Click Element   id:previous-page
@@ -39,9 +39,9 @@ the respective link on main menu bar.
 .. code:: robotframework
 
     *** Test Cases ***
-    Open Admin Page
+    Opening Admin Page
         Click Link   link:Admin
-        Wait Until Page Contains   Maintenance
+        Wait Until Data Has Finished Loading
 
 People
 ------
@@ -55,18 +55,18 @@ Known issues
 
 .. code:: robotframework
 
-    View People
+    Viewing List of People
         Click Link   link:People
-        Wait Until Page Does Not Contain   Loading data...
+        Wait Until Data Has Finished Loading
         Page Should Not Contain   No data
 
-    View Person
+    Viewing Single Person
         Click Element   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]
         Wait Until Page Contains    Update
         Go Back
         Wait Until Element Is Visible   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]
 
-    View Different Pages
+    Viewing Different Pages of Paginated Data
         ${personId1}=   Get Text   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]
         Navigate To Next Page
         ${personId2}=   Get Text   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]

@@ -5,6 +5,7 @@
     Library             SeleniumLibrary
 
     *** Test Cases ***
-    Open Main Page
+    Opening Main Page
         Go To       ${MAIN URL}
+        Wait Until Data Has Finished Loading
         Error Bar Should Not Be Visible

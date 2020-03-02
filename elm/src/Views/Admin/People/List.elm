@@ -1,4 +1,4 @@
-module Views.Admin.People.List exposing (init, page, update)
+module Views.Admin.People.List exposing (init, isReady, page, update)
 
 import Accessors exposing (over, set)
 import Api.Admin exposing (getPeople, getSimulationStatus)
@@ -129,7 +129,7 @@ listDisplay model =
 
                 Just Loading ->
                     [ tr []
-                        [ td [ colspan 2, class "noData" ] [ text "Loading ..." ] ]
+                        [ td [ colspan 2, class "noData" ] [] ]
                     ]
 
                 Just (Failure _) ->
@@ -178,6 +178,18 @@ init model =
         , getPeople (AdminListPeopleMessage << PeopleReceived) (Just size) (Just size)
         , getSimulationStatus (AdminMessage << SimulationStatusReceived)
         ]
+
+
+isReady : Model -> Bool
+isReady model =
+    let
+        vm =
+            model.adminR.adminListPeopleR
+    in
+    Dict.get vm.currentPage vm.people
+        |> Maybe.withDefault NotAsked
+        |> RemoteData.isLoading
+        |> not
 
 
 {-| Handle incoming messages
