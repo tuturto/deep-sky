@@ -31,6 +31,7 @@ import Html.Attributes exposing (class, id)
 import Html.Events exposing (onClick)
 import Maybe exposing (andThen, withDefault)
 import Navigation exposing (parseLocation)
+import RemoteData
 import Url exposing (Url)
 import Views.Admin.Main
 import Views.Admin.People.Add
@@ -109,27 +110,27 @@ infoBar model =
              , li [] <|
                 chemicalsToText model.resources
              ]
-                ++ (if isReady model then
-                        []
+                ++ (if isLoading model then
+                        [ li [ id "loading-indicator", class "pull-right" ] [ text "loading..." ] ]
 
                     else
-                        [ li [ id "loading-indicator", class "pull-right" ] [ text "loading..." ] ]
+                        []
                    )
             )
         ]
 
 
-isReady : Model -> Bool
-isReady model =
+isLoading : Model -> Bool
+isLoading model =
     case parseLocation model.url of
         AdminR ->
-            Views.Admin.Main.isReady model
+            Views.Admin.Main.isLoading model
 
         AdminListPeopleR ->
-            Views.Admin.People.List.isReady model
+            Views.Admin.People.List.isLoading model
 
         AdminPersonR _ ->
-            True
+            Views.Admin.People.Edit.isLoading model
 
         AdminNewPersonR ->
             True
@@ -281,8 +282,8 @@ segment model route =
         AdminPersonR _ ->
             let
                 name =
-                    Maybe.map (\x -> displayName x.name) model.adminR.adminEditPersonR.person
-                        |> Maybe.withDefault "-"
+                    RemoteData.map (\x -> displayName x.name) model.adminR.adminEditPersonR.person
+                        |> RemoteData.withDefault "-"
             in
             ( name, Just AdminListPeopleR )
 

@@ -8,7 +8,7 @@ module ViewModels.Admin.People.Add exposing
     )
 
 import Data.Admin exposing (Person)
-import Http
+import RemoteData exposing (WebData)
 
 
 {-| Messages view model may emit
@@ -19,7 +19,7 @@ type AdminAddPersonRMsg
     | StartAgeChanged String
     | EndAgeChanged String
     | CreationRequested
-    | PersonCreated (Result Http.Error Person)
+    | PersonCreated (WebData Person)
 
 
 {-| Current state of view model

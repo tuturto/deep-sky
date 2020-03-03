@@ -1,6 +1,6 @@
 module Views.Admin.Main exposing
     ( init
-    , isReady
+    , isLoading
     , page
     , update
     )
@@ -42,15 +42,13 @@ init _ =
     getSimulationStatus (AdminMessage << SimulationStatusReceived)
 
 
-isReady : Model -> Bool
-isReady model =
+isLoading : Model -> Bool
+isLoading model =
     let
         vm =
             model.adminR
     in
-    vm.simulation
-        |> RemoteData.isLoading
-        |> not
+    RemoteData.isLoading vm.simulation
 
 
 {-| Handle incoming messages

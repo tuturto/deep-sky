@@ -1,4 +1,4 @@
-module Views.Admin.People.List exposing (init, isReady, page, update)
+module Views.Admin.People.List exposing (init, isLoading, page, update)
 
 import Accessors exposing (over, set)
 import Api.Admin exposing (getPeople, getSimulationStatus)
@@ -181,8 +181,8 @@ init model =
         ]
 
 
-isReady : Model -> Bool
-isReady model =
+isLoading : Model -> Bool
+isLoading model =
     let
         vm =
             model.adminR.adminListPeopleR
@@ -190,9 +190,8 @@ isReady model =
     (Dict.get vm.currentPage vm.people
         |> Maybe.withDefault NotAsked
         |> RemoteData.isLoading
-        |> not
     )
-        && Views.Admin.Main.isReady model
+        || Views.Admin.Main.isLoading model
 
 
 {-| Handle incoming messages

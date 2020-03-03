@@ -26,6 +26,7 @@ import Data.People exposing (Age(..))
 import Html exposing (Html, div, input, option, select, text)
 import Html.Attributes exposing (class, type_, value)
 import Html.Events exposing (onClick, onInput)
+import RemoteData exposing (RemoteData(..))
 import ViewModels.Admin.Main exposing (AdminRMsg(..))
 import ViewModels.Admin.People.Add
     exposing
@@ -200,14 +201,19 @@ update message model =
                     , addPerson (AdminAddPersonMessage << PersonCreated) msg
                     )
 
-        PersonCreated (Err err) ->
+        PersonCreated (Failure err) ->
             ( over errorsA (\errors -> error err "Failed to generate person" :: errors) model
             , Cmd.none
             )
 
-        PersonCreated (Ok res) ->
+        PersonCreated (Success res) ->
             ( model
             , pushUrl model (AdminPersonR res.id)
+            )
+
+        PersonCreated _ ->
+            ( model
+            , Cmd.none
             )
 
 
