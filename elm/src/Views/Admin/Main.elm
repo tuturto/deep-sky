@@ -1,15 +1,17 @@
-module Views.Admin.Main exposing (init, page, update)
+module Views.Admin.Main exposing
+    ( init
+    , isReady
+    , page
+    , update
+    )
 
-import Accessors exposing (get, over, set)
-import Accessors.Library exposing (try)
+import Accessors exposing (over, set)
 import Api.Admin exposing (getSimulationStatus, putSimulationStatus)
 import Data.Accessors
     exposing
         ( adminRA
-        , currentPageA
         , currentTimeA
         , errorsA
-        , processTurnA
         , simulationA
         , statusA
         , timeA
@@ -18,12 +20,10 @@ import Data.Admin exposing (SystemStatus(..))
 import Data.Common exposing (Route(..), error, nextStarDate)
 import Data.Model exposing (Model, Msg(..))
 import Data.User exposing (Role(..))
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Html exposing (Html)
+import RemoteData exposing (RemoteData(..))
 import ViewModels.Admin.Main exposing (AdminRMsg(..))
 import Views.Admin.Menu exposing (adminLayout, mainMenu)
-import Views.Helpers exposing (href)
 
 
 {-| Render admin view
@@ -38,8 +38,19 @@ page model =
 {-| Initialize data retrieval from server
 -}
 init : Model -> Cmd Msg
-init model =
+init _ =
     getSimulationStatus (AdminMessage << SimulationStatusReceived)
+
+
+isReady : Model -> Bool
+isReady model =
+    let
+        vm =
+            model.adminR
+    in
+    vm.simulation
+        |> RemoteData.isLoading
+        |> not
 
 
 {-| Handle incoming messages
@@ -47,36 +58,46 @@ init model =
 update : AdminRMsg -> Model -> ( Model, Cmd Msg )
 update message model =
     case message of
-        SimulationStatusReceived (Err err) ->
-            ( set (adminRA << simulationA) Nothing model
+        SimulationStatusReceived (Failure err) ->
+            ( set (adminRA << simulationA) (Failure err) model
                 |> over errorsA (\errors -> error err "Failed to load simulation status" :: errors)
             , Cmd.none
             )
 
-        SimulationStatusReceived (Ok simulation) ->
-            ( set (adminRA << simulationA) (Just simulation) model
+        SimulationStatusReceived (Success simulation) ->
+            ( set (adminRA << simulationA) (Success simulation) model
                 |> set currentTimeA (Just simulation.time)
             , Cmd.none
             )
 
-        ChangeStatusRequested ProcessingTurn ->
+        SimulationStatusReceived Loading ->
             ( model
+            , Cmd.none
+            )
+
+        SimulationStatusReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        ChangeStatusRequested ProcessingTurn ->
+            ( set (adminRA << simulationA) Loading model
             , case model.adminR.simulation of
-                Just simulation ->
+                Success simulation ->
                     putSimulationStatus (AdminMessage << SimulationStatusReceived)
                         (set timeA (nextStarDate simulation.time) simulation)
 
-                Nothing ->
+                _ ->
                     Cmd.none
             )
 
         ChangeStatusRequested status ->
-            ( model
+            ( set (adminRA << simulationA) Loading model
             , case model.adminR.simulation of
-                Just simulation ->
+                Success simulation ->
                     putSimulationStatus (AdminMessage << SimulationStatusReceived)
                         (set statusA status simulation)
 
-                Nothing ->
+                _ ->
                     Cmd.none
             )

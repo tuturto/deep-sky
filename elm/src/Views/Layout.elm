@@ -24,7 +24,6 @@ import Html
         , i
         , li
         , nav
-        , span
         , text
         , ul
         )
@@ -124,7 +123,7 @@ isReady : Model -> Bool
 isReady model =
     case parseLocation model.url of
         AdminR ->
-            True
+            Views.Admin.Main.isReady model
 
         AdminListPeopleR ->
             Views.Admin.People.List.isReady model

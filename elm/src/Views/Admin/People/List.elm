@@ -40,6 +40,7 @@ import Html.Events exposing (onClick)
 import RemoteData exposing (RemoteData(..), WebData)
 import ViewModels.Admin.Main exposing (AdminRMsg(..))
 import ViewModels.Admin.People.List exposing (AdminListPeopleRMsg(..))
+import Views.Admin.Main
 import Views.Admin.Menu exposing (adminLayout, personMenu)
 import Views.Helpers exposing (href, pushUrl)
 
@@ -186,10 +187,12 @@ isReady model =
         vm =
             model.adminR.adminListPeopleR
     in
-    Dict.get vm.currentPage vm.people
+    (Dict.get vm.currentPage vm.people
         |> Maybe.withDefault NotAsked
         |> RemoteData.isLoading
         |> not
+    )
+        && Views.Admin.Main.isReady model
 
 
 {-| Handle incoming messages
