@@ -133,49 +133,49 @@ isLoading model =
             Views.Admin.People.Edit.isLoading model
 
         AdminNewPersonR ->
-            True
+            False
 
         BasesR ->
-            True
+            False
 
         ConstructionR ->
-            True
+            False
 
         DesignerR ->
-            True
+            False
 
         FleetR ->
-            True
+            False
 
         HomeR ->
-            True
+            False
 
         MessagesR ->
-            True
+            False
 
         ProfileR ->
-            True
+            False
 
         ResearchR ->
-            True
+            False
 
         StarSystemR _ ->
-            True
+            False
 
         StarSystemsR ->
-            True
+            False
 
         PlanetR _ ->
-            True
+            False
 
         PersonR _ ->
-            True
+            False
 
         UnitR _ ->
-            True
+            False
 
         LogoutR ->
-            True
+            False
 
 
 errorBar : Model -> Html Msg
