@@ -35,7 +35,6 @@ import Data.Accessors
         , populationsA
         , researchProductionA
         , researchRA
-        , starSystemRA
         , starSystemsA
         , starSystemsRA
         , starsA
