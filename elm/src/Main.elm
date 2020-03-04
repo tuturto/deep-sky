@@ -10,7 +10,11 @@ import Browser
 import Browser.Navigation as Nav
 import Data.Accessors
     exposing
-        ( availableBuildingsA
+        ( adminAddPersonRA
+        , adminEditPersonRA
+        , adminListPeopleRA
+        , adminRA
+        , availableBuildingsA
         , availableChassisA
         , availableComponentsA
         , availableResearchA
@@ -22,13 +26,20 @@ import Data.Accessors
         , designsA
         , errorsA
         , iconsA
+        , messagesRA
         , newsA
+        , personRA
+        , planetRA
         , planetStatusA
         , planetsA
         , populationsA
         , researchProductionA
+        , researchRA
+        , starSystemRA
         , starSystemsA
+        , starSystemsRA
         , starsA
+        , unitRA
         )
 import Data.Common
     exposing
@@ -56,6 +67,9 @@ import Maybe.Extra exposing (isJust)
 import Navigation exposing (parseLocation)
 import Url exposing (Url)
 import ViewModels.Admin.Main
+import ViewModels.Admin.People.Add
+import ViewModels.Admin.People.Edit
+import ViewModels.Admin.People.List
 import ViewModels.Designer exposing (DesignerRMsg(..))
 import ViewModels.Messages exposing (MessagesRMsg(..))
 import ViewModels.Person
@@ -147,6 +161,64 @@ init _ url key =
     )
 
 
+initViewModel : Url -> Model -> Model
+initViewModel url model =
+    case parseLocation url of
+        AdminR ->
+            set adminRA ViewModels.Admin.Main.init model
+
+        HomeR ->
+            model
+
+        ProfileR ->
+            model
+
+        StarSystemsR ->
+            model
+
+        StarSystemR _ ->
+            set starSystemsRA ViewModels.StarSystem.init model
+
+        PlanetR _ ->
+            set planetRA ViewModels.Planet.init model
+
+        BasesR ->
+            model
+
+        FleetR ->
+            model
+
+        DesignerR ->
+            set designerRA ViewModels.Designer.init model
+
+        ConstructionR ->
+            model
+
+        MessagesR ->
+            set messagesRA ViewModels.Messages.init model
+
+        PersonR _ ->
+            set personRA ViewModels.Person.init model
+
+        UnitR _ ->
+            set unitRA ViewModels.Unit.init model
+
+        AdminListPeopleR ->
+            set (adminRA << adminListPeopleRA) ViewModels.Admin.People.List.init model
+
+        AdminPersonR _ ->
+            set (adminRA << adminEditPersonRA) ViewModels.Admin.People.Edit.init model
+
+        AdminNewPersonR ->
+            set (adminRA << adminAddPersonRA) ViewModels.Admin.People.Add.init model
+
+        LogoutR ->
+            model
+
+        ResearchR ->
+            set researchRA ViewModels.Research.init model
+
+
 {-| Handle update messages
 -}
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -161,8 +233,7 @@ update msg model =
                     ( model, Nav.load href )
 
         UrlChanged url ->
-            ( { model | url = url }
-              -- TODO: reinit new view model
+            ( initViewModel url { model | url = url }
             , currentInit url <| model
             )
 
