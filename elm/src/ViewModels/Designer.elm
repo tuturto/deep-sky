@@ -12,8 +12,8 @@ import Data.Vehicles
         , Design
         , PlannedComponent
         , UnitStats
-        , ValidationMessage
         )
+import RemoteData exposing (WebData)
 
 
 {-| Messages sent by designer view

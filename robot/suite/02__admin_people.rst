@@ -30,6 +30,20 @@ has already been loaded and cached.
     Navigate To Previous Page
         Click Element   id:previous-page
 
+When list of people are displayed, they can be opened by clicking respective
+row. Application will then display the detailed person data. Each person row
+has two ids: ``person-id-`` for id field and ``person-name-`` for person name.
+Both are followed by 1 based index of the table. Name of the first person
+can thus be found on element ``person-name-1`` and id of 3rd person on
+element ``person-id-3``.
+
+.. code:: robotframework
+
+    View Person on Row
+        [Arguments]   ${person_row_id}
+        ${id}=   Catenate   SEPARATOR=   person-id-   ${person_row_id}
+        Click Element   id:${id}
+
 Admin page
 ==========
 Admin page is only visible for users with sufficient rights. They can use it
@@ -59,19 +73,21 @@ Known issues
         Click Link   link:People
         Wait Until Data Has Finished Loading
         Page Should Not Contain   No data
+        ${person_name}=   Get Text   id:person-name-1
+        Should Not Be Equal   ${person_name}   ${EMPTY}
 
     Viewing Single Person
-        Click Element   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]
-        Wait Until Page Contains    Update
+        View Person on Row   1
+        Wait Until Data Has Finished Loading
         Go Back
-        Wait Until Element Is Visible   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]
+        Wait Until Data Has Finished Loading
 
     Viewing Different Pages of Paginated Data
-        ${personId1}=   Get Text   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]
+        ${personId1}=   Get Text   id:person-id-1
         Navigate To Next Page
-        ${personId2}=   Get Text   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]
+        ${personId2}=   Get Text   id:person-id-1
         Navigate To Previous Page
-        ${personId3}=   Get Text   xpath:/html/body/div[4]/div/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[1]
+        ${personId3}=   Get Text   id:person-id-1
         Should Be Equal As Integers   ${personId1}   ${personId3}
         Should Not Be Equal As Integers   ${personId1}   ${personId2}
 

@@ -139,7 +139,7 @@ listDisplay model =
                     ]
 
                 Just (Success people) ->
-                    List.map personEntry people
+                    List.indexedMap personEntry people
     in
     div [ class "row" ]
         [ div [ class "col-lg-12" ]
@@ -158,11 +158,11 @@ listDisplay model =
 
 {-| Single row in person table
 -}
-personEntry : Person -> Html Msg
-personEntry person =
-    tr [ class "clickable", onClick <| AdminListPeopleMessage <| PersonSelected person.id ]
-        [ td [] [ text <| String.fromInt <| unPersonId person.id ]
-        , td [] [ text <| displayName person.name ]
+personEntry : Int -> Person -> Html Msg
+personEntry index person =
+    tr [ id <| "person-row-" ++ String.fromInt (index + 1), class "clickable", onClick <| AdminListPeopleMessage <| PersonSelected person.id ]
+        [ td [ id <| "person-id-" ++ String.fromInt (index + 1) ] [ text <| String.fromInt <| unPersonId person.id ]
+        , td [ id <| "person-name-" ++ String.fromInt (index + 1) ] [ text <| displayName person.name ]
         ]
 
 
