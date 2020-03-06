@@ -1,4 +1,9 @@
-module Views.Admin.People.Add exposing (init, page, update)
+module Views.Admin.People.Add exposing
+    ( init
+    , isLoading
+    , page
+    , update
+    )
 
 import Accessors exposing (over, set)
 import Api.Admin exposing (addPerson, getSimulationStatus)
@@ -12,6 +17,7 @@ import Data.Accessors
         , errorsA
         , exactAgeA
         , fieldsA
+        , personA
         , startAgeA
         )
 import Data.Admin exposing (AgeOptions(..), PersonOptions)
@@ -27,12 +33,14 @@ import Html exposing (Html, div, input, option, select, text)
 import Html.Attributes exposing (class, type_, value)
 import Html.Events exposing (onClick, onInput)
 import RemoteData exposing (RemoteData(..))
+import SaveData exposing (SaveData(..))
 import ViewModels.Admin.Main exposing (AdminRMsg(..))
 import ViewModels.Admin.People.Add
     exposing
         ( AdminAddPersonRMsg(..)
         , Fields
         )
+import Views.Admin.Main
 import Views.Admin.Menu exposing (adminLayout, personMenu)
 import Views.Helpers exposing (pushUrl)
 
@@ -60,19 +68,26 @@ page model =
                 ]
             ]
             :: (ageSelection fields <| stringToAgeOptionType fields.ageOption)
-            ++ buttonStrip
+            ++ buttonStrip model
         )
         model
 
 
-buttonStrip : List (Html Msg)
-buttonStrip =
+buttonStrip : Model -> List (Html Msg)
+buttonStrip model =
+    let
+        bClass =
+            if isLoading model then
+                [ class "btn btn-disabled btn-sm command-button" ]
+
+            else
+                [ class "btn btn-primary btn-sm command-button", onClick (AdminAddPersonMessage CreationRequested) ]
+    in
     [ div [ class "row" ]
         [ div [ class "col-lg-10" ]
             [ text " " ]
         , div [ class "col-lg-2" ]
-            [ div [ class "btn btn-primary btn-sm command-button", onClick (AdminAddPersonMessage CreationRequested) ]
-                [ text "Create" ]
+            [ div bClass [ text "Create" ]
             ]
         ]
     ]
@@ -162,6 +177,12 @@ init _ =
         ]
 
 
+isLoading : Model -> Bool
+isLoading model =
+    RemoteData.isLoading model.adminR.adminAddPersonR.person
+        || Views.Admin.Main.isLoading model
+
+
 {-| Handle incoming messages
 -}
 update : AdminAddPersonRMsg -> Model -> ( Model, Cmd Msg )
@@ -197,21 +218,27 @@ update message model =
                     ( model, Cmd.none )
 
                 Just msg ->
-                    ( model
+                    ( set (adminRA << adminAddPersonRA << personA) Loading model
                     , addPerson (AdminAddPersonMessage << PersonCreated) msg
                     )
 
         PersonCreated (Failure err) ->
             ( over errorsA (\errors -> error err "Failed to generate person" :: errors) model
+                |> set (adminRA << adminAddPersonRA << personA) (Failure err)
             , Cmd.none
             )
 
         PersonCreated (Success res) ->
-            ( model
+            ( set (adminRA << adminAddPersonRA << personA) (Success res) model
             , pushUrl model (AdminPersonR res.id)
             )
 
-        PersonCreated _ ->
+        PersonCreated NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        PersonCreated Loading ->
             ( model
             , Cmd.none
             )

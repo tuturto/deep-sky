@@ -133,7 +133,7 @@ isLoading model =
             Views.Admin.People.Edit.isLoading model
 
         AdminNewPersonR ->
-            False
+            Views.Admin.People.Add.isLoading model
 
         BasesR ->
             False

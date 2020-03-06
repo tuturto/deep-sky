@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - units report their status to faction of owner
 - Robot Framework and Selenium taken into use for testing
 - `pushUrl` function for type safe url manipulation
+- `SaveData` to track when data is being saved
 ### Changed
 - Admin interface has been rewritten in Elm
 - `Age` changed from `Int` to `Natural`
