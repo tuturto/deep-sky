@@ -2,12 +2,12 @@ module Views.Designer exposing
     ( desginSaveFailure
     , designSaveOk
     , init
+    , isLoading
     , page
     , update
-    , isLoading
     )
 
-import Accessors exposing (over, set, get)
+import Accessors exposing (get, over, set)
 import Accessors.Library exposing (onEach, try)
 import Api.Designer
     exposing
@@ -87,8 +87,27 @@ import Data.Vehicles
         , unWeight
         , validateDesign
         )
-import Html exposing (Html, div, i, text)
-import Html.Attributes exposing (class, placeholder, type_, value)
+import Html
+    exposing
+        ( Html
+        , div
+        , i
+        , table
+        , tbody
+        , td
+        , text
+        , th
+        , thead
+        , tr
+        )
+import Html.Attributes
+    exposing
+        ( class
+        , id
+        , placeholder
+        , type_
+        , value
+        )
 import Html.Events exposing (onClick, onInput)
 import Http
 import Maybe exposing (andThen, withDefault)
@@ -402,32 +421,41 @@ designsPanel model =
 -}
 designsPanelContent : Model -> List (Html Msg)
 designsPanelContent model =
-    [ div [ class "row" ]
-        [ div [ class "col-lg-5 panel-table-heading" ] [ text "Name" ]
-        , div [ class "col-lg-3 panel-table-heading" ] [ text "Chassis" ]
-        , div [ class "col-lg-2 panel-table-heading" ] [ text "Size" ]
-        ]
-    ]
-        ++ (case RemoteData.toMaybe model.designerR.designs of
-                Nothing ->
-                    []
+    div [ class "row" ]
+        [ div [ class "col-lg-12" ]
+            [ table []
+                [ thead []
+                    [ tr []
+                        [ th [] [ text "Name" ]
+                        , th [] [ text "Chassis" ]
+                        , th [] [ text "Size" ]
+                        , th [] []
+                        ]
+                    ]
+                , tbody []
+                    (case RemoteData.toMaybe model.designerR.designs of
+                        Nothing ->
+                            []
 
-                Just designs ->
-                    List.sortWith (designSort (RemoteData.withDefault [] model.designerR.availableChassis)) designs
-                        |> List.drop (model.designerR.designsCurrentPage * model.designerR.designsPageSize)
-                        |> List.take model.designerR.designsPageSize
-                        |> List.map
-                            (designsPanelEntry
-                                (RemoteData.withDefault [] model.designerR.availableChassis)
-                            )
-           )
-        ++ designsHelp model
+                        Just designs ->
+                            List.sortWith (designSort (RemoteData.withDefault [] model.designerR.availableChassis)) designs
+                                |> List.drop (model.designerR.designsCurrentPage * model.designerR.designsPageSize)
+                                |> List.take model.designerR.designsPageSize
+                                |> List.indexedMap
+                                    (designsPanelEntry
+                                        (RemoteData.withDefault [] model.designerR.availableChassis)
+                                    )
+                    )
+                ]
+            ]
+        ]
+        :: designsHelp model
 
 
 {-| Help shown for existing designs
 -}
 designsHelp : Model -> List (Html Msg)
-designsHelp model =
+designsHelp _ =
     [ div [ class "row space-top" ]
         [ div [ class "col-lg-12" ]
             [ text "List of available designs is show above. You can choose one for editing by clicking its name."
@@ -445,8 +473,8 @@ designsHelp model =
     ]
 
 
-designsPanelEntry : List Chassis -> Design -> Html Msg
-designsPanelEntry availableChassis design =
+designsPanelEntry : List Chassis -> Int -> Design -> Html Msg
+designsPanelEntry availableChassis index design =
     let
         chassis =
             findFirst (\x -> unChassisId x.id == unChassisId design.chassis.id) availableChassis
@@ -458,14 +486,17 @@ designsPanelEntry availableChassis design =
         tonnage =
             Maybe.map (\x -> String.fromInt <| unChassisTonnage x.tonnage) chassis
                 |> Maybe.withDefault ""
+
+        idNumber =
+            String.fromInt (index + 1)
     in
-    div [ class "row" ]
-        [ div [ class "col-lg-5", onClick (DesignerMessage <| DesignSelected design) ] [ text <| unDesignName design.name ]
-        , div [ class "col-lg-3" ] [ text chassisName ]
-        , div [ class "col-lg-2" ] [ text tonnage ]
-        , div [ class "col-lg-2" ]
-            [ i [ class "fas fa-copy", onClick (DesignerMessage <| DesignCopied design) ] []
-            , i [ class "fas fa-trash-alt small-space-left", onClick (DesignerMessage <| DesignDeleted design) ] []
+    tr [ onClick (DesignerMessage <| DesignSelected design) ]
+        [ td [ id <| "design-entry-" ++ idNumber ] [ text <| unDesignName design.name ]
+        , td [] [ text chassisName ]
+        , td [] [ text tonnage ]
+        , td [ class "icons" ]
+            [ i [ id ("copy-design-" ++ idNumber), class "fas fa-copy", onClick (DesignerMessage <| DesignCopied design) ] []
+            , i [ id ("delete-design-" ++ idNumber), class "fas fa-trash-alt small-space-left", onClick (DesignerMessage <| DesignDeleted design) ] []
             ]
         ]
 
@@ -918,7 +949,9 @@ commandsContent model =
         saveAttributes =
             case model.designerR.currentDesign of
                 Nothing ->
-                    [ class "btn btn-primary btn-sm command-button disabled" ]
+                    [ id "save-button"
+                    , class "btn btn-primary btn-sm command-button disabled"
+                    ]
 
                 Just design ->
                     let
@@ -932,16 +965,19 @@ commandsContent model =
                                 |> Maybe.withDefault []
                     in
                     if List.isEmpty validationMessages then
-                        [ class "btn btn-primary btn-sm command-button"
+                        [ id "save-button"
+                        , class "btn btn-primary btn-sm command-button"
                         , onClick <| DesignerMessage (SaveDesignRequested design)
                         ]
 
                     else
-                        [ class "btn btn-primary btn-sm command-button disabled" ]
+                        [ id "save-button"
+                        , class "btn btn-primary btn-sm command-button disabled"
+                        ]
     in
     [ div [ class "row" ]
         [ div [ class "col-lg-12" ]
-            [ div [ class ("btn btn-primary btn-sm command-button " ++ newClass), onClick <| DesignerMessage NewDesignStarted ] [ text "Clear" ]
+            [ div [ id "clear-button", class ("btn btn-primary btn-sm command-button " ++ newClass), onClick <| DesignerMessage NewDesignStarted ] [ text "Clear" ]
             , div saveAttributes [ text "Save" ]
             ]
         ]
@@ -1193,7 +1229,6 @@ update message model =
                 newDesign =
                     addComponent component model.designerR.availableComponents model.designerR.currentDesign
             in
-
             case newDesign of
                 Just design ->
                     ( set (designerRA << currentDesignA) newDesign model
@@ -1201,13 +1236,10 @@ update message model =
                     , estimateDesign (DesignerMessage << DesignEstimated) design
                     )
 
-
-
                 Nothing ->
                     ( set (designerRA << currentDesignA) newDesign model
                     , Cmd.none
                     )
-
 
         ComponentRemoved component ->
             let
@@ -1223,7 +1255,7 @@ update message model =
 
                 Nothing ->
                     ( set (designerRA << currentDesignA) newDesign model
-                    ,  Cmd.none
+                    , Cmd.none
                     )
 
         DesignPanelStatusChanged status ->
@@ -1449,10 +1481,10 @@ designSaveOk model design =
         Just (Just _) ->
             over (designerRA << designsA << SaveData.tryRemote << onEach) (replaceDesign design) model
                 |> over (designerRA << currentDesignA << try) (replaceDesign design)
+
         _ ->
             over (designerRA << designsA << SaveData.tryRemote) ((::) design) model
                 |> over (designerRA << currentDesignA << try) (replaceDesign design)
-
 
 
 {-| Given new design and existing one, replace old with new if ids match
@@ -1475,12 +1507,14 @@ replaceDesign new old =
                     else
                         old
 
+
 isLoading : Model -> Bool
 isLoading model =
     let
-        vm = model.designerR
+        vm =
+            model.designerR
     in
-        RemoteData.isLoading vm.availableComponents
-            || RemoteData.isLoading vm.availableChassis
-            || RemoteData.isLoading vm.designs
-            || RemoteData.isLoading vm.designStats
+    RemoteData.isLoading vm.availableComponents
+        || RemoteData.isLoading vm.availableChassis
+        || RemoteData.isLoading vm.designs
+        || RemoteData.isLoading vm.designStats

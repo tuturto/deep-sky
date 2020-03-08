@@ -25,6 +25,20 @@ are faction specific.
 Keywords
 --------
 
+Design can be opened by clicking the respective row on the designs list.
+
+.. code:: robotframework
+
+    View Design on Row
+        [Arguments]   ${design_row_id}
+        ${id}=   Catenate   SEPARATOR=   design-entry-   ${design_row_id}
+        Click Element   id:${id}
+        Wait Until Data Has Finished Loading
+
+    Close Design Without Saving
+        Click Element   id:clear-button
+        Wait Until Data Has Finished Loading
+
 Test cases
 ----------
 
@@ -42,7 +56,8 @@ Existing design can be opened by clicking its entry on the list.
 .. code:: robotframework
 
     Viewing Existing Desig
-        Fail
+        View Design on Row   1
+        Close Design Without Saving
 
 A design is created by first selecting suitable chassis and then filling in
 components and name. Until required components have been filled in, the design
