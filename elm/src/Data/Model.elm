@@ -18,7 +18,7 @@ import Data.StarSystem
         , Star
         , StarSystem
         )
-import Data.Vehicles exposing (Chassis, Component, Design, UnitStats)
+import Data.Vehicles exposing (Chassis, Design, UnitStats)
 import Dict exposing (Dict)
 import Http
 import Url exposing (Url)
@@ -58,9 +58,6 @@ type alias Model =
     , researchProduction : Maybe TotalResearchScore
     , errors : List ErrorMessage
     , researchR : ResearchViewModel
-    , availableComponents : Maybe (List Component)
-    , availableChassis : Maybe (List Chassis)
-    , designs : Maybe (List Design)
     , designerR : DesignerViewModel
     , personR : PersonViewModel
     , adminR : AdminViewModel
@@ -102,8 +99,3 @@ type ApiMsg
     | AvailableResearchReceived (Result Http.Error (List Research))
     | CurrentResearchReceived (Result Http.Error (List CurrentResearch))
     | ResearchProductionReceived (Result Http.Error TotalResearchScore)
-    | ComponentsReceived (Result Http.Error (List Component))
-    | ChassisReceived (Result Http.Error (List Chassis))
-    | DesignsReceived (Result Http.Error (List Design))
-    | DesignSaved (Result Http.Error Design)
-    | DesignEstimated (Result Http.Error UnitStats)

@@ -54,7 +54,7 @@ the respective link on main menu bar.
 
     *** Test Cases ***
     Opening Admin Page
-        Click Link   link:Admin
+        Click Link   Admin
         Wait Until Data Has Finished Loading
 
 People

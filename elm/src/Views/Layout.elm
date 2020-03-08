@@ -142,7 +142,7 @@ isLoading model =
             False
 
         DesignerR ->
-            False
+            Views.Designer.isLoading model
 
         FleetR ->
             False

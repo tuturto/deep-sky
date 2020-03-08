@@ -25,7 +25,7 @@ always be available for logged in users.
 
     *** Test Cases ***
     Opening News Page
-        Click Link   link:Messages
+        Click Link   Messages
         Wait Until Page Contains   Latest news
 
 User submitted news

@@ -142,9 +142,6 @@ init _ url key =
             , researchProduction = Nothing
             , errors = []
             , researchR = ViewModels.Research.init
-            , availableComponents = Nothing
-            , availableChassis = Nothing
-            , designs = Nothing
             , designerR = ViewModels.Designer.init
             , personR = ViewModels.Person.init
             , adminR = ViewModels.Admin.Main.init
@@ -450,60 +447,6 @@ handleApiMsg msg model =
         ResearchProductionReceived (Err err) ->
             ( set researchProductionA Nothing model
                 |> over errorsA (\errors -> error err "Failed to load research production" :: errors)
-            , Cmd.none
-            )
-
-        ComponentsReceived (Ok status) ->
-            ( set availableComponentsA (Just status) model
-            , Cmd.none
-            )
-
-        ComponentsReceived (Err err) ->
-            ( set availableComponentsA Nothing model
-                |> over errorsA (\errors -> error err "Failed to load components" :: errors)
-            , Cmd.none
-            )
-
-        ChassisReceived (Ok status) ->
-            ( set availableChassisA (Just status) model
-            , Cmd.none
-            )
-
-        ChassisReceived (Err err) ->
-            ( set availableChassisA Nothing model
-                |> over errorsA (\errors -> error err "Failed to load chassis" :: errors)
-            , Cmd.none
-            )
-
-        DesignsReceived (Ok status) ->
-            ( set designsA (Just status) model
-            , Cmd.none
-            )
-
-        DesignsReceived (Err err) ->
-            ( set designsA Nothing model
-                |> over errorsA (\errors -> error err "Failed to load designs" :: errors)
-            , Cmd.none
-            )
-
-        DesignSaved (Ok design) ->
-            ( Views.Designer.designSaveOk model design
-            , availableDesignsCmd
-            )
-
-        DesignSaved (Err err) ->
-            ( Views.Designer.desginSaveFailure model err
-            , Cmd.none
-            )
-
-        DesignEstimated (Ok stats) ->
-            ( set (designerRA << designStatsA) (Just stats) model
-            , Cmd.none
-            )
-
-        DesignEstimated (Err err) ->
-            ( set (designerRA << designStatsA) Nothing model
-                |> over errorsA (\errors -> error err "Failed to estimate effectivity of design" :: errors)
             , Cmd.none
             )
 

@@ -4,15 +4,27 @@ module SaveData exposing
     , isLoading
     , map
     , succeed
+    , try
+    , tryRemote
     )
 
+import Accessors exposing (Relation, makeOneToN)
 import Http exposing (Error)
-import RemoteData exposing (WebData)
+import RemoteData exposing (RemoteData, WebData)
 
 
-{-| Extension to RemoteData module, allowing retaining information on client
-when updating data on the server.
--}
+tryRemote : Relation elem sub wrap -> Relation (RemoteData err elem) sub (RemoteData err wrap)
+tryRemote =
+    makeOneToN
+        RemoteData.map
+        RemoteData.map
+
+
+try : Relation elem sub wrap -> Relation (SaveData elem) sub (SaveData wrap)
+try =
+    makeOneToN
+        map
+        map
 
 
 {-| Data that can be saved and retained on client while save is in progress

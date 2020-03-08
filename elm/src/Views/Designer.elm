@@ -4,9 +4,10 @@ module Views.Designer exposing
     , init
     , page
     , update
+    , isLoading
     )
 
-import Accessors exposing (over, set)
+import Accessors exposing (over, set, get)
 import Accessors.Library exposing (onEach, try)
 import Api.Designer
     exposing
@@ -20,6 +21,8 @@ import Api.Designer
 import Data.Accessors
     exposing
         ( amountA
+        , availableChassisA
+        , availableComponentsA
         , chassisCurrentPageA
         , chassisListStatusA
         , commandsStatusA
@@ -44,6 +47,7 @@ import Data.Common
         ( InfoPanelStatus(..)
         , error
         , findFirst
+        , joinMaybe
         , maxPage
         , unDesignId
         )
@@ -88,6 +92,8 @@ import Html.Attributes exposing (class, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Http
 import Maybe exposing (andThen, withDefault)
+import RemoteData exposing (RemoteData(..), WebData)
+import SaveData exposing (SaveData(..))
 import ViewModels.Designer exposing (DesignerRMsg(..), DesignerViewModel)
 import Views.Helpers
     exposing
@@ -129,8 +135,8 @@ chassisList model =
             { pageSize = model.designerR.chassisPageSize
             , currentPage = model.designerR.chassisCurrentPage
             , maxPage =
-                model.availableChassis
-                    |> withDefault []
+                model.designerR.availableChassis
+                    |> RemoteData.withDefault []
                     |> maxPage model.designerR.chassisPageSize
             , pageChangedMessage = DesignerMessage << ChassisListPageChanged
             }
@@ -148,8 +154,8 @@ chassisListContent model =
         , div [ class "col-lg-4" ] [ text "Type" ]
         , div [ class "col-lg-2" ] [ text "Size" ]
         ]
-        :: (model.availableChassis
-                |> withDefault []
+        :: (model.designerR.availableChassis
+                |> RemoteData.withDefault []
                 |> List.sortWith sortChassis
                 |> List.drop (model.designerR.chassisCurrentPage * model.designerR.chassisPageSize)
                 |> List.take model.designerR.chassisPageSize
@@ -233,7 +239,7 @@ componentList model =
             { pageSize = model.designerR.componentsPageSize
             , currentPage = model.designerR.componentsCurrentPage
             , maxPage =
-                applicableComponents model
+                applicableComponents model.designerR
                     |> maxPage model.designerR.componentsPageSize
             , pageChangedMessage = DesignerMessage << ComponentListPageChanged
             }
@@ -246,7 +252,7 @@ componentList model =
 -}
 componentListContent : Model -> List (Html Msg)
 componentListContent model =
-    (applicableComponents model
+    (applicableComponents model.designerR
         |> List.drop (model.designerR.componentsPageSize * model.designerR.componentsCurrentPage)
         |> List.take model.designerR.componentsPageSize
         |> List.map componentEntry
@@ -256,11 +262,11 @@ componentListContent model =
 
 {-| List of components that are currently selectable
 -}
-applicableComponents : Model -> List Component
-applicableComponents model =
-    model.designerR.currentDesign
-        |> andThen (currentChassis model.availableChassis)
-        |> andThen (matchingComponents model.availableComponents)
+applicableComponents : DesignerViewModel -> List Component
+applicableComponents vm =
+    vm.currentDesign
+        |> Maybe.andThen (currentChassis vm.availableChassis)
+        |> Maybe.andThen (matchingComponents vm.availableComponents)
         |> withDefault []
         |> List.sortWith componentSort
 
@@ -293,26 +299,24 @@ sortByComponentName a b =
 
 {-| Given list of available chassis and current design, find matching chassis
 -}
-currentChassis : Maybe (List Chassis) -> Design -> Maybe Chassis
+currentChassis : WebData (List Chassis) -> Design -> Maybe Chassis
 currentChassis availableChassis design =
-    case availableChassis of
-        Nothing ->
-            Nothing
-
-        Just chassis ->
-            List.filter (\x -> x.id == design.chassis.id) chassis
-                |> List.head
+    RemoteData.map (\entries -> List.filter (\x -> x.id == design.chassis.id) entries) availableChassis
+        |> RemoteData.map (\entries -> List.head entries)
+        |> RemoteData.toMaybe
+        |> joinMaybe
 
 
 {-| Produce a list of components that are applicable for selected chassis
 -}
-matchingComponents : Maybe (List Component) -> Chassis -> Maybe (List Component)
+matchingComponents : WebData (List Component) -> Chassis -> Maybe (List Component)
 matchingComponents availableComponents chassis =
-    Maybe.map
+    RemoteData.map
         (\components ->
             List.filter (\x -> x.chassisType == chassis.chassisType) components
         )
         availableComponents
+        |> RemoteData.toMaybe
 
 
 {-| Single component entry in available components
@@ -384,8 +388,8 @@ designsPanel model =
             { pageSize = model.designerR.designsPageSize
             , currentPage = model.designerR.designsCurrentPage
             , maxPage =
-                model.designs
-                    |> withDefault []
+                model.designerR.designs
+                    |> RemoteData.withDefault []
                     |> maxPage model.designerR.designsPageSize
             , pageChangedMessage = DesignerMessage << DesignsPanelPageChanged
             }
@@ -404,17 +408,17 @@ designsPanelContent model =
         , div [ class "col-lg-2 panel-table-heading" ] [ text "Size" ]
         ]
     ]
-        ++ (case model.designs of
+        ++ (case RemoteData.toMaybe model.designerR.designs of
                 Nothing ->
                     []
 
                 Just designs ->
-                    List.sortWith (designSort (Maybe.withDefault [] model.availableChassis)) designs
+                    List.sortWith (designSort (RemoteData.withDefault [] model.designerR.availableChassis)) designs
                         |> List.drop (model.designerR.designsCurrentPage * model.designerR.designsPageSize)
                         |> List.take model.designerR.designsPageSize
                         |> List.map
                             (designsPanelEntry
-                                (Maybe.withDefault [] model.availableChassis)
+                                (RemoteData.withDefault [] model.designerR.availableChassis)
                             )
            )
         ++ designsHelp model
@@ -539,6 +543,7 @@ designPanel model =
 
 
 {-| Contents of design panel
+This view shows a single design
 -}
 designPanelContent : Model -> List (Html Msg)
 designPanelContent model =
@@ -549,7 +554,7 @@ designPanelContent model =
         Just design ->
             let
                 chassis =
-                    findFirst (\x -> x.id == design.chassis.id) (withDefault [] model.availableChassis)
+                    findFirst (\x -> x.id == design.chassis.id) (RemoteData.withDefault [] model.designerR.availableChassis)
 
                 chassisType =
                     case chassis of
@@ -560,7 +565,9 @@ designPanelContent model =
                             chassisTypeToString c.chassisType
 
                 tonnage =
-                    String.fromInt <| unWeight <| sumOfDesignTonnage (withDefault [] model.availableComponents) design
+                    String.fromInt <|
+                        unWeight <|
+                            sumOfDesignTonnage (RemoteData.withDefault [] model.designerR.availableComponents) design
 
                 maxTonnage =
                     case chassis of
@@ -603,7 +610,7 @@ designPanelContent model =
                         |> withDefault (SlotAmount 0)
 
                 cost =
-                    case model.availableComponents of
+                    case RemoteData.toMaybe model.designerR.availableComponents of
                         Nothing ->
                             Nothing
 
@@ -640,56 +647,56 @@ designPanelContent model =
                 [ div [ class "col-lg-2" ] []
                 , div [ class "col-lg-1" ]
                     [ text <|
-                        slotsLeftString (withDefault [] model.availableComponents)
+                        slotsLeftString (RemoteData.withDefault [] model.designerR.availableComponents)
                             armourSlots
                             design.components
                             ArmourSlot
                     ]
                 , div [ class "col-lg-1" ]
                     [ text <|
-                        slotsLeftString (withDefault [] model.availableComponents)
+                        slotsLeftString (RemoteData.withDefault [] model.designerR.availableComponents)
                             innerSlots
                             design.components
                             InnerSlot
                     ]
                 , div [ class "col-lg-1" ]
                     [ text <|
-                        slotsLeftString (withDefault [] model.availableComponents)
+                        slotsLeftString (RemoteData.withDefault [] model.designerR.availableComponents)
                             outerSlots
                             design.components
                             OuterSlot
                     ]
                 , div [ class "col-lg-1" ]
                     [ text <|
-                        slotsLeftString (withDefault [] model.availableComponents)
+                        slotsLeftString (RemoteData.withDefault [] model.designerR.availableComponents)
                             sensorSlots
                             design.components
                             SensorSlot
                     ]
                 , div [ class "col-lg-1" ]
                     [ text <|
-                        slotsLeftString (withDefault [] model.availableComponents)
+                        slotsLeftString (RemoteData.withDefault [] model.designerR.availableComponents)
                             weaponSlots
                             design.components
                             WeaponSlot
                     ]
                 , div [ class "col-lg-1" ]
                     [ text <|
-                        slotsLeftString (withDefault [] model.availableComponents)
+                        slotsLeftString (RemoteData.withDefault [] model.designerR.availableComponents)
                             engineSlots
                             design.components
                             EngineSlot
                     ]
                 , div [ class "col-lg-1" ]
                     [ text <|
-                        slotsLeftString (withDefault [] model.availableComponents)
+                        slotsLeftString (RemoteData.withDefault [] model.designerR.availableComponents)
                             motiveSlots
                             design.components
                             MotiveSlot
                     ]
                 , div [ class "col-lg-1" ]
                     [ text <|
-                        slotsLeftString (withDefault [] model.availableComponents)
+                        slotsLeftString (RemoteData.withDefault [] model.designerR.availableComponents)
                             sailSlots
                             design.components
                             SailSlot
@@ -714,9 +721,11 @@ designPanelContent model =
             , div [ class "row panel-sub-title" ]
                 [ div [ class "col-lg-12" ] [ text "Components:" ] ]
             ]
-                ++ List.map (designPanelEntry model.availableComponents)
+                ++ List.map (designPanelEntry model.designerR.availableComponents)
                     (List.filter (\x -> unComponentAmount x.amount > 0)
-                        (List.sortWith (plannedComponentSort <| withDefault [] model.availableComponents) design.components)
+                        (List.sortWith (plannedComponentSort <| RemoteData.withDefault [] model.designerR.availableComponents)
+                            design.components
+                        )
                     )
                 ++ designPanelHelp model.designerR.currentDesign
 
@@ -810,11 +819,11 @@ plannedComponentWeight components component =
 
 {-| Single entry in list of selected components
 -}
-designPanelEntry : Maybe (List Component) -> PlannedComponent -> Html Msg
+designPanelEntry : WebData (List Component) -> PlannedComponent -> Html Msg
 designPanelEntry components component =
     let
         comp =
-            findFirst (\x -> x.id == component.id) (withDefault [] components)
+            findFirst (\x -> x.id == component.id) (RemoteData.withDefault [] components)
 
         name =
             case comp of
@@ -915,12 +924,12 @@ commandsContent model =
                     let
                         validationMessages =
                             Maybe.map
-                                (validateDesign (withDefault [] model.availableComponents)
-                                    (withDefault [] model.availableChassis)
-                                    model.designerR.designStats
+                                (validateDesign (RemoteData.withDefault [] model.designerR.availableComponents)
+                                    (RemoteData.withDefault [] model.designerR.availableChassis)
+                                    (RemoteData.toMaybe model.designerR.designStats)
                                 )
                                 model.designerR.currentDesign
-                                |> withDefault []
+                                |> Maybe.withDefault []
                     in
                     if List.isEmpty validationMessages then
                         [ class "btn btn-primary btn-sm command-button"
@@ -964,9 +973,9 @@ messagesContent model =
             let
                 validationMessages =
                     Maybe.map
-                        (validateDesign (withDefault [] model.availableComponents)
-                            (withDefault [] model.availableChassis)
-                            model.designerR.designStats
+                        (validateDesign (RemoteData.withDefault [] model.designerR.availableComponents)
+                            (RemoteData.withDefault [] model.designerR.availableChassis)
+                            (RemoteData.toMaybe model.designerR.designStats)
                         )
                         model.designerR.currentDesign
                         |> withDefault []
@@ -1015,8 +1024,8 @@ briefStatsContent model =
         [ div [ class "row" ]
             [ div [ class "col-lg-3 panel-sub-title" ] [ text "Crew:" ]
             , div [ class "col-lg-9" ]
-                [ Maybe.map displayCrew model.designerR.designStats
-                    |> Maybe.withDefault "0 / 0"
+                [ RemoteData.map displayCrew model.designerR.designStats
+                    |> RemoteData.withDefault "0 / 0"
                     |> text
                 ]
             ]
@@ -1024,16 +1033,16 @@ briefStatsContent model =
     , div [ class "row" ]
         [ div [ class "col-lg-3 panel-sub-title" ] [ text "Quarters:" ]
         , div [ class "col-lg-9" ]
-            [ Maybe.map displayCrewQuarters model.designerR.designStats
-                |> Maybe.withDefault "0 / 0 / 0"
+            [ RemoteData.map displayCrewQuarters model.designerR.designStats
+                |> RemoteData.withDefault "0 / 0 / 0"
                 |> text
             ]
         ]
     , div [ class "row" ]
         [ div [ class "col-lg-3" ] [ text " " ]
         , div [ class "col-lg-9" ]
-            [ Maybe.map displayQuartersRequirement model.designerR.designStats
-                |> Maybe.withDefault "-"
+            [ RemoteData.map displayQuartersRequirement model.designerR.designStats
+                |> RemoteData.withDefault "-"
                 |> text
             ]
         ]
@@ -1096,9 +1105,9 @@ displayCrew stats =
 init : Model -> Cmd Msg
 init _ =
     Cmd.batch
-        [ availableComponentsCmd
-        , availableChassisCmd
-        , availableDesignsCmd
+        [ availableComponentsCmd (DesignerMessage << ComponentsReceived)
+        , availableChassisCmd (DesignerMessage << ChassisReceived)
+        , availableDesignsCmd (DesignerMessage << DesignsReceived)
         ]
 
 
@@ -1114,7 +1123,7 @@ update message model =
 
         ChassisListUpdatedRequested ->
             ( model
-            , availableChassisCmd
+            , availableChassisCmd (DesignerMessage << ChassisReceived)
             )
 
         ChassisListPageChanged n ->
@@ -1129,7 +1138,7 @@ update message model =
 
         ComponentListUpdatedRequested ->
             ( model
-            , availableComponentsCmd
+            , availableComponentsCmd (DesignerMessage << ComponentsReceived)
             )
 
         ComponentListPageChanged n ->
@@ -1144,7 +1153,7 @@ update message model =
 
         DesignsPanelUpdatedRequested ->
             ( model
-            , availableDesignsCmd
+            , availableDesignsCmd (DesignerMessage << DesignsReceived)
             )
 
         DesignsPanelPageChanged n ->
@@ -1175,36 +1184,47 @@ update message model =
                     }
             in
             ( set (designerRA << currentDesignA) (Just newDesign) model
-            , estimateDesign newDesign
+                |> set (designerRA << designStatsA) Loading
+            , estimateDesign (DesignerMessage << DesignEstimated) newDesign
             )
 
         ComponentAdded component ->
             let
                 newDesign =
-                    addComponent component model.availableComponents model.designerR.currentDesign
+                    addComponent component model.designerR.availableComponents model.designerR.currentDesign
             in
-            ( set (designerRA << currentDesignA) newDesign model
-            , case newDesign of
+
+            case newDesign of
                 Just design ->
-                    estimateDesign design
+                    ( set (designerRA << currentDesignA) newDesign model
+                        |> set (designerRA << designStatsA) Loading
+                    , estimateDesign (DesignerMessage << DesignEstimated) design
+                    )
+
+
 
                 Nothing ->
-                    Cmd.none
-            )
+                    ( set (designerRA << currentDesignA) newDesign model
+                    , Cmd.none
+                    )
+
 
         ComponentRemoved component ->
             let
                 newDesign =
                     over (try << componentsA << onEach) (removeComponent component.id) model.designerR.currentDesign
             in
-            ( set (designerRA << currentDesignA) newDesign model
-            , case newDesign of
+            case newDesign of
                 Just design ->
-                    estimateDesign design
+                    ( set (designerRA << currentDesignA) newDesign model
+                        |> set (designerRA << designStatsA) Loading
+                    , estimateDesign (DesignerMessage << DesignEstimated) design
+                    )
 
                 Nothing ->
-                    Cmd.none
-            )
+                    ( set (designerRA << currentDesignA) newDesign model
+                    ,  Cmd.none
+                    )
 
         DesignPanelStatusChanged status ->
             ( set (designerRA << designPanelStatusA) status model
@@ -1218,18 +1238,19 @@ update message model =
 
         NewDesignStarted ->
             ( set (designerRA << currentDesignA) Nothing model
-                |> set (designerRA << designStatsA) Nothing
+                |> set (designerRA << designStatsA) NotAsked
             , Cmd.none
             )
 
         SaveDesignRequested design ->
             ( model
-            , saveDesignCmd design
+            , saveDesignCmd (DesignerMessage << DesignSaved) design
             )
 
         DesignSelected design ->
             ( set (designerRA << currentDesignA) (Just design) model
-            , estimateDesign design
+                |> set (designerRA << designStatsA) Loading
+            , estimateDesign (DesignerMessage << DesignEstimated) design
               -- TODO: here we should be loading pre-existing stats
             )
 
@@ -1237,13 +1258,14 @@ update message model =
             ( set (designerRA << currentDesignA) (Just design) model
                 |> set (designerRA << currentDesignA << try << idA) Nothing
                 |> set (designerRA << currentDesignA << try << nameA) (DesignName "")
-            , estimateDesign design
+                |> set (designerRA << designStatsA) Loading
+            , estimateDesign (DesignerMessage << DesignEstimated) design
               -- TODO: here we should be loading pre-existing stats
             )
 
         DesignDeleted design ->
             ( model
-            , deleteDesignCmd design
+            , deleteDesignCmd (DesignerMessage << DesignsReceived) design
             )
 
         StatsStatusChanged status ->
@@ -1251,16 +1273,126 @@ update message model =
             , Cmd.none
             )
 
+        ComponentsReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        ComponentsReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        ComponentsReceived (Success res) ->
+            ( set (designerRA << availableComponentsA) (Success res) model
+            , Cmd.none
+            )
+
+        ComponentsReceived (Failure err) ->
+            ( over errorsA (\errors -> error err "Failed to load components" :: errors) model
+                |> set (designerRA << availableComponentsA) (Failure err)
+            , Cmd.none
+            )
+
+        ChassisReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        ChassisReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        ChassisReceived (Success res) ->
+            ( set (designerRA << availableChassisA) (Success res) model
+            , Cmd.none
+            )
+
+        ChassisReceived (Failure err) ->
+            ( over errorsA (\errors -> error err "Failed to load chassis" :: errors) model
+                |> set (designerRA << availableChassisA) (Failure err)
+            , Cmd.none
+            )
+
+        DesignsReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        DesignsReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        DesignsReceived (Success res) ->
+            ( set (designerRA << designsA) (Success res) model
+            , Cmd.none
+            )
+
+        DesignsReceived (Failure err) ->
+            ( over errorsA (\errors -> error err "Failed to load designs" :: errors) model
+                |> set (designerRA << designsA) (Failure err)
+            , Cmd.none
+            )
+
+        DesignEstimated NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        DesignEstimated Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        DesignEstimated (Success res) ->
+            ( set (designerRA << designStatsA) (Success res) model
+            , Cmd.none
+            )
+
+        DesignEstimated (Failure err) ->
+            ( over errorsA (\errors -> error err "Failed to estimate design stats" :: errors) model
+                |> set (designerRA << designStatsA) (Failure err)
+            , Cmd.none
+            )
+
+        DesignSaved NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        DesignSaved Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        DesignSaved (Success res) ->
+            ( designSaveOk model res
+            , Cmd.none
+            )
+
+        DesignSaved (Failure err) ->
+            ( desginSaveFailure model err
+            , Cmd.none
+            )
+
 
 {-| Add component to list of planned components of a design
 -}
-addComponent : Component -> Maybe (List Component) -> Maybe Design -> Maybe Design
+addComponent : Component -> WebData (List Component) -> Maybe Design -> Maybe Design
 addComponent component components design =
     case components of
-        Nothing ->
+        NotAsked ->
             design
 
-        Just _ ->
+        Loading ->
+            design
+
+        Failure _ ->
+            design
+
+        Success _ ->
             case design of
                 Nothing ->
                     design
@@ -1313,8 +1445,14 @@ desginSaveFailure model failure =
 -}
 designSaveOk : Model -> Design -> Model
 designSaveOk model design =
-    over (designsA << try << onEach) (replaceDesign design) model
-        |> over (designerRA << currentDesignA << try) (replaceDesign design)
+    case Maybe.map (findFirst (\x -> x.id == design.id)) (RemoteData.toMaybe model.designerR.designs) of
+        Just (Just _) ->
+            over (designerRA << designsA << SaveData.tryRemote << onEach) (replaceDesign design) model
+                |> over (designerRA << currentDesignA << try) (replaceDesign design)
+        _ ->
+            over (designerRA << designsA << SaveData.tryRemote) ((::) design) model
+                |> over (designerRA << currentDesignA << try) (replaceDesign design)
+
 
 
 {-| Given new design and existing one, replace old with new if ids match
@@ -1336,3 +1474,13 @@ replaceDesign new old =
 
                     else
                         old
+
+isLoading : Model -> Bool
+isLoading model =
+    let
+        vm = model.designerR
+    in
+        RemoteData.isLoading vm.availableComponents
+            || RemoteData.isLoading vm.availableChassis
+            || RemoteData.isLoading vm.designs
+            || RemoteData.isLoading vm.designStats
