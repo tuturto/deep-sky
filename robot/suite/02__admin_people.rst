@@ -43,6 +43,7 @@ element ``person-id-3``.
         [Arguments]   ${person_row_id}
         ${id}=   Catenate   SEPARATOR=   person-id-   ${person_row_id}
         Click Element   id:${id}
+        Wait Until Data Has Finished Loading
 
 Admin page
 ==========
@@ -78,7 +79,6 @@ Known issues
 
     Viewing Single Person
         View Person on Row   1
-        Wait Until Data Has Finished Loading
         Go Back
         Wait Until Data Has Finished Loading
 
