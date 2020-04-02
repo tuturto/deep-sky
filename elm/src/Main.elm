@@ -4,7 +4,7 @@ module Main exposing (handleApiMsg, init, main, subscriptions, update)
 -}
 
 import Accessors exposing (over, set)
-import Api.Common exposing (resourcesCmd, starDateCmd)
+import Api.Common exposing (getResources, getStarDate)
 import Api.Designer exposing (availableDesignsCmd)
 import Browser
 import Browser.Navigation as Nav
@@ -64,6 +64,7 @@ import Http exposing (Error(..))
 import List
 import Maybe.Extra exposing (isJust)
 import Navigation exposing (parseLocation)
+import RemoteData exposing (RemoteData(..))
 import Url exposing (Url)
 import ViewModels.Admin.Main
 import ViewModels.Admin.People.Add
@@ -122,8 +123,8 @@ init _ url key =
         model =
             { key = key
             , url = url
-            , currentTime = Nothing
-            , resources = Nothing
+            , currentTime = NotAsked
+            , resources = NotAsked
             , starSystems = Nothing
             , stars = Nothing
             , planets = Nothing
@@ -150,8 +151,8 @@ init _ url key =
     in
     ( model
     , Cmd.batch
-        [ starDateCmd
-        , resourcesCmd
+        [ getStarDate (ApiMsgCompleted << StarDateReceived)
+        , getResources (ApiMsgCompleted << ResourcesReceived)
         , currentInit url <| model
         ]
     )
@@ -280,24 +281,44 @@ update msg model =
 handleApiMsg : ApiMsg -> Model -> ( Model, Cmd Msg )
 handleApiMsg msg model =
     case msg of
-        StarDateReceived (Ok starDate) ->
-            ( { model | currentTime = Just starDate }
+        StarDateReceived NotAsked ->
+            ( model
             , Cmd.none
             )
 
-        StarDateReceived (Err err) ->
-            ( { model | currentTime = Nothing }
+        StarDateReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        StarDateReceived (Success starDate) ->
+            ( { model | currentTime = Success starDate }
+            , Cmd.none
+            )
+
+        StarDateReceived (Failure err) ->
+            ( { model | currentTime = Failure err }
                 |> over errorsA (\errors -> error err "Failed to load star date" :: errors)
             , Cmd.none
             )
 
-        ResourcesReceived (Ok resources) ->
-            ( { model | resources = Just resources }
+        ResourcesReceived NotAsked ->
+            ( model
             , Cmd.none
             )
 
-        ResourcesReceived (Err err) ->
-            ( { model | resources = Nothing }
+        ResourcesReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        ResourcesReceived (Success resources) ->
+            ( { model | resources = Success resources }
+            , Cmd.none
+            )
+
+        ResourcesReceived (Failure err) ->
+            ( { model | resources = Failure err }
                 |> over errorsA (\errors -> error err "Failed to load resources" :: errors)
             , Cmd.none
             )

@@ -101,14 +101,17 @@ infoBar model =
         [ ul [ class "infoitem" ]
             ([ li []
                 [ i [ class "fas fa-clock" ] []
-                , starDateToText model.currentTime
+                , starDateToText <| RemoteData.toMaybe model.currentTime
                 ]
              , li [] <|
-                biologicalsToText model.resources
+                biologicalsToText <|
+                    RemoteData.toMaybe model.resources
              , li [] <|
-                mechanicalsToText model.resources
+                mechanicalsToText <|
+                    RemoteData.toMaybe model.resources
              , li [] <|
-                chemicalsToText model.resources
+                chemicalsToText <|
+                    RemoteData.toMaybe model.resources
              ]
                 ++ (if isLoading model then
                         [ li [ id "loading-indicator", class "pull-right" ] [ text "loading..." ] ]
@@ -122,6 +125,13 @@ infoBar model =
 
 isLoading : Model -> Bool
 isLoading model =
+    isModuleLoading model
+        || RemoteData.isLoading model.resources
+        || RemoteData.isLoading model.currentTime
+
+
+isModuleLoading : Model -> Bool
+isModuleLoading model =
     case parseLocation model.url of
         AdminR ->
             Views.Admin.Main.isLoading model

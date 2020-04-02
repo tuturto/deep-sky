@@ -64,7 +64,7 @@ update message model =
 
         SimulationStatusReceived (Success simulation) ->
             ( set (adminRA << simulationA) (Success simulation) model
-                |> set currentTimeA (Just simulation.time)
+                |> set currentTimeA (Success simulation.time)
             , Cmd.none
             )
 

@@ -63,7 +63,6 @@ import Json.Decode as Decode
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
 import RemoteData exposing (WebData)
-import SaveData exposing (SaveData)
 
 
 {-| Command for loading current simulation status

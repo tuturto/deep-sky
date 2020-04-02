@@ -5,8 +5,8 @@ module Api.Common exposing
     , dynastyNameDecoder
     , encodeMaybe
     , get
-    , getResourcesCmd
-    , getStarDateCmd
+    , getResources
+    , getStarDate
     , is
     , locationDecoder
     , planetIdDecoder
@@ -17,10 +17,8 @@ module Api.Common exposing
     , put
     , resourceTypeDecoder
     , resourceTypeEncoder
-    , resourcesCmd
     , resourcesDecoder
     , resourcesEncoder
-    , starDateCmd
     , starDateDecoder
     , starDateEncoder
     , starNameDecoder
@@ -54,7 +52,7 @@ import Data.Common
         , StarSystemName(..)
         , UnitId(..)
         )
-import Data.Model exposing (ApiMsg(..), Model, Msg(..))
+import Data.Model exposing (ApiMsg(..), Msg(..))
 import Http
 import Json.Decode as Decode
     exposing
@@ -70,7 +68,7 @@ import Json.Decode as Decode
         )
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
-import Maybe.Extra exposing (isNothing)
+import RemoteData exposing (WebData)
 
 
 {-| Send HTTP GET to specific endpoint and parse response with given decoder
@@ -132,42 +130,18 @@ send method url body decoder =
         }
 
 
-{-| Command for retrieving current star date from server
+{-| Retrieve current star date from server
 -}
-starDateCmd : Cmd Msg
-starDateCmd =
-    Http.send (ApiMsgCompleted << StarDateReceived) (get ApiStarDate currentTimeDecoder)
-
-
-{-| Check if model already has star date. In case it's not present, create a command to
-retrieve it.
--}
-getStarDateCmd : Model -> Cmd Msg
-getStarDateCmd model =
-    if isNothing model.currentTime then
-        starDateCmd
-
-    else
-        Cmd.none
+getStarDate : (WebData StarDate -> Msg) -> Cmd Msg
+getStarDate msg =
+    Http.send (RemoteData.fromResult >> msg) (get ApiStarDate currentTimeDecoder)
 
 
 {-| Command to retrieve raw resources at the player's disposal
 -}
-resourcesCmd : Cmd Msg
-resourcesCmd =
-    Http.send (ApiMsgCompleted << ResourcesReceived) (get ApiResources resourcesDecoder)
-
-
-{-| If model does not contain raw resources information, create a command to retrieve them
-from the server.
--}
-getResourcesCmd : Model -> Cmd Msg
-getResourcesCmd model =
-    if isNothing model.resources then
-        resourcesCmd
-
-    else
-        Cmd.none
+getResources : (WebData Resources -> Msg) -> Cmd Msg
+getResources msg =
+    Http.send (RemoteData.fromResult >> msg) (get ApiResources resourcesDecoder)
 
 
 {-| Decode current time response into @StarDate

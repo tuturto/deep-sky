@@ -18,9 +18,9 @@ import Data.StarSystem
         , Star
         , StarSystem
         )
-import Data.Vehicles exposing (Chassis, Design, UnitStats)
 import Dict exposing (Dict)
 import Http
+import RemoteData exposing (WebData)
 import Url exposing (Url)
 import ViewModels.Admin.Main exposing (AdminRMsg, AdminViewModel)
 import ViewModels.Admin.People.Add exposing (AdminAddPersonRMsg)
@@ -38,8 +38,8 @@ import ViewModels.Unit exposing (UnitRMsg, UnitViewModel)
 type alias Model =
     { key : Key
     , url : Url
-    , currentTime : Maybe StarDate
-    , resources : Maybe Resources
+    , currentTime : WebData StarDate
+    , resources : WebData Resources
     , starSystems : Maybe (Dict Int StarSystem)
     , planets : Maybe (Dict Int (List Planet))
     , planetStatus : Maybe PlanetStatus
@@ -84,8 +84,8 @@ type Msg
 
 
 type ApiMsg
-    = StarDateReceived (Result Http.Error StarDate)
-    | ResourcesReceived (Result Http.Error Resources)
+    = StarDateReceived (WebData StarDate)
+    | ResourcesReceived (WebData Resources)
     | StarSystemsReceived (Result Http.Error (List StarSystem))
     | StarsReceived (Result Http.Error (List Star))
     | PlanetsReceived (Result Http.Error (List Planet))
