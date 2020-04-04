@@ -12,14 +12,13 @@ module Api.StarSystem exposing
     , getPopulationsCmd
     , getStarSystem
     , getStarSystemCmd
-    , getStarSystemsCmd
+    , getStarSystems
     , getStarsCmd
     , gravityDecoder
     , planetDecoder
     , planetPositionDecoder
     , planetStatus
     , starDecoder
-    , starSystemsCmd
     , starsCmd
     )
 
@@ -89,20 +88,12 @@ import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
 import Maybe
 import Maybe.Extra exposing (isNothing)
+import RemoteData exposing (WebData)
 
 
-starSystemsCmd : Cmd Msg
-starSystemsCmd =
-    Http.send (ApiMsgCompleted << StarSystemsReceived) (get ApiStarSystem (list starSystemDecoder))
-
-
-getStarSystemsCmd : Model -> Cmd Msg
-getStarSystemsCmd model =
-    if isNothing model.starSystems then
-        starSystemsCmd
-
-    else
-        Cmd.none
+getStarSystems : (WebData (List StarSystem) -> Msg) -> Cmd Msg
+getStarSystems msg =
+    Http.send (RemoteData.fromResult >> msg) (get ApiStarSystem (list starSystemDecoder))
 
 
 getStarSystem : (Result Http.Error StarSystem -> Msg) -> StarSystemId -> Cmd Msg

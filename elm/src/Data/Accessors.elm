@@ -107,6 +107,7 @@ module Data.Accessors exposing
     , starListStatusA
     , starSystemA
     , starSystemRA
+    , systemsA
     , starSystemsA
     , starSystemsRA
     , starsA
@@ -128,6 +129,12 @@ module Data.Accessors exposing
     )
 
 import Accessors exposing (Relation, makeOneToOne)
+
+systemsA : Relation field sub wrap -> Relation { rec | systems : field } sub wrap
+systemsA =
+    makeOneToOne
+        .systems
+        (\change rec -> { rec | systems = change rec.systems })
 
 
 crewTabCurrentPageA : Relation field sub wrap -> Relation { rec | crewTabCurrentPage : field } sub wrap

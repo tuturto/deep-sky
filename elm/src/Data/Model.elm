@@ -32,6 +32,7 @@ import ViewModels.Person exposing (PersonRMsg, PersonViewModel)
 import ViewModels.Planet exposing (PlanetRMsg(..), PlanetViewModel)
 import ViewModels.Research exposing (ResearchRMsg(..), ResearchViewModel)
 import ViewModels.StarSystem exposing (StarSystemRMsg, StarSystemViewModel)
+import ViewModels.StarSystems exposing (StarSystemsRMsg, StarSystemsViewModel)
 import ViewModels.Unit exposing (UnitRMsg, UnitViewModel)
 
 
@@ -49,7 +50,8 @@ type alias Model =
     , constructions : Maybe (Dict Int (List Construction))
     , availableBuildings : Maybe (List BuildingInfo)
     , news : Maybe (List NewsArticle)
-    , starSystemsR : StarSystemViewModel
+    , starSystemR : StarSystemViewModel
+    , starSystemsR : StarSystemsViewModel
     , planetR : PlanetViewModel
     , messagesR : MessagesViewModel
     , icons : Maybe (List ( UserIcon, String ))
@@ -71,6 +73,7 @@ type Msg
     | ClearErrors
     | ApiMsgCompleted ApiMsg
     | StarSystemMessage StarSystemRMsg
+    | StarSystemsMessage StarSystemsRMsg
     | PlanetMessage PlanetRMsg
     | NewsMessage MessagesRMsg
     | ResearchMessage ResearchRMsg

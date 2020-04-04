@@ -2,6 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE OverloadedStrings          #-}
 
 module Handler.StarSystems
     ( getApiStarSystemsR, getStarSystemsR, getStarSystemR, getPlanetR
@@ -47,8 +48,10 @@ getApiStarSystemsR :: Handler Value
 getApiStarSystemsR = do
     (uId, _, _, fId) <- apiRequireFaction
     _ <- apiRequireViewSimulation uId
-    loadedSystemReports <- runDB $ selectList [ StarSystemReportFactionId ==. fId ] [ Asc StarSystemReportId
-                                                                                    , Asc StarSystemReportDate ]
+    loadedSystemReports <- runDB $ selectList [ StarSystemReportFactionId ==. fId ]
+                                              [ Asc StarSystemReportId
+                                              , Asc StarSystemReportDate ]
+
     let systemReports = collateReports $ map entityVal loadedSystemReports
     return $ toJSON systemReports
 

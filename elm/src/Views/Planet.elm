@@ -20,7 +20,6 @@ import Api.StarSystem
         ( getBuildingsCmd
         , getPlanetCmd
         , getPopulationsCmd
-        , getStarSystemsCmd
         , planetStatus
         )
 import Data.Accessors
@@ -524,7 +523,6 @@ init pId model =
         , getPopulationsCmd model pId
         , getBuildingsCmd model pId
         , getConstructionsCmd model pId
-        , getStarSystemsCmd model
         , getAvailableBuildingsCmd model
         , planetStatus model pId
         ]

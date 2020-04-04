@@ -35,6 +35,7 @@ import Data.Accessors
         , populationsA
         , researchProductionA
         , researchRA
+        , starSystemRA
         , starSystemsA
         , starSystemsRA
         , starsA
@@ -76,6 +77,7 @@ import ViewModels.Person
 import ViewModels.Planet exposing (PlanetRMsg(..))
 import ViewModels.Research exposing (ResearchRMsg(..))
 import ViewModels.StarSystem exposing (StarSystemRMsg(..))
+import ViewModels.StarSystems
 import ViewModels.Unit
 import Views.Admin.Main
 import Views.Admin.People.Add
@@ -135,7 +137,8 @@ init _ url key =
             , availableBuildings = Nothing
             , news = Nothing
             , icons = Nothing
-            , starSystemsR = ViewModels.StarSystem.init
+            , starSystemR = ViewModels.StarSystem.init
+            , starSystemsR = ViewModels.StarSystems.init
             , planetR = ViewModels.Planet.init
             , messagesR = ViewModels.Messages.init
             , availableResearch = Nothing
@@ -174,7 +177,7 @@ initViewModel url model =
             model
 
         StarSystemR _ ->
-            set starSystemsRA ViewModels.StarSystem.init model
+            set starSystemRA ViewModels.StarSystem.init model
 
         PlanetR _ ->
             set planetRA ViewModels.Planet.init model
@@ -244,6 +247,9 @@ update msg model =
 
         StarSystemMessage message ->
             Views.StarSystem.update message model
+
+        StarSystemsMessage message ->
+            Views.StarSystems.update message model
 
         PlanetMessage message ->
             Views.Planet.update message model
