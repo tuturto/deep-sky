@@ -7,7 +7,14 @@ module Views.StarSystems exposing
 
 import Accessors exposing (over, set)
 import Api.StarSystem exposing (getStarSystems)
-import Data.Accessors exposing (errorsA, starSystemsRA, systemsA)
+import Data.Accessors
+    exposing
+        ( errorsA
+        , starSystemsRA
+        , systemsA
+        , systemsCurrentPageA
+        , systemsStatusA
+        )
 import Data.Common
     exposing
         ( InfoPanelStatus(..)
@@ -129,10 +136,14 @@ update : StarSystemsRMsg -> Model -> ( Model, Cmd Msg )
 update message model =
     case message of
         SystemsStatusChanged status ->
-            ( model, Cmd.none )
+            ( set (starSystemsRA << systemsStatusA) status model
+            , Cmd.none
+            )
 
-        SystemsPageChanged status ->
-            ( model, Cmd.none )
+        SystemsPageChanged n ->
+            ( set (starSystemsRA << systemsCurrentPageA) n model
+            , Cmd.none
+            )
 
         ViewSystemRequested systemId ->
             ( model
