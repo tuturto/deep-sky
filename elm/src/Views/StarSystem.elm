@@ -1,11 +1,16 @@
-module Views.StarSystem exposing (init, page, update)
+module Views.StarSystem exposing
+    ( init
+    , isLoading
+    , page
+    , update
+    )
 
 import Accessors exposing (get, over, set)
 import Api.StarSystem
     exposing
         ( getPlanetsCmd
-        , getStarSystemCmd
-        , getStarsCmd
+        , getStarSystem
+        , getStars
         )
 import Data.Accessors
     exposing
@@ -15,6 +20,7 @@ import Data.Accessors
         , starListStatusA
         , starSystemA
         , starSystemRA
+        , starsA
         , systemDetailsStatusA
         )
 import Data.Common
@@ -40,7 +46,8 @@ import Data.StarSystem
 import Dict
 import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (class, id)
-import Maybe exposing (andThen, withDefault)
+import Maybe
+import RemoteData exposing (RemoteData(..))
 import ViewModels.StarSystem exposing (StarSystemRMsg(..))
 import Views.Helpers
     exposing
@@ -81,7 +88,7 @@ leftPanel systemId model =
             , refreshMessage = Nothing
             }
             Nothing
-            (starsInfo systemId)
+            starsInfo
             model
         ++ infoPanel
             { title = "Star lanes"
@@ -118,40 +125,52 @@ systemDetails _ model =
     let
         name =
             model.starSystemR.starSystem
-                |> andThen (\x -> Just (unStarSystemName x.name))
-                |> withDefault ""
+                |> RemoteData.andThen (\x -> Success (unStarSystemName x.name))
+                |> RemoteData.withDefault ""
                 |> text
 
         location =
             model.starSystemR.starSystem
-                |> andThen (\x -> Just <| locationToString x.location)
-                |> withDefault ""
+                |> RemoteData.andThen (\x -> Success <| locationToString x.location)
+                |> RemoteData.withDefault ""
                 |> text
 
         date =
             model.starSystemR.starSystem
-                |> andThen (\x -> Just <| starDateToString x.date)
-                |> withDefault ""
+                |> RemoteData.andThen (\x -> Success <| starDateToString x.date)
+                |> RemoteData.withDefault ""
                 |> text
 
         title =
             model.starSystemR.starSystem
-                |> andThen (\x -> x.rulerTitle)
-                |> andThen (Just << unShortTitle)
-                |> withDefault " "
+                |> RemoteData.andThen (\x -> Success x.rulerTitle)
+                |> RemoteData.andThen (\x -> Success <| Maybe.map unShortTitle x)
+                |> RemoteData.withDefault Nothing
+                |> Maybe.withDefault " "
 
         rulerText =
             model.starSystemR.starSystem
-                |> andThen (\x -> x.rulerName)
-                |> andThen (\x -> Just <| displayName x)
-                |> andThen (\x -> Just <| title ++ " " ++ x)
-                |> withDefault "No ruler"
+                |> RemoteData.andThen (\x -> Success x.rulerName)
+                |> RemoteData.andThen (\x -> Success <| Maybe.map displayName x)
+                |> RemoteData.andThen (\x -> Success <| Maybe.map (\y -> title ++ " " ++ y) x)
+                |> RemoteData.withDefault Nothing
+                |> Maybe.withDefault "No ruler"
                 |> text
 
         rulerLink =
             model.starSystemR.starSystem
-                |> andThen (\x -> x.rulerId)
-                |> andThen (\rId -> Just (a [ href (PersonR rId) ] [ rulerText ]))
+                |> RemoteData.andThen (\x -> Success x.rulerId)
+                |> RemoteData.andThen
+                    (\x ->
+                        Success
+                            (Maybe.map
+                                (\rId ->
+                                    a [ href (PersonR rId) ] [ rulerText ]
+                                )
+                                x
+                            )
+                    )
+                |> RemoteData.withDefault Nothing
     in
     [ div [ class "row" ]
         [ div [ class "col-lg-4 design-panel-title" ] [ text "Name" ]
@@ -179,16 +198,16 @@ systemDetails _ model =
     ]
 
 
-starsInfo : StarSystemId -> Model -> List (Html Msg)
-starsInfo systemId model =
+starsInfo : Model -> List (Html Msg)
+starsInfo model =
     div [ class "row design-panel-title" ]
         [ div [ class "col-lg-4" ] [ text "Name" ]
         , div [ class "col-lg-4" ] [ text "Class" ]
         , div [ class "col-lg-4" ] [ text "Date" ]
         ]
-        :: (model.stars
-                |> andThen (Dict.get (unStarSystemId systemId))
-                |> withDefault []
+        :: (model.starSystemR.stars
+                |> RemoteData.toMaybe
+                |> Maybe.withDefault []
                 |> List.map
                     (\entry ->
                         div [ class "row" ]
@@ -214,8 +233,8 @@ planetsInfo systemId model =
         , div [ class "col-lg-4" ] [ text "Date" ]
         ]
         :: (model.planets
-                |> andThen (Dict.get (unStarSystemId systemId))
-                |> withDefault []
+                |> Maybe.andThen (Dict.get (unStarSystemId systemId))
+                |> Maybe.withDefault []
                 |> List.map
                     (\entry ->
                         div [ class "row" ]
@@ -223,14 +242,14 @@ planetsInfo systemId model =
                                 [ a [ href (PlanetR entry.id) ] [ text (unPlanetName entry.name) ] ]
                             , div [ class "col-lg-1" ]
                                 [ entry.position
-                                    |> andThen (\(PlanetPosition x) -> Just <| String.fromInt x)
-                                    |> withDefault ""
+                                    |> Maybe.andThen (\(PlanetPosition x) -> Just <| String.fromInt x)
+                                    |> Maybe.withDefault ""
                                     |> text
                                 ]
                             , div [ class "col-lg-2" ]
                                 [ entry.gravity
-                                    |> andThen (\gravity -> Just <| gravityToString gravity)
-                                    |> withDefault ""
+                                    |> Maybe.andThen (\gravity -> Just <| gravityToString gravity)
+                                    |> Maybe.withDefault ""
                                     |> text
                                 ]
                             , div [ class "col-lg-4" ] [ text <| starDateToString entry.date ]
@@ -244,9 +263,10 @@ planetsInfo systemId model =
 
 
 init : StarSystemId -> Model -> Cmd Msg
-init systemId model =
+init systemId _ =
     Cmd.batch
-        [ getStarSystemCmd (StarSystemMessage << StarSystemReceived) systemId
+        [ getStarSystem (StarSystemMessage << StarSystemReceived) systemId
+        , getStars (StarSystemMessage << StarsReceived) (Just systemId)
         ]
 
 
@@ -265,13 +285,54 @@ update msg model =
         PlanetListStatusChanged status ->
             ( set (starSystemRA << planetsStatusA) status model, Cmd.none )
 
-        StarSystemReceived (Ok system) ->
-            ( set (starSystemRA << starSystemA) (Just system) model
+        StarSystemReceived NotAsked ->
+            ( model
             , Cmd.none
             )
 
-        StarSystemReceived (Err err) ->
-            ( set (starSystemRA << starSystemA) Nothing model
+        StarSystemReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        StarSystemReceived (Success system) ->
+            ( set (starSystemRA << starSystemA) (Success system) model
+            , Cmd.none
+            )
+
+        StarSystemReceived (Failure err) ->
+            ( set (starSystemRA << starSystemA) (Failure err) model
                 |> over errorsA (\errors -> error err "Failed to load star system" :: errors)
             , Cmd.none
             )
+
+        StarsReceived NotAsked ->
+            ( model
+            , Cmd.none
+            )
+
+        StarsReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        StarsReceived (Success stars) ->
+            ( set (starSystemRA << starsA) (Success stars) model
+            , Cmd.none
+            )
+
+        StarsReceived (Failure err) ->
+            ( over errorsA (\errors -> error err "Failed to load stars" :: errors) model
+                |> set (starSystemRA << starsA) (Failure err)
+            , Cmd.none
+            )
+
+
+isLoading : Model -> Bool
+isLoading model =
+    let
+        vm =
+            model.starSystemR
+    in
+    RemoteData.isLoading vm.stars
+        || RemoteData.isLoading vm.starSystem

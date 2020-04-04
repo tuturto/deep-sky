@@ -1,4 +1,9 @@
-module Views.Unit exposing (init, page, update)
+module Views.Unit exposing
+    ( init
+    , isLoading
+    , page
+    , update
+    )
 
 import Accessors exposing (over, set)
 import Api.StarSystem exposing (getPlanet, getStarSystem)
@@ -61,6 +66,7 @@ import Html
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Ordering exposing (Ordering)
+import RemoteData exposing (RemoteData(..))
 import ViewModels.Unit
     exposing
         ( Tab(..)
@@ -140,8 +146,8 @@ shipLocation vm location =
                 |> Maybe.withDefault "unknown planet"
 
         systemName =
-            Maybe.map (unStarSystemName << .name) vm.starSystem
-                |> Maybe.withDefault "unknown system"
+            RemoteData.map (unStarSystemName << .name) vm.starSystem
+                |> RemoteData.withDefault "unknown system"
     in
     case location of
         Just (PlanetarySpace pId band) ->
@@ -452,13 +458,23 @@ update msg model =
             , Cmd.none
             )
 
-        StarSystemDetailsReceived (Ok starSystem) ->
-            ( set (unitRA << starSystemA) (Just starSystem) model
+        StarSystemDetailsReceived NotAsked ->
+            ( model
             , Cmd.none
             )
 
-        StarSystemDetailsReceived (Err err) ->
-            ( set (unitRA << starSystemA) Nothing model
+        StarSystemDetailsReceived Loading ->
+            ( model
+            , Cmd.none
+            )
+
+        StarSystemDetailsReceived (Success starSystem) ->
+            ( set (unitRA << starSystemA) (Success starSystem) model
+            , Cmd.none
+            )
+
+        StarSystemDetailsReceived (Failure err) ->
+            ( set (unitRA << starSystemA) (Failure err) model
                 |> over errorsA (\errors -> error err "Failed to load star system details" :: errors)
             , Cmd.none
             )
@@ -511,3 +527,12 @@ init uId _ =
     Cmd.batch
         [ getUnitDetails (UnitMessage << UnitDetailsReceived) uId
         ]
+
+
+isLoading : Model -> Bool
+isLoading model =
+    let
+        vm =
+            model.unitR
+    in
+    RemoteData.isLoading vm.starSystem

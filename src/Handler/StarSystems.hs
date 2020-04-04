@@ -11,6 +11,7 @@ module Handler.StarSystems
     where
 
 import Import
+import Database.Persist.Sql (toSqlKey)
 import Report ( collateReports, collateReport, planetStatusIconMapper )
 
 import Common ( apiRequireFaction, apiNotFound, apiRequireViewSimulation )
@@ -56,13 +57,20 @@ getApiStarSystemsR = do
     return $ toJSON systemReports
 
 
--- | api method to retrieve all known stars
+-- | api method to retrieve all known stars or stars of specific system
+-- ?systemId=1
 getApiStarsR :: Handler Value
 getApiStarsR = do
     (uId, _, _, fId) <- apiRequireFaction
     _ <- apiRequireViewSimulation uId
-    loadedReports <- runDB $ selectList [ StarReportFactionId ==. fId ] [ Asc StarReportId
-                                                                        , Asc StarReportDate ]
+    sIdParam <- lookupGetParam "systemId"
+    let systemId = toSqlKey <$> ((unpack <$> sIdParam) >>= readMay)
+    let filterParams = catMaybes [ Just $ StarReportFactionId ==. fId
+                                 , (StarReportStarSystemId ==.) <$> systemId
+                                 ]
+    loadedReports <- runDB $ selectList filterParams [ Asc StarReportId
+                                                     , Asc StarReportDate
+                                                     ]
     let reports = collateReports $ map entityVal loadedReports
     return $ toJSON reports
 

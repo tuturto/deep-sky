@@ -1,20 +1,17 @@
 module Views.Layout exposing (view)
 
-import Accessors exposing (get)
 import Browser
 import Data.Common
     exposing
         ( ErrorMessage(..)
         , Route(..)
         , unPlanetName
-        , unStarSystemId
         , unStarSystemName
         )
 import Data.Model exposing (Model, Msg(..))
 import Data.PersonNames exposing (displayName)
 import Data.User exposing (Role(..))
 import Data.Vehicles exposing (Unit(..), unShipName, unVehicleName)
-import Dict
 import Html
     exposing
         ( Attribute
@@ -29,9 +26,8 @@ import Html
         )
 import Html.Attributes exposing (class, id)
 import Html.Events exposing (onClick)
-import Maybe exposing (andThen, withDefault)
 import Navigation exposing (parseLocation)
-import RemoteData
+import RemoteData exposing (RemoteData(..))
 import Url exposing (Url)
 import Views.Admin.Main
 import Views.Admin.People.Add
@@ -170,7 +166,7 @@ isModuleLoading model =
             False
 
         StarSystemR _ ->
-            False
+            Views.StarSystem.isLoading model
 
         StarSystemsR ->
             Views.StarSystems.isLoading model
@@ -182,7 +178,7 @@ isModuleLoading model =
             False
 
         UnitR _ ->
-            False
+            Views.Unit.isLoading model
 
         LogoutR ->
             False
@@ -325,13 +321,12 @@ segment model route =
         ResearchR ->
             ( "Research", Nothing, Just HomeR )
 
-        StarSystemR systemId ->
+        StarSystemR _ ->
             let
                 starSystemName =
-                    model.starSystems
-                        |> andThen (Dict.get (unStarSystemId systemId))
-                        |> andThen (\x -> Just (unStarSystemName x.name))
-                        |> withDefault "Unknown star system"
+                    model.starSystemR.starSystem
+                        |> RemoteData.map (\x -> unStarSystemName x.name)
+                        |> RemoteData.withDefault "Unknown star system"
             in
             ( starSystemName, Just (id "breadcrumb-system-name"), Just StarSystemsR )
 

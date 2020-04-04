@@ -5,7 +5,6 @@ module Main exposing (handleApiMsg, init, main, subscriptions, update)
 
 import Accessors exposing (over, set)
 import Api.Common exposing (getResources, getStarDate)
-import Api.Designer exposing (availableDesignsCmd)
 import Browser
 import Browser.Navigation as Nav
 import Data.Accessors
@@ -15,15 +14,11 @@ import Data.Accessors
         , adminListPeopleRA
         , adminRA
         , availableBuildingsA
-        , availableChassisA
-        , availableComponentsA
         , availableResearchA
         , buildingsA
         , constructionsA
         , currentResearchA
-        , designStatsA
         , designerRA
-        , designsA
         , errorsA
         , iconsA
         , messagesRA
@@ -36,9 +31,6 @@ import Data.Accessors
         , researchProductionA
         , researchRA
         , starSystemRA
-        , starSystemsA
-        , starSystemsRA
-        , starsA
         , unitRA
         )
 import Data.Common
@@ -57,9 +49,7 @@ import Data.Model
         , Model
         , Msg(..)
         )
-import Data.StarSystem exposing (StarSystem)
 import Data.User exposing (Role(..))
-import Dict exposing (Dict)
 import Dict.Extra exposing (groupBy)
 import Http exposing (Error(..))
 import List
@@ -127,8 +117,6 @@ init _ url key =
             , url = url
             , currentTime = NotAsked
             , resources = NotAsked
-            , starSystems = Nothing
-            , stars = Nothing
             , planets = Nothing
             , planetStatus = Nothing
             , populations = Nothing
@@ -329,28 +317,6 @@ handleApiMsg msg model =
             , Cmd.none
             )
 
-        StarSystemsReceived (Ok starSystems) ->
-            ( set starSystemsA (Just <| starSystemsToDict starSystems) model
-            , Cmd.none
-            )
-
-        StarSystemsReceived (Err err) ->
-            ( set starSystemsA Nothing model
-                |> over errorsA (\errors -> error err "Failed to load star systems" :: errors)
-            , Cmd.none
-            )
-
-        StarsReceived (Ok stars) ->
-            ( set starsA (Just <| groupBy (\entry -> unStarSystemId entry.systemId) stars) model
-            , Cmd.none
-            )
-
-        StarsReceived (Err err) ->
-            ( set starSystemsA Nothing model
-                |> over errorsA (\errors -> error err "Failed to load stars" :: errors)
-            , Cmd.none
-            )
-
         PlanetsReceived (Ok planets) ->
             ( set planetsA (Just <| groupBy (\entry -> unStarSystemId entry.systemId) planets) model
             , Cmd.none
@@ -488,13 +454,6 @@ just b =
 
         Nothing ->
             Debug.todo "Partial function"
-
-
-{-| Given list of star systems, turn them into dictionary with star system id as key
--}
-starSystemsToDict : List StarSystem -> Dict Int StarSystem
-starSystemsToDict systems =
-    Dict.fromList (List.map (\entry -> ( unStarSystemId entry.id, entry )) systems)
 
 
 

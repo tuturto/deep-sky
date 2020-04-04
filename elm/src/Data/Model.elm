@@ -41,10 +41,8 @@ type alias Model =
     , url : Url
     , currentTime : WebData StarDate
     , resources : WebData Resources
-    , starSystems : Maybe (Dict Int StarSystem)
     , planets : Maybe (Dict Int (List Planet))
     , planetStatus : Maybe PlanetStatus
-    , stars : Maybe (Dict Int (List Star))
     , populations : Maybe (Dict Int (List Population))
     , buildings : Maybe (Dict Int (List Building))
     , constructions : Maybe (Dict Int (List Construction))
@@ -89,8 +87,6 @@ type Msg
 type ApiMsg
     = StarDateReceived (WebData StarDate)
     | ResourcesReceived (WebData Resources)
-    | StarSystemsReceived (Result Http.Error (List StarSystem))
-    | StarsReceived (Result Http.Error (List Star))
     | PlanetsReceived (Result Http.Error (List Planet))
     | PopulationReceived (Result Http.Error (List Population))
     | BuildingsReceived (Result Http.Error (List Building))

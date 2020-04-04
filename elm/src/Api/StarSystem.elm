@@ -11,15 +11,13 @@ module Api.StarSystem exposing
     , getPlanetsCmd
     , getPopulationsCmd
     , getStarSystem
-    , getStarSystemCmd
     , getStarSystems
-    , getStarsCmd
+    , getStars
     , gravityDecoder
     , planetDecoder
     , planetPositionDecoder
     , planetStatus
     , starDecoder
-    , starsCmd
     )
 
 import Accessors
@@ -87,7 +85,6 @@ import Json.Decode as Decode
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
 import Maybe
-import Maybe.Extra exposing (isNothing)
 import RemoteData exposing (WebData)
 
 
@@ -96,28 +93,16 @@ getStarSystems msg =
     Http.send (RemoteData.fromResult >> msg) (get ApiStarSystem (list starSystemDecoder))
 
 
-getStarSystem : (Result Http.Error StarSystem -> Msg) -> StarSystemId -> Cmd Msg
+getStarSystem : (WebData StarSystem -> Msg) -> StarSystemId -> Cmd Msg
 getStarSystem msg sId =
-    Http.send msg (get (ApiSingleStarSystem sId) starSystemDecoder)
+    Http.send (RemoteData.fromResult >> msg) (get (ApiSingleStarSystem sId) starSystemDecoder)
 
 
-getStarSystemCmd : (Result Http.Error StarSystem -> Msg) -> StarSystemId -> Cmd Msg
-getStarSystemCmd msg starSystemId =
-    Http.send msg (get (ApiSingleStarSystem starSystemId) starSystemDecoder)
-
-
-starsCmd : Cmd Msg
-starsCmd =
-    Http.send (ApiMsgCompleted << StarsReceived) (get ApiStar (list starDecoder))
-
-
-getStarsCmd : Model -> Cmd Msg
-getStarsCmd model =
-    if isNothing model.stars then
-        starsCmd
-
-    else
-        Cmd.none
+{-| Retrieve all known stars or all known stars of specific star system
+-}
+getStars : (WebData (List Star) -> Msg) -> Maybe StarSystemId -> Cmd Msg
+getStars msg sId =
+    Http.send (RemoteData.fromResult >> msg) (get (ApiStar sId) (list starDecoder))
 
 
 getPlanet : (Result Http.Error Planet -> Msg) -> PlanetId -> Cmd Msg
