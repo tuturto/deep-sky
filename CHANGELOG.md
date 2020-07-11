@@ -21,13 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - url of planet changed from `/starsystem/sId/pId` to `planet/pId`
 - type of design name changed from `Text` to `DesignName`
 - `PersonName` and related types and functions moved from `Data.Person` to `Data.PersonName` on client
+- Data loaded from server is now handled with `RemoteData` library
 ### Removed
 ### Fixed
+- [Old planet details are shown][6]
 - [No people are shown in admin view][13]
 - [Submitting user written news fails][14]
 ### Known bugs
 - [Disallow dismissing special events][1]
-- [Old planet details are shown][6]
 
 ## [0.2.0] - 2019-10-19
 ### Added
