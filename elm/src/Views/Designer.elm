@@ -490,10 +490,10 @@ designsPanelEntry availableChassis index design =
         idNumber =
             String.fromInt (index + 1)
     in
-    tr [ onClick (DesignerMessage <| DesignSelected design) ]
-        [ td [ id <| "design-entry-" ++ idNumber ] [ text <| unDesignName design.name ]
-        , td [] [ text chassisName ]
-        , td [] [ text tonnage ]
+    tr []
+        [ td [ id <| "design-entry-" ++ idNumber, onClick (DesignerMessage <| DesignSelected design) ] [ text <| unDesignName design.name ]
+        , td [ onClick (DesignerMessage <| DesignSelected design) ] [ text chassisName ]
+        , td [ onClick (DesignerMessage <| DesignSelected design) ] [ text tonnage ]
         , td [ class "icons" ]
             [ i [ id ("copy-design-" ++ idNumber), class "fas fa-copy", onClick (DesignerMessage <| DesignCopied design) ] []
             , i [ id ("delete-design-" ++ idNumber), class "fas fa-trash-alt small-space-left", onClick (DesignerMessage <| DesignDeleted design) ] []
