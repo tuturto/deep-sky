@@ -21,6 +21,9 @@ Messages
 Messages can be opened by clicking main menu item "Messages", which should
 always be available for logged in users.
 
+Keywords
+--------
+
 .. code:: robotframework
 
     *** Test Cases ***
@@ -33,10 +36,6 @@ User submitted news
 User submitted news are meant for sending to members of user's own faction.
 They contain short free form text and user selectable icon.
 
-Known issues
-++++++++++++
- - 14_: Submitting user written news article fails
-
 .. code:: robotframework
 
     Submitting User Written Article
@@ -45,6 +44,3 @@ Known issues
         Click Element   id:news-icon-jubilation-user-news
         Click Button   Submit
         Wait Until Page Contains   Ready for blast-off!
-
-
-.. _14: https://github.com/tuturto/deep-sky/issues/14

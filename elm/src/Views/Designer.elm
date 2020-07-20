@@ -168,29 +168,39 @@ chassisList model =
 -}
 chassisListContent : Model -> List (Html Msg)
 chassisListContent model =
-    div [ class "row info-panel-content-header" ]
-        [ div [ class "col-lg-6" ] [ text "Name" ]
-        , div [ class "col-lg-4" ] [ text "Type" ]
-        , div [ class "col-lg-2" ] [ text "Size" ]
-        ]
-        :: (model.designerR.availableChassis
-                |> RemoteData.withDefault []
-                |> List.sortWith sortChassis
-                |> List.drop (model.designerR.chassisCurrentPage * model.designerR.chassisPageSize)
-                |> List.take model.designerR.chassisPageSize
-                |> List.map (chassisEntry model.designerR)
-           )
-        ++ [ div [ class "row space-top" ]
-                [ div [ class "col-lg-12" ]
-                    [ case model.designerR.currentDesign of
-                        Nothing ->
-                            text "Select chassis from list above to start designing a new vehicle."
-
-                        Just _ ->
-                            text "Selecting a chassis of different type will remove all added components"
+    [ div [ class "row" ]
+        [ div [ class "col-lg-12" ]
+            [ table [ id "chassis-list" ]
+                [ thead []
+                    [ tr []
+                        [ th [] [ text "Name" ]
+                        , th [] [ text "Type" ]
+                        , th [] [ text "Size" ]
+                        , th [] []
+                        ]
                     ]
+                , tbody []
+                    (model.designerR.availableChassis
+                        |> RemoteData.withDefault []
+                        |> List.sortWith sortChassis
+                        |> List.drop (model.designerR.chassisCurrentPage * model.designerR.chassisPageSize)
+                        |> List.take model.designerR.chassisPageSize
+                        |> List.map (chassisEntry model.designerR)
+                    )
                 ]
-           ]
+            ]
+        ]
+    , div [ class "row space-top" ]
+        [ div [ class "col-lg-12" ]
+            [ case model.designerR.currentDesign of
+                Nothing ->
+                    text "Select chassis from list above to start designing a new vehicle."
+
+                Just _ ->
+                    text "Selecting a chassis of different type will remove all added components"
+            ]
+        ]
+    ]
 
 
 {-| Compare two chassis by their type and name
@@ -228,18 +238,18 @@ chassisEntry vm chassis =
             case vm.currentDesign of
                 Just design ->
                     if design.chassis.id == chassis.id then
-                        "row selected-chassis"
+                        "selected-chassis"
 
                     else
-                        "row"
+                        ""
 
                 Nothing ->
-                    "row"
+                    ""
     in
-    div [ class rowClass, onClick (DesignerMessage <| ChassisSelected chassis) ]
-        [ div [ class "col-lg-6" ] [ text <| unChassisName chassis.name ]
-        , div [ class "col-lg-4" ] [ text <| chassisTypeToString chassis.chassisType ]
-        , div [ class "col-lg-2" ] [ text <| String.fromInt <| unChassisTonnage chassis.tonnage ]
+    tr [ class rowClass, onClick (DesignerMessage <| ChassisSelected chassis) ]
+        [ td [] [ text <| unChassisName chassis.name ]
+        , td [] [ text <| chassisTypeToString chassis.chassisType ]
+        , td [] [ text <| String.fromInt <| unChassisTonnage chassis.tonnage ]
         ]
 
 
@@ -423,7 +433,7 @@ designsPanelContent : Model -> List (Html Msg)
 designsPanelContent model =
     div [ class "row" ]
         [ div [ class "col-lg-12" ]
-            [ table []
+            [ table [ id "design-table" ]
                 [ thead []
                     [ tr []
                         [ th [] [ text "Name" ]
@@ -652,7 +662,8 @@ designPanelContent model =
                 [ div [ class "col-lg-2 panel-sub-title" ] [ text "Name:" ]
                 , div [ class "col-lg-4" ]
                     [ Html.input
-                        [ type_ "text"
+                        [ id "ship-name-input"
+                        , type_ "text"
                         , class "ship-name-input"
                         , placeholder "name for ship"
                         , value <| unDesignName design.name

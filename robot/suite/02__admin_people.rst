@@ -7,6 +7,22 @@
     Suite Teardown      Admin Teardown
     Test Teardown       Error Bar Should Not Be Visible
 
+
+Admin page
+==========
+Admin page is only visible for users with sufficient rights. They can use it
+to monitor game status and administer it. Admin page can be opened by clicking
+the respective link on main menu bar.
+
+.. code:: robotframework
+
+    *** Test Cases ***
+    Opening Admin Page
+        Click Link   Admin
+        Wait Until Data Has Finished Loading
+
+Keywords
+--------
 .. code:: robotframework
 
     *** Keywords ***
@@ -45,28 +61,12 @@ element ``person-id-3``.
         Click Element   id:${id}
         Wait Until Data Has Finished Loading
 
-Admin page
-==========
-Admin page is only visible for users with sufficient rights. They can use it
-to monitor game status and administer it. Admin page can be opened by clicking
-the respective link on main menu bar.
-
-.. code:: robotframework
-
-    *** Test Cases ***
-    Opening Admin Page
-        Click Link   Admin
-        Wait Until Data Has Finished Loading
 
 People
 ------
 People section shows all people in the system. As there can be lot of data,
 this data is paginated. Clicking a single row will open details of respective
 person.
-
-Known issues
-++++++++++++
-- 13_: No people are shown in admin view
 
 .. code:: robotframework
 
@@ -91,4 +91,3 @@ Known issues
         Should Be Equal As Integers   ${personId1}   ${personId3}
         Should Not Be Equal As Integers   ${personId1}   ${personId2}
 
-.. _13: https://github.com/tuturto/deep-sky/issues/13
