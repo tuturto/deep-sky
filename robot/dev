@@ -1,0 +1,3 @@
+#!/bin/bash
+
+robot --extension rst --outputdir results --include development suite

@@ -17,6 +17,8 @@ type UnitRMsg
     | StarSystemDetailsReceived (WebData StarSystem)
     | TabActivated Tab
     | CrewTabStatusChanged InfoPanelStatus
+    | CrewSpaceInfoPanelStatusChanged InfoPanelStatus
+    | CrewMessagesInfoPanelStatusChanged InfoPanelStatus
     | CrewPageChanged Int
 
 
@@ -28,6 +30,8 @@ type alias UnitViewModel =
     , crewTabPageSize : Int
     , crewTabCurrentPage : Int
     , crewTabStatus : InfoPanelStatus
+    , crewSpaceInfoPanelStatus : InfoPanelStatus
+    , crewMessagesInfoPanelStatus : InfoPanelStatus
     }
 
 
@@ -40,6 +44,8 @@ init =
     , crewTabPageSize = 20
     , crewTabCurrentPage = 0
     , crewTabStatus = InfoPanelOpen
+    , crewSpaceInfoPanelStatus = InfoPanelOpen
+    , crewMessagesInfoPanelStatus = InfoPanelOpen
     }
 
 

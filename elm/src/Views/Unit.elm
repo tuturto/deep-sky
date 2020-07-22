@@ -11,6 +11,8 @@ import Api.Units exposing (getUnitDetails)
 import Data.Accessors
     exposing
         ( activeTabA
+        , crewMessagesInfoPanelStatusA
+        , crewSpaceInfoPanelStatusA
         , crewTabCurrentPageA
         , crewTabStatusA
         , errorsA
@@ -45,8 +47,10 @@ import Data.Vehicles
         , crewRankToString
         , positionOrdering
         , rankOrdering
+        , unCrewSpace
         , unDesignName
         , unShipName
+        , unitStats
         )
 import Html
     exposing
@@ -58,12 +62,12 @@ import Html
         , tbody
         , td
         , text
+        , tfoot
         , th
         , thead
         , tr
         )
 import Html.Attributes exposing (class)
-import Html.Events exposing (onClick)
 import Ordering exposing (Ordering)
 import RemoteData exposing (RemoteData(..))
 import ViewModels.Unit
@@ -72,7 +76,31 @@ import ViewModels.Unit
         , UnitRMsg(..)
         , UnitViewModel
         )
-import Views.Helpers exposing (href, infoPanel)
+import Views.Helpers
+    exposing
+        ( PanelSizing(..)
+        , TabConfig
+        , TabStatus(..)
+        , href
+        , infoPanel
+        , tabControl
+        , twinPanels
+        )
+
+
+tabConfig : Model -> TabConfig Tab
+tabConfig model =
+    { tabList = [ GeneralInfo, Crew, Orders, DamageControl, Stats, Log ]
+    , isActive =
+        \t ->
+            if model.unitR.activeTab == t then
+                ActiveTab
+
+            else
+                NonActiveTab
+    , activeMsg = UnitMessage << TabActivated
+    , tabText = tabToString
+    }
 
 
 page : Model -> Html Msg
@@ -80,7 +108,7 @@ page model =
     div []
         (commonInfo model.unitR
             ++ [ div [ class "row" ]
-                    [ div [ class "col-lg-12" ] [ tabs model ]
+                    [ div [ class "col-lg-12" ] [ tabControl (tabConfig model) ]
                     ]
                , div [ class "row" ]
                     [ div [ class "col-lg-12" ] (tabContent model) ]
@@ -237,37 +265,6 @@ vehicleCommonInfo _ _ =
     []
 
 
-tabs : Model -> Html Msg
-tabs model =
-    let
-        tab =
-            tabHeader model
-    in
-    div [ class "space-bottom" ]
-        [ tab GeneralInfo
-        , tab Crew
-        , tab Orders
-        , tab DamageControl
-        , tab Stats
-        , tab Log
-        ]
-
-
-tabHeader : Model -> Tab -> Html Msg
-tabHeader model tab =
-    let
-        attributes =
-            if model.unitR.activeTab == tab then
-                [ class "btn btn-primary btn-sm command-button" ]
-
-            else
-                [ class "btn btn-default btn-sm command-button"
-                , onClick <| UnitMessage (TabActivated tab)
-                ]
-    in
-    div attributes [ text <| tabToString tab ]
-
-
 tabToString : Tab -> String
 tabToString tab =
     case tab of
@@ -318,8 +315,160 @@ generalTab _ =
         [ div [ class "col-lg-12" ] [ text "general tab" ] ]
 
 
+{-| Render crew tab
+-}
 crewTab : Model -> List (Html Msg)
 crewTab model =
+    crewTabTop model
+        ++ currentCrewInfoPanel model
+
+
+{-| -}
+crewTabTop : Model -> List (Html Msg)
+crewTabTop =
+    twinPanels EqualPanels crewSpaceStatsInfoPanel crewMessagesInfoPanel
+
+
+crewSpaceStatsInfoPanel : Model -> List (Html Msg)
+crewSpaceStatsInfoPanel model =
+    infoPanel
+        { title = "Crew quarters"
+        , currentStatus = model.unitR.crewSpaceInfoPanelStatus
+        , openingMessage = UnitMessage <| CrewSpaceInfoPanelStatusChanged InfoPanelOpen
+        , closingMessage = UnitMessage <| CrewSpaceInfoPanelStatusChanged InfoPanelClosed
+        , refreshMessage = Nothing
+        }
+        Nothing
+        crewSpacePanelContent
+        model
+
+
+crewSpacePanelContent : Model -> List (Html Msg)
+crewSpacePanelContent model =
+    let
+        header =
+            thead []
+                [ tr []
+                    [ th [] [ text "Type" ]
+                    , th [] [ text "Space" ]
+                    ]
+                ]
+    in
+    case RemoteData.map (.crewSpace << unitStats) model.unitR.unit of
+        NotAsked ->
+            [ table []
+                [ header
+                , tbody []
+                    [ tr []
+                        [ td [ class "noData", Html.Attributes.colspan 2 ] [ text "Data has not been requested" ] ]
+                    ]
+                ]
+            ]
+
+        Loading ->
+            [ table []
+                [ header
+                , tbody []
+                    [ tr []
+                        [ td [ class "noData", Html.Attributes.colspan 2 ] [ text "Loading..." ] ]
+                    ]
+                ]
+            ]
+
+        Success Nothing ->
+            [ table []
+                [ header
+                , tbody []
+                    [ tr []
+                        [ td [ class "noData", Html.Attributes.colspan 2 ] [ text "Crew space data is unavailable" ] ]
+                    ]
+                ]
+            ]
+
+        Success (Just cSpace) ->
+            [ table []
+                [ header
+                , tbody []
+                    [ tr []
+                        [ td [] [ text "Steerage" ]
+                        , td []
+                            [ unCrewSpace cSpace.steerageSpace
+                                |> String.fromInt
+                                |> text
+                            ]
+                        ]
+                    , tr []
+                        [ td [] [ text "Standard" ]
+                        , td []
+                            [ unCrewSpace cSpace.standardSpace
+                                |> String.fromInt
+                                |> text
+                            ]
+                        ]
+                    , tr
+                        []
+                        [ td [] [ text "Luxury" ]
+                        , td []
+                            [ unCrewSpace cSpace.luxurySpace
+                                |> String.fromInt
+                                |> text
+                            ]
+                        ]
+                    ]
+                , tfoot []
+                    [ tr
+                        []
+                        [ th [] [ text "Total" ]
+                        , td [] [ text "79" ]
+                        ]
+                    , tr
+                        []
+                        [ th [] [ text "Used" ]
+                        , td [] [ text "50" ]
+                        ]
+                    , tr
+                        []
+                        [ th [] [ text "Free" ]
+                        , td [] [ text "29" ]
+                        ]
+                    ]
+                ]
+            ]
+
+        Failure _ ->
+            [ table []
+                [ header
+                , tbody []
+                    [ tr []
+                        [ td [ class "noData", Html.Attributes.colspan 2 ] [ text "Failure to retrieve data" ] ]
+                    ]
+                ]
+            ]
+
+
+crewMessagesInfoPanel : Model -> List (Html Msg)
+crewMessagesInfoPanel model =
+    infoPanel
+        { title = "Messages"
+        , currentStatus = model.unitR.crewMessagesInfoPanelStatus
+        , openingMessage = UnitMessage <| CrewMessagesInfoPanelStatusChanged InfoPanelOpen
+        , closingMessage = UnitMessage <| CrewMessagesInfoPanelStatusChanged InfoPanelClosed
+        , refreshMessage = Nothing
+        }
+        Nothing
+        crewMessagesPanelContent
+        model
+
+
+crewMessagesPanelContent : Model -> List (Html Msg)
+crewMessagesPanelContent _ =
+    [ text "Here are messages about current crew situation" ]
+
+
+{-| Render info panel for showing current crew of the ship
+-}
+currentCrewInfoPanel : Model -> List (Html Msg)
+currentCrewInfoPanel model =
     let
         crew =
             case model.unitR.unit of
@@ -358,8 +507,8 @@ crewTabContent model =
                 [ thead []
                     [ tr []
                         [ th [] [ text "Name" ]
-                        , th [] [ text "Rank" ]
                         , th [] [ text "Position" ]
+                        , th [] [ text "Rank" ]
                         ]
                     ]
                 , case model.unitR.unit of
@@ -395,8 +544,8 @@ crewRow : CrewReport -> Html Msg
 crewRow crew =
     tr []
         [ td [] [ a [ href (PersonR crew.personId) ] [ text <| displayName crew.name ] ]
-        , td [] [ text <| crewRankToString crew.rank ]
         , td [] [ text <| crewPositionToString crew.position ]
+        , td [] [ text <| crewRankToString crew.rank ]
         ]
 
 
@@ -510,6 +659,16 @@ update msg model =
 
         CrewPageChanged n ->
             ( set (unitRA << crewTabCurrentPageA) n model
+            , Cmd.none
+            )
+
+        CrewSpaceInfoPanelStatusChanged status ->
+            ( set (unitRA << crewSpaceInfoPanelStatusA) status model
+            , Cmd.none
+            )
+
+        CrewMessagesInfoPanelStatusChanged status ->
+            ( set (unitRA << crewMessagesInfoPanelStatusA) status model
             , Cmd.none
             )
 

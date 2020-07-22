@@ -182,7 +182,7 @@ insert into required_component (chassis_id, component_type, level, amount) value
 
 insert into faction (name, home_system, biologicals, mechanicals, chemicals) values ('Terrans', 1, 10000, 7500, 7500);
 insert into faction (name, home_system, biologicals, mechanicals, chemicals) values ('Republic of Aclael', 2, 5000, 5000, 5000);
-insert into user (ident, faction_id) values ('tuukka', 1);
+insert into user (ident, faction_id) values ('tuula', 1);
 insert into user_role (user_id, role) values (1, 'RoleAdministrator');
 
 insert into building (planet_id, type, level, damage) values (3, 'SensorStation', 1, 0);

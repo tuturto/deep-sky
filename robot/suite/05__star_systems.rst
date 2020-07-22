@@ -51,6 +51,7 @@ Star systems view can always be opened from the top menu.
 
     *** Test Cases ***
     Opening Star Systems View
+        [Tags]   star systems   smoke
         Click Link   Star Systems
         Wait Until Data Has Finished Loading
 
@@ -60,6 +61,7 @@ the star system is viewed, its name is displayed in the breadcrumb path.
 .. code:: robotframework
 
     Viewing Star System Details
+        [Tags]   star systems
         ${system_name_from_list}=   Get Text   id:system-name-1
         View Star System on Row   1
         ${system_name_from_view}=   Get Text   id:system-name

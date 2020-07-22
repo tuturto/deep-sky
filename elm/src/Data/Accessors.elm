@@ -28,6 +28,8 @@ module Data.Accessors exposing
     , componentsCurrentPageA
     , constructionStatusA
     , constructionsA
+    , crewMessagesInfoPanelStatusA
+    , crewSpaceInfoPanelStatusA
     , crewTabCurrentPageA
     , crewTabStatusA
     , currentDesignA
@@ -131,6 +133,20 @@ module Data.Accessors exposing
     )
 
 import Accessors exposing (Relation, makeOneToOne)
+
+
+crewMessagesInfoPanelStatusA : Relation field sub wrap -> Relation { rec | crewMessagesInfoPanelStatus : field } sub wrap
+crewMessagesInfoPanelStatusA =
+    makeOneToOne
+        .crewMessagesInfoPanelStatus
+        (\change rec -> { rec | crewMessagesInfoPanelStatus = change rec.crewMessagesInfoPanelStatus })
+
+
+crewSpaceInfoPanelStatusA : Relation field sub wrap -> Relation { rec | crewSpaceInfoPanelStatus : field } sub wrap
+crewSpaceInfoPanelStatusA =
+    makeOneToOne
+        .crewSpaceInfoPanelStatus
+        (\change rec -> { rec | crewSpaceInfoPanelStatus = change rec.crewSpaceInfoPanelStatus })
 
 
 systemsCurrentPageA : Relation field sub wrap -> Relation { rec | systemsCurrentPage : field } sub wrap

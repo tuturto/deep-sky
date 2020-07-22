@@ -197,6 +197,19 @@ CrewAssignment json
     rank CrewRank
     UniqueCrewAssignment personId
 
+Formation json
+    name FormationName
+    parentFormationId FormationId Maybe
+    deriving Show Read Eq
+
+UnitCommand json
+    unitId UnitID
+    formationId FormationId
+    name CommandName
+    UniqueUnit unitId
+    UniqueFormation formationId
+    deriving Show Read Eq
+
 ShipConstruction json
     shipId ShipId Maybe
     planetId PlanetId Maybe

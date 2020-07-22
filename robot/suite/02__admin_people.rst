@@ -61,9 +61,11 @@ element ``person-id-3``.
         Click Element   id:${id}
         Wait Until Data Has Finished Loading
 
+Test Cases
+----------
 
 People
-------
+++++++
 People section shows all people in the system. As there can be lot of data,
 this data is paginated. Clicking a single row will open details of respective
 person.
@@ -71,6 +73,7 @@ person.
 .. code:: robotframework
 
     Viewing List of People
+        [Tags]   admin
         Click Link   link:People
         Wait Until Data Has Finished Loading
         Page Should Not Contain   No data
@@ -78,11 +81,13 @@ person.
         Should Not Be Equal   ${person_name}   ${EMPTY}
 
     Viewing Single Person
+        [Tags]   admin
         View Person on Row   1
         Go Back
         Wait Until Data Has Finished Loading
 
     Viewing Different Pages of Paginated Data
+        [Tags]   admin
         ${personId1}=   Get Text   id:person-id-1
         Navigate To Next Page
         ${personId2}=   Get Text   id:person-id-1

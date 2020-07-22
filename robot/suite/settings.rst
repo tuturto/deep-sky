@@ -12,7 +12,7 @@
     ${SERVER}           localhost:3000
     ${BROWSER}          Firefox
     ${DELAY}            0
-    ${VALID USER}       tuukka
+    ${VALID USER}       tuula
     ${MAIN URL}         http://${SERVER}/
     ${MESSAGES URL}     ${MAIN URL}message/
     ${LOGOUT URL}       ${MAIN URL}auth/logout

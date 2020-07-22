@@ -94,6 +94,7 @@ Designer can always be opened from the top menu.
 
     *** Test Cases ***
     Opening Designer
+        [Tags]   designer   smoke
         Click Link   Designer
         Wait Until Data Has Finished Loading
 
@@ -102,6 +103,7 @@ Existing design can be opened by clicking its entry on the list.
 .. code:: robotframework
 
     Viewing Existing Desig
+        [Tags]   designer
         View Design on Row   1
         Close Design Without Saving
 
@@ -112,6 +114,7 @@ can't be saved.
 .. code:: robotframework
 
     Creating a New Design
+        [Tags]   designer
         Select Chassis   SUV
         Add Component   Wheeled
         Name Design   ${test_vehicle_name}
@@ -124,6 +127,7 @@ Clicking remove button will immediately delete the design.
 .. code:: robotframework
 
     Deleting an Existing Design
+        [Tags]   designer
         Delete Design   ${test_vehicle_name}
         Wait Until Data Has Finished Loading
         Page Should Not Contain    ${test_vehicle_name}

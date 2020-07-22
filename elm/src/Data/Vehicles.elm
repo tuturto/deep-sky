@@ -19,6 +19,7 @@ module Data.Vehicles exposing
     , CrewAmount(..)
     , CrewPosition(..)
     , CrewRank(..)
+    , unitStats
     , CrewReport
     , CrewRequirement
     , CrewSpace(..)
@@ -888,6 +889,14 @@ type alias VehicleDetails =
     , crew : List CrewReport
     }
 
+unitStats : Unit -> UnitStats
+unitStats unit =
+    case unit of
+        Ship ship ->
+            ship.stats
+
+        Vehicle vehicle ->
+            vehicle.stats
 
 type UnitLocation
     = ShipLocation ShipLocation

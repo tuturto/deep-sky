@@ -2,6 +2,8 @@ module Views.Helpers exposing
     ( InfoPanelConfig
     , PagingConfig
     , PanelSizing(..)
+    , TabConfig
+    , TabStatus(..)
     , biologicalsToText
     , chemicalsToText
     , href
@@ -11,6 +13,7 @@ module Views.Helpers exposing
     , starDateToString
     , starDateToText
     , stringToStarDate
+    , tabControl
     , triplePanels
     , twinPanels
     )
@@ -306,3 +309,50 @@ pagingButtons config =
               else
                 i [ class "fa fa-fast-forward small-space-left" ] []
             ]
+
+
+{-| Type indicating if given tab is currently selected or not
+-}
+type TabStatus
+    = ActiveTab
+    | NonActiveTab
+
+
+{-| Configuration for tab control that holds tabs of type a
+-}
+type alias TabConfig a =
+    { tabList : List a
+    , isActive : a -> TabStatus
+    , activeMsg : a -> Msg
+    , tabText : a -> String
+    }
+
+
+{-| Render tab control according to given configuration
+-}
+tabControl : TabConfig a -> Html Msg
+tabControl config =
+    let
+        tab =
+            tabHeader config.isActive config.activeMsg config.tabText
+    in
+    div [ class "space-bottom" ]
+        (List.map tab config.tabList)
+
+
+{-| Render single tab header
+-}
+tabHeader : (a -> TabStatus) -> (a -> Msg) -> (a -> String) -> a -> Html Msg
+tabHeader isActive activatedMsg tabText tab =
+    let
+        attributes =
+            case isActive tab of
+                ActiveTab ->
+                    [ class "btn btn-primary btn-sm command-button" ]
+
+                NonActiveTab ->
+                    [ class "btn btn-default btn-sm command-button"
+                    , onClick <| activatedMsg tab
+                    ]
+    in
+    div attributes [ text <| tabText tab ]
